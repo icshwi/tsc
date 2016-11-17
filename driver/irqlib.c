@@ -1,0 +1,215 @@
+/*=========================< begin file & file header >=======================
+ *  References
+ *  
+ *    filename : irqlib.c
+ *    author   : JFG
+ *    company  : IOxOS
+ *    creation : Sept 27,2015
+ *    version  : 0.0.1
+ *
+ *----------------------------------------------------------------------------
+ *  Description
+ *
+ *    This file contains the low level functions to drive the address mappers
+ *    implemented on the IFC1211.
+ *
+ *----------------------------------------------------------------------------
+ *
+ * Copyright (c) 2015 IOxOS Technologies SA <ioxos@ioxos.ch>
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ * GPL license :
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ *----------------------------------------------------------------------------
+ *  Change History
+ *  
+ *  
+ *=============================< end file header >============================*/
+#include "tscos.h"
+#include "tscdrvr.h"
+
+#define DBGno
+#include "debug.h"
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_irq_register
+ * Prototype     : int
+ * Parameters    : pointer to IFC1211 device control structure
+ *                 interrupt source identifier
+ *                 interrupt handler
+ *                 argument to by passed to interrupt handler
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : register interrupt handler <func> associated to interrupt
+ *                 source identifier <src>. Pointer <arg> is passed as argument
+ *                 when <func> is executed on occurence of interrupt <src>
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int 
+tsc_irq_register( struct ifc1211_device *ifc,
+		  int src,
+		  void (* func)( struct ifc1211_device*, int, void *),
+		  void *arg)
+{
+  if( ifc->irq_tbl[src].busy)
+  {
+    return( -EBUSY);
+  }
+  ifc->irq_tbl[src].func = func;
+  ifc->irq_tbl[src].arg = arg;
+  ifc->irq_tbl[src].cnt = 0;
+  ifc->irq_tbl[src].busy = 1;
+
+  return( 0);
+}
+EXPORT_SYMBOL( tsc_irq_register);
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_irq_spurious
+ * Prototype     : int
+ * Parameters    : pointer to IFC1211 device control structure
+ *                 interrupt source identifier
+ *                 argument associated ti interrupt handler
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : IFC1211 default interrupt handle, does nothing...
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+void
+tsc_irq_spurious( struct ifc1211_device *p,
+		         int src,
+		         void *arg)
+{
+  debugk(("IFC1211 spurious interrupt : %x - %p\n", src, arg));
+  return;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_irq_check_busy
+ * Prototype     : int
+ * Parameters    : pointer to IFC1211 device control structure
+ *                 interrupt source identifier
+ * Return        : 1 if source attached to handler
+ *----------------------------------------------------------------------------
+ * Description   : check if interrupt source is attached to an handler
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int 
+tsc_irq_check_busy( struct ifc1211_device *ifc,
+		    int src)
+{
+  return( ifc->irq_tbl[src].busy);
+}
+EXPORT_SYMBOL( tsc_irq_check_busy);
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_irq_unregister
+ * Prototype     : int
+ * Parameters    : pointer to IFC1211 device control structure
+ *                 interrupt source identifier
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : unregister interrupt handler >func> associated to interrupt
+ *                 source identifier <src>. 
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+void 
+tsc_irq_unregister( struct ifc1211_device *ifc,
+		    int src)
+{
+  ifc->irq_tbl[src].func = tsc_irq_spurious;
+  ifc->irq_tbl[src].arg = NULL;
+  ifc->irq_tbl[src].cnt = 0;
+  ifc->irq_tbl[src].busy = 0;
+}
+EXPORT_SYMBOL( tsc_irq_unregister);
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_irq_mask
+ * Prototype     : int
+ * Parameters    : pointer to IFC1211 device control structure
+ *                 operation to be performed (set/clear)
+ *                 source identifier
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : initialize IFC1211 address mapping data structures for PCI
+ *                 master access.
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int 
+tsc_irq_mask( struct ifc1211_device *ifc,
+	      int op,
+	      int src)
+{
+  int retval;
+  int ctl;
+  int ip;
+
+  debugk(( KERN_NOTICE "ifc1211 : Entering tsc_irq_mask( %p, %x, %x)\n", ifc, op, src));
+
+  retval = -1;
+  ctl = ITC_CTL(src);
+  ip = ITC_IP(src);
+
+  switch( ctl)
+  {
+    case ITC_CTL_ILOC:
+    {
+      if( op == TSC_IOCTL_ITC_MSK_CLEAR)
+      {
+	iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_IMC);
+	retval = 0;
+      }
+      if( op == TSC_IOCTL_ITC_MSK_SET)
+      {
+        iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_IMS);
+	retval = 0;
+      }
+      break;
+    }
+    case ITC_CTL_DMA:
+    {
+      if( op == TSC_IOCTL_ITC_MSK_CLEAR)
+      {
+	iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMC);
+	retval = 0;
+      }
+      if( op == TSC_IOCTL_ITC_MSK_SET)
+      {
+        iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMS);
+	retval = 0;
+      }
+      break;
+    }
+  }
+
+  return( retval);
+}
+EXPORT_SYMBOL( tsc_irq_mask);
+
