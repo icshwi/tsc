@@ -59,10 +59,13 @@ struct cli_cmd_history pm_history;
 extern struct aiocb aiocb;
 extern char aio_buf[256];
 struct rdwr_cycle_para last_csr_cycle;
-struct rdwr_cycle_para last_shm_cycle;
-struct rdwr_cycle_para last_shm2_cycle;
-struct rdwr_cycle_para last_usr_cycle;
-struct rdwr_cycle_para last_usr2_cycle;
+// Structure 0 -> CENTRAL device
+// Structure 1 -> IO device
+struct rdwr_cycle_para last_shm_cycle[2];
+struct rdwr_cycle_para last_shm2_cycle[2];
+struct rdwr_cycle_para last_usr_cycle[2];
+struct rdwr_cycle_para last_usr2_cycle[2];
+
 struct rdwr_cycle_para last_kbuf_cycle[TSC_NUM_KBUF];
 extern int script_exit;
 
@@ -84,105 +87,135 @@ rdwr_rcsid()
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-rdwr_init( void)
-{
-  int i;
+int rdwr_init( void){
+	int i;
 
-  cli_history_init( &pm_history);
-  bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
-  aiocb.aio_fildes = STDIN_FILENO;		 // Async IO
-  aiocb.aio_buf    = aio_buf;
-  aiocb.aio_nbytes = 1;
+	cli_history_init( &pm_history);
+	bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
+	aiocb.aio_fildes = STDIN_FILENO;		       // Async IO
+	aiocb.aio_buf    = aio_buf;
+	aiocb.aio_nbytes = 1;
 
-  bzero( &last_csr_cycle, sizeof(struct rdwr_cycle_para));
-  last_csr_cycle.len = 0x40;
-  last_csr_cycle.m.ads = 0x24;
-  last_csr_cycle.m.space = 0x00;
-  last_csr_cycle.m.swap = 0x00;
-  last_csr_cycle.m.am = 0x00;
-  last_csr_cycle.loop = 1;
+	// -> CENTRAL[0] -> SHM1, SHM2,  USR1, USR2
+	// -> IO[1]      -> SHM,  <SHM>  USR, <USR> <> remapping
 
-  bzero( &last_shm_cycle, sizeof(struct rdwr_cycle_para));
-  last_shm_cycle.len = 0x40;
-  last_shm_cycle.m.ads = 0x44;
-  last_shm_cycle.m.space = RDWR_SPACE_SHM;
-  last_shm_cycle.m.swap = 0x00;
-  last_shm_cycle.m.am = 0x00;
-  last_shm_cycle.loop = 1;
+	// csr cycle
 
-  bzero( &last_shm2_cycle, sizeof(struct rdwr_cycle_para));
-  last_shm2_cycle.len = 0x40;
-  last_shm2_cycle.m.ads = 0x44;
-  last_shm2_cycle.m.space = RDWR_SPACE_SHM2;
-  last_shm2_cycle.m.swap = 0x00;
-  last_shm2_cycle.m.am = 0x00;
-  last_shm2_cycle.loop = 1;
+	bzero( &last_csr_cycle, sizeof(struct rdwr_cycle_para));
+	last_csr_cycle.len     = 0x40;
+	last_csr_cycle.m.ads   = 0x24;
+	last_csr_cycle.m.space = 0x00;
+	last_csr_cycle.m.swap  = 0x00;
+	last_csr_cycle.m.am    = 0x00;
+	last_csr_cycle.loop    = 1;
 
-  bzero( &last_usr_cycle, sizeof(struct rdwr_cycle_para));
-  last_usr_cycle.len = 0x40;
-  last_usr_cycle.m.ads = 0x44;
-  last_usr_cycle.m.space = RDWR_SPACE_USR1;
-  last_usr_cycle.m.swap = 0x00;
-  last_usr_cycle.m.am = 0x00;
-  last_usr_cycle.loop = 1;
+	// shm1 cycle
 
-  bzero( &last_usr2_cycle, sizeof(struct rdwr_cycle_para));
-  last_usr2_cycle.len = 0x40;
-  last_usr2_cycle.m.ads = 0x44;
-  last_usr2_cycle.m.space = RDWR_SPACE_USR2;
-  last_usr2_cycle.m.swap = 0x00;
-  last_usr2_cycle.m.am = 0x00;
-  last_usr2_cycle.loop = 1;
+	// CENTRAL
+	bzero( &last_shm_cycle[0], sizeof(struct rdwr_cycle_para));
+	last_shm_cycle[0].len     = 0x40;
+	last_shm_cycle[0].m.ads   = 0x44;
+	last_shm_cycle[0].m.space = RDWR_SPACE_SHM1;
+	last_shm_cycle[0].m.swap  = 0x00;
+	last_shm_cycle[0].m.am    = 0x00;
+	last_shm_cycle[0].loop    = 1;
 
+	// IO
+	bzero( &last_shm_cycle[1], sizeof(struct rdwr_cycle_para));
+	last_shm_cycle[1].len     = 0x40;
+	last_shm_cycle[1].m.ads   = 0x44;
+	last_shm_cycle[1].m.space = RDWR_SPACE_SHM;
+	last_shm_cycle[1].m.swap  = 0x00;
+	last_shm_cycle[1].m.am    = 0x00;
+	last_shm_cycle[1].loop    = 1;
 
-  for( i = 0; i <  TSC_NUM_KBUF; i++)
-  {
-    bzero( &last_kbuf_cycle[i], sizeof(struct rdwr_cycle_para));
-    last_kbuf_cycle[i].len = 0x40;
-    last_kbuf_cycle[i].m.ads = 0x44;
-    last_kbuf_cycle[i].m.space = RDWR_SPACE_KBUF;
-    last_kbuf_cycle[i].m.swap = 0x00;
-    last_kbuf_cycle[i].m.am = 0x00;
-    last_kbuf_cycle[i].loop = 1;
-    last_kbuf_cycle[i].kb_p = NULL;
-  }
-//<<<<<<< HEAD
-//#ifdef JFG
-//  kbuf_req.size = 0x100000;
-//  if( !tsc_kbuf_alloc( &kbuf_req))
-//  {
-//    printf("kernel buffer allocated: %p %lx %x\n", kbuf_req.k_base, kbuf_req.b_base, kbuf_req.size);
-//  }
-//  else
-//  {
-//    printf("Cannot allocate kernel buffer\n");
-//  }
-//#endif
-//  if( !alloc_kbuf( 0, 0x100000))
-//  {
-//    printf("kernel buffer allocated: %p %lx %x\n", tsc_kbuf_p[0]->k_base, tsc_kbuf_p[0]->b_base, tsc_kbuf_p[0]->size);
-//    last_kbuf_cycle[0].kb_p = tsc_kbuf_p[0];
-//=======
+	// shm2 cycle
 
-  if( !alloc_kbuf( 0, 0x100000))
-  {
-    printf("kernel buffer allocated: %p %llx %x\n", tsc_kbuf_ctl[0].kbuf_p->k_base, tsc_kbuf_ctl[0].kbuf_p->b_base, tsc_kbuf_ctl[0].kbuf_p->size);
-    last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
-//>>>>>>> 5042c01d1d3599737cf51040056ce6585d536cbb
+	// CENTRAL
+	bzero( &last_shm2_cycle[0], sizeof(struct rdwr_cycle_para));
+	last_shm2_cycle[0].len     = 0x40;
+	last_shm2_cycle[0].m.ads   = 0x44;
+	last_shm2_cycle[0].m.space = RDWR_SPACE_SHM2;
+	last_shm2_cycle[0].m.swap  = 0x00;
+	last_shm2_cycle[0].m.am    = 0x00;
+	last_shm2_cycle[0].loop    = 1;
 
-  }
-  else
-  {
-    printf("Cannot allocate kernel buffer\n");
-  }
+	// IO
+	bzero( &last_shm2_cycle[1], sizeof(struct rdwr_cycle_para));
+	last_shm2_cycle[1].len     = 0x40;
+	last_shm2_cycle[1].m.ads   = 0x44;
+	last_shm2_cycle[1].m.space = RDWR_SPACE_SHM;
+	last_shm2_cycle[1].m.swap  = 0x00;
+	last_shm2_cycle[1].m.am    = 0x00;
+	last_shm2_cycle[1].loop    = 1;
 
-  bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
-  aiocb.aio_fildes = STDIN_FILENO;		 // Async IO
-  aiocb.aio_buf    = aio_buf;
-  aiocb.aio_nbytes = 1;
+	// user1 cycle
 
-  return(0);
+	// CENTRAL
+	bzero( &last_usr_cycle[0], sizeof(struct rdwr_cycle_para));
+	last_usr_cycle[0].len      = 0x40;
+	last_usr_cycle[0].m.ads    = 0x44;
+	last_usr_cycle[0].m.space  = RDWR_SPACE_USR1;
+	last_usr_cycle[0].m.swap   = 0x00;
+	last_usr_cycle[0].m.am     = 0x00;
+	last_usr_cycle[0].loop     = 1;
+
+	// IO
+	bzero( &last_usr_cycle[1], sizeof(struct rdwr_cycle_para));
+	last_usr_cycle[1].len      = 0x40;
+	last_usr_cycle[1].m.ads    = 0x44;
+	last_usr_cycle[1].m.space  = RDWR_SPACE_USR;
+	last_usr_cycle[1].m.swap   = 0x00;
+	last_usr_cycle[1].m.am     = 0x00;
+	last_usr_cycle[1].loop     = 1;
+
+	// user2 cycle
+
+	// CENTRAL
+	bzero( &last_usr2_cycle[0], sizeof(struct rdwr_cycle_para));
+  	last_usr2_cycle[0].len     = 0x40;
+  	last_usr2_cycle[0].m.ads   = 0x44;
+  	last_usr2_cycle[0].m.space = RDWR_SPACE_USR2;
+  	last_usr2_cycle[0].m.swap  = 0x00;
+  	last_usr2_cycle[0].m.am    = 0x00;
+  	last_usr2_cycle[0].loop    = 1;
+
+  	// IO
+	bzero( &last_usr2_cycle[1], sizeof(struct rdwr_cycle_para));
+  	last_usr2_cycle[1].len     = 0x40;
+  	last_usr2_cycle[1].m.ads   = 0x44;
+  	last_usr2_cycle[1].m.space = RDWR_SPACE_USR;
+  	last_usr2_cycle[1].m.swap  = 0x00;
+  	last_usr2_cycle[1].m.am    = 0x00;
+  	last_usr2_cycle[1].loop    = 1;
+
+  	// kbuf cycle
+
+  	for( i = 0; i <  TSC_NUM_KBUF; i++){
+  		bzero( &last_kbuf_cycle[i], sizeof(struct rdwr_cycle_para));
+  		last_kbuf_cycle[i].len     = 0x40;
+  		last_kbuf_cycle[i].m.ads   = 0x44;
+  		last_kbuf_cycle[i].m.space = RDWR_SPACE_KBUF;
+  		last_kbuf_cycle[i].m.swap  = 0x00;
+  		last_kbuf_cycle[i].m.am    = 0x00;
+  		last_kbuf_cycle[i].loop    = 1;
+  		last_kbuf_cycle[i].kb_p    = NULL;
+  	}
+
+  	if(!alloc_kbuf( 0, 0x100000)){
+  		printf("kernel buffer allocated: %p %llx %x\n", tsc_kbuf_ctl[0].kbuf_p->k_base, tsc_kbuf_ctl[0].kbuf_p->b_base, tsc_kbuf_ctl[0].kbuf_p->size);
+  		last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
+  	}
+  	else{
+  		printf("Cannot allocate kernel buffer\n");
+  	}
+
+  	bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
+  	aiocb.aio_fildes = STDIN_FILENO;		       // Async IO
+  	aiocb.aio_buf    = aio_buf;
+  	aiocb.aio_nbytes = 1;
+
+  	return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -211,51 +244,69 @@ rdwr_exit( void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-struct rdwr_cycle_para *
-rdwr_get_cycle_space( char *cmd_p)
-{
-  if( cmd_p[1] == 's')
-  {
-    if( strlen( cmd_p) > 2 )
-    {
-      if( cmd_p[2] == '2')
-      {
-        return( &last_shm2_cycle);
-      }
-    }
-    return( &last_shm_cycle);
-  }
-  if( cmd_p[1] == 'u')
-  {
-  if( strlen( cmd_p) > 2 )
-  {
-  if( cmd_p[2] == '2')
-  {
-  return( &last_usr2_cycle);
-  }
-  }
-  return( &last_usr_cycle);
-  }
-  if( cmd_p[1] == 'm') 
-  {
-    last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
-    return( &last_kbuf_cycle[0]);
-  }
-  if( cmd_p[1] == 'k')
-  {
-    struct rdwr_cycle_para *cp;
-    int idx;
+struct rdwr_cycle_para *rdwr_get_cycle_space( char *cmd_p){
+	int device = -1;
 
-    idx = (int)(cmd_p[2] - '0');
-    if( ( idx < 0) || ( idx > TSC_NUM_KBUF))
-    {
-      return( NULL);
-    }
-    cp = &last_kbuf_cycle[idx];
-    cp->kb_p = tsc_kbuf_ctl[idx].kbuf_p;
-    return(cp);
-  }
-  return( NULL);
+	// Get current device used to match correct command history
+	device = tsc_get_device();
+
+	// SHM
+	if(cmd_p[1] == 's'){
+		if( strlen( cmd_p) > 2){
+			if( cmd_p[2] == '2'){
+				if(device == 0){
+					return( &last_shm2_cycle[0]);
+				}
+				else if (device == 1){
+					return( &last_shm2_cycle[1]);
+				}
+			}
+		}
+		if(device == 0){
+			return( &last_shm_cycle[0]);
+		}
+		else if (device == 1){
+			return( &last_shm_cycle[1]);
+		}
+	}
+
+	// USR
+	if(cmd_p[1] == 'u'){
+		if( strlen( cmd_p) > 2){
+			if( cmd_p[2] == '2'){
+				if (device == 0){
+					return( &last_usr2_cycle[0]);
+				}
+				else if (device == 1){
+					return( &last_usr2_cycle[1]);
+				}
+			}
+		}
+		if (device == 0){
+			return( &last_usr_cycle[0]);
+		}
+		else if (device == 1){
+			return( &last_usr_cycle[1]);
+		}
+	}
+
+	// KBUF
+	if(cmd_p[1] == 'm') {
+		last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
+		return( &last_kbuf_cycle[0]);
+	}
+	if(cmd_p[1] == 'k'){
+		struct rdwr_cycle_para *cp;
+		int idx;
+		idx = (int)(cmd_p[2] - '0');
+		if((idx < 0) || (idx > TSC_NUM_KBUF)){
+			return( NULL);
+		}
+		cp = &last_kbuf_cycle[idx];
+		cp->kb_p = tsc_kbuf_ctl[idx].kbuf_p;
+		return(cp);
+	}
+	return( NULL);
 }
 
 static int
