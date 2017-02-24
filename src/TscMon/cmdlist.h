@@ -105,6 +105,22 @@ char *dc_msg[] =
   "            <end>  = offset in hexadecimal of last register",
 0};
 
+char *ddr_msg[]=
+{
+  "Perform specific command on DDR memory",
+  "ddr calib",
+  "ddr reset",
+  "ddr status",
+  "ddr set <DQ> <DQS> <PM>",
+  "   where ddr calib               = DDR memory IDELAY alignment",
+  "         ddr reset               = Reset to default DDR memory IDELAY",
+  "         ddr status              = Show the DDR3 memory DQ[15:0] and DQS[1:0] line selection",
+  "         ddr set <DQ> <DQS> <PM> = Set the IDELAY for specifics lane",
+  "            where <DQ>           = Select the specific lane DQ[15:0]",
+  "            where <DQS>          = Select the specific lane DQS[1:0]",
+  "            where <PM>           = Increment <+> or decrement <-> the IDELAY",
+0};
+
 char *di_msg[] = 
 { "  display content of a set of IFC PON registers",
   "  di <start>[..<end>]",
@@ -473,6 +489,7 @@ struct cli_cmd_list cmd_list[] =
   { "cu2"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
   { "cu"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
   { "dc"     	, tsc_rdwr_dr,      dc_msg     	  , 0},
+  { "ddr"    	, tsc_ddr,          ddr_msg 	  , 0},
   { "di"     	, tsc_rdwr_dr,      di_msg     	  , 0},
   { "dk"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
   { "dma"     	, tsc_dma    ,      dma_msg       , 0},
