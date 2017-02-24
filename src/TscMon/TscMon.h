@@ -36,6 +36,7 @@
 #define TSC_QUIT -2
 
 #include "conf.h"   
+#include "ddr.h"
 #include "rdwr.h"   
 #include "map.h"
 #include "dma.h"   
