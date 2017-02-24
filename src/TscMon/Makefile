@@ -34,13 +34,16 @@ LIBDIR = ../../lib
 INC = -I $(INCDIR)
 LIB = -L $(LIBDIR)
 
-OFILES = TscMon.o script.o rdwr.o conf.o map.o dma.o timer.o sflash.o buf.o tst.o semaphore.o fifo.o lmk.o
+OFILES = TscMon.o script.o rdwr.o conf.o map.o dma.o timer.o sflash.o buf.o tst.o semaphore.o fifo.o lmk.o ddr.o
 HFILES = $(INCDIR)/cli.h 
 
 all : TscMon
 
 conf.o: conf.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c conf.c
+
+ddr.o: ddr.c cmdlist.h Makefile
+	$(CC) $(FLAGS) $(INC) -c ddr.c
 
 map.o: map.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c map.c
