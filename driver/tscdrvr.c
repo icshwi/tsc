@@ -313,7 +313,14 @@ static int ifc1211_mmap( struct file *filp, struct vm_area_struct *vma){
 
 	size   = vma->vm_end - vma->vm_start;
 	off    = vma->vm_pgoff << PAGE_SHIFT;
-	retval = remap_pfn_range( vma,  vma->vm_start, off >> PAGE_SHIFT, size, vma->vm_page_prot);
+
+	if( (off & 0xc00000000) == 0xc00000000){
+		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+		retval = io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff, size, vma->vm_page_prot);
+	}
+	else {
+		retval = remap_pfn_range( vma,  vma->vm_start, vma->vm_pgoff, size, vma->vm_page_prot);
+	}
 	return( retval);
 }
 
