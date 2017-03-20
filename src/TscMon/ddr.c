@@ -49,7 +49,8 @@
 
 #include "ddr.h"
 
-#define SMEM_DDR3_IDEL 		0x80c // DDR3 IDELAY offset register
+// IDEL control register for both DDR3 memory
+unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
 
 extern int tsc_fd;
 
@@ -58,6 +59,7 @@ extern int tsc_fd;
 void bin(unsigned n, unsigned int bit_size){
 	unsigned int i;
 	unsigned int j = 1;
+
     for (i = 1 << (bit_size - 1); i > 0; i = i / 2) {
     	(n & i)? printf("1"): printf("0");
     	if (!(j % 4)){
@@ -70,51 +72,54 @@ void bin(unsigned n, unsigned int bit_size){
 // Althea ddr reset
 // Reset to default DDR3 memory delay
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_reset(void){
+int althea_ddr_idel_reset(int mem){
 	unsigned int data = 0;
 
-	printf("Loading Althea DDR default IDELAY ... \n");
-	data = 0x8003ffff;
-	tsc_csr_write(SMEM_DDR3_IDEL, &data); // Load default delay
+	printf("Loading Althea DDR3 #%d default IDELAY ... \n", mem);
+	data = 0x8000ffff;
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Load default delay
 	usleep(1000);
 	data = 0x00000000;
-	tsc_csr_write(SMEM_DDR3_IDEL, &data); // Unselect all lines
-	printf("Done... \n");
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Unselect all lines
+	printf("DDR3 #%d done ... \n", mem);
+
 	return 0;
 }
 
 // Althea ddr set IDELAY
 // Set the IDELAY +/- for selected lane
-// |----- x -----| by step of +-78 [ps]
+// |----- x -----|
+// Step is 1 to 16
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_set(unsigned int dq, unsigned int dqs, char* pm){
+int althea_ddr_idel_set(int mem, unsigned int dq, unsigned int step, char* pm){
 	unsigned int data = 0;
 
 	// -- Decrement the delay --
 	if (*pm == '-') {
-		data = (dq & 0x0000ffff) | ((dqs & 0x00000003) << 16) | ((1 & 0x00000001) << 29);
-		tsc_csr_write(SMEM_DDR3_IDEL, &data);
+		data = (dq & 0x0000ffff) | ((step & 0x00000000f) << 20) | ((1 & 0x00000001) << 29);
+		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 	}
 	// -- Increment the delay --
 	else if(*pm == '+') {
-		data = (dq & 0x0000ffff) | ((dqs & 0x00000003) << 16) | ((1 & 0x00000001) << 30);
-		tsc_csr_write(SMEM_DDR3_IDEL, &data);
+		data = (dq & 0x0000ffff) | ((step & 0x00000000f) << 20) | ((1 & 0x00000001) << 30);
+		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 	}
+	printf("DDR3 #%d IDELAY set done ...\n", mem);
+
 	return 0;
 }
 
-// Show the current status of DDR DQ and DQS line
+// Show the current status of DDR DQ line
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_status(void){
-	unsigned int d0;
+int althea_ddr_idel_status(int mem){
+	unsigned int d0   = 0;
 	unsigned int temp = 0;
 	unsigned int mask = 0;
 
-	printf("Althea DDR memory IDELAY status\n");
+
+	printf("Althea DDR3 #%d IDELAY status\n", mem);
 	printf("-------------------------------- \n");
-
-	tsc_csr_read(SMEM_DDR3_IDEL, &d0);
-
+	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &d0);
 	// -- DQ[15:0] (data bus) --
 	mask = 0x0000ffff;
 	temp = d0 & mask;
@@ -122,18 +127,9 @@ int althea_ddr_idel_status(void){
 	bin(temp,16);
 	printf(" [0x%04x]", temp);
 	printf("\n");
-
-	// -- DQS[1:0] (strobe) --
-	printf("DQS[1:0] : ");
-	mask = 0x00030000;
-	temp = (d0 & mask) >> 16;
-	bin(temp,2);
-	printf(" [0x%01x]", temp);
-
-	printf("\n");
 	printf("-------------------------------- \n");
 
-  return 0;
+    return 0;
 }
 
 // Althea ddr align
@@ -145,7 +141,7 @@ int althea_ddr_idel_status(void){
 // DQ[15..8] -> DATA[7..0]
 // DQ[07..0] -> DATA[15..8]
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_calib(void){
+int althea_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
@@ -209,12 +205,17 @@ int althea_ddr_idel_calib(void){
     buf_ddr = NULL;
     memset(&map_win, sizeof(map_win), 0);
 
-
     map_win.req.rem_addr   = offset;
     map_win.req.loc_addr   = 0;
 	map_win.req.size       = size;
 	map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
-	map_win.req.mode.space = MAP_SPACE_SHM;
+	if ((mem - 1) == 0){
+		map_win.req.mode.space = MAP_SPACE_SHM1; // SHM #1
+	}
+	else if((mem - 1) == 1){
+		map_win.req.mode.space = MAP_SPACE_SHM2; // SHM #2
+	}
+
 	map_win.req.mode.flags = 0;
 
 	retval = tsc_map_alloc(&map_win);
@@ -292,9 +293,6 @@ int althea_ddr_idel_calib(void){
     d0 = 3;
     tsc_smon_write(0x40, &d0);
 
-
-return 0;
-
 	printf("\n");
 	printf("Enter hardware default DQ delay (default value: %i): ", CURRENT);
 	if (scanf(" %d", &CURRENT) != 1) {
@@ -303,7 +301,7 @@ return 0;
 	printf(" %i", CURRENT);
 	printf("\n");
     printf("Calibration pattern   : 0101 1001 0011 0100 1011 0101 1001 0011 \n");
-    printf("Default absolute IDEL : DQ = %i, DQS = 4 \n", CURRENT);
+    printf("Default absolute IDEL : DQ = %i \n", CURRENT);
     printf("\n");
 
     // Pass the entire possible delay taps
@@ -323,10 +321,10 @@ return 0;
     printf("+---------------------------------------------------------------------------------------------------------------+ \n");
 
 	// Reset all
-    data = 0x8003ffff;
-    tsc_csr_write(SMEM_DDR3_IDEL, &data); // Load initial DQ and DQS
+    data = 0x8000ffff;
+    tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Load initial DQ
     data = 0x00000000;
-    tsc_csr_write(SMEM_DDR3_IDEL, &data); // Unselect all lines (DQ and DQS)
+    tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Unselect all lines (DQ)
 
 	// Loop on 16 DQ
     for(j = 0; j < 16; j++){
@@ -343,15 +341,15 @@ return 0;
 #ifdef PPC
 			if(j < 8){
 				data = (0x20000000 | (0x1 << (j + 8)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // -
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 			}
 			else {
 				data = (0x20000000 | (0x1 << (j - 8)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // -
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 			}
 #else
 			data = (0x20000000 | (0x1 << (j)));
-			tsc_csr_write(SMEM_DDR3_IDEL, &data); // -
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data); // -
 #endif
 
 			// Fill DDR3 with test pattern
@@ -378,10 +376,10 @@ return 0;
 				pattern[(m * 2) + 1] =  (buf_rx[m] & (0x1 << (16 + j))) >> (16 + j);
 			}
 
-			/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-			// DEBUG
-			// Print pattern
-			/*
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEBUG
+// Print pattern
+/*
 			if (k != 0){
 				printf("            :");
 			}
@@ -403,8 +401,8 @@ return 0;
 				printf("buf lsb [%i] %x \n", m, (buf_rx[m] & (0x00000001 << j)) >>  j);
 				printf("buf msb [%i] %x \n", m, (buf_rx[m] & (0x1 << (16 + j))) >> (16 + j));
 			}
-			*/
-			/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			// Check data received with reference pattern
 			if (!memcmp(pattern, ref_pattern, 32 * sizeof(int))){
@@ -422,15 +420,15 @@ return 0;
 #ifdef PPC
 				if(j < 8){
 					data = (0x40000000 | (0x1 << (j + 8)));
-					tsc_csr_write(SMEM_DDR3_IDEL, &data); // +
+					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
 				}
 				else {
 					data = (0x40000000 | (0x1 << (j - 8)));
-					tsc_csr_write(SMEM_DDR3_IDEL, &data); // +
+					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data); // +
 				}
 #else
 				data = (0x40000000 | (0x1 << (j)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // +
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
 #endif
 			}
 
@@ -466,15 +464,15 @@ return 0;
 #ifdef PPC
 			if(j < 8){
 				data = (0x20000000 | (0x1 << (j + 8)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // -
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 			}
 			else {
 				data = (0x20000000 | (0x1 << (j - 8)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // -
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 			}
 #else
 			data = (0x20000000 | (0x1 << (j)));
-			tsc_csr_write(SMEM_DDR3_IDEL, &data); // -
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 #endif
 
 			// Fill DDR3 with test pattern
@@ -493,15 +491,15 @@ return 0;
 #ifdef PPC
 			if(j < 8){
 				data = (0x40000000 | (0x1 << (j + 8)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // +
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
 			}
 			else {
 				data = (0x40000000 | (0x1 << (j - 8)));
-				tsc_csr_write(SMEM_DDR3_IDEL, &data); // +
+				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
 			}
 #else
 			data = (0x40000000 | (0x1 << (j)));
-			tsc_csr_write(SMEM_DDR3_IDEL, &data); // +
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
 #endif
 
 			// Fill DDR3 with test pattern
@@ -515,16 +513,16 @@ return 0;
 		// Get data from DDR3
 		memcpy(buf_rx, buf_ddr, size);
 
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// DEBUG
-		/*
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEBUG
+/*
 		printf("start: %i, end: %i, ok: %i, avg: %i, marker: %i \n", start, end, ok, avg_x, marker);
 		printf("\n");
-		*/
-		////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		data = 0x00000000;
-		tsc_csr_write(SMEM_DDR3_IDEL, &data); // Unselect all lines
+		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Unselect all lines
     }
 
     printf("\n");
@@ -537,7 +535,7 @@ return 0;
 	}
 
 	data = 0x00000000;
-	tsc_csr_write(SMEM_DDR3_IDEL, &data); // Unselect all lines
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Unselect all lines
 
 	munmap(buf_ddr, map_win.req.size); // Unmap DDR3 memory
 	tsc_map_free(&map_win);
@@ -553,34 +551,56 @@ int tsc_ddr(struct cli_cmd_para *c){
 	int cnt = 0;
 	int idx = 0;
 	cnt = c->cnt;
-	unsigned int dq  = 0;
-	unsigned int dqs = 0;
-	unsigned int sts = 0;
-	unsigned int tag = 0;
+	unsigned int dq   = 0;
+	unsigned int sts  = 0;
+	unsigned int tag  = 0;
+	unsigned int mem  = 0;
+	unsigned int step = 0;
 	char *p;
 
 // Select sub command and check syntax
 	if(cnt--) {
 
 // DDR command
-		if((!strcmp("calib", c->para[0])) && (c->cnt == 1)) {
-			althea_ddr_idel_calib();
-		}
-		else if((!strcmp("reset", c->para[0])) && (c->cnt == 1)) {
-			althea_ddr_idel_reset();
-		}
-		else if((!strcmp("status", c->para[0])) && (c->cnt == 1)) {
-			althea_ddr_idel_status();
-		}
-		else if((!strcmp("set", c->para[0])) && (c->cnt == 4)) {
-			// Acquire and transform parameter to unsigned int
-			sscanf(c->para[2], "%x", &dq);
-			sscanf(c->para[3], "%x", &dqs);
-			if((dq > 0xffff) | (dqs > 0x3)) {
+		if((!strcmp("calib", c->para[0])) && (c->cnt == 2)) {
+			// Acquire and transform parameter
+			sscanf(c->para[1], "%x", &mem);
+			if ((mem < 1) | (mem > 2)){
 				printf("Bad value! Type \"? althea\" for help \n");
 			}
 			else {
-				althea_ddr_idel_set(dq, dqs, c->para[3]);
+				althea_ddr_idel_calib(mem);
+			}
+		}
+		else if((!strcmp("reset", c->para[0])) && (c->cnt == 2)) {
+			sscanf(c->para[1], "%x", &mem);
+			if ((mem < 1) | (mem > 2)){
+				printf("Bad value! Type \"? althea\" for help \n");
+			}
+			else {
+				althea_ddr_idel_reset(mem);
+			}
+		}
+		else if((!strcmp("status", c->para[0])) && (c->cnt == 2)) {
+			sscanf(c->para[1], "%x", &mem);
+			if ((mem < 1) | (mem > 2)){
+				printf("Bad value! Type \"? althea\" for help \n");
+			}
+			else {
+				althea_ddr_idel_status(mem);
+			}
+		}
+		else if((!strcmp("set", c->para[0])) && (c->cnt == 5)) {
+			// Acquire and transform parameter to unsigned int
+			sscanf(c->para[1], "%x", &mem);
+			sscanf(c->para[2], "%x", &dq);
+			sscanf(c->para[3], "%x", &step);
+
+			if((mem < 1) | (mem > 2) | (dq > 0xffff) | (step > 16) | (step < 1)) {
+				printf("Bad value! Type \"? althea\" for help \n");
+			}
+			else {
+				althea_ddr_idel_set(mem, dq, step, c->para[4]);
 			}
 		}
 		else {

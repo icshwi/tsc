@@ -108,17 +108,20 @@ char *dc_msg[] =
 char *ddr_msg[]=
 {
   "Perform specific command on DDR memory",
-  "ddr calib",
-  "ddr reset",
-  "ddr status",
-  "ddr set <DQ> <DQS> <PM>",
-  "   where ddr calib               = DDR memory IDELAY alignment",
-  "         ddr reset               = Reset to default DDR memory IDELAY",
-  "         ddr status              = Show the DDR3 memory DQ[15:0] and DQS[1:0] line selection",
-  "         ddr set <DQ> <DQS> <PM> = Set the IDELAY for specifics lane",
-  "            where <DQ>           = Select the specific lane DQ[15:0]",
-  "            where <DQS>          = Select the specific lane DQS[1:0]",
-  "            where <PM>           = Increment <+> or decrement <-> the IDELAY",
+  "ddr calib <MEM>",
+  "ddr reset <MEM>",
+  "ddr status <MEM>",
+  "ddr set <MEM> <DQ> <STEP> <PM>",
+  "   where ddr calib <MEM>                = DDR memory IDELAY alignment",
+  "         ddr reset <MEM>                = Reset to default DDR memory IDELAY",
+  "         ddr status <MEM>               = Show the DDR3 memory DQ[15:0] line selection",
+  "         ddr set <MEM> <DQ> <STEP> <PM> = Set the IDELAY for specifics lane",
+  "            where <MEM>                 = Select the specific DDR3 1 or 2",
+  "            where <DQ>                  = Select the specific lane DQ[15:0]",
+  "            where <STEP>                = Select the specific step for increment / decrement",
+  "                                          STEP = 1 to 16",
+  "            where <PM>                  = Increment + STEP[ps] or decrement - STEP[ps ]the IDELAY",
+  "                                          (STEP = 1 to 16)",
 0};
 
 char *di_msg[] = 
