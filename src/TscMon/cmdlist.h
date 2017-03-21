@@ -120,7 +120,7 @@ char *ddr_msg[]=
   "            where <DQ>                  = Select the specific lane DQ[15:0]",
   "            where <STEP>                = Select the specific step for increment / decrement",
   "                                          STEP = 1 to 16",
-  "            where <PM>                  = Increment + STEP[ps] or decrement - STEP[ps ]the IDELAY",
+  "            where <PM>                  = Increment + STEP[ps] or decrement - STEP[ps]the IDELAY",
   "                                          (STEP = 1 to 16)",
 0};
 
