@@ -33,6 +33,47 @@
 int tsc_func_help(struct cli_cmd_para *);
 int tsc_wait(struct cli_cmd_para *);
 
+char *adc3110_msg[] = 
+{
+  "ADC3110 operations",
+  "adc3110.<x> <dev> read <reg>",
+  "adc3110.<x> <dev> write <reg> <data>",
+  "adc3110.<x> <dev> acqfif <offset> <size>",
+  "adc3110.<x> <dev> check <offset> <size>",
+  "adc3110.<x> <dev> acq<size> h:<file_his> d:<file_dat> t:<trig> s:<smem> c:<csr> a:<last_addr> ",
+  "adc3110.<x> <file> save <offset> <size>",
+  "adc3110.<x> tmp102 show",
+  "adc3110.<x> eeprom sign set",
+  "adc3110.<x> eeprom sign def b:<board> s:<serial> v:<ver> r:<rev>",
+  "adc3110.<x> eeprom dump",
+  "   where <x>        = index",
+  "         <dev>      = lmk, ads01, ads23, ads45, ads67",
+  "         <reg>      = register",
+  "         <data>     = data",
+  "         <offset>   = offset of data buffer",
+  "         <size>     = size of data buffer",
+
+  "         <file_his> = histogram filename",
+  "         <file_dat> = raw data filename",
+0};
+
+char *adc3117_msg[] = 
+{
+  "ADC3117 operations",
+  "adc3117.<x> <dev> read <reg>",
+  "adc3117.<x> <dev> write <reg> <data>",
+  "adc3117.<x> <dev> acq ",
+  "adc3117.<x> <dev> save o:<offset> s:<size> h:<file_his> d:<file_dat>",
+  "adc3117.<x> <dev> temp",
+  "adc3117.<x> eeprom sign set",
+  "adc3117.<x> eeprom sign def b:<board> s:<serial> v:<ver> r:<rev>",
+  "adc3117.<x> eeprom dump",
+  "   where <x>    = index",
+  "         <dev>  = ads01, ads23, ads1, ads2, dac, xra01, xra23, xratrig, lmk, sy",
+  "         <reg>  = register",
+  "         <data> = data",
+0};
+
 char *ci_msg[] =
 {
   "Compare with mask the content of IFC PON register with data",
@@ -63,6 +104,18 @@ char *conf_msg[] =
   "                      pcie",
   "                      msi",
   "                      smon",
+0};
+
+char *cp_msg[] = 
+{ 
+  "Compare with mask the content of a location in PCI tree with data",
+  "cp.<ds> <offset> <data> <mask>",
+  "cp1.<ds> <offset> <data> <mask>",
+  "cp2.<ds> <offset> <data> <mask>",
+  "     where <ds>    = b,s,w -> data size: 1,2,4",
+  "          <offset> = address offset in hexadecimal",
+  "          <data>   = data to be compared in hexadecimal",
+  "          <mask>   = mask to apply in hexadecimal",
 0};
 
 char *cr_msg[] = 
@@ -139,16 +192,25 @@ char *dma_msg[] =
   "dma.<x> alloc",
   "dma.<x> free",
   "dma.<x> clear",
-  "     where <x>     =  DMA channel (0 or 1)",
+  "     where <x>     =  DMA channel (0 to 3)",
   "           <space> =  0 -> PCIe bus address",
-  "                      2 -> Shared Memory (on PEV1100, IPV1102, VCC1104, IFC1210)",
-  "                      2 -> Shared Memory #1 (on MPC1200)",
-  "                      3 -> Shared Memory #2 (on MPC1200)",
-  "                      3 -> FPGA user area (on PEV1100, IPV1102, VCC1104)",
-  "                      4 -> FPGA user area #1 (on IFC1210, MPC1210)",
-  "                      5 -> FPGA user area #2 (on IFC1210, MPC1210)",
+  "                      2 -> Shared Memory #1",
+  "                      3 -> Shared Memory #2",
+  "                      4 -> FPGA user area #1",
+  "                      5 -> FPGA user area #2",
   "                      8 -> Test buffer allocated in system memory",
   "           If .s is appended to <space>, byte swapping if performed",
+0};
+
+char *dp_msg[] = 
+{ "  display content in PCI tree",
+  "  dp.<ds><sw> <start>[..<end>]",
+  "  dp1.<ds><sw> <start>[..<end>]",
+  "  dp2.<ds><sw> <start>[..<end>]",
+  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "           <sw>    = s       -> display swapped data", 
+  "           <start> = start address in hexadecimal",
+  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
 0};
 
 char *dr_msg[] = 
@@ -226,6 +288,17 @@ char *fs_msg[] =
   "           <data>  = data in hexadecimal",
 0};
 
+char *fp_msg[] = 
+{ "  fill PCI tree addresses with data",
+  "  fp.<ds> <start>..<end> <data>",
+  "  fp1.<ds> <start>..<end> <data>",
+  "  fp2.<ds> <start>..<end> <data>",
+  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "           <start> = start address in hexadecimal",
+  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "           <data>  = data in hexadecimal",
+0};
+
 char *fu_msg[] =
 { "  fill USR space with data",
   "  fu.<ds> <start>..<end> <data>",
@@ -242,6 +315,21 @@ char *help_msg[]   =
   "  Display list of commands or syntax of command <cmd>",
   "  help",
   "  help <cmd>",
+0};
+
+char *i2c_msg[]     = 
+{
+  "Perform i2c command ",
+  "   i2c <dev>  read  <reg>",
+  "   i2c <dev>  write <reg> <data>",
+  "   where <dev> = lm95255",
+  "                 ds1339",
+  "                 max5970",
+  "                 bmr463_0",
+  "                 bmr463_1",
+  "                 bmr463_2",
+  "                 bmr463_3",
+  "                 pes32nt",
 0};
 
 char *kbuf_msg[] = 
@@ -265,6 +353,42 @@ char *lmk_msg[]   =
   "   where <x>     = LMK index ",
   "         <reg>   = register address",
   "         <data>  = data to be written",
+0};
+
+char *lp_msg[]     = 
+{ 
+  "Read/write loop from/to PEV1100 shared memory",
+  "lp<i>.<ds> <offset> <data> [l:<loop>]",
+  "   where <i>      = 1, 2 [PCI tree index]",
+  "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
+  "         <offset> = shared memory address offset in hexadecimal",
+  "         <data>   = data in hexadecimal [write cycle]",
+  "         <loop>   = loop count (0 -> infinite)",
+  "         If s is appended to <ds>, byte swapping if performed",
+0};
+
+char *ls_msg[]     = 
+{ 
+  "Read/write loop from/to PEV1100 shared memory",
+  "ls<i>.<ds> <offset> <data> [l:<loop>]",
+  "   where <i>      = 1, 2 [shared memory index]",
+  "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
+  "         <offset> = shared memory address offset in hexadecimal",
+  "         <data>   = data in hexadecimal [write cycle]",
+  "         <loop>   = loop count (0 -> infinite)",
+  "         If s is appended to <ds>, byte swapping if performed",
+0};
+
+char *lu_msg[]     = 
+{ 
+  "Read/write loop from/to PEV1100 user area",
+  "lu<i>.<ds> <offset> <data> [l:<loop>]",
+  "   where <i>      = 1, 2 [user area index]",
+  "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
+  "         <offset> = shared memory address offset in hexadecimal",
+  "         <data>   = data in hexadecimal [write cycle]",
+  "         <loop>   = loop count (0 -> infinite)",
+  "         If s is appended to <ds>, byte swapping if performed",
 0};
 
 char *map_msg[] = 
@@ -307,6 +431,16 @@ char *pk_msg[] =
 char *pm_msg[] = 
 { "  read/write data from/to kernel buffer in System Memory",
   "  pm.<ds> <offset> [<data>]",
+  "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
+  "           <offset> = address offset in hexadecimal",
+  "           <data>   = data in hexadecimal [write cycle]",
+0};
+
+char *pp_msg[] = 
+{ "  read/write data from/to PCI tree address",
+  "  pp.<ds> <offset> [<data>]",
+  "  pp1.<ds> <offset> [<data>]",
+  "  pp2.<ds> <offset> [<data>]",
   "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
   "           <offset> = address offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
@@ -434,6 +568,19 @@ char *twait_msg[] =
   "   where <tmo> = timeout in sec",
 0};
 
+char *tp_msg[]  = 
+{
+  "Perform read/write test in PCI tree address space",
+  "tp.<ds> <start>..<end> <data> [<loop>]",
+  "tp1.<ds> <start>..<end> <data> [<loop>]",
+  "tp2.<ds> <start>..<end> <data> [<loop>]",
+  "   where <ds>    = b, s, w, l [data size 1, 2, 4, 8]",
+  "         <start> = address offset in hexadecimal of first  location",
+  "         <end>   = address offset in hexadecimal of last location",
+  "         <data>  = data in hexadecimal",
+  "         <loop>  = number of loop",
+0};
+
 char *ts_msg[]  = 
 {
   "Perform read/write test on shared memory",
@@ -462,9 +609,13 @@ char *tu_msg[]  =
 
 struct cli_cmd_list cmd_list[] =
 {
+  { "adc3110"   , tsc_adc3110,      adc3110_msg	, 0},
+  { "adc3117"   , tsc_adc3117,      adc3117_msg	, 0},
   { "ci"     	, tsc_rdwr_cr,      ci_msg     	  , 0},
   { "cmp"     	, tsc_rdwr_cmp,     cmp_msg       , 0},
   { "conf"   	, tsc_conf_show,    conf_msg      , 0},
+  { "cp1"     	, tsc_rdwr_cx,      cp_msg     	  , 0},
+  { "cp2"     	, tsc_rdwr_cx,      cp_msg     	  , 0},
   { "cr"     	, tsc_rdwr_cr,      cr_msg     	  , 0},
   { "cs1"     	, tsc_rdwr_cx,      cs_msg     	  , 0},
   { "cs2"     	, tsc_rdwr_cx,      cs_msg     	  , 0},
@@ -477,6 +628,8 @@ struct cli_cmd_list cmd_list[] =
   { "dk"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
   { "dma"     	, tsc_dma    ,      dma_msg       , 0},
   { "dm"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
+  { "dp1"     	, tsc_rdwr_dx,      dp_msg     	  , 0},
+  { "dp2"     	, tsc_rdwr_dx,      dp_msg     	  , 0},
   { "dr"     	, tsc_rdwr_dr,      dr_msg     	  , 0},
   { "ds1"     	, tsc_rdwr_dx,      ds_msg     	  , 0},
   { "ds2"     	, tsc_rdwr_dx,      ds_msg     	  , 0},
@@ -486,16 +639,34 @@ struct cli_cmd_list cmd_list[] =
   { "du"     	, tsc_rdwr_dx,      du_msg     	  , 0},
   //{ "fifo"   	, tsc_fifo,         fifo_msg      , 0},
   { "fk"     	, tsc_rdwr_fx,      fk_msg     	  , 0},
+  { "fp1"     	, tsc_rdwr_fx,      fp_msg     	  , 0},
+  { "fp2"     	, tsc_rdwr_fx,      fp_msg     	  , 0},
   { "fm"     	, tsc_rdwr_fx,      fm_msg     	  , 0},
+  { "fs1"     	, tsc_rdwr_fx,      fs_msg     	  , 0},
+  { "fs2"     	, tsc_rdwr_fx,      fs_msg     	  , 0},
   { "fs"     	, tsc_rdwr_fx,      fs_msg     	  , 0},
+  { "fu"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
+  { "fu1"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
+  { "fu2"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
   { "help"   	, tsc_func_help,    help_msg   	  , 0},
+  { "i2c"    	, tsc_i2c,          i2c_msg       , 0},
   { "kbuf"    	, tsc_kbuf,         kbuf_msg  	  , 0},
   { "lmk"    	, tsc_lmk,          lmk_msg    	  , 0},
+  { "lp1"    	, tsc_rdwr_lx,      lp_msg     	  , 0},
+  { "lp2"    	, tsc_rdwr_lx,      lp_msg     	  , 0},
+  { "ls1"    	, tsc_rdwr_lx,      ls_msg     	  , 0},
+  { "ls2"    	, tsc_rdwr_lx,      ls_msg     	  , 0},
+  { "ls"     	, tsc_rdwr_lx,      ls_msg     	  , 0},
+  { "lu2"    	, tsc_rdwr_lx,      lu_msg     	  , 0},
+  { "lu1"    	, tsc_rdwr_lx,      lu_msg     	  , 0},
+  { "lu"     	, tsc_rdwr_lx,      lu_msg     	  , 0},
   { "map"    	, tsc_map,          map_msg    	  , 0},
   { "pc"     	, tsc_rdwr_pr,      pc_msg     	  , 0},
   { "pi"     	, tsc_rdwr_pr,      pi_msg     	  , 0},
   { "pk"     	, tsc_rdwr_px,      pk_msg     	  , 0},
   { "pm"     	, tsc_rdwr_px,      pm_msg     	  , 0},
+  { "pp1"     	, tsc_rdwr_px,      pp_msg     	  , 0},
+  { "pp2"     	, tsc_rdwr_px,      pp_msg     	  , 0},
   { "pr"     	, tsc_rdwr_pr,      pr_msg     	  , 0},
   { "ps1"     	, tsc_rdwr_px,      ps_msg     	  , 0},
   { "ps2"     	, tsc_rdwr_px,      ps_msg     	  , 0},
@@ -514,6 +685,8 @@ struct cli_cmd_list cmd_list[] =
   { "tstart" 	, tsc_tstart,       tstart_msg 	  , 0},
   { "tstop"  	, tsc_tstop,        tstop_msg  	  , 0},
   { "tset"   	, tsc_tset,         tset_msg   	  , 0},
+  { "tp1"     	, tsc_rdwr_tx,      tp_msg     	  , 0},
+  { "tp2"     	, tsc_rdwr_tx,      tp_msg     	  , 0},
   { "ts1"     	, tsc_rdwr_tx,      ts_msg     	  , 0},
   { "ts2"     	, tsc_rdwr_tx,      ts_msg     	  , 0},
   { "ts"     	, tsc_rdwr_tx,      ts_msg     	  , 0},

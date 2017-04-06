@@ -34,9 +34,11 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
+typedef long dma_addr_t;
 
 #include "../include/tscioctl.h"
 #include "../include/tsculib.h"
+#include "../include/pev791xlib.h"
 
 float
 pev791x_bmr_conv_11bit_u( unsigned short val)
@@ -86,10 +88,15 @@ pev791x_bmr_read( uint bmr,
   {
     case 0:
     {
-      device |= 0x53;
+      device |= 0x24;
       break;
     }
     case 1:
+    {
+      device |= 0x53;
+      break;
+    }
+    case 2:
     {
       device |= 0x63;
       break;
@@ -99,8 +106,7 @@ pev791x_bmr_read( uint bmr,
       return(-1);
     }
   }
-  device = I2C_DEV( device, 2, IFC1211_I2C_CTL_CMDSIZ(1)|IFC1211_I2C_CTL_DATSIZ(cnt), IFC1211_I2C_CTL_SPEED_100k);
-  device |= IFC1211_I2C_CTL_STR_REPEAT;
+  device = I2C_DEV( device, 1, IFC1211_I2C_CTL_CMDSIZ(1)|IFC1211_I2C_CTL_DATSIZ(cnt));
 
   return( tsc_i2c_read( device, reg, data));
 }
@@ -119,12 +125,17 @@ pev791x_bmr_write( uint bmr,
   {
     case 0:
     {
-      device = 0x53;
+      device = 0x24;
       break;
     }
     case 1:
     {
-      device = 0x5b;
+      device = 0x53;
+      break;
+    }
+    case 2:
+    {
+      device = 0x63;
       break;
     }
     default:
@@ -132,8 +143,25 @@ pev791x_bmr_write( uint bmr,
       return(-1);
     }
   }
-  device = I2C_DEV( device, 2, IFC1211_I2C_CTL_CMDSIZ(1)|IFC1211_I2C_CTL_DATSIZ(2), IFC1211_I2C_CTL_SPEED_100k);
-  device |= IFC1211_I2C_CTL_STR_REPEAT;
+  device = I2C_DEV( device, 1, IFC1211_I2C_CTL_CMDSIZ(1)|IFC1211_I2C_CTL_DATSIZ(2));
 
   return( tsc_i2c_write( device, reg, data));
 }
+
+int
+pev_csr_rd( int reg)
+{
+  int data;
+  tsc_csr_read( reg, &data);
+  return( data);
+}
+
+void
+pev_csr_wr( int reg,
+	    int data)
+{
+  tsc_csr_write( reg, &data);
+}
+
+
+

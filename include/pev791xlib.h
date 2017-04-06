@@ -28,11 +28,31 @@
 #ifndef _H_PEV791XLIB
 #define _H_PEV791XLIB
 
+struct pev_ioctl_map_pg
+{
+  uint size;                            /* mapping size required by user            */
+  char flag; char sg_id; ushort mode;   /* mapping mode                             */
+  ulong rem_addr;                       /* remote address to be mapped              */
+  ulong loc_addr;                       /* local address returned by mapper         */
+  uint offset;                          /* offset of page containing local address  */
+  uint win_size;                        /* size actually mapped                     */
+  ulong rem_base;                       /* remote address of window actually mapped */
+  ulong loc_base;                       /* local address of window actually mapped  */
+  void *usr_addr;                       /* user address pointing to local address   */
+  ulong pci_base;                       /* pci base address of SG window            */
+};
+
 float pev791x_bmr_conv_11bit_u( unsigned short);
 float pev791x_bmr_conv_11bit_s( unsigned short);
 float pev791x_bmr_conv_16bit_u( unsigned short);
 int pev791x_pex_write( uint, uint);
 int pev791x_bmr_read( uint, uint, uint *, uint);
 int pev791x_bmr_write( uint, uint, uint, uint);
+int pev_csr_rd( int);
+void pev_csr_wr( int, int);
+int pev_map_alloc( struct pev_ioctl_map_pg *);
+int pev_map_free( struct pev_ioctl_map_pg *);
+void *pev_mmap( struct pev_ioctl_map_pg *);
+int pev_munmap( struct pev_ioctl_map_pg *);
 
 #endif /*  _H_PEV791XLIB */

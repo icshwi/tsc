@@ -60,7 +60,7 @@ static void ifc1211_remove(struct pci_dev *);
 
 #include "debug.h"
 
-#define DRIVER_VERSION "2.21"
+#define DRIVER_VERSION "1.00"
 
 struct ifc1211 ifc1211;      /* driver main data structure for device */
 
@@ -313,7 +313,20 @@ static int ifc1211_mmap( struct file *filp, struct vm_area_struct *vma){
 
 	size   = vma->vm_end - vma->vm_start;
 	off    = vma->vm_pgoff << PAGE_SHIFT;
-	retval = remap_pfn_range( vma,  vma->vm_start, off >> PAGE_SHIFT, size, vma->vm_page_prot);
+	printk( KERN_ALERT "ifc: entering ifc1211_mmap( %p, %p, %lx [%lx])\n", filp, vma,  off, size);
+	if( (off & 0xc00000000) == 0xc00000000)
+	{
+	  vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+	  retval = io_remap_pfn_range( vma,
+				       vma->vm_start,
+				       vma->vm_pgoff,
+				       size,
+				       vma->vm_page_prot);
+	}
+	else 
+	{
+	  retval = remap_pfn_range( vma,  vma->vm_start, vma->vm_pgoff, size, vma->vm_page_prot);
+	}
 	return( retval);
 }
 
@@ -432,7 +445,7 @@ static int ifc1211_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	}
 
 	/* map CSR registers through BAR 3 (size 8k) */
-	debugk((KERN_NOTICE "ifc1211 : pci resource start BAR3 : %x\n", pci_resource_start(pdev, 3)));
+	debugk((KERN_NOTICE "ifc1211 : pci resource start BAR3 : %lx\n", pci_resource_start(pdev, 3)));
 	ifc->csr_ptr = ioremap_nocache( pci_resource_start(pdev, 3), 2*4096);
 	if( !ifc->csr_ptr) {
 		dev_err(&pdev->dev, "Unable to remap CSR region\n");
@@ -625,7 +638,7 @@ static int ifc1211_init(void){
 	/* verify if ifc1211 device has been discovered */
 	if( !ifc1211.ifc_io){
 		debugk((KERN_NOTICE "ifc1211_io : didn't find ifc1211 PCI device\n"));
-		goto ifc1211_no_device;
+		//goto ifc1211_no_device;
 	}
 	ifc_io = ifc1211.ifc_io;
 	debugk((KERN_NOTICE "ifc1211_io : driver registered [%p]\n", ifc_io));

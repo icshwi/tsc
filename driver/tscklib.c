@@ -860,15 +860,15 @@ tsc_csr_op( struct ifc1211_device *ifc,
     case TSC_IOCTL_CSR_PCIEP_RD:
     { 
       iowrite32( csr_op->offset, ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_ADDPT);
-      if( csr_op->offset & IFC1211_A7_PCIEP_ADDPT_CFG)
-      {
-	/* read PCIe EP CFG register */
-        csr_op->data = ioread32( ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_CFGDAT);
-      }
-      else 
+      if( csr_op->offset & IFC1211_A7_PCIEP_ADDPT_DRP)
       {
 	/* read PCIe EP DRP register */
         csr_op->data = ioread32( ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_DRPDAT);
+      }
+      else 
+      {
+	/* read PCIe EP CFG register */
+        csr_op->data = ioread32( ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_CFGDAT);
       }
       break;
     }

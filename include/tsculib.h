@@ -65,6 +65,8 @@ int tsc_map_free( struct tsc_ioctl_map_win *w);
 int tsc_map_modify( struct tsc_ioctl_map_win *w);
 int tsc_map_read( struct tsc_ioctl_map_ctl *m);
 int tsc_map_clear( struct tsc_ioctl_map_ctl *m);
+void *tsc_pci_mmap( off_t pci_addr, size_t size);
+int tsc_pci_munmap( void *pci_addr, size_t size);
 int tsc_kbuf_alloc( struct tsc_ioctl_kbuf_req *kr_p);
 int tsc_kbuf_free( struct tsc_ioctl_kbuf_req *kr_p);
 void *tsc_kbuf_mmap( struct tsc_ioctl_kbuf_req *kr_p);

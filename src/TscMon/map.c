@@ -141,17 +141,27 @@ map_show( char *name)
 	    printf("PCIe\n");
 	    break;
     	  }
-      case 0x2000:
+          case 0x2000:
 	  {
-	    printf("SHM\n");
+	    printf("SHM1\n");
 	    break;
 	  }
           case 0x3000:
 	  {
-	    printf("USR\n");
+	    printf("SHM2\n");
 	    break;
 	  }
-          default:
+          case 0x4000:
+	  {
+	    printf("USR1\n");
+	    break;
+	  }
+           case 0x5000:
+	  {
+	    printf("USR2\n");
+	    break;
+	  }
+         default:
 	  {
 	    printf("\n");
 	    break;

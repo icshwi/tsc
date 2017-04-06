@@ -42,7 +42,8 @@ typedef long dma_addr_t;
 
 #define TSC_BOARD_PEV7912        PCI_DEVICE_ID_IOXOS_ALTHEA7912
 
-//#define TSC_BOARD_IFC1211        PCI_DEVICE_ID_IOXOS_IFC1211
+#define TSC_BOARD_IFC1211        0x73571211
+#define TSC_BOARD_IFC1410        0x73571410
 
 #define TSC_BOARD_IFC1211_IO        PCI_DEVICE_ID_IOXOS_IFC1211_IO
 #define TSC_BOARD_IFC1211_CENTRAL        PCI_DEVICE_ID_IOXOS_IFC1211_CENTRAL
@@ -255,7 +256,8 @@ struct tsc_ioctl_map_win
 
 #define RDWR_MODE_SET( ads, space, am)   (((ads&0xff)<<24) | ((space&0xff)<<16) | (am&0xffff))
 
-#define RDWR_SWAP_DATA   0x80
+#define RDWR_SWAP_DATA         0x80
+#define RDWR_LOOP        0x80000000
 
 struct tsc_ioctl_rdwr
 {
@@ -280,6 +282,8 @@ struct tsc_ioctl_rdwr
 #define DMA_CHAN_NUM    2        /* number of DMA channels         */
 #define DMA_CHAN_0      0        /* DMA channel #0                 */
 #define DMA_CHAN_1      1        /* DMA channel #1                 */
+#define DMA_CHAN_2      2        /* DMA channel #0                 */
+#define DMA_CHAN_3      3        /* DMA channel #1                 */
 
 struct tsc_ioctl_dma_req
 {
@@ -457,7 +461,13 @@ struct tsc_ioctl_fifo
 #define TSC_IOCTL_I2C_WRITE         	(TSC_IOCTL_I2C | 0x3)
 #define TSC_IOCTL_I2C_CMD         	(TSC_IOCTL_I2C | 0x4)
 
-#define I2C_DEV( addr, port, size, speed) ((addr&0x7f) | ((addr&0x380) << 1) | ((port&0x7)<<29) | size | speed)
+#define I2C_DEV( addr, bus, size) (((bus &0x7)<<29) | (addr&0x7f) | size)
+
+struct tsc_i2c_devices
+{
+  char *name;
+  uint id;
+};
 
 struct tsc_ioctl_i2c
 {

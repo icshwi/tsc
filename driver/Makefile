@@ -34,9 +34,9 @@ pon-objs := pondrvr.o
 
 ifeq ($(ARCH),powerpc)
 # JFG platform
-    #KERNELDIR = /home/rootfs_2080_1.9/usr/src/linux
+        KERNELDIR = /T2080IFC_2.0/linux/build/
 # XP platform
-	KERNELDIR = /data/T2081/rootfs_2080_1.9/lib/modules/3.12.37-rt51+g43cecda/build/
+#	KERNELDIR = /data/T2081/rootfs_2080_1.9/lib/modules/3.12.37-rt51+g43cecda/build/
 else
 	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 endif

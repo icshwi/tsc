@@ -471,8 +471,8 @@ static const int IFC1211_PCIE_MMUDAT_AM[0x40] = {
 /*
  *  PCIe End Point register address pointer
  */
-#define IFC1211_A7_PCIEP_ADDPT_DRP           0x00000
-#define IFC1211_A7_PCIEP_ADDPT_CFG           0x10000
+#define IFC1211_A7_PCIEP_ADDPT_DRP           0x10000
+#define IFC1211_A7_PCIEP_ADDPT_CFG           0x00000
 
 
 /*
@@ -507,7 +507,7 @@ static const int IFC1211_PCIE_MMUDAT_AM[0x40] = {
 
 #define IFC1211_PVME_ITC_IACK_VEC(iack)            (iack&0xff)  /* extract vector from iack       */
 #define IFC1211_ALL_ITC_IACK_SRC(iack)         ((iack>>8)&0x3f)  /* extract source from iack      */
-#define IFC1211_ALL_ITC_IACK_CTL(iack)       ((iack>>112)&0x3)  /* extract controller from iack  */
+#define IFC1211_ALL_ITC_IACK_CTL(iack)       ((iack>>12)&0x3)  /* extract controller from iack  */
 
 /*
  *  Interrupt Controller Mask Set/Clear(CSR + $84/$484/$884/$c84)
