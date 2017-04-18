@@ -73,7 +73,8 @@ struct dma_ctl
   struct dma_desc rd_desc;
   struct dma_desc wr_desc;
   int status;                    /* DMA transfer status                                             */
-  int irq;                       /* IRQs associated to the DMA channel                               */
+  int irq;                       /* IRQs associated to the DMA channel                              */
+  short rd_mode; short wr_mode;  /* DMA default mode                                                */
 };
 
 void tsc_dma_irq(struct ifc1211_device *ifc, int src, void *dma_ctl_p);
@@ -81,6 +82,7 @@ int  dma_init(struct dma_ctl *dma);
 int  tsc_dma_move(struct ifc1211_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
 int  tsc_dma_wait(struct ifc1211_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
 int  tsc_dma_status(struct ifc1211_device *ifc, struct tsc_ioctl_dma_sts *dma_sts_p);
+int  tsc_dma_mode(struct ifc1211_device *ifc, struct tsc_ioctl_dma_mode *dma_mode_p);
 int  tsc_dma_alloc(struct ifc1211_device *ifc, struct tsc_ioctl_dma *dma_p);
 int  tsc_dma_free(struct ifc1211_device *ifc, struct tsc_ioctl_dma *dma_p);
 int  tsc_dma_clear(struct ifc1211_device *ifc, struct tsc_ioctl_dma *dma_p);

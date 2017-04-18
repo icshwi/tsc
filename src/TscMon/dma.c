@@ -53,11 +53,245 @@ static char *rcsid = "$Id: dma.c,v 1.4 2015/12/04 13:27:52 ioxos Exp $";
 struct tsc_ioctl_dma_req dma_req[DMA_CHAN_NUM];
 struct tsc_ioctl_dma_sts dma_sts[DMA_CHAN_NUM];
 extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
+struct cli_cmd_history dma_history;
 
 char *
 dma_rcsid()
 {
   return( rcsid);
+}
+
+int
+dma_init( void)
+{
+  cli_history_init( &dma_history);
+  return( 0);
+}
+
+static int
+set_para_char( char *prompt,
+	       char *data)
+{
+  char *para;
+
+  para = cli_get_cmd( &dma_history, prompt);
+  para = strtok(para,"\n\r");
+  if( para)
+  {
+    *data = para[0];
+    return( 0);
+  }
+  //printf("Bad parameter! Type \"? vme\" for help \n"); 
+  return( -1);
+}
+
+static int
+set_para_dec( char *prompt,
+	      uint *data)
+{
+  char *para, *p;
+
+  para = cli_get_cmd( &dma_history, prompt);
+  para = strtok(para,"\n\r");
+  if( para)
+  {
+    *data = strtoul( para, &p, 10);
+    if( p == para)
+    {
+      //printf("%s : Bad parameter value\n", para);
+      return(-1);
+    }
+  }
+  return( 0);
+}
+
+
+
+int
+dma_mode( int chan)
+{
+  char prompt[32];
+  char yn;
+  struct tsc_ioctl_dma_mode  mode;
+  uint data;
+
+  printf("in dma.%d mode\n", chan);
+  yn = 'y';
+  mode.chan = chan;
+  mode.op = DMA_MODE_GET;
+  tsc_dma_mode( &mode);
+
+  printf("setting source mode (DMA WR engine) : %04x\n", (unsigned short)mode.wr_mode);
+
+  yn = 'n';
+  if( mode.wr_mode & DMA_MODE_CACHE_ENA) yn = 'y';
+  sprintf(prompt, "enable caching [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.wr_mode |= DMA_MODE_CACHE_ENA;
+    }
+    else
+    {
+      mode.wr_mode &= ~DMA_MODE_CACHE_ENA;
+    }
+  }
+
+  yn = 'n';
+  if( mode.wr_mode & DMA_MODE_SNOOP) yn = 'y';
+  sprintf(prompt, "enable PCIe target snooping [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.wr_mode |= DMA_MODE_SNOOP;
+    }
+    else
+    {
+      mode.wr_mode &= ~DMA_MODE_SNOOP;
+    }
+  }
+
+  yn = 'n';
+  if( mode.wr_mode & DMA_MODE_RELAX) yn = 'y';
+  sprintf(prompt, "enable PCIe relax ordering [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.wr_mode |= DMA_MODE_RELAX;
+    }
+    else
+    {
+      mode.wr_mode &= ~DMA_MODE_RELAX;
+    }
+  }
+
+  yn = 'n';
+  if( mode.wr_mode & DMA_MODE_ADD_NO_INC) yn = 'y';
+  sprintf(prompt, "Dont increment source address [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.wr_mode |= DMA_MODE_ADD_NO_INC;
+    }
+    else
+    {
+      mode.wr_mode &= ~DMA_MODE_ADD_NO_INC;
+    }
+  }
+
+  yn = 'n';
+  if( mode.wr_mode & DMA_MODE_ADD_NO_UPD) yn = 'y';
+  sprintf(prompt, "Keep last source address [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.wr_mode |= DMA_MODE_ADD_NO_UPD;
+    }
+    else
+    {
+      mode.wr_mode &= ~DMA_MODE_ADD_NO_UPD;
+    }
+  }
+
+  data = (mode.wr_mode >> 12)&3;
+  sprintf(prompt, "maximum read request [%d] -> ", data);
+  set_para_dec( prompt, &data);
+  mode.wr_mode &= ~DMA_MODE_RD_REQ_MASK;
+  mode.wr_mode |= (short)DMA_MODE_RD_REQ(data);
+  printf("mode = %04x\n", (unsigned short)mode.wr_mode);
+
+  printf("setting destination mode (DMA RD engine) : %04x\n", (unsigned short)mode.rd_mode);
+
+  yn = 'n';
+  if( mode.rd_mode & DMA_MODE_CACHE_ENA) yn = 'y';
+  sprintf(prompt, "enable caching [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.rd_mode |= DMA_MODE_CACHE_ENA;
+    }
+    else
+    {
+      mode.rd_mode &= ~DMA_MODE_CACHE_ENA;
+    }
+  }
+
+  yn = 'n';
+  if( mode.rd_mode & DMA_MODE_SNOOP) yn = 'y';
+  sprintf(prompt, "enable PCIe target snooping [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.rd_mode |= DMA_MODE_SNOOP;
+    }
+    else
+    {
+      mode.rd_mode &= ~DMA_MODE_SNOOP;
+    }
+  }
+
+  yn = 'n';
+  if( mode.rd_mode & DMA_MODE_RELAX) yn = 'y';
+  sprintf(prompt, "enable PCIe relax ordering [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.rd_mode |= DMA_MODE_RELAX;
+    }
+    else
+    {
+      mode.rd_mode &= ~DMA_MODE_RELAX;
+    }
+  }
+
+  yn = 'n';
+  if( mode.rd_mode & DMA_MODE_ADD_NO_INC) yn = 'y';
+  sprintf(prompt, "Dont increment source address [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.rd_mode |= DMA_MODE_ADD_NO_INC;
+    }
+    else
+    {
+      mode.rd_mode &= ~DMA_MODE_ADD_NO_INC;
+    }
+  }
+
+  yn = 'n';
+  if( mode.rd_mode & DMA_MODE_ADD_NO_UPD) yn = 'y';
+  sprintf(prompt, "Keep last source address [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.rd_mode |= DMA_MODE_ADD_NO_UPD;
+    }
+    else
+    {
+      mode.rd_mode &= ~DMA_MODE_ADD_NO_UPD;
+    }
+  }
+
+  data = (mode.rd_mode >> 12)&3;
+  sprintf(prompt, "maximum write post [%d] -> ", data);
+  set_para_dec( prompt, &data);
+  mode.rd_mode &= ~DMA_MODE_WR_POST_MASK;
+  mode.rd_mode |= (short)DMA_MODE_WR_POST(data);
+  printf("mode = %04x\n", (unsigned short)mode.rd_mode);
+  mode.chan = chan;
+  mode.op = DMA_MODE_SET;
+  tsc_dma_mode( &mode);
+  return( 0);
 }
 
 int 
@@ -75,6 +309,14 @@ tsc_dma( struct cli_cmd_para *c)
       if( c->ext[0] == '1')
       {
 	chan = DMA_CHAN_1;
+      }
+      if( c->ext[0] == '2')
+      {
+	chan = DMA_CHAN_2;
+      }
+      if( c->ext[0] == '3')
+      {
+	chan = DMA_CHAN_3;
       }
     }
   }
@@ -96,15 +338,11 @@ tsc_dma( struct cli_cmd_para *c)
     }
     sw = 0;
 
-//<<<<<<< HEAD
-//    npara = sscanf( c->para[1], "%lx:%x.%c", &dma_req[chan].des_addr, &para, &sw);
-//=======
 
     npara = sscanf( c->para[1], "%llx:%x.%c", &tmp, &para, &sw);
     dma_req[chan].des_addr = (dma_addr_t)tmp;
-//>>>>>>> 5042c01d1d3599737cf51040056ce6585d536cbb
 
-	dma_req[chan].des_mode = 0;
+    dma_req[chan].des_mode = 0;
     if( para ==  DMA_SPACE_KBUF)
     {
       dma_req[chan].des_space = DMA_SPACE_PCIE;
@@ -139,12 +377,8 @@ tsc_dma( struct cli_cmd_para *c)
 
     }
     sw = 0;
-//<<<<<<< HEAD
-//    npara = sscanf( c->para[2], "%lx:%x.%c", &dma_req[chan].src_addr, &para, &sw);
-//=======
     npara = sscanf( c->para[2], "%llx:%x.%c", &tmp, &para, &sw);
     dma_req[chan].src_addr = (dma_addr_t)tmp;
-//>>>>>>> 5042c01d1d3599737cf51040056ce6585d536cbb
     if( para ==  DMA_SPACE_KBUF)
     {
       dma_req[chan].src_space = DMA_SPACE_PCIE;
@@ -182,8 +416,8 @@ tsc_dma( struct cli_cmd_para *c)
     sscanf( c->para[3], "%x", &dma_req[chan].size);
     dma_req[chan].start_mode = (char)DMA_START_CHAN(chan);
     dma_req[chan].end_mode = 0;
-    //dma_req[chan].wait_mode = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4); /* 5 sec timeout */
-    dma_req[chan].wait_mode = 0;
+    dma_req[chan].wait_mode = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4); /* 5 sec timeout */
+    //dma_req[chan].wait_mode = 0;
     if( tsc_dma_alloc( chan))
     {
       printf("Cannot perform DMA transfer on channel #%d -> %s\n", chan, strerror(errno));
@@ -196,12 +430,13 @@ tsc_dma( struct cli_cmd_para *c)
     }
     else 
     {
-      printf("OK -> status = %08x\n", dma_req[chan].dma_status);
-      dma_req[chan].wait_mode = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4); /* 5 sec timeout */
-      tsc_dma_wait( &dma_req[chan]);
+      //printf("OK -> status = %08x\n", dma_req[chan].dma_status);
+      //dma_req[chan].wait_mode = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4); /* 5 sec timeout */
+      //tsc_dma_wait( &dma_req[chan]);
       if(  dma_req[chan].dma_status & DMA_STATUS_TMO)
       {
   	printf("NOK -> timeout - status = %08x\n",  dma_req[chan].dma_status);
+	tsc_dma_clear( chan);
       }
       else if(  dma_req[chan].dma_status & DMA_STATUS_ERR)
       {
@@ -285,6 +520,11 @@ tsc_dma( struct cli_cmd_para *c)
   else if( !strncmp( "clear", c->para[0], 3))
   {
     tsc_dma_clear( chan);
+    return( TSC_OK);
+  }
+  else if( !strncmp( "mode", c->para[0], 3))
+  {
+    dma_mode( chan);
     return( TSC_OK);
   }
   return( TSC_ERR);

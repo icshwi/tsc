@@ -100,8 +100,8 @@
  *  refer to IFC1211 user's manual for detailed description.
  *
  */
-#define IFC1211_CSR_ILOC_BASE	        	0x000
-#define IFC1211_CSR_ILOC_STATIC	        	0x000
+#define IFC1211_CSR_ILOC_BASE	             0x000
+#define IFC1211_CSR_ILOC_STATIC	             0x000
 #define IFC1211_CSR_ILOC_OPT_DYN_SEL         0x004
 #define IFC1211_CSR_ILOC_OPT_DYN_DAT         0x008
 #define IFC1211_CSR_ILOC_PON_FSM             0x00c
@@ -200,6 +200,13 @@
 #define IFC1211_CSR_SMEM_DDR3_IDEL	        0x80c
 #define IFC1211_CSR_SMEM_SRAM_CSR	        0x810
 
+#define IFC1211_CSR_SMEM2_BASE	        	0xc00
+#define IFC1211_CSR_SMEM2_DDR3_CSR	        0xc00
+#define IFC1211_CSR_SMEM2_DDR3_ERR	        0xc04
+#define IFC1211_CSR_SMEM2_DDR3_DELQ	        0xc08
+#define IFC1211_CSR_SMEM2_DDR3_IDEL	        0xc0c
+#define IFC1211_CSR_SMEM2_SRAM_CSR	        0xc10
+
 #define IFC1211_CSR_IDMA_BASE	       	 	0x800
 #define IFC1211_CSR_IDMA_GCSR	        	0x840
 
@@ -209,13 +216,26 @@
 #define IFC1211_CSR_IDMA_WR_1_PCSR	        0x85c
 
 #define IFC1211_CSR_IDMA_ITC_IACK	        0x880
-#define IFC1211_CSR_IDMA_ITC_CSR	        	0x884
-#define IFC1211_CSR_IDMA_ITC_IMC	        	0x888
-#define IFC1211_CSR_IDMA_ITC_IMS	        	0x88c
+#define IFC1211_CSR_IDMA_ITC_CSR	        0x884
+#define IFC1211_CSR_IDMA_ITC_IMC	        0x888
+#define IFC1211_CSR_IDMA_ITC_IMS	        0x88c
 
-#define IFC1211_CSR_SEMAPHORE 	 			0x8b8
+#define IFC1211_CSR_IDMA2_BASE	       	 	0xc00
+#define IFC1211_CSR_IDMA2_GCSR	        	0xc40
 
-#define IFC1211_MBX_NUM                      8
+#define IFC1211_CSR_IDMA2_RD_0_PCSR	        0xc50
+#define IFC1211_CSR_IDMA2_RD_1_PCSR	        0xc54
+#define IFC1211_CSR_IDMA2_WR_0_PCSR	        0xc58
+#define IFC1211_CSR_IDMA2_WR_1_PCSR	        0xc5c
+
+#define IFC1211_CSR_IDMA2_ITC_IACK	        0xc80
+#define IFC1211_CSR_IDMA2_ITC_CSR	        0xc84
+#define IFC1211_CSR_IDMA2_ITC_IMC	        0xc88
+#define IFC1211_CSR_IDMA2_ITC_IMS	        0xc8c
+
+#define IFC1211_CSR_SEMAPHORE 	 		0x8b8
+
+#define IFC1211_MBX_NUM                             8
 #define IFC1211_CSR_MBX_0_CTL	        	0x8C0
 #define IFC1211_CSR_MBX_1_CTL	        	0x8C4
 #define IFC1211_CSR_MBX_2_CTL	        	0x8C8
@@ -226,9 +246,9 @@
 #define IFC1211_CSR_MBX_7_CTL	        	0x8DC
 static const int IFC1211_CSR_MBX_CTL[IFC1211_MBX_NUM] = {
                                                 IFC1211_CSR_MBX_0_CTL, IFC1211_CSR_MBX_1_CTL,
-												IFC1211_CSR_MBX_2_CTL, IFC1211_CSR_MBX_3_CTL,
-												IFC1211_CSR_MBX_4_CTL, IFC1211_CSR_MBX_5_CTL,
-												IFC1211_CSR_MBX_6_CTL, IFC1211_CSR_MBX_7_CTL };
+						IFC1211_CSR_MBX_2_CTL, IFC1211_CSR_MBX_3_CTL,
+						IFC1211_CSR_MBX_4_CTL, IFC1211_CSR_MBX_5_CTL,
+						IFC1211_CSR_MBX_6_CTL, IFC1211_CSR_MBX_7_CTL };
 
 #define IFC1211_CSR_MBX_0_PORT	        0x8E0
 #define IFC1211_CSR_MBX_1_PORT	        0x8E4
@@ -302,23 +322,51 @@ static const int IFC1211_CSR_IDMA_CDES[4] = { IFC1211_CSR_IDMA_RD_0_CDES, IFC121
 static const int IFC1211_CSR_IDMA_DCNT[4] = { IFC1211_CSR_IDMA_RD_0_DCNT, IFC1211_CSR_IDMA_RD_1_DCNT,
 					         IFC1211_CSR_IDMA_WR_0_DCNT, IFC1211_CSR_IDMA_WR_1_DCNT };
 
-#define IFC1211_CSR_IDMA_ROM 	        0xb80
+#define IFC1211_CSR_IDMA2_RD_0_CSR	        0xd00
+#define IFC1211_CSR_IDMA2_RD_0_NDES	        0xd04
+#define IFC1211_CSR_IDMA2_RD_0_CDES	        0xd08
+#define IFC1211_CSR_IDMA2_RD_0_DCNT	        0xd0c
 
-#define IFC1211_CSR_USER_BASE	        0xc00
+#define IFC1211_CSR_IDMA2_RD_1_CSR	        0xd40
+#define IFC1211_CSR_IDMA2_RD_1_NDES	        0xd44
+#define IFC1211_CSR_IDMA2_RD_1_CDES	        0xd48
+#define IFC1211_CSR_IDMA2_RD_1_DCNT	        0xd4c
+
+#define IFC1211_CSR_IDMA2_WR_0_CSR	        0xe00
+#define IFC1211_CSR_IDMA2_WR_0_NDES	        0xe04
+#define IFC1211_CSR_IDMA2_WR_0_CDES	        0xe08
+#define IFC1211_CSR_IDMA2_WR_0_DCNT	        0xe0c
+
+#define IFC1211_CSR_IDMA2_WR_1_CSR	        0xe40
+#define IFC1211_CSR_IDMA2_WR_1_NDES	        0xe44
+#define IFC1211_CSR_IDMA2_WR_1_CDES	        0xe48
+#define IFC1211_CSR_IDMA2_WR_1_DCNT	        0xe4c
+
+static const int IFC1211_CSR_IDMA2_CSR[4] = { IFC1211_CSR_IDMA2_RD_0_CSR, IFC1211_CSR_IDMA2_RD_1_CSR,
+					        IFC1211_CSR_IDMA2_WR_0_CSR, IFC1211_CSR_IDMA2_WR_1_CSR };
+static const int IFC1211_CSR_IDMA2_NDES[4] = { IFC1211_CSR_IDMA2_RD_0_NDES, IFC1211_CSR_IDMA2_RD_1_NDES,
+					         IFC1211_CSR_IDMA2_WR_0_NDES, IFC1211_CSR_IDMA2_WR_1_NDES };
+static const int IFC1211_CSR_IDMA2_CDES[4] = { IFC1211_CSR_IDMA2_RD_0_CDES, IFC1211_CSR_IDMA2_RD_1_CDES,
+					         IFC1211_CSR_IDMA2_WR_0_CDES, IFC1211_CSR_IDMA2_WR_1_CDES };
+static const int IFC1211_CSR_IDMA2_DCNT[4] = { IFC1211_CSR_IDMA2_RD_0_DCNT, IFC1211_CSR_IDMA2_RD_1_DCNT,
+					         IFC1211_CSR_IDMA2_WR_0_DCNT, IFC1211_CSR_IDMA2_WR_1_DCNT };
+#define IFC1211_CSR_IDMA_ROM 	            0xb80
+
+#define IFC1211_CSR_USER_BASE	            0xc00
 #define IFC1211_CSR_GPIO_OUT	            0xc00
 #define IFC1211_CSR_GPIO_ENA	            0xc04
 #define IFC1211_CSR_GPIO_IN	            0xc08
-#define IFC1211_CSR_GPIO_IPOL	        0xc0c
+#define IFC1211_CSR_GPIO_IPOL	            0xc0c
 
 #define IFC1211_CSR_UART_CTL	            0xc10
-#define IFC1211_CSR_VME_SERIAL	        0xc14
+#define IFC1211_CSR_VME_SERIAL	            0xc14
 
 #define IFC1211_CSR_USER_ITC_IACK	    0xc80
-#define IFC1211_CSR_USER_ITC_CSR	        0xc84
-#define IFC1211_CSR_USER_ITC_IMC	        0xc88
-#define IFC1211_CSR_USER_ITC_IMS	        0xc8c
+#define IFC1211_CSR_USER_ITC_CSR	    0xc84
+#define IFC1211_CSR_USER_ITC_IMC	    0xc88
+#define IFC1211_CSR_USER_ITC_IMS	    0xc8c
 
-#define IFC1211_CSR_USER_ROM	                0xf80
+#define IFC1211_CSR_USER_ROM	            0xf80
 
 #define IFC1211_CSR_OFFSET_MAX	       0xfff
 
@@ -861,7 +909,7 @@ static const int IFC1211_PVME_ITC_IM_IRQ[7] = { IFC1211_PVME_ITC_IM_IRQ1,
 /*
  *  IDMA Control Registers (CSR + $900/$940/$a00/$a40)
  */
-#define IFC1211_IDMA_CSR_	               (1<<31)  /* DMA Engine enabled              */
+#define IFC1211_IDMA_CSR_CACHE_ENA	       (1<<27)  /* DMA Engine enabled              */
 #define IFC1211_IDMA_CSR_SUSPEND	       (1<<28)  /* DMA Engine enabled              */
 #define IFC1211_IDMA_CSR_ABORT	       (1<<29)  /* DMA Engine enabled              */
 #define IFC1211_IDMA_CSR_KILL	       (1<<30)  /* DMA Engine enabled              */

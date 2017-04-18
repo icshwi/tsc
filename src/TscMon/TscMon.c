@@ -124,6 +124,7 @@ main( int argc,
 
   rdwr_init();
   tst_init();
+  dma_init();
 
   if( argc > 1) 
   {

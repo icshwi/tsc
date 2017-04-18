@@ -68,6 +68,11 @@ char *adc3117_msg[] =
   "adc3117.<x> eeprom sign set",
   "adc3117.<x> eeprom sign def b:<board> s:<serial> v:<ver> r:<rev>",
   "adc3117.<x> eeprom dump",
+  "adc3117.<x> eeprom vref show",
+  "adc3117.<x> eeprom vref store",
+  "adc3117.<x> eeprom vref load",
+  "adc3117.<x> eeprom vref write <filename>",
+  "adc3117.<x> eeprom vref read <filename>",
   "   where <x>    = index",
   "         <dev>  = ads01, ads23, ads1, ads2, dac, xra01, xra23, xratrig, lmk, sy",
   "         <reg>  = register",
@@ -156,6 +161,25 @@ char *dc_msg[] =
   "  dc <start>[..<end>]",
   "     where <start> = offset in hexadecimal of first register",
   "            <end>  = offset in hexadecimal of last register",
+0};
+
+char *ddr_msg[]=
+{
+  "Perform specific command on DDR memory",
+  "ddr calib <MEM>",
+  "ddr reset <MEM>",
+  "ddr status <MEM>",
+  "ddr set <MEM> <DQ> <STEP> <PM>",
+  "   where ddr calib <MEM>                = DDR memory IDELAY alignment",
+  "         ddr reset <MEM>                = Reset to default DDR memory IDELAY",
+  "         ddr status <MEM>               = Show the DDR3 memory DQ[15:0] line selection",
+  "         ddr set <MEM> <DQ> <STEP> <PM> = Set the IDELAY for specifics lane",
+  "            where <MEM>                 = Select the specific DDR3 1 or 2",
+  "            where <DQ>                  = Select the specific lane DQ[15:0]",
+  "            where <STEP>                = Select the specific step for increment / decrement",
+  "                                          STEP = 1 to 16",
+  "            where <PM>                  = Increment + STEP[ps] or decrement - STEP[ps]the IDELAY",
+  "                                          (STEP = 1 to 16)",
 0};
 
 char *di_msg[] = 
@@ -624,6 +648,7 @@ struct cli_cmd_list cmd_list[] =
   { "cu2"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
   { "cu"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
   { "dc"     	, tsc_rdwr_dr,      dc_msg     	  , 0},
+  { "ddr"    	, tsc_ddr,          ddr_msg 	  , 0},
   { "di"     	, tsc_rdwr_dr,      di_msg     	  , 0},
   { "dk"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
   { "dma"     	, tsc_dma    ,      dma_msg       , 0},

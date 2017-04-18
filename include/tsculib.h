@@ -76,6 +76,7 @@ int tsc_kbuf_write( void *k_addr, char *buf, uint size);
 int tsc_dma_move( struct tsc_ioctl_dma_req *dr_p);
 int tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p);
 int tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p);
+int tsc_dma_mode( struct tsc_ioctl_dma_mode *dm_p);
 int tsc_dma_alloc( int chan);
 int tsc_dma_free( int chan);
 int tsc_dma_clear( int chan);

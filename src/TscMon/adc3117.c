@@ -70,6 +70,8 @@ static char *rcsid = "$Id: adc3117.c,v 1.10 2016/01/15 10:21:19 ioxos Exp $";
 #define ACQ_REG_ADC_CTL          0x1184
 #define ACQ_REG_BUF_CTL          0x11a0
 
+char line[256];
+
 struct adc3117_reg
 {
   int sign;
@@ -122,6 +124,7 @@ struct adc3117_sign
   char revision[2];     /*  0x14  [20] */
   char rsv[6];          /*  0x16  [22] */
   char test_date[8];    /*  0x1c  [28] */
+
   char pad[216];        /*  0x24  [36] */
   int cks;              /*  0xfc [252] */
 } adc3117_sign;         /* 0x100 [256] */
@@ -139,6 +142,19 @@ struct adc3117_acq_res
     int off_max;
   } chan[ADC_NUM_CHAN];
 };
+
+struct adc3117_vref
+{
+  int magic;
+  int len;
+  int cks;
+  float temp;
+  struct vref_calib
+  {
+    int dac;
+    float volt;
+  } vref[32];
+} adc3117_vref;
 
 #define I2C_CTL_EXEC_IDLE  0x00000000
 #define I2C_CTL_EXEC_RUN   0x00100000
@@ -530,6 +546,13 @@ adc3117_eeprom_sign( struct cli_cmd_para *c,
       if( para_p[0] == 'q') return(-1);
       if( para_p[0]) strncpy( &adc3117_sign.revision[0], para_p, 2);
 
+      strcpy( &prompt[0], "Test Date :  [");
+      strncat( &prompt[0], &adc3117_sign.test_date[0], 8);
+      strcat( &prompt[0], "] : "); 
+      para_p = cli_get_cmd( &adc3117_history, prompt);
+      if( para_p[0] == 'q') return(-1);
+      if( para_p[0]) strncpy( &adc3117_sign.test_date[0], para_p, 8);
+
     }
     if( op == 2)
     {
@@ -667,6 +690,123 @@ adc3117_eeprom_dump( struct cli_cmd_para *c,
   return(0);
 }
 
+int
+adc3117_eeprom_vref( struct cli_cmd_para *c,
+		     int device,
+		     int fmc)
+{
+  char *p;
+  int data, i;
+
+  if( fmc == 2)
+  {
+    device |= 2;
+  }
+  if( !strcmp( "show", c->para[2]))
+  {
+    printf("DAC vref calibration\n");
+    p = (char *)&adc3117_vref;
+    if( *(int *)p != 0x56524546)
+    {
+      printf("No valid calibration data available!!\n");
+      return(-1);
+    }
+    printf("Temperature = %f\n", adc3117_vref.temp);
+    printf(" DAC | VOLT\n");
+    for( i = 0; i < 32; i++)
+    {
+      printf(" %03d | %f\n", adc3117_vref.vref[i].dac, adc3117_vref.vref[i].volt);
+    }
+  }
+  else if( !strcmp( "store", c->para[2]))
+  {
+    printf("Storing DAC vref calibration in EEPROM...");
+    p = (char *)&adc3117_vref;
+    if( *(int *)p != 0x56524546)
+    {
+      printf("Need valid calibration data !!\n");
+      return(-1);
+    }
+    for( i = 0; i < sizeof( struct adc3117_vref); i++)
+    {
+      data = p[i];
+      tsc_i2c_write( device, 0x6000+i, data);
+      usleep(5000);
+    }
+    printf("Done\n");
+  }
+  else if( !strcmp( "load", c->para[2]))
+  {
+    printf("Loading DAC vref calibration from EEPROM...");
+    p = (char *)&adc3117_vref;
+    for( i = 0; i < sizeof( struct adc3117_vref); i++)
+    {
+      data = 0;
+      tsc_i2c_read( device, 0x6000+i, &data);
+      p[i] = (char)data;
+    }
+    printf("Done\n");
+  }
+  else
+  {
+    FILE *ref_file;
+
+    if( c->cnt < 4)
+    {
+      printf("Needs file name...\n");
+      return(-1);
+    }
+    ref_file = fopen( c->para[3], "r");
+    if( !ref_file)
+    {
+      printf("Cannot open file %s\n", c->para[3]);
+      return(-1);
+    }
+    if( !strcmp( "read", c->para[2]))
+    {
+      printf("Reading DAC vref calibration from file %s\n", c->para[3]);
+      fgets( line, 256, ref_file);
+      if( sscanf(line, "%f", &adc3117_vref.temp) != 1)
+      {
+	printf("formatting error!!\n");
+	fclose( ref_file);
+	return(-1);
+      }
+      i = 0;
+      while( fgets( line, 256, ref_file) && (i<32))
+      {
+	if( sscanf(line, "%d, %f", &adc3117_vref.vref[i].dac, &adc3117_vref.vref[i].volt) != 2)
+	{
+	  printf("formatting error!!\n");
+	  fclose( ref_file);
+	  return(-1);
+	}
+	i++;
+      }
+      adc3117_vref.magic = 0x56524546;
+      adc3117_vref.len = sizeof( struct adc3117_vref);
+      adc3117_vref.cks = 0;
+      fclose( ref_file);
+    }
+    else if( !strcmp( "write", c->para[2]))
+    {
+      printf("Writing DAC vref calibration to file %s...", c->para[3]);
+      if( adc3117_vref.magic != 0x56524546)
+      {
+        printf("No valid calibration data available!!\n");
+        fclose( ref_file);
+        return(-1);
+      }
+      fprintf( ref_file, "%f\n", adc3117_vref.temp);
+      for( i = 0; i < 32; i++)
+      {
+        fprintf( ref_file, "%d, %f\n", adc3117_vref.vref[i].dac, adc3117_vref.vref[i].volt);
+      }
+      fclose( ref_file);
+      printf("Done\n");
+    }
+  }
+}
 int 
 tsc_adc3117( struct cli_cmd_para *c)
 {
@@ -813,6 +953,13 @@ tsc_adc3117( struct cli_cmd_para *c)
   else if( !strcmp( "dump", c->para[1]))
   {
     adc3117_eeprom_dump( c, add->cmd, fmc);
+  }
+  else if( !strcmp( "vref", c->para[1]))
+  {
+    if( add->cmd == 0x40010050)
+    {
+      adc3117_eeprom_vref( c, add->cmd, fmc);
+    }
   }
   else 
   {

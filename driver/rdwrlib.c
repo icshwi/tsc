@@ -86,6 +86,7 @@ tsc_rdwr_init( struct ifc1211_device *ifc)
   }
   retval = -1;
   /* prepare dynamic window to access the RDWR bus  */
+  memset(  &mas_win, 0, sizeof( mas_win));
   mas_win.req.rem_addr = 0;                          /* point to RDWR  base */
   mas_win.req.size = IFC1211_PCIE_MMU_PG_64K;      /* map just 1 page */
   mas_win.req.mode.space = MAP_SPACE_SHM;

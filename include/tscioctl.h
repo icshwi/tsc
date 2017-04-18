@@ -201,6 +201,14 @@ struct tsc_ioctl_map_win
 #define ITC_SRC_DMA_WR0_ERR       0x25
 #define ITC_SRC_DMA_WR1_END       0x26
 #define ITC_SRC_DMA_WR1_ERR       0x27
+#define ITC_SRC_DMA2_RD0_END      0x30
+#define ITC_SRC_DMA2_RD0_ERR      0x31
+#define ITC_SRC_DMA2_RD1_END      0x32
+#define ITC_SRC_DMA2_RD1_ERR      0x33
+#define ITC_SRC_DMA2_WR0_END      0x34
+#define ITC_SRC_DMA2_WR0_ERR      0x35
+#define ITC_SRC_DMA2_WR1_END      0x36
+#define ITC_SRC_DMA2_WR1_ERR      0x37
 
 #define ITC_IP(src)      (1<<(src&0xf)) /* interrupt pending bitfield from source id     */
 
@@ -278,8 +286,9 @@ struct tsc_ioctl_rdwr
 #define TSC_IOCTL_DMA_CLEAR        (TSC_IOCTL_DMA | 0x4)
 #define TSC_IOCTL_DMA_ALLOC        (TSC_IOCTL_DMA | 0x5)
 #define TSC_IOCTL_DMA_FREE         (TSC_IOCTL_DMA | 0x6)
+#define TSC_IOCTL_DMA_MODE         (TSC_IOCTL_DMA | 0x7)
 
-#define DMA_CHAN_NUM    2        /* number of DMA channels         */
+#define DMA_CHAN_NUM    4        /* number of DMA channels         */
 #define DMA_CHAN_0      0        /* DMA channel #0                 */
 #define DMA_CHAN_1      1        /* DMA channel #1                 */
 #define DMA_CHAN_2      2        /* DMA channel #0                 */
@@ -293,6 +302,12 @@ struct tsc_ioctl_dma_req
   unsigned char src_space; unsigned char src_mode; unsigned char des_space; unsigned char des_mode;
   unsigned char start_mode; unsigned char end_mode; unsigned char intr_mode; unsigned char wait_mode;
   uint dma_status;
+};
+
+struct tsc_ioctl_dma_mode
+{
+  short rsv; char op; char chan;
+  short rd_mode; short wr_mode;
 };
 
 struct tsc_ioctl_dma
@@ -313,15 +328,34 @@ struct tsc_ioctl_dma_sts
   uint wr_cnt;
 };
 
+#define DMA_MODE_CACHE_ENA            0x8000
+#define DMA_MODE_WR_POST_MASK         0x3000  
+#define DMA_MODE_WR_POST(x)      ((x<<12)&DMA_MODE_WR_POST_MASK)
+#define DMA_MODE_RD_REQ_MASK          0x3000
+#define DMA_MODE_RD_REQ(x)       ((x<<12)&DMA_MODE_RD_REQ_MASK)
+#define DMA_MODE_SHM_NO_INC            0x200
+#define DMA_MODE_SHM_NO_UPD            0x100
+#define DMA_MODE_SHM_MASK              0x300
+#define DMA_MODE_RELAX                  0x20
+#define DMA_MODE_SNOOP                  0x10
+#define DMA_MODE_ADD_NO_INC              0x4
+#define DMA_MODE_ADD_NO_UPD              0x2
+#define DMA_MODE_ADD_MASK                0x6
+#define DMA_MODE_GET                     0x0
+#define DMA_MODE_SET                     0x1
+
 #define DMA_SPACE_PCIE       0x00
 #define DMA_SPACE_SHM        0x02
+#define DMA_SPACE_SHM2       0x03
 #define DMA_SPACE_USR        0x03
 #define DMA_SPACE_KBUF       0x08
 #define DMA_SPACE_MASK       0x07
 
 #define DMA_START_PIPE_NO    0x00
 #define DMA_START_PIPE       0x01
-#define DMA_START_CHAN(chan)  ((chan&1) << 4)
+#define DMA_START_CHAN(chan)  ((chan&3) << 4)
+#define DMA_START_CHAN_MASK              0x30
+#define DMA_START_CHAN_GET(x)      ((x>>4)&3)
 #define DMA_SPACE_WS      0x10
 #define DMA_SPACE_DS      0x20
 #define DMA_SPACE_QS      0x30

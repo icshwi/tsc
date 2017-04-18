@@ -219,7 +219,7 @@ tsc_init()
   {
 	// Open both devices
     tsc_fd_central = open("/dev/bus/bridge/tsc_ctl_central", O_RDWR);
-    //tsc_fd_io      = open("/dev/bus/bridge/tsc_ctl_io", O_RDWR);
+    tsc_fd_io      = open("/dev/bus/bridge/tsc_ctl_io", O_RDWR);
 
     //if( (tsc_fd_central >= 0) && (tsc_fd_io >= 0))
     if( tsc_fd_central >= 0)
@@ -1042,10 +1042,10 @@ tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_status
  * Prototype     : int
- * Parameters    : pointer to mapping control structure
- * Return        : status of set operation
+ * Parameters    : pointer to dma status control structure
+ * Return        : status of status operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : update dma status control structure with current status
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
@@ -1055,12 +1055,27 @@ tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_mode
+ * Prototype     : int
+ * Parameters    : pointer to dma mode control structure
+ * Return        : current DMA  mode of operation
+ *----------------------------------------------------------------------------
+ * Description   : allow to set/get dma mode of operation
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int
+tsc_dma_mode( struct tsc_ioctl_dma_sts *dm_p)
+{
+  if( tsc_fd < 0) return(-EBADF);
+  return( ioctl( tsc_fd, TSC_IOCTL_DMA_MODE, dm_p));
+}
+ 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_alloc
  * Prototype     : int
- * Parameters    : pointer to mapping control structure
+ * Parameters    : channel index
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : request DMA chhannel allocation
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_dma_alloc( int chan)
@@ -1078,7 +1093,7 @@ tsc_dma_alloc( int chan)
  * Parameters    : pointer to mapping control structure
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : free allocated DMA channel
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_dma_free( int chan)

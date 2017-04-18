@@ -36,7 +36,7 @@ ifeq ($(ARCH),powerpc)
 # JFG platform
         KERNELDIR = /T2080IFC_2.0/linux/build/
 # XP platform
-#	KERNELDIR = /data/T2081/rootfs_2080_1.9/lib/modules/3.12.37-rt51+g43cecda/build/
+#	KERNELDIR = /data/QorIQ-SDK-V2.0-20160527-yocto/build_t2080rdb-64b/tmp/work/t2080rdb_64b-fsl-linux/linux-qoriq/4.1-r0/build/
 else
 	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 endif

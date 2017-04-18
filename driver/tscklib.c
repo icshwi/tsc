@@ -105,7 +105,8 @@ tsc_dev_init( struct ifc1211_device *ifc)
   retval = tsc_map_mas_init( ifc);
 
   /* initialize data structures controlling access to SHM */
-  retval = tsc_shm_init( ifc);
+  retval = tsc_shm_init( ifc, IFC1211_SHM1_IDX); /* SHM 1 */
+  retval = tsc_shm_init( ifc, IFC1211_SHM2_IDX); /* SHM 2 */
 
   /* initialize data structures controlling RDWR access */
   retval = tsc_rdwr_init( ifc);
@@ -143,7 +144,8 @@ tsc_dev_exit( struct ifc1211_device *ifc)
   tsc_rdwr_exit( ifc);
 
   /* release data structures controlling SHM */
-  tsc_shm_exit( ifc);
+  tsc_shm_exit( ifc, IFC1211_SHM1_IDX);
+  tsc_shm_exit( ifc, IFC1211_SHM2_IDX);
 
   /* release data structures controlling the PCI master mapping */
   tsc_map_mas_exit( ifc);
@@ -537,6 +539,7 @@ tsc_sflash_init( struct ifc1211_device *ifc)
  * Function name : tsc_shm_init
  * Prototype     : int
  * Parameters    : pointer to ifc1211 device control structure
+ *                 SHM index
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare translation windows to access SHM
@@ -544,42 +547,65 @@ tsc_sflash_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_shm_init( struct ifc1211_device *ifc)
+tsc_shm_init( struct ifc1211_device *ifc,
+	      int idx)
 {
   int retval;
   struct tsc_ioctl_map_win mas_win;
+  int csr_offset, space;
 
-  debugk(("in tsc_shm_init( %p)\n", ifc));
+  debugk(("in tsc_shm_init( %p, idx)\n", ifc, idx));
 
   /* Check PCI MEM mapping has been initialized */
-  ifc->shm_ctl = NULL;
+  ifc->shm_ctl[idx] = NULL;
   if( !ifc->map_mas_pci_mem)
   {
     return(-1);
   }
-  ifc->shm_ctl = kzalloc( sizeof( struct shm_ctl), GFP_KERNEL);
-  if( !ifc->shm_ctl)
+  retval = 0;
+  switch( idx)
+  {
+    case IFC1211_SHM1_IDX:
+    {
+      csr_offset = IFC1211_CSR_SMEM_SRAM_CSR;
+      space = MAP_SPACE_SHM;
+      break;
+    }
+    case IFC1211_SHM2_IDX:
+    {
+      csr_offset = IFC1211_CSR_SMEM2_SRAM_CSR;
+      space = MAP_SPACE_SHM2;
+      break;
+    }
+    default:
+    {
+      return(-1);
+    }
+  }
+  ifc->shm_ctl[idx] = kzalloc( sizeof( struct shm_ctl), GFP_KERNEL);
+  if( !ifc->shm_ctl[idx])
   {
     return(-ENOMEM);
   }
-  retval = 0;
+
   /* prepare translation window to access ifc1211 SRAM  */
   /* get SRAM size from SMEM_RAM_CRS register */
-  ifc->shm_ctl->sram_size = ioread32( ifc->csr_ptr + IFC1211_CSR_SMEM_SRAM_CSR);
-  ifc->shm_ctl->sram_size = IFC1211_SMEM_RAM_SIZE( ifc->shm_ctl->sram_size);
-  debugk(("sram_size = %x\n", ifc->shm_ctl->sram_size));
-  if( ifc->shm_ctl->sram_size)
+  ifc->shm_ctl[idx]->sram_size = ioread32( ifc->csr_ptr + csr_offset);
+  ifc->shm_ctl[idx]->sram_size = IFC1211_SMEM_RAM_SIZE( ifc->shm_ctl[idx]->sram_size);
+  debugk(("sram_size = %x\n", ifc->shm_ctl[idx]->sram_size));
+  if( ifc->shm_ctl[idx]->sram_size)
   { 
+    memset( &mas_win, 0, sizeof( mas_win));
     mas_win.req.rem_addr = 0; /* point to SMEM RAM base */
-    mas_win.req.size = ifc->shm_ctl->sram_size;
-    mas_win.req.mode.space = MAP_SPACE_SHM;
+    mas_win.req.size = ifc->shm_ctl[idx]->sram_size;
+    mas_win.req.mode.space = space;
     mas_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
     mas_win.req.mode.flags = 0;
-    ifc->shm_ctl->sram_offset = tsc_map_mas_alloc( ifc, &mas_win);
+    ifc->shm_ctl[idx]->sram_offset = tsc_map_mas_alloc( ifc, &mas_win);
     debugk(("sram loc_addr = %lx\n",  mas_win.req.loc_addr));
-    if( ifc->shm_ctl->sram_offset >= 0)
+    if( ifc->shm_ctl[idx]->sram_offset >= 0)
     {
-      ifc->shm_ctl->sram_ptr = ioremap_nocache( mas_win.req.loc_addr, ifc->shm_ctl->sram_size);
+      ifc->shm_ctl[idx]->sram_ptr = ioremap_nocache( mas_win.req.loc_addr, ifc->shm_ctl[idx]->sram_size);
     }
   }
   return( retval);
@@ -596,18 +622,34 @@ tsc_shm_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_shm_exit( struct ifc1211_device *ifc)
+tsc_shm_exit( struct ifc1211_device *ifc,
+	      int idx)
 {
-  debugk(("in tsc_shm_exit( %p)\n", ifc));
+  debugk(("in tsc_shm_exit( %p, %d)\n", ifc, idx));
 
-  if( ifc->shm_ctl)
+  switch( idx)
   {
-    if( ifc->shm_ctl->sram_ptr)
+    case IFC1211_SHM1_IDX:
     {
-      tsc_map_mas_free( ifc, MAP_ID_MAS_PCIE_MEM, ifc->shm_ctl->sram_offset);
-      iounmap( ifc->shm_ctl->sram_ptr);
+      break;
     }
-    kfree( ifc->shm_ctl);
+    case IFC1211_SHM2_IDX:
+    {
+      break;
+    }
+    default:
+    {
+      return;
+    }
+  }
+  if( ifc->shm_ctl[idx])
+  {
+    if( ifc->shm_ctl[idx]->sram_ptr)
+    {
+      tsc_map_mas_free( ifc, MAP_ID_MAS_PCIE_MEM, ifc->shm_ctl[idx]->sram_offset);
+      iounmap( ifc->shm_ctl[idx]->sram_ptr);
+    }
+    kfree( ifc->shm_ctl[idx]);
   }
 }
 
@@ -636,9 +678,9 @@ tsc_dma_init( struct ifc1211_device *ifc)
     /* initialize DMA control structure */
     ifc->dma_ctl[chan]->chan = chan;
     ifc->dma_ctl[chan]->ifc = ifc;
-    ifc->dma_ctl[chan]->desc_ptr = ifc->shm_ctl->sram_ptr + DMA_DESC_OFFSET + (chan*DMA_DESC_SIZE);
-    ifc->dma_ctl[chan]->desc_offset = DMA_DESC_OFFSET + (chan*DMA_DESC_SIZE);
-    ifc->dma_ctl[chan]->ring_offset = DMA_RING_OFFSET + (chan*DMA_RING_SIZE);
+    ifc->dma_ctl[chan]->desc_ptr = ifc->shm_ctl[chan/2]->sram_ptr + DMA_DESC_OFFSET + ((chan%2)*DMA_DESC_SIZE);
+    ifc->dma_ctl[chan]->desc_offset = DMA_DESC_OFFSET + ((chan%2)*DMA_DESC_SIZE);
+    ifc->dma_ctl[chan]->ring_offset = DMA_RING_OFFSET + ((chan%2)*DMA_RING_SIZE);
     dma_init( ifc->dma_ctl[chan]);
   }
   return( 0);
@@ -962,7 +1004,7 @@ EXPORT_SYMBOL(tsc_kbuf_free);
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int tsc_semaphore_release(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore *semaphore){
-	semaphore_release(semaphore->idx, ifc->shm_ctl->sram_ptr);
+	semaphore_release(semaphore->idx, ifc->shm_ctl[0]->sram_ptr);
 	return(0);
 }
 
@@ -986,7 +1028,7 @@ int tsc_semaphore_get(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore *se
 		retval = -EFAULT;
 		return retval;
 	}
-	ret = semaphore_get(semaphore->idx, ifc->shm_ctl->sram_ptr, tag);
+	ret = semaphore_get(semaphore->idx, ifc->shm_ctl[0]->sram_ptr, tag);
 	kfree(tag);
 	return(retval | ret);
 }

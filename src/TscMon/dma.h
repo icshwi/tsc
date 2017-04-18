@@ -33,4 +33,5 @@
 #define _H_DMA
 
 int tsc_dma( struct cli_cmd_para *);
+int dma_init( void);
 #endif /* _H_DMA */
