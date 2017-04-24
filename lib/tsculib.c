@@ -219,7 +219,8 @@ tsc_init()
     tsc_fd_central = open("/dev/bus/bridge/tsc_ctl_central", O_RDWR);
     tsc_fd_io      = open("/dev/bus/bridge/tsc_ctl_io", O_RDWR);
 
-    if( (tsc_fd_central >= 0) && (tsc_fd_io >= 0))
+    // CENTRAL device must be accessible, IO device is present only on IFC1211 board
+    if( tsc_fd_central >= 0)
     {
       // By default CENTRAL devices is used
       tsc_fd = tsc_fd_central;
@@ -1570,17 +1571,28 @@ int tsc_semaphore_get(uint idx, uint *tag){
 }
 
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : set_device
+ * Prototype     : int
+ * Parameters    : device number
+ * Return        : status of operation
+ *----------------------------------------------------------------------------
+ * Description   : change between CENTRAL and IO device if available
+ *
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int set_device(int device){
 	int retval = 0;
 
 	// 0 -> CENTRAL device
 	// 1 -> IO      device
-	if(device == 0){
+	if((device == 0) && (tsc_fd_central >= 0)) {
 		tsc_fd = tsc_fd_central;
 	}
-	else if (device == 1){
+	else if ((device == 1) && (tsc_fd_io >= 0)){
 		tsc_fd = tsc_fd_io;
 	}
+	// CENTRAL (never happens) or IO not available (IFC1410)
 	else{
 		return(-1);
 	}
