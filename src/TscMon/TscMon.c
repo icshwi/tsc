@@ -94,7 +94,7 @@ main( int argc,
 
   if( tsc_init() < 0)
   {
-    printf("Cannot find IFC1211 interface\n");
+    printf("Cannot find interface\n");
     exit( -1);
   }
 
