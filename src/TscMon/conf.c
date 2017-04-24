@@ -738,7 +738,7 @@ int tsc_set_device(struct cli_cmd_para *c){
 					printf("   -> Device : central - OK\n");
 				}
 				else{
-					printf("   -> Device : central - NOK\n");
+					printf("   -> Device : central - Not available\n");
 				}
 			}
 			else if(!strncmp( "io", c->para[1], 3)){
@@ -747,7 +747,7 @@ int tsc_set_device(struct cli_cmd_para *c){
 					printf("   -> Device : io - OK\n");
 				}
 				else{
-					printf("   -> Device : io - NOK\n");
+					printf("   -> Device : io - Not available\n");
 				}
 			}
 			else {
