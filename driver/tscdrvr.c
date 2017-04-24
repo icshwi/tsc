@@ -64,9 +64,6 @@ static void ifc1211_remove(struct pci_dev *);
 
 struct ifc1211 ifc1211;      /* driver main data structure for device */
 
-int lock = 0;
-
-static const char device_name[]         = IFC1211_NAME;
 static const char device_name_io[]      = IFC1211_NAME_IO;
 static const char device_name_central[] = IFC1211_NAME_CENTRAL;
 
@@ -533,35 +530,34 @@ ifc1211_probe_err_alloc_dev:
 static void ifc1211_remove( struct pci_dev *pdev){
 	struct ifc1211_device *ifc;
 
-	debugk(( KERN_ALERT "ifc1211: entering ifc1211_remove(%p)\n", pdev));
+	debugk(( KERN_ALERT "ifc1211: entering ifc1211_remove(%p) %x\n", pdev, pdev->device));
 
-	// Use lock variable to remove only one device at time
-	if (lock == 0){
-		// call ifc1211 exit function
+	// IO is present
+	if ((ifc1211.ifc_io != NULL) && (pdev->device == PCI_DEVICE_ID_IOXOS_IFC1211_IO)){
 		ifc = ifc1211.ifc_io;
-		tsc_dev_exit( ifc);
+		tsc_dev_exit(ifc);
 		mutex_destroy( &ifc->mutex_ctl);
 		free_irq( ifc->pdev->irq, (void *)ifc);
 		pci_disable_msi( ifc->pdev);
-	    pci_release_regions(pdev);
-	    pci_disable_device(pdev);
 		iounmap( ifc->csr_ptr);
 		kfree(ifc);
+		ifc1211.ifc_io = NULL;
 	}
 
-	if (lock == 1){
-		// call ifc1211 exit function
+	// CENTRAL is present
+	if ((ifc1211.ifc_central != NULL) && (pdev->device == PCI_DEVICE_ID_IOXOS_IFC1211_CENTRAL)){
 		ifc = ifc1211.ifc_central;
-		tsc_dev_exit( ifc);
+		tsc_dev_exit(ifc);
 		mutex_destroy( &ifc->mutex_ctl);
 		free_irq( ifc->pdev->irq, (void *)ifc);
-		pci_disable_msi( ifc->pdev);
-	    pci_release_regions(pdev);
-	    pci_disable_device(pdev);
+		pci_disable_msi(ifc->pdev);
 		iounmap( ifc->csr_ptr);
 		kfree(ifc);
+		ifc1211.ifc_central = NULL;
 	}
-	lock = 1;
+
+	pci_release_regions(pdev);
+    pci_disable_device(pdev);
 
 	return;
 }
@@ -615,7 +611,8 @@ static int ifc1211_init(void){
 		debugk((KERN_NOTICE "ifc1211 : Error %d adding device\n", retval));
 		goto ifc1211_init_err_cdev_add;
 	}
-	debugk((KERN_NOTICE "ifc1211 : device added\n"));
+	major = MAJOR(ifc1211_dev_id);
+	debugk((KERN_NOTICE "ifc1211: device added\n"));
 
 	/*--------------------------------------------------------------------------
 	 * Register as PCI driver
@@ -623,70 +620,80 @@ static int ifc1211_init(void){
 
 	// IO --------------
 
+	ifc1211.ifc_io = NULL;
 	retval = pci_register_driver( &ifc1211_driver_io);
 	if(retval) {
 		debugk((KERN_NOTICE "ifc1211_io : Error %d registering driver\n", retval));
-		goto ifc1211_init_err_pci_register_driver;
+		//goto ifc1211_init_err_pci_register_driver;
 	}
 
 	/* verify if ifc1211 device has been discovered */
 	if( !ifc1211.ifc_io){
 		debugk((KERN_NOTICE "ifc1211_io : didn't find ifc1211 PCI device\n"));
-		goto ifc1211_no_device;
+		//goto ifc1211_no_device;
 	}
 	ifc_io = ifc1211.ifc_io;
 	debugk((KERN_NOTICE "ifc1211_io : driver registered [%p]\n", ifc_io));
 
 	// CENTRAL --------------
 
+	ifc1211.ifc_central = NULL;
 	retval = pci_register_driver( &ifc1211_driver_central);
 	if(retval){
 		debugk((KERN_NOTICE "ifc1211_central : Error %d registering driver\n", retval));
-		goto ifc1211_init_err_pci_register_driver;
+		//goto ifc1211_init_err_pci_register_driver;
 	}
 
 	/* verify if ifc1211 device has been discovered */
 	if( !ifc1211.ifc_central){
 		debugk((KERN_NOTICE "ifc1211_central : didn't find ifc1211 PCI device\n"));
-		goto ifc1211_no_device;
+		//goto ifc1211_no_device;
 	}
 	ifc_central = ifc1211.ifc_central;
 	debugk((KERN_NOTICE "ifc1211_central : driver registered [%p]\n", ifc_central));
 
 	/*--------------------------------------------------------------------------
+	 * Check if at laest one FPGA has been found
+	 *--------------------------------------------------------------------------*/
+	if((ifc1211.ifc_io == NULL) && (ifc1211.ifc_central == NULL)){
+		goto ifc1211_no_device;
+	}
+	/*--------------------------------------------------------------------------
 	 * Create sysfs entries - on udev systems this creates the dev files
 	 *--------------------------------------------------------------------------*/
-	bridge_sysfs_class_io = class_create( THIS_MODULE, device_name_io);
-	if (IS_ERR( bridge_sysfs_class_io)){
-		retval = PTR_ERR(bridge_sysfs_class_io);
-		goto ifc1211_err_class;
+
+	if (ifc1211.ifc_io != NULL) {
+		bridge_sysfs_class_io = class_create( THIS_MODULE, device_name_io);
+		if (IS_ERR( bridge_sysfs_class_io)){
+			retval = PTR_ERR(bridge_sysfs_class_io);
+			ifc1211_remove( ifc_io->pdev);
+		}
+		else {
+			device_create(bridge_sysfs_class_io, NULL, MKDEV(major, 0), NULL, name_io, 0);
+		}
 	}
 
-	bridge_sysfs_class_central = class_create( THIS_MODULE, device_name_central);
-	if (IS_ERR( bridge_sysfs_class_central)){
-		retval = PTR_ERR(bridge_sysfs_class_central);
-		goto ifc1211_err_class;
+	if (ifc1211.ifc_central != NULL) {
+		bridge_sysfs_class_central = class_create( THIS_MODULE, device_name_central);
+		if (IS_ERR( bridge_sysfs_class_central)){
+			retval = PTR_ERR(bridge_sysfs_class_central);
+			ifc1211_remove( ifc_central->pdev);
+		}
+		else {
+			device_create(bridge_sysfs_class_central, NULL, MKDEV(major, 1), NULL, name_central, 1);
+		}
 	}
 
-	/*--------------------------------------------------------------------------
-	 * Create ifc1211 control device in file system
-	 *--------------------------------------------------------------------------*/
-
-	major = MAJOR(ifc1211_dev_id);
-
-	device_create(bridge_sysfs_class_io, NULL, MKDEV(major, 0), NULL, name_io, 0);
-	device_create(bridge_sysfs_class_central, NULL, MKDEV(major, 1), NULL, name_central, 1);
+	if((ifc1211.ifc_io == NULL) && (ifc1211.ifc_central == NULL)){
+		goto ifc1211_no_device;
+	}
 
 	return( 0);
 
 	/*--------------------------------------------------------------------------
 	 * Cleanup after an error has been detected
    *--------------------------------------------------------------------------*/
-ifc1211_err_class:
-ifc1211_remove( ifc_io->pdev);
-ifc1211_remove( ifc_central->pdev);
 ifc1211_no_device:
-ifc1211_init_err_pci_register_driver:
   	cdev_del( &ifc1211.cdev);
 ifc1211_init_err_cdev_add:
   	unregister_chrdev_region(ifc1211.dev_id, IFC1211_COUNT);
@@ -723,7 +730,7 @@ static void ifc1211_exit(void){
 		  class_destroy(bridge_sysfs_class_central);
 	}
 
-	cdev_del( &ifc1211.cdev);
+	cdev_del(&ifc1211.cdev);
 	unregister_chrdev_region( ifc1211.dev_id, IFC1211_COUNT);
 }
 
