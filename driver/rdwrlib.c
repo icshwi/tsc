@@ -86,6 +86,7 @@ tsc_rdwr_init( struct ifc1211_device *ifc)
   }
   retval = -1;
   /* prepare dynamic window to access the RDWR bus  */
+  memset(  &mas_win, 0, sizeof( mas_win));
   mas_win.req.rem_addr = 0;                          /* point to RDWR  base */
   mas_win.req.size = IFC1211_PCIE_MMU_PG_64K;      /* map just 1 page */
   mas_win.req.mode.space = MAP_SPACE_SHM;
@@ -316,7 +317,8 @@ tsc_read_blk_exit:
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 tsc_read_sgl( struct ifc1211_device *ifc,
-	      struct tsc_ioctl_rdwr *rw)
+	      struct tsc_ioctl_rdwr *rw,
+	      int loop)
 {
   int retval;
   void *kaddr;
@@ -344,22 +346,66 @@ tsc_read_sgl( struct ifc1211_device *ifc,
   {
     case RDWR_SIZE_BYTE:
     {
-      *(char *)kbuf = *(char *)kaddr;
+      if(loop)
+      {
+	loop = rw->len;
+	while(loop--)
+	{
+	  *(char *)kbuf = *(char *)kaddr;
+	}
+      }
+      else 
+      {
+	*(char *)kbuf = *(char *)kaddr;
+      }
       break;
     }
     case RDWR_SIZE_SHORT:
     {
-      *(short *)kbuf = *(short *)kaddr;
+      if(loop)
+      {
+	loop = rw->len/2;
+	while(loop--)
+	{
+	  *(short *)kbuf = *(short *)kaddr;
+	}
+      }
+      else 
+      {
+	*(short *)kbuf = *(short *)kaddr;
+      }
       break;
     }
      case RDWR_SIZE_INT:
     {
-      *(int *)kbuf = *(int *)kaddr;
+      if(loop)
+      {
+	loop = rw->len/4;
+	while(loop--)
+	{
+	  *(int *)kbuf = *(int *)kaddr;
+	}
+      }
+      else 
+      {
+	*(int *)kbuf = *(int *)kaddr;
+      }
       break;
     }
      case RDWR_SIZE_DBL:
     {
-      *(long long *)kbuf = *(long long *)kaddr;
+      if(loop)
+      {
+	loop = rw->len/8;
+	while(loop--)
+	{
+	  *(long long *)kbuf = *(long long *)kaddr;
+	}
+      }
+      else 
+      {
+	*(long long *)kbuf = *(long long *)kaddr;
+      }
       break;
     }
   }
@@ -385,13 +431,15 @@ int
 tsc_rem_read( struct ifc1211_device *ifc,
 	      struct tsc_ioctl_rdwr *rw)
 {
-  if( rw->len < 0)
+  if( rw->len & RDWR_LOOP)
   {
-    return( -EINVAL);
+    /* loop data write */
+    rw->len &= ~RDWR_LOOP;
+    return( tsc_read_sgl( ifc, rw, 1));
   }
   else if( rw->len == 0)
   {
-    return( tsc_read_sgl( ifc, rw));
+    return( tsc_read_sgl( ifc, rw, 0));
   }
   else 
   {
@@ -600,7 +648,8 @@ tsc_write_exit:
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 tsc_write_sgl( struct ifc1211_device *ifc,
-	       struct tsc_ioctl_rdwr *rw)
+	       struct tsc_ioctl_rdwr *rw,
+	       int loop)
 {
   int retval;
   void *kaddr; 
@@ -633,22 +682,66 @@ tsc_write_sgl( struct ifc1211_device *ifc,
   {
     case RDWR_SIZE_BYTE:
     {
-       *(char *)kaddr = *(char *)kbuf;
+      if(loop)
+      {
+	loop = rw->len;
+	while(loop--)
+	{
+	  *(char *)kaddr = *(char *)kbuf;
+	}
+      }
+      else 
+      {
+	*(char *)kaddr = *(char *)kbuf;
+      }
       break;
     }
     case RDWR_SIZE_SHORT:
     {
-      *(short *)kaddr = *(short *)kbuf;
+      if(loop)
+      {
+	loop = rw->len/2;
+	while(loop--)
+	{
+	  *(short *)kaddr = *(short *)kbuf;
+	}
+      }
+      else 
+      {
+	*(short *)kaddr = *(short *)kbuf;
+      }
       break;
     }
      case RDWR_SIZE_INT:
     {
-      *(int *)kaddr = *(int *)kbuf;
+      if(loop)
+      {
+	loop = rw->len/4;
+	while(loop--)
+	{
+	  *(int *)kaddr = *(int *)kbuf;
+	}
+      }
+      else 
+      {
+	*(int *)kaddr = *(int *)kbuf;
+      }
       break;
     }
      case RDWR_SIZE_DBL:
     {
-      *(long long *)kaddr = *(long long *)kbuf;
+      if(loop)
+      {
+	loop = rw->len/8;
+	while(loop--)
+	{
+	  *(long long *)kaddr = *(long long *)kbuf;
+	}
+      }
+      else 
+      {
+	*(long long *)kaddr = *(long long *)kbuf;
+      }
       break;
     }
  }
@@ -670,14 +763,16 @@ int
 tsc_rem_write( struct ifc1211_device *ifc,
 	       struct tsc_ioctl_rdwr *rw)
 {
-  if( rw->len < 0)
+  if( rw->len & RDWR_LOOP)
   {
-    return( -EINVAL);
+    /* loop data write */
+    rw->len &= ~RDWR_LOOP;
+    return( tsc_write_sgl( ifc, rw, 1));
   }
   else if( rw->len == 0)
   {
     /* single data write */
-    return( tsc_write_sgl( ifc, rw));
+    return( tsc_write_sgl( ifc, rw, 0));
   }
   else 
   {

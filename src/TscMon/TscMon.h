@@ -48,6 +48,9 @@
 #include "semaphore.h"
 #include "fifo.h"
 #include "lmk.h"
+#include "i2c.h"
+#include "adc3110.h"  
+#include "adc3117.h"  
 
 int tsc_print_usage(struct cli_cmd_para *c);
 

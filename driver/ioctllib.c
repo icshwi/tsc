@@ -362,6 +362,25 @@ ioctl_dma( struct ifc1211_device *ifc,
       }
       break;
     }
+    case TSC_IOCTL_DMA_MODE:
+    {
+      struct tsc_ioctl_dma_mode dma_mode;
+
+      if( copy_from_user( &dma_mode, (void *)arg, sizeof(dma_mode)))
+      {
+	return( -EFAULT);
+      }
+      retval = tsc_dma_mode( ifc, &dma_mode);
+      if( retval < 0)
+      {
+	return( retval);
+      }
+      if( copy_to_user( (void *)arg, &dma_mode, sizeof( dma_mode)))
+      {
+	return -EFAULT;
+      }
+      break;
+    }
     case TSC_IOCTL_DMA_ALLOC:
     case TSC_IOCTL_DMA_FREE:
     case TSC_IOCTL_DMA_CLEAR:

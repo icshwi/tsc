@@ -167,6 +167,7 @@ int althea_ddr_idel_status(int mem){
 // ----------------------------------------------------------------------------------
 int althea_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
+	char para_buf[32];
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
@@ -321,14 +322,16 @@ int althea_ddr_idel_calib(int mem){
 
 	printf("\n");
 	printf("Enter hardware default DQ delay (default value: %i): ", CURRENT_DLY);
-	if (scanf(" %d", &CURRENT_DLY) != 1) {
+	gets(para_buf);
+	if (sscanf( para_buf, " %d", &CURRENT_DLY) != 1) {
 	  printf("ERROR ! \n");
 	}
 	printf(" %i", CURRENT_DLY);
 
 	printf("\n");
 	printf("Enter hardware default INC / DEC STEP (default value: %i): ", CURRENT_STEP);
-	if (scanf(" %d", &CURRENT_STEP) != 1) {
+	gets(para_buf);
+	if (sscanf( para_buf, " %d", &CURRENT_STEP) != 1) {
 	  printf("ERROR ! \n");
 	}
 	printf(" %i", CURRENT_STEP);

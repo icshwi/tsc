@@ -1,7 +1,7 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : dma.h
+ *    filename : i2c.h
  *    author   : JFG
  *    company  : IOxOS
  *    creation : Sept 30,2015
@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contain the declarations of all exported functions defined in
- *    dma.c
+ *    i2c.c
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -26,12 +26,11 @@
  *----------------------------------------------------------------------------
  *  Change History
  *  
- *
  *=============================< end file header >============================*/
 
-#ifndef _H_DMA
-#define _H_DMA
+#ifndef _H_I2C
+#define _H_I2C
 
-int tsc_dma( struct cli_cmd_para *);
-int dma_init( void);
-#endif /* _H_DMA */
+int tsc_i2c( struct cli_cmd_para *);
+
+#endif /* _H_I2C */

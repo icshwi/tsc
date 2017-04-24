@@ -32,6 +32,7 @@
 #ifndef lint
 static char rcsid[] = "$Id: tsculib.c,v 1.15 2016/03/02 09:44:14 ioxos Exp $";
 #endif
+typedef long dma_addr_t;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -45,8 +46,9 @@ static char rcsid[] = "$Id: tsculib.c,v 1.15 2016/03/02 09:44:14 ioxos Exp $";
 #include <sys/mman.h>
 
 #include "../include/tscioctl.h"
+#include "../include/i2c-dev.h"
 
-char tsc_lib_version[] = "2.21";
+char tsc_lib_version[] = "1.00";
 int tsc_fd         = -1;
 int tsc_fd_io      = -1;
 int tsc_fd_central = -1;
@@ -546,6 +548,68 @@ tsc_read_blk( ulong rem_addr,
 
   return( retval);
 }
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_write_blk
+ * Prototype     : int
+ * Parameters    : remote adrress
+ *                 data buffer pointer
+ *                 transfer size (in bytes)
+ *                 transfer mode (am,ds,..)
+ * Return        : status of read operation
+ *----------------------------------------------------------------------------
+ * Description   : copy <len> bytes from buffer <buf> to remote space 
+ *                 the adressing mode and data size are specified in <mode>
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int
+tsc_write_loop( ulong rem_addr,
+	        char *buf,
+	        int len,
+	        uint mode)
+{
+  struct tsc_ioctl_rdwr rdwr;
+  int retval;
+
+  if( len <= 0) return(-EINVAL);
+  if( tsc_fd < 0) return(-EBADF);
+  rdwr.rem_addr = rem_addr;
+  rdwr.buf = buf;
+  rdwr.len = len | RDWR_LOOP;
+  rdwr.mode = mode;
+  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+
+  return( retval);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_read_blk
+ * Prototype     : int
+ * Parameters    : remote adrress
+ *                 data buffer pointer
+ *                 transfer size (in bytes)
+ *                 transfer mode (am,ds,..)
+ * Return        : status of read operation
+ *----------------------------------------------------------------------------
+ * Description   : 
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int
+tsc_read_loop( ulong rem_addr,
+	      char *buf,
+	      int len,
+	      uint mode)
+{
+  struct tsc_ioctl_rdwr rdwr;
+  int retval;
+
+  if( len <= 0) return(-EINVAL);
+  if( tsc_fd < 0) return(-EBADF);
+  rdwr.rem_addr = rem_addr;
+  rdwr.buf = buf;
+  rdwr.len = len | RDWR_LOOP;
+  rdwr.mode = mode;
+  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+
+  return( retval);
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_sgl
@@ -805,6 +869,38 @@ tsc_map_clear( struct tsc_ioctl_map_ctl *m)
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_pci_mmap
+ * Prototype     : int
+ * Parameters    : pci address and mapping size
+ * Return        : status of set operation
+ *----------------------------------------------------------------------------
+ * Description   : map kernel buffer in user's space
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+void *
+tsc_pci_mmap( off_t pci_addr,
+	      size_t size)
+{
+  if( tsc_fd < 0) return(NULL);
+  return( mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, tsc_fd, pci_addr));
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_pci_munmap
+ * Prototype     : int
+ * Parameters    : pci address and mapping size
+ * Return        : status of set operation
+ *----------------------------------------------------------------------------
+ * Description   : unmap kernel buffer
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int
+tsc_pci_munmap( void *addr,
+	        size_t size)
+{
+  if( tsc_fd < 0) return(-EBADF);
+  return( munmap( addr, size));
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_kbuf_alloc
  * Prototype     : int
  * Parameters    : pointer to kernel buffer request data structure
@@ -946,10 +1042,10 @@ tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_status
  * Prototype     : int
- * Parameters    : pointer to mapping control structure
- * Return        : status of set operation
+ * Parameters    : pointer to dma status control structure
+ * Return        : status of status operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : update dma status control structure with current status
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
@@ -959,12 +1055,27 @@ tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_mode
+ * Prototype     : int
+ * Parameters    : pointer to dma mode control structure
+ * Return        : current DMA  mode of operation
+ *----------------------------------------------------------------------------
+ * Description   : allow to set/get dma mode of operation
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int
+tsc_dma_mode( struct tsc_ioctl_dma_sts *dm_p)
+{
+  if( tsc_fd < 0) return(-EBADF);
+  return( ioctl( tsc_fd, TSC_IOCTL_DMA_MODE, dm_p));
+}
+ 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_alloc
  * Prototype     : int
- * Parameters    : pointer to mapping control structure
+ * Parameters    : channel index
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : request DMA chhannel allocation
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_dma_alloc( int chan)
@@ -982,7 +1093,7 @@ tsc_dma_alloc( int chan)
  * Parameters    : pointer to mapping control structure
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : free allocated DMA channel
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_dma_free( int chan)
@@ -1410,20 +1521,79 @@ tsc_fifo_write( uint idx,
  *                 by <data>.
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+static int
+i2c_set_dev( int dev)
+{
+  int fd;
+  int addr;
+  char filename[16];
+
+  switch( (dev >> 29) & 3)
+  {
+    case 0:
+    {
+      sprintf(filename,"/dev/i2c-0");
+      break;
+    }
+    case 1:
+    {
+      sprintf(filename,"/dev/i2c-1");
+      break;
+    }
+    case 2:
+    {
+      sprintf(filename,"/dev/i2c-2");
+      break;
+    }
+    default:
+    {
+      return(-1);
+    }
+  }
+  fd = open(filename,O_RDWR);
+  if( fd < 0)
+  {
+    printf("cannot open %s\n", filename);
+    return( -1);
+  }
+  addr = dev & 0x7f;
+  if (ioctl( fd, I2C_SLAVE, addr) < 0) 
+  {
+    printf("cannot select I2C_SLVE %x\n", addr);
+    close( fd);
+    return( -1);
+  }
+  return(fd);
+}
+
 int
 tsc_i2c_read( uint dev,
 	      uint reg,
 	      uint *data)
 {
-  struct tsc_ioctl_i2c i2c;
+  int fd;
+  int cmd_size;
+  int data_size;
 
-  i2c.device = dev;
-  i2c.cmd = reg;
-  i2c.data = 0;
-  ioctl( tsc_fd, TSC_IOCTL_I2C_READ, &i2c);
-  *data = i2c.data;
-
-  return( i2c.status);
+  fd = i2c_set_dev( dev);
+  if( fd < 0)
+  {
+    return(-1);
+  }
+  cmd_size  = ((dev>>16)&3)+1;
+  data_size = ((dev>>18)&3)+1;
+  if( cmd_size == 2)
+  {
+    i2c_smbus_write_byte_data(fd, (reg>>8)&0xff, reg&0xff);
+    *data = i2c_smbus_read_byte(fd);
+  }
+  if( cmd_size == 1)
+  {
+    if( data_size == 1) *data = i2c_smbus_read_byte_data(fd, reg);
+    if( data_size == 2) *data = i2c_smbus_read_word_data(fd, reg);
+  }
+  close(fd);
+  return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1439,16 +1609,20 @@ tsc_i2c_read( uint dev,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_i2c_cmd( uint dev,
-	      uint cmd)
+	     uint cmd)
 {
-  struct tsc_ioctl_i2c i2c;
+  int fd;
 
-  i2c.device = dev;
-  i2c.cmd = cmd;
-  i2c.data = 0;
-  ioctl( tsc_fd, TSC_IOCTL_I2C_CMD, &i2c);
-
-  return( i2c.status);
+  fd = i2c_set_dev( dev);
+  if( fd < 0)
+  {
+    return(-1);
+  }
+  if( i2c_smbus_write_byte(fd, cmd) < 0)
+  {
+    return(-1);
+  }
+  close(fd);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1468,14 +1642,28 @@ tsc_i2c_write( uint dev,
 	       uint reg,
 	       uint data)
 {
-  struct tsc_ioctl_i2c i2c;
+  int fd;
+  int cmd_size;
+  int data_size;
 
-  i2c.device = dev;
-  i2c.cmd = reg;
-  i2c.data = data;
-  ioctl( tsc_fd, TSC_IOCTL_I2C_WRITE, &i2c);
-
-  return( i2c.status);
+  fd = i2c_set_dev( dev);
+  if( fd < 0)
+  {
+    return(-1);
+  }
+  cmd_size  = ((dev>>16)&3)+1;
+  data_size = ((dev>>18)&3)+1;
+  if( cmd_size == 2)
+  {
+    i2c_smbus_write_word_data(fd, (reg>>8)&0xff, (reg&0xff) | ((data&0xff)<<8));
+  }
+  if( cmd_size == 1)
+  {
+    if( data_size == 1) i2c_smbus_write_byte_data(fd, reg, data);
+    if( data_size == 2) i2c_smbus_write_word_data(fd, reg, data);
+  }
+  close(fd);
+  return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1491,14 +1679,7 @@ tsc_i2c_write( uint dev,
 int
 tsc_i2c_reset( uint dev)
 {
-  struct tsc_ioctl_i2c i2c;
-
-  i2c.device = dev;
-  i2c.cmd = 0;
-  i2c.data = 0;
-  ioctl( tsc_fd, TSC_IOCTL_I2C_RESET, &i2c);
-
-  return( i2c.status);
+  return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

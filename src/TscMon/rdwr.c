@@ -59,13 +59,12 @@ struct cli_cmd_history pm_history;
 extern struct aiocb aiocb;
 extern char aio_buf[256];
 struct rdwr_cycle_para last_csr_cycle;
-// Structure 0 -> CENTRAL device
-// Structure 1 -> IO device
 struct rdwr_cycle_para last_shm_cycle[2];
 struct rdwr_cycle_para last_shm2_cycle[2];
 struct rdwr_cycle_para last_usr_cycle[2];
 struct rdwr_cycle_para last_usr2_cycle[2];
-
+struct rdwr_cycle_para last_pci1_cycle;
+struct rdwr_cycle_para last_pci2_cycle;
 struct rdwr_cycle_para last_kbuf_cycle[TSC_NUM_KBUF];
 extern int script_exit;
 
@@ -87,135 +86,134 @@ rdwr_rcsid()
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdwr_init( void){
-	int i;
+int 
+rdwr_init( void)
+{
+  int i;
 
-	cli_history_init( &pm_history);
-	bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
-	aiocb.aio_fildes = STDIN_FILENO;		       // Async IO
-	aiocb.aio_buf    = aio_buf;
-	aiocb.aio_nbytes = 1;
+  cli_history_init( &pm_history);
+  bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
+  aiocb.aio_fildes = STDIN_FILENO;		 // Async IO
+  aiocb.aio_buf    = aio_buf;
+  aiocb.aio_nbytes = 1;
 
-	// -> CENTRAL[0] -> SHM1, SHM2,  USR1, USR2
-	// -> IO[1]      -> SHM,  <SHM>  USR, <USR> <> remapping
+  bzero( &last_csr_cycle, sizeof(struct rdwr_cycle_para));
+  last_csr_cycle.len = 0x40;
+  last_csr_cycle.m.ads = 0x24;
+  last_csr_cycle.m.space = 0x00;
+  last_csr_cycle.m.swap = 0x00;
+  last_csr_cycle.m.am = 0x00;
+  last_csr_cycle.loop = 1;
 
-	// csr cycle
+  bzero( &last_shm_cycle[0], sizeof(struct rdwr_cycle_para));
+  last_shm_cycle[0].len = 0x40;
+  last_shm_cycle[0].m.ads = 0x44;
+  last_shm_cycle[0].m.space = RDWR_SPACE_SHM;
+  last_shm_cycle[0].m.swap = 0x00;
+  last_shm_cycle[0].m.am = 0x00;
+  last_shm_cycle[0].loop = 1;
 
-	bzero( &last_csr_cycle, sizeof(struct rdwr_cycle_para));
-	last_csr_cycle.len     = 0x40;
-	last_csr_cycle.m.ads   = 0x24;
-	last_csr_cycle.m.space = 0x00;
-	last_csr_cycle.m.swap  = 0x00;
-	last_csr_cycle.m.am    = 0x00;
-	last_csr_cycle.loop    = 1;
+  bzero( &last_shm2_cycle[0], sizeof(struct rdwr_cycle_para));
+  last_shm2_cycle[0].len = 0x40;
+  last_shm2_cycle[0].m.ads = 0x44;
+  last_shm2_cycle[0].m.space = RDWR_SPACE_SHM2;
+  last_shm2_cycle[0].m.swap = 0x00;
+  last_shm2_cycle[0].m.am = 0x00;
+  last_shm2_cycle[0].loop = 1;
 
-	// shm1 cycle
+  bzero( &last_usr_cycle[0], sizeof(struct rdwr_cycle_para));
+  last_usr_cycle[0].len = 0x40;
+  last_usr_cycle[0].m.ads = 0x44;
+  last_usr_cycle[0].m.space = RDWR_SPACE_USR1;
+  last_usr_cycle[0].m.swap = 0x00;
+  last_usr_cycle[0].m.am = 0x00;
+  last_usr_cycle[0].loop = 1;
 
-	// CENTRAL
-	bzero( &last_shm_cycle[0], sizeof(struct rdwr_cycle_para));
-	last_shm_cycle[0].len     = 0x40;
-	last_shm_cycle[0].m.ads   = 0x44;
-	last_shm_cycle[0].m.space = RDWR_SPACE_SHM1;
-	last_shm_cycle[0].m.swap  = 0x00;
-	last_shm_cycle[0].m.am    = 0x00;
-	last_shm_cycle[0].loop    = 1;
+  bzero( &last_usr2_cycle[0], sizeof(struct rdwr_cycle_para));
+  last_usr2_cycle[0].len = 0x40;
+  last_usr2_cycle[0].m.ads = 0x44;
+  last_usr2_cycle[0].m.space = RDWR_SPACE_USR2;
+  last_usr2_cycle[0].m.swap = 0x00;
+  last_usr2_cycle[0].m.am = 0x00;
+  last_usr2_cycle[0].loop = 1;
 
-	// IO
-	bzero( &last_shm_cycle[1], sizeof(struct rdwr_cycle_para));
-	last_shm_cycle[1].len     = 0x40;
-	last_shm_cycle[1].m.ads   = 0x44;
-	last_shm_cycle[1].m.space = RDWR_SPACE_SHM;
-	last_shm_cycle[1].m.swap  = 0x00;
-	last_shm_cycle[1].m.am    = 0x00;
-	last_shm_cycle[1].loop    = 1;
+  bzero( &last_shm_cycle[1], sizeof(struct rdwr_cycle_para));
+  last_shm_cycle[1].len = 0x40;
+  last_shm_cycle[1].m.ads = 0x44;
+  last_shm_cycle[1].m.space = RDWR_SPACE_SHM;
+  last_shm_cycle[1].m.swap = 0x00;
+  last_shm_cycle[1].m.am = 0x00;
+  last_shm_cycle[1].loop = 1;
 
-	// shm2 cycle
+  bzero( &last_shm2_cycle[1], sizeof(struct rdwr_cycle_para));
+  last_shm2_cycle[1].len = 0x40;
+  last_shm2_cycle[1].m.ads = 0x44;
+  last_shm2_cycle[1].m.space = RDWR_SPACE_SHM2;
+  last_shm2_cycle[1].m.swap = 0x00;
+  last_shm2_cycle[1].m.am = 0x00;
+  last_shm2_cycle[1].loop = 1;
 
-	// CENTRAL
-	bzero( &last_shm2_cycle[0], sizeof(struct rdwr_cycle_para));
-	last_shm2_cycle[0].len     = 0x40;
-	last_shm2_cycle[0].m.ads   = 0x44;
-	last_shm2_cycle[0].m.space = RDWR_SPACE_SHM2;
-	last_shm2_cycle[0].m.swap  = 0x00;
-	last_shm2_cycle[0].m.am    = 0x00;
-	last_shm2_cycle[0].loop    = 1;
+  bzero( &last_usr_cycle[1], sizeof(struct rdwr_cycle_para));
+  last_usr_cycle[1].len = 0x40;
+  last_usr_cycle[1].m.ads = 0x44;
+  last_usr_cycle[1].m.space = RDWR_SPACE_USR1;
+  last_usr_cycle[1].m.swap = 0x00;
+  last_usr_cycle[1].m.am = 0x00;
+  last_usr_cycle[1].loop = 1;
 
-	// IO
-	bzero( &last_shm2_cycle[1], sizeof(struct rdwr_cycle_para));
-	last_shm2_cycle[1].len     = 0x40;
-	last_shm2_cycle[1].m.ads   = 0x44;
-	last_shm2_cycle[1].m.space = RDWR_SPACE_SHM;
-	last_shm2_cycle[1].m.swap  = 0x00;
-	last_shm2_cycle[1].m.am    = 0x00;
-	last_shm2_cycle[1].loop    = 1;
+  bzero( &last_usr2_cycle[1], sizeof(struct rdwr_cycle_para));
+  last_usr2_cycle[1].len = 0x40;
+  last_usr2_cycle[1].m.ads = 0x44;
+  last_usr2_cycle[1].m.space = RDWR_SPACE_USR2;
+  last_usr2_cycle[1].m.swap = 0x00;
+  last_usr2_cycle[1].m.am = 0x00;
+  last_usr2_cycle[1].loop = 1;
 
-	// user1 cycle
+  bzero( &last_pci1_cycle, sizeof(struct rdwr_cycle_para));
+  last_pci1_cycle.len = 0x40;
+  last_pci1_cycle.m.ads = 0x44;
+  last_pci1_cycle.m.space = RDWR_SPACE_PCIE1;
+  last_pci1_cycle.m.swap = 0x00;
+  last_pci1_cycle.m.am = 0x00;
+  last_pci1_cycle.loop = 1;
 
-	// CENTRAL
-	bzero( &last_usr_cycle[0], sizeof(struct rdwr_cycle_para));
-	last_usr_cycle[0].len      = 0x40;
-	last_usr_cycle[0].m.ads    = 0x44;
-	last_usr_cycle[0].m.space  = RDWR_SPACE_USR1;
-	last_usr_cycle[0].m.swap   = 0x00;
-	last_usr_cycle[0].m.am     = 0x00;
-	last_usr_cycle[0].loop     = 1;
+  bzero( &last_pci2_cycle, sizeof(struct rdwr_cycle_para));
+  last_pci2_cycle.len = 0x40;
+  last_pci2_cycle.m.ads = 0x44;
+  last_pci2_cycle.m.space = RDWR_SPACE_PCIE2;
+  last_pci2_cycle.m.swap = 0x00;
+  last_pci2_cycle.m.am = 0x00;
+  last_pci2_cycle.loop = 1;
 
-	// IO
-	bzero( &last_usr_cycle[1], sizeof(struct rdwr_cycle_para));
-	last_usr_cycle[1].len      = 0x40;
-	last_usr_cycle[1].m.ads    = 0x44;
-	last_usr_cycle[1].m.space  = RDWR_SPACE_USR;
-	last_usr_cycle[1].m.swap   = 0x00;
-	last_usr_cycle[1].m.am     = 0x00;
-	last_usr_cycle[1].loop     = 1;
 
-	// user2 cycle
+  for( i = 0; i <  TSC_NUM_KBUF; i++)
+  {
+    bzero( &last_kbuf_cycle[i], sizeof(struct rdwr_cycle_para));
+    last_kbuf_cycle[i].len = 0x40;
+    last_kbuf_cycle[i].m.ads = 0x44;
+    last_kbuf_cycle[i].m.space = RDWR_SPACE_KBUF;
+    last_kbuf_cycle[i].m.swap = 0x00;
+    last_kbuf_cycle[i].m.am = 0x00;
+    last_kbuf_cycle[i].loop = 1;
+    last_kbuf_cycle[i].kb_p = NULL;
+  }
 
-	// CENTRAL
-	bzero( &last_usr2_cycle[0], sizeof(struct rdwr_cycle_para));
-  	last_usr2_cycle[0].len     = 0x40;
-  	last_usr2_cycle[0].m.ads   = 0x44;
-  	last_usr2_cycle[0].m.space = RDWR_SPACE_USR2;
-  	last_usr2_cycle[0].m.swap  = 0x00;
-  	last_usr2_cycle[0].m.am    = 0x00;
-  	last_usr2_cycle[0].loop    = 1;
+  if( !alloc_kbuf( 0, 0x100000))
+  {
+    printf("kernel buffer allocated: %p %llx %x\n", tsc_kbuf_ctl[0].kbuf_p->k_base, tsc_kbuf_ctl[0].kbuf_p->b_base, tsc_kbuf_ctl[0].kbuf_p->size);
+    last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
+  }
+  else
+  {
+    printf("Cannot allocate kernel buffer\n");
+  }
 
-  	// IO
-	bzero( &last_usr2_cycle[1], sizeof(struct rdwr_cycle_para));
-  	last_usr2_cycle[1].len     = 0x40;
-  	last_usr2_cycle[1].m.ads   = 0x44;
-  	last_usr2_cycle[1].m.space = RDWR_SPACE_USR;
-  	last_usr2_cycle[1].m.swap  = 0x00;
-  	last_usr2_cycle[1].m.am    = 0x00;
-  	last_usr2_cycle[1].loop    = 1;
+  bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
+  aiocb.aio_fildes = STDIN_FILENO;		 // Async IO
+  aiocb.aio_buf    = aio_buf;
+  aiocb.aio_nbytes = 1;
 
-  	// kbuf cycle
-
-  	for( i = 0; i <  TSC_NUM_KBUF; i++){
-  		bzero( &last_kbuf_cycle[i], sizeof(struct rdwr_cycle_para));
-  		last_kbuf_cycle[i].len     = 0x40;
-  		last_kbuf_cycle[i].m.ads   = 0x44;
-  		last_kbuf_cycle[i].m.space = RDWR_SPACE_KBUF;
-  		last_kbuf_cycle[i].m.swap  = 0x00;
-  		last_kbuf_cycle[i].m.am    = 0x00;
-  		last_kbuf_cycle[i].loop    = 1;
-  		last_kbuf_cycle[i].kb_p    = NULL;
-  	}
-
-  	if(!alloc_kbuf( 0, 0x100000)){
-  		printf("kernel buffer allocated: %p %llx %x\n", tsc_kbuf_ctl[0].kbuf_p->k_base, tsc_kbuf_ctl[0].kbuf_p->b_base, tsc_kbuf_ctl[0].kbuf_p->size);
-  		last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
-  	}
-  	else{
-  		printf("Cannot allocate kernel buffer\n");
-  	}
-
-  	bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
-  	aiocb.aio_fildes = STDIN_FILENO;		       // Async IO
-  	aiocb.aio_buf    = aio_buf;
-  	aiocb.aio_nbytes = 1;
-
-  	return(0);
+  return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -244,69 +242,67 @@ rdwr_exit( void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-struct rdwr_cycle_para *rdwr_get_cycle_space( char *cmd_p){
-	int device = -1;
+struct rdwr_cycle_para *
+rdwr_get_cycle_space( char *cmd_p)
+{
+  int device = -1;
 
-	// Get current device used to match correct command history
-	device = tsc_get_device();
+  // Get current device used to match correct command history
+  device = tsc_get_device();
+  printf("device: %d\n", device);
 
-	// SHM
-	if(cmd_p[1] == 's'){
-		if( strlen( cmd_p) > 2){
-			if( cmd_p[2] == '2'){
-				if(device == 0){
-					return( &last_shm2_cycle[0]);
-				}
-				else if (device == 1){
-					return( &last_shm2_cycle[1]);
-				}
-			}
-		}
-		if(device == 0){
-			return( &last_shm_cycle[0]);
-		}
-		else if (device == 1){
-			return( &last_shm_cycle[1]);
-		}
-	}
-
-	// USR
-	if(cmd_p[1] == 'u'){
-		if( strlen( cmd_p) > 2){
-			if( cmd_p[2] == '2'){
-				if (device == 0){
-					return( &last_usr2_cycle[0]);
-				}
-				else if (device == 1){
-					return( &last_usr2_cycle[1]);
-				}
-			}
-		}
-		if (device == 0){
-			return( &last_usr_cycle[0]);
-		}
-		else if (device == 1){
-			return( &last_usr_cycle[1]);
-		}
-	}
-
-	// KBUF
-	if(cmd_p[1] == 'm') {
-		last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
-		return( &last_kbuf_cycle[0]);
-	}
-	if(cmd_p[1] == 'k'){
-		struct rdwr_cycle_para *cp;
-		int idx;
-		idx = (int)(cmd_p[2] - '0');
-		if((idx < 0) || (idx > TSC_NUM_KBUF)){
-			return( NULL);
-		}
-		cp = &last_kbuf_cycle[idx];
-		cp->kb_p = tsc_kbuf_ctl[idx].kbuf_p;
-		return(cp);
-	}
-	return( NULL);
+  if( cmd_p[1] == 'p')
+  {
+    if( strlen( cmd_p) > 2 )
+    {
+      if( cmd_p[2] == '1')
+      {
+        return( &last_pci2_cycle);
+      }
+    }
+    return( &last_pci1_cycle);
+  }
+  if( cmd_p[1] == 's')
+  {
+    if( strlen( cmd_p) > 2 )
+    {
+      if( cmd_p[2] == '2')
+      {
+        return( &last_shm2_cycle[device]);
+      }
+    }
+    return( &last_shm_cycle[device]);
+  }
+  if( cmd_p[1] == 'u')
+  {
+    if( strlen( cmd_p) > 2 )
+    {
+      if( cmd_p[2] == '2')
+      {
+        return( &last_usr2_cycle[device]);
+      }
+      return( &last_usr_cycle[device]);
+    }
+  }
+  if( cmd_p[1] == 'm') 
+  {
+    last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
+    return( &last_kbuf_cycle[0]);
+  }
+  if( cmd_p[1] == 'k')
+  {
+    struct rdwr_cycle_para *cp;
+    int idx;
+    idx = (int)(cmd_p[2] - '0');
+    if((idx < 0) || (idx > TSC_NUM_KBUF))
+    {
+      return( NULL);
+    }
+    cp = &last_kbuf_cycle[idx];
+    cp->kb_p = tsc_kbuf_ctl[idx].kbuf_p;
+    return(cp);
+  }
+  return( NULL);
 }
 
 static int
@@ -421,7 +417,12 @@ rdwr_get_cycle_swap( char *name,
   char tmp[4];
 
   if( !name) return;
-
+  cp->m.swap = 0x0;
+  if( name[1] == 's')
+  {
+    cp->m.swap = 0x80;
+  }
+#ifdef JFG
   bzero( tmp, 4);
   strncpy( tmp, name, 4);
 
@@ -441,6 +442,7 @@ rdwr_get_cycle_swap( char *name,
   {
     cp->m.swap =RDWR_SWAP_QS;
   }
+#endif
 }
 
 static void
@@ -507,17 +509,36 @@ static char
   return( prompt);
 }
 
+void rdwr_sprintf_bin( char *s, 
+		       unsigned n,
+		       unsigned int bit_size)
+{
+  unsigned int i;
+  unsigned int j = 1;
+
+  for( i = 1 << (bit_size - 1); i > 0; i = i / 2)
+  {
+    (n & i) ? sprintf(s++,"1"): sprintf(s++,"0");
+    if (!(j % 4))
+    {
+      sprintf(s++,"'");
+    }
+    j++;
+  }
+  *(--s) = 0;
+}
 
 static char * 
 rdwr_patch_addr( ulong addr, 
 		 void *data_p,
 		 int mode,
-		 int ex)
+		 int swap)
 {
   unsigned char *p;
   int ds;
   char pm_prompt[32];
   int idx;
+  char bin_string[33];
 
   p = (unsigned char *)data_p;
   ds = mode & 0xf;
@@ -527,17 +548,36 @@ rdwr_patch_addr( ulong addr,
   {
     case 1:
     {
-      sprintf( &pm_prompt[idx], "%02x -> ", *p);
+      rdwr_sprintf_bin( bin_string, *p, 8);
+      sprintf( &pm_prompt[idx], "%02x [%s] -> ", *p, bin_string);
       break;
     }
     case 2:
     {
-      sprintf( &pm_prompt[idx], "%04x -> ", *(ushort *)p);
+      if( swap & 0x80)
+      {
+	rdwr_sprintf_bin( bin_string, tsc_swap_16( *(ushort *)p), 16);
+	sprintf( &pm_prompt[idx], "%04x [%s] -> ", (ushort)tsc_swap_16( *(ushort *)p), bin_string);
+      }
+      else 
+      {
+	rdwr_sprintf_bin( bin_string, *(ushort *)p, 16);
+	sprintf( &pm_prompt[idx], "%04x [%s] -> ", *(ushort *)p,  bin_string);
+      }
       break;
     }
     case 4:
     {
-      sprintf( &pm_prompt[idx], "%08x -> ", *(uint *)p);
+      if( swap & 0x80)
+      {
+	rdwr_sprintf_bin( bin_string, tsc_swap_32( *(uint *)p), 32);
+	sprintf( &pm_prompt[idx], "%08x [%s] -> ",  tsc_swap_32( *(uint *)p), bin_string);
+      }
+      else 
+      {
+	rdwr_sprintf_bin( bin_string, *(uint *)p, 32);
+	sprintf( &pm_prompt[idx], "%08x [%s] -> ", *(uint *)p, bin_string);
+      }
       break;
     }
     case 8:
@@ -545,11 +585,6 @@ rdwr_patch_addr( ulong addr,
       sprintf( &pm_prompt[idx], "%016lx -> ", *(ulong *)p);
       break;
     }
-  }
-  if( ex)
-  {
-    printf("%s .\n", pm_prompt);
-    return( 0);
   }
   return( cli_get_cmd( &pm_history, pm_prompt));
 }
@@ -783,8 +818,8 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
         printf("\ncannot access IFC1211 PCI CFG register 0x%x -> error %d\n", offset*4, retval);
         return( RDWR_ERR);
       }
-      if( !((i*4)&0xf)) printf("\n  0x%04x : ", 4*offset);
-      printf("0x%08x ", data);
+      if( !((i*4)&0xf)) printf("\n%08x : ", 4*offset);
+      printf("%08x ", data);
     }
     else if( c->cmd[1] == 'i')
     {
@@ -794,8 +829,8 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
         printf("\ncannot access PON register 0x%x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
-      if( !(i&0xf)) printf("\n  0x%04x : ", offset);
-      printf("0x%08x ", data);
+      if( !(i&0xf)) printf("\n%08x : ", offset);
+      printf("%08x ", data);
     }
     else
     {
@@ -805,8 +840,8 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
         printf("\ncannot access IFC1211 register 0x%x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
-      if( !(i&0xf)) printf("\n  0x%04x : ", offset);
-      printf("0x%08x ", data);
+      if( !(i&0xf)) printf("\n%08x : ", offset);
+      printf("%08x ", data);
     }
   }
   printf("\n\n");
@@ -942,7 +977,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
 {
   struct rdwr_cycle_para *cp;
   char *buf;
-  int swap, len;
+  int len;
 
   cp = rdwr_get_cycle_space( c->cmd);
   if( !cp)
@@ -981,12 +1016,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
   {
     tsc_read_blk( cp->addr, buf, cp->len, cp->mode);
   }
-  swap = 0;
-  if( c->ext)
-  {
-    if( c->ext[1] == 's') swap = 0x80;
-  }
-  rdwr_show_buf( cp->addr, buf, cp->len, swap | RDWR_MODE_GET_DS( cp->m.ads));
+  rdwr_show_buf( cp->addr, buf, cp->len, cp->m.swap | RDWR_MODE_GET_DS( cp->m.ads));
   cp->addr += (ulong)cp->len;
   free(buf);
 
@@ -1065,7 +1095,8 @@ rdwr_fill_buf( void *buf,
 	  para = ((ushort)(cp->para << shift)) | ((ushort)(cp->para >> ( 0x10 - shift)));
 	  data =  (ushort)cp->data ^ para;
 	}
-        *p++ = data;
+	if( cp->m.swap & 0x80) *p++ = tsc_swap_16( data);
+        else *p++ = data;
 	if( cp->operation == 'r') data =  (ushort)random();
 	if( cp->operation == 's') data =  (ushort)((int)data + (int)cp->para);
 	if( cp->operation == 'w') data =  (ushort)cp->data;
@@ -1091,7 +1122,8 @@ rdwr_fill_buf( void *buf,
 	  para = ((uint)cp->para << shift) | ((uint)cp->para >> ( 0x20 - shift));
 	  data =  (uint)cp->data ^ para;
 	}
-        *p++ = data;
+	if( cp->m.swap & 0x80) *p++ = tsc_swap_32( data);
+        else *p++ = data;
 	if( cp->operation == 'r') data =  (uint)((random()<<24) + random());
 	if( cp->operation == 's') data +=  (uint)cp->para;
 	if( cp->operation == 'w') data =  (uint)cp->data;
@@ -1456,6 +1488,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
   int ds;
   struct rdwr_cycle_para *cp;
   char *next, *p;
+  char bin_string[33];
 
   cp = rdwr_get_cycle_space( c->cmd);
   if( !cp)
@@ -1506,17 +1539,34 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       {
         case RDWR_SIZE_BYTE:
         {
-          printf("0x%08lx : 0x%02x -> \n", offset, *(char *)buf);
+	  rdwr_sprintf_bin( bin_string,  *(unsigned char *)buf, 8);
+          printf("0x%08lx : 0x%02x [0b%8b] -> \n", offset, *(unsigned char *)buf, bin_string);
           break;
         }
         case RDWR_SIZE_SHORT:
         {
-          printf("0x%08lx : 0x%04x -> \n", offset, *(short *)buf);
+	  unsigned short data_s;
+
+	  data_s =  *(unsigned short *)buf;
+	  if( cp->m.swap & 0x80)
+	  {
+	    data_s = (unsigned short)tsc_swap_16( data_s);
+	  }
+	  rdwr_sprintf_bin( bin_string,  data_s, 16);
+	  printf("0x%08lx : 0x%04x [%s] -> \n", offset, data_s, bin_string);
           break;
         }
         case RDWR_SIZE_INT:
         {
-          printf("0x%08lx : 0x%08x -> \n", offset, *(int *)buf);
+	  unsigned int data_i;
+
+	  data_i =  *(unsigned int *)buf;
+	  if( cp->m.swap & 0x80)
+	  {
+	    data_i = (unsigned int)tsc_swap_32( data_i);
+	  }
+	  rdwr_sprintf_bin( bin_string,  data_i, 32);
+	  printf("0x%08lx : 0x%08x [%s] -> \n", offset, data_i, bin_string);
           break;
         }
       }
@@ -1531,8 +1581,28 @@ tsc_rdwr_px( struct cli_cmd_para *c)
         goto tsc_rdwr_px_error;
       }
       if( ds == RDWR_SIZE_BYTE)  *(char *)buf = (char)data;
-      if( ds == RDWR_SIZE_SHORT) *(short *)buf = (short)data;
-      if( ds == RDWR_SIZE_INT)   *(int *)buf = data;
+      if( ds == RDWR_SIZE_SHORT)
+      {
+	if( cp->m.swap & 0x80)
+	{
+	  *(short *)buf = tsc_swap_16( (short)data);
+	}
+	else 
+	{
+	  *(short *)buf = (short)data;
+	}
+      }
+      if( ds == RDWR_SIZE_INT)   
+      {
+	if( cp->m.swap & 0x80)
+	{
+	  *(int *)buf = tsc_swap_32( data);
+	}
+	else 
+	{
+	  *(int *)buf = data;
+	}
+      }
       if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
       {
         if( !cp->kb_p)
@@ -1575,7 +1645,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       printf("cannot access IFC1211 register 0x%lx -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
-    next = rdwr_patch_addr( offset, (void *)buf, cp->m.ads, 0);
+    next = rdwr_patch_addr( offset, (void *)buf, cp->m.ads, cp->m.swap);
     switch( next[0])
     {
       case 0:
@@ -1607,8 +1677,28 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	else
 	{
           if( ds == RDWR_SIZE_BYTE)  *(char *)buf = (char)data;
-          if( ds == RDWR_SIZE_SHORT) *(short *)buf = (short)data;
-          if( ds == RDWR_SIZE_INT)   *(int *)buf = data;
+          if( ds == RDWR_SIZE_SHORT)
+	  {
+	    if( cp->m.swap & 0x80)
+	    {
+	      *(short *)buf = tsc_swap_16( (short)data);
+	    }
+	    else 
+	    {
+	      *(short *)buf = (short)data;
+	    }
+	  }
+          if( ds == RDWR_SIZE_INT)   
+	  {
+	    if( cp->m.swap & 0x80)
+	    {
+	      *(int *)buf = tsc_swap_32( data);
+	    }
+	    else 
+	    {
+	      *(int *)buf = data;
+	    }
+	  }
           if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
           {
             if( !cp->kb_p)
@@ -1840,13 +1930,11 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
     tsc_print_usage( c);
     return( retval);
   }
-  printf("buf1 : %x %c %d\n", off1, sp1, idx1);
-  printf("buf1 : %x %c %d\n", off2, sp2, idx2);
-  printf("length : %x\n", len);
-  printf("Comparing data buffers..\n");
+  printf("Comparing data buffers..");
 
   mode1 = 0;
   buf1 = (char *)malloc( len);
+  buf2 = NULL;
   if( !buf1)
   {
     printf("Cannot allocate memory\n");
@@ -1926,11 +2014,13 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
   offset = rdwr_cmp_buf( buf1, buf2, len, -1);
   if( offset < len)
   {
+    printf(" -> NOK\n");
     rdwr_tx_error( buf1, buf2, offset,  RDWR_SIZE_INT, 0);
     retval = RDWR_ERR;
   }
   else
   {
+    printf(" -> OK\n");
     retval = RDWR_OK;
   }
 
@@ -1938,4 +2028,135 @@ tsc_rdwr_cmp_err:
   if( buf1) free(buf1);
   if( buf2) free(buf2);
   return( retval);
+}
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_rdwr_lx
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : RDWR_OK  if command executed
+ *                 RDWR_ERR if error
+ *----------------------------------------------------------------------------
+ * Description   : loop read/write on remote resource
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int 
+tsc_rdwr_lx( struct cli_cmd_para *c)
+{
+  ulong offset;
+  ulong data;
+  char buf[8];
+  int retval;
+  int ds;
+  struct rdwr_cycle_para *cp;
+  int rdwr;
+
+  cp = rdwr_get_cycle_space( c->cmd);
+  if( !cp)
+  {
+    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    goto tsc_rdwr_lx_error;
+  }
+  if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
+  {
+    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    goto tsc_rdwr_lx_error;
+  }
+  if( !c->cnt)
+  {
+    offset = cp->addr;
+  }
+  else 
+  {
+    if( sscanf( c->para[0], "%lx", &offset) != 1)
+    {
+      printf("Bad address argument [%s] -> usage:\n", c->para[0]);
+      goto tsc_rdwr_lx_error;
+    }
+    cp->addr = (ulong)offset;
+  }
+  rdwr = 0;
+  if( c->cnt > 1)
+  {
+    if( sscanf( c->para[1], "%lx", &data) != 1)
+    {
+       printf("Bad data argument [%s] -> usage:\n", c->para[1]);
+       goto tsc_rdwr_lx_error;
+    }
+    rdwr = 1;
+    printf("data = %lx\n", data);
+  }
+  if( c->ext)
+  {
+    rdwr_get_cycle_ds( c->ext, cp);
+    rdwr_get_cycle_swap( c->ext, cp);
+  }
+  ds = RDWR_MODE_GET_DS(cp->m.ads);
+  if( aio_error( &aiocb) != EINPROGRESS)
+  {
+    if( aio_read( &aiocb) < 0)
+    {
+      perror("aio_read");
+      goto xprs_rdwr_lx_exit;
+    }
+  }
+  while(1)
+  {
+    if( rdwr)
+    {
+      if( ds == RDWR_SIZE_BYTE)  *(char *)buf = (char)data;
+      if( ds == RDWR_SIZE_SHORT)
+      {
+        if( cp->m.swap & 0x80)
+        {
+          *(short *)buf = tsc_swap_16( (short)data);
+        }
+	else 
+	{
+	  *(short *)buf = (short)data;
+	}
+      }
+      if( ds == RDWR_SIZE_INT)   
+      {
+	if( cp->m.swap & 0x80)
+	{
+	  *(int *)buf = tsc_swap_32( data);
+	}
+	else 
+        {
+          *(int *)buf = data;
+        }
+      }
+      if( ds == RDWR_SIZE_DBL)   
+      {
+	if( cp->m.swap & 0x80)
+	{
+	  *(long long *)buf = tsc_swap_64( data);
+	}
+	else 
+        {
+          *(long long *)buf = data;
+        }
+      }
+      tsc_write_loop( offset, buf, 1000, cp->mode);
+    }
+    else 
+    {
+      tsc_read_loop( offset, buf, 1000, cp->mode);
+    }
+    if( aio_error( &aiocb) != EINPROGRESS)
+    {
+      aio_return( &aiocb);
+      goto xprs_rdwr_lx_exit;
+    }
+  }
+  if( aio_error( &aiocb) == EINPROGRESS)
+  {
+    aio_cancel( aiocb.aio_fildes, &aiocb);
+  }
+xprs_rdwr_lx_exit:
+  return(RDWR_OK);
+
+tsc_rdwr_lx_error:
+  tsc_print_usage( c);
+  return( RDWR_ERR);
 }

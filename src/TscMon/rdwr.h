@@ -62,5 +62,6 @@ int tsc_rdwr_px( struct cli_cmd_para *);
 int tsc_rdwr_cr( struct cli_cmd_para *);
 int tsc_rdwr_cx( struct cli_cmd_para *);
 int tsc_rdwr_cmp( struct cli_cmd_para *c);
+int tsc_rdwr_lx( struct cli_cmd_para *);
 
 #endif /* _H_RDWR */

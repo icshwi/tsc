@@ -33,7 +33,7 @@ RANLIB = ranlib
 
 all: libtsc.a
 
-tsculib.o:tsculib.c 
+tsculib.o:tsculib.c  ../include/tscioctl.h
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tsculib.c
 clilib.o:clilib.c 
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c clilib.c

@@ -392,7 +392,7 @@ conf_show_lm95235( void)
   {
     return;
   }
-  dev = I2C_DEV( 0x18, 0, 0, IFC1211_I2C_CTL_SPEED_400k);
+  dev = I2C_DEV( 0x4c, 0, 0);
   reg = 0xfe;
   sts = tsc_i2c_read( dev, reg, &data);
   if( (sts & IFC1211_I2C_CTL_EXEC_MASK) == IFC1211_I2C_CTL_EXEC_ERR)
@@ -441,16 +441,18 @@ conf_show_bmr463( void)
   float f0, f1, f2, f3;
   int i;
   uint sts, data;
+  int board_type;
 
-  if( (tsc_get_device_id() != TSC_BOARD_IFC1211_IO) || (tsc_get_device_id() != TSC_BOARD_IFC1211_CENTRAL))
+  tsc_pon_read(0, &board_type);
+  if(  board_type != TSC_BOARD_IFC1211)
   {
     return;
   }
   printf("   DC-DC Voltage Regulators\n");
-  for( i = 0; i < 2; i++)
+  for( i = 0; i < 3; i++)
   {
     sts = pev791x_bmr_read( i, 0x88, &data, 2);/*0x88*/
-    if( (sts & IFC1211_I2C_CTL_EXEC_MASK) == IFC1211_I2C_CTL_EXEC_ERR)
+    if( (sts < 0))
     {
       printf("      BMR#%d -> readout error [%08x]\n", i,sts);
     }
@@ -471,7 +473,9 @@ conf_show_bmr463( void)
       d3 = (unsigned short)data;
       f3 = pev791x_bmr_conv_11bit_s( d3);
       usleep( 10000);
-      printf("      BMR#%d\n", i);
+      if( i == 0) printf("      BMR#%d T2081 core\n", i);
+      if( i == 1) printf("      BMR#%d Central FPGA\n", i);
+      if( i == 2) printf("      BMR#%d FMC mezzanines\n", i);
       printf("        VIN                : %5.2f [%04x]\n", f0, d0);
       printf("        VOUT               : %5.2f [%04x]\n", f1, d1);
       printf("        IOUT               : %5.2f [%04x]\n", f2, d2);
@@ -499,12 +503,15 @@ conf_show_max5970( void)
   float f0, f1, f2;
   uint reg, sts, data;
   uint min, max, mean;
-  uint max5970 = 0x410000b0;
+  uint max5970 = 0x20000030;
+  int board_type;
 
-  if( (tsc_get_device_id() != TSC_BOARD_IFC1211_IO) || (tsc_get_device_id() != TSC_BOARD_IFC1211_CENTRAL))
+  tsc_pon_read(0, &board_type);
+  if(  board_type != TSC_BOARD_IFC1211)
   {
     return;
   }
+
   printf("   MAX5970 Voltage Monitor\n");
   sts = tsc_i2c_read( max5970, 0, &data);
   if( (sts & IFC1211_I2C_CTL_EXEC_MASK) == IFC1211_I2C_CTL_EXEC_ERR)
@@ -635,8 +642,8 @@ tsc_conf_show(struct cli_cmd_para *c)
     conf_show_msi();
     conf_show_smon();
     //conf_show_lm95235();
-    //conf_show_bmr463();
-    //conf_show_max5970();
+    conf_show_bmr463();
+    conf_show_max5970();
     conf_show_device();
     return( retval);
   }
@@ -688,14 +695,14 @@ tsc_conf_show(struct cli_cmd_para *c)
 	//{
 	//  show_set |= 0x80;
 	//}
-	//if( !strncmp( "bmr463", c->para[i], 3))
-	//{
-	//  show_set |= 0x100;
-	//}
-	//if( !strncmp( "max5970", c->para[i], 3))
-	//{
-	//  show_set |= 0x200;
-	//}
+	if( !strncmp( "bmr463", c->para[i], 3))
+	{
+	  show_set |= 0x100;
+	}
+	if( !strncmp( "max5970", c->para[i], 3))
+	{
+	  show_set |= 0x200;
+	}
 	if( !strncmp( "device", c->para[i], 3))
 	{
 	  show_set |= 0x400;
@@ -708,8 +715,8 @@ tsc_conf_show(struct cli_cmd_para *c)
       if( show_set & 0x10) conf_show_msi();
       if( show_set & 0x20) conf_show_smon();
       //if( show_set & 0x80) conf_show_lm95235();
-      //if( show_set & 0x100) conf_show_bmr463();
-      //if( show_set & 0x200) conf_show_max5970();
+      if( show_set & 0x100) conf_show_bmr463();
+      if( show_set & 0x200) conf_show_max5970();
       if( show_set & 0x400) conf_show_device();
     }
   }

@@ -1,17 +1,17 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : dma.h
+ *    filename : adc3110.h
  *    author   : JFG
  *    company  : IOxOS
- *    creation : Sept 30,2015
+ *    creation : may 30,2012
  *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions defined in
- *    dma.c
+ *    This file contain the declarations of all exported functions define in
+ *    pevulib.c
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -26,12 +26,15 @@
  *----------------------------------------------------------------------------
  *  Change History
  *  
+ * $Log: adc3110.h,v $
+ * Revision 1.1  2013/04/15 13:55:14  ioxos
+ * first checkin [JFG]
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_DMA
-#define _H_DMA
+#ifndef _H_ADC3110
+#define _H_ADC3110
 
-int tsc_dma( struct cli_cmd_para *);
-int dma_init( void);
-#endif /* _H_DMA */
+int tsc_adc3110( struct cli_cmd_para *);
+
+#endif /* _H_ADC3110 */

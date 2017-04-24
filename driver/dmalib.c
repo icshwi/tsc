@@ -95,6 +95,31 @@ tsc_dma_irq( struct  ifc1211_device *ifc,
   return;
 }
 
+void
+tsc_dma2_irq( struct  ifc1211_device *ifc,
+	      int src,
+	      void *arg)
+{
+  struct dma_ctl *dma_ctl_p;
+  int idx;
+
+  dma_ctl_p = (struct dma_ctl *)arg;
+  dma_ctl_p->state = DMA_STS_DONE;
+  dma_ctl_p->status |= DMA_STATUS_DONE | (src << 16);
+  idx = IFC1211_ALL_ITC_IACK_SRC(src);
+  if( (idx == ITC_SRC_DMA2_RD0_ERR) ||
+      (idx == ITC_SRC_DMA2_WR0_ERR) ||
+      (idx == ITC_SRC_DMA2_RD1_ERR) ||
+      (idx == ITC_SRC_DMA2_WR1_ERR)    )
+  {
+    dma_ctl_p->status |= DMA_STATUS_ERR;
+  }
+  debugk(("DMA #%d IRQ masking -> %08x [%x]\n", dma_ctl_p->chan, dma_ctl_p->irq, dma_ctl_p->status));
+  iowrite32( dma_ctl_p->irq, ifc->csr_ptr + IFC1211_CSR_IDMA2_ITC_IMS);
+  up( &dma_ctl_p->sem);
+  return;
+}
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_init
  * Prototype     : int
@@ -132,6 +157,30 @@ dma_init( struct dma_ctl *dma_ctl_p)
     iowrite32(IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_RD_1_CSR);
     iowrite32(IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_WR_1_CSR);
   }
+  if( dma_ctl_p->chan == DMA_CHAN_2)
+  {
+    dma_ctl_p->irq  = IFC1211_IDMA_ITC_IM_RD0_END | IFC1211_IDMA_ITC_IM_RD0_ERR;
+    dma_ctl_p->irq |= IFC1211_IDMA_ITC_IM_WR0_END | IFC1211_IDMA_ITC_IM_WR0_ERR;
+    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_END, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_END, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
+    iowrite32(IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_0_CSR);
+    iowrite32(IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_0_CSR);
+  }
+  if( dma_ctl_p->chan == DMA_CHAN_3)
+  {
+    dma_ctl_p->irq  = IFC1211_IDMA_ITC_IM_RD1_END | IFC1211_IDMA_ITC_IM_RD1_ERR;
+    dma_ctl_p->irq |= IFC1211_IDMA_ITC_IM_WR1_END | IFC1211_IDMA_ITC_IM_WR1_ERR;
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_END, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_END, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
+    iowrite32(IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_1_CSR);
+    iowrite32(IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_1_CSR);
+  }
+  dma_ctl_p->wr_mode  = 0;
+  dma_ctl_p->rd_mode  = 0;
   mutex_init( &dma_ctl_p->dma_lock);
   sema_init( &dma_ctl_p->sem, 0);
   dma_ctl_p->state = DMA_STS_IDLE;
@@ -273,6 +322,20 @@ tsc_dma_clear( struct ifc1211_device *ifc,
     iowrite32( IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_RD_1_CSR);
     iowrite32( IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_WR_1_CSR);
   }
+  if( dma_ctl_p->chan == DMA_CHAN_2)
+  {
+    iowrite32( IFC1211_IDMA_CSR_KILL, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_0_CSR);
+    iowrite32( IFC1211_IDMA_CSR_KILL, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_0_CSR);
+    iowrite32( IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_0_CSR);
+    iowrite32( IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_0_CSR);
+  }
+  if( dma_ctl_p->chan == DMA_CHAN_3)
+  {
+    iowrite32( IFC1211_IDMA_CSR_KILL, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_1_CSR);
+    iowrite32( IFC1211_IDMA_CSR_KILL, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_1_CSR);
+    iowrite32( IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_1_CSR);
+    iowrite32( IFC1211_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_1_CSR);
+  }
   dma_ctl_p->state = DMA_STS_ALLOCATED;
 
 dma_clear_exit:
@@ -354,14 +417,7 @@ tsc_dma_wait( struct ifc1211_device *ifc,
   struct dma_ctl *dma_ctl_p;
 
   retval = 0;
-  if( dr_p->start_mode & DMA_START_CHAN(DMA_CHAN_1))
-  {
-    chan = DMA_CHAN_1;
-  }
-  else
-  {
-    chan = DMA_CHAN_0;
-  }
+  chan =  DMA_START_CHAN_GET(dr_p->start_mode);
   dma_ctl_p = ifc->dma_ctl[chan];
   if( dr_p->wait_mode & DMA_WAIT_INTR)
   {
@@ -394,15 +450,25 @@ dma_set_pipe( struct dma_ctl *dma_ctl_p,
     rd_pipe = IFC1211_IDMA_PCSR_PIPE_ENABLE | IFC1211_IDMA_PCSR_PIPE_MODE_2 | IFC1211_IDMA_PCSR_PIPE_RESET;
     wr_pipe = IFC1211_IDMA_PCSR_PIPE_ENABLE | IFC1211_IDMA_PCSR_PIPE_MODE_2 | IFC1211_IDMA_PCSR_PIPE_RESET;
   }
-  if( dma_ctl_p->chan)
+  if( dma_ctl_p->chan == DMA_CHAN_0)
+  {
+    iowrite32(  rd_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_RD_0_PCSR);
+    iowrite32(  wr_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_WR_0_PCSR);
+  }
+  if( dma_ctl_p->chan == DMA_CHAN_1)
   { 
     iowrite32(  rd_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_RD_1_PCSR);
     iowrite32(  wr_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_WR_1_PCSR);
   }
-  else
+  if( dma_ctl_p->chan == DMA_CHAN_2)
   {
-    iowrite32(  rd_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_RD_0_PCSR);
-    iowrite32(  wr_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA_WR_0_PCSR);
+    iowrite32(  rd_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_0_PCSR);
+    iowrite32(  wr_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_0_PCSR);
+  }
+  if( dma_ctl_p->chan == DMA_CHAN_3)
+  { 
+    iowrite32(  rd_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_RD_1_PCSR);
+    iowrite32(  wr_pipe, dma_ctl_p->ifc->csr_ptr + IFC1211_CSR_IDMA2_WR_1_PCSR);
   }
   return(0);
 }
@@ -447,7 +513,8 @@ dma_set_ctl( uint space,
 
   debugk(("in dma_set_ctl( %x, %x, %x, %x)...", space, trig, intr, mode));
   ctl = IFC1211_IDMA_DES0_UPDATE_TIME | trig | intr;
-  ctl |= (mode&0x3ff) << 20;
+  ctl |= mode & ( DMA_MODE_ADD_MASK | DMA_MODE_SHM_MASK | DMA_MODE_SNOOP | DMA_MODE_RELAX);
+  ctl |= (mode & DMA_MODE_WR_POST_MASK) << 12;
 
 
   if( (space & DMA_SPACE_MASK) == DMA_SPACE_PCIE)
@@ -489,7 +556,7 @@ dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
   intr = IFC1211_IDMA_DES0_INTR_END;
 
   /* prepare transfer descriptor */
-  dd->ctl = dma_set_ctl( space, trig, intr, mode);
+  dd->ctl = dma_set_ctl( space, trig, intr, dc->rd_mode);
   dd->wcnt = (uint)space << 24 | (size & IFC1211_IDMA_DES1_WC_MASK);
   dd->shm_addr = (shm_addr & IFC1211_IDMA_DES2_ADDR_MASK) | 3;      /* SHM local buffer */
   dd->next = next;                   
@@ -527,7 +594,7 @@ dma_set_wr_desc( struct dma_ctl *dma_ctl_p,
   intr = IFC1211_IDMA_DES0_INTR_ERR;
 
   /* prepare transfer descriptor */
-  dd->ctl = dma_set_ctl( space, trig, intr, mode);
+  dd->ctl = dma_set_ctl( space, trig, intr, dc->wr_mode);
   dd->wcnt = (uint)space << 24 | (size & IFC1211_IDMA_DES1_WC_MASK);
   dd->shm_addr = (shm_addr & IFC1211_IDMA_DES2_ADDR_MASK) | 3;      /* SHM local buffer */
   dd->next = next;                   
@@ -555,8 +622,9 @@ tsc_dma_move( struct ifc1211_device *ifc,
   int rdo, wro;
   int csr_rdo, csr_wro;
   int sts_rdo, sts_wro;
-  int irq;
+  int irq, csr_itc_imc;
   uint shm_offset;
+  unsigned char space_shm;
 
   debugk(("in tsc_dma_move() : %llx:%x %llx:%x %x %x %x\n",
 	  (long long)dr_p->des_addr, dr_p->des_space,
@@ -564,21 +632,43 @@ tsc_dma_move( struct ifc1211_device *ifc,
 	  dr_p->size, dr_p->des_mode, dr_p->src_mode));
 
   retval = 0;
-  if( dr_p->start_mode & DMA_START_CHAN(DMA_CHAN_1))
-  {
-    chan = DMA_CHAN_1;
-    csr_rdo = IFC1211_CSR_IDMA_RD_1_NDES;
-    csr_wro = IFC1211_CSR_IDMA_WR_1_NDES;
-    sts_rdo = DMA_STATUS_RUN_RD1;
-    sts_wro = DMA_STATUS_RUN_WR1;
-  }
-  else
+  chan =  DMA_START_CHAN_GET(dr_p->start_mode);
+  if(chan == DMA_CHAN_0)
   {
     chan = DMA_CHAN_0;
     csr_rdo = IFC1211_CSR_IDMA_RD_0_NDES;
     csr_wro = IFC1211_CSR_IDMA_WR_0_NDES;
     sts_rdo = DMA_STATUS_RUN_RD0;
     sts_wro = DMA_STATUS_RUN_WR0;
+    csr_itc_imc = IFC1211_CSR_IDMA_ITC_IMC;
+    space_shm = DMA_SPACE_SHM;
+  }
+  if(chan == DMA_CHAN_1)
+  {
+    csr_rdo = IFC1211_CSR_IDMA_RD_1_NDES;
+    csr_wro = IFC1211_CSR_IDMA_WR_1_NDES;
+    sts_rdo = DMA_STATUS_RUN_RD1;
+    sts_wro = DMA_STATUS_RUN_WR1;
+    csr_itc_imc = IFC1211_CSR_IDMA_ITC_IMC;
+    space_shm = DMA_SPACE_SHM;
+  }
+  if(chan == DMA_CHAN_2)
+  {
+    csr_rdo = IFC1211_CSR_IDMA2_RD_0_NDES;
+    csr_wro = IFC1211_CSR_IDMA2_WR_0_NDES;
+    sts_rdo = DMA_STATUS_RUN_RD0;
+    sts_wro = DMA_STATUS_RUN_WR0;
+    csr_itc_imc = IFC1211_CSR_IDMA2_ITC_IMC;
+    space_shm = DMA_SPACE_SHM2;
+  }
+  if(chan == DMA_CHAN_3)
+  {
+    csr_rdo = IFC1211_CSR_IDMA2_RD_1_NDES;
+    csr_wro = IFC1211_CSR_IDMA2_WR_1_NDES;
+    sts_rdo = DMA_STATUS_RUN_RD1;
+    sts_wro = DMA_STATUS_RUN_WR1;
+    csr_itc_imc = IFC1211_CSR_IDMA2_ITC_IMC;
+    space_shm = DMA_SPACE_SHM2;
   }
   dma_ctl_p = ifc->dma_ctl[chan];
   if( ( dma_ctl_p->state != DMA_STS_ALLOCATED) &&
@@ -587,9 +677,9 @@ tsc_dma_move( struct ifc1211_device *ifc,
     return( -EPERM);
   }
   irq = dma_ctl_p->irq;
-  if( ( dr_p->src_space & DMA_SPACE_MASK) ==  DMA_SPACE_SHM)
+  if( ( dr_p->src_space & DMA_SPACE_MASK) ==  space_shm)
   {
-    if( ( dr_p->des_space & DMA_SPACE_MASK) ==  DMA_SPACE_SHM)
+    if( ( dr_p->des_space & DMA_SPACE_MASK) ==  space_shm)
     {
       return( -EINVAL);
     }
@@ -603,7 +693,7 @@ tsc_dma_move( struct ifc1211_device *ifc,
   }
   else
   {
-    if( ( dr_p->des_space & DMA_SPACE_MASK) ==  DMA_SPACE_SHM)
+    if( ( dr_p->des_space & DMA_SPACE_MASK) ==  space_shm)
     {
       pipe = DMA_NO_PIPE;
       rdo = 0;
@@ -615,7 +705,7 @@ tsc_dma_move( struct ifc1211_device *ifc,
       pipe = DMA_PIPE;
       rdo = dma_set_rd_desc( dma_ctl_p, dma_ctl_p->ring_offset, dr_p->des_addr, dr_p->size, dr_p->des_space, dr_p->des_mode);
       wro = dma_set_wr_desc( dma_ctl_p, dma_ctl_p->ring_offset, dr_p->src_addr, dr_p->size, dr_p->src_space, dr_p->src_mode);
-      if( chan == DMA_CHAN_0)
+      if( (chan == DMA_CHAN_0) || (chan == DMA_CHAN_2))
       {
 	irq &= ~IFC1211_IDMA_ITC_IM_WR0_END;
       }
@@ -635,16 +725,32 @@ tsc_dma_move( struct ifc1211_device *ifc,
 
   /* unmask DMA  interrupts */
   debugk(("DMA IRQ unmasking -> %08x\n", irq));
-  iowrite32( irq, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMC);
+  iowrite32( irq, ifc->csr_ptr + csr_itc_imc);
   debugk(("rdo = %x - wro = %x\n", rdo, wro));
   if( rdo)
   {
+    int ctl;
+
     dma_ctl_p->status |= sts_rdo;
+    ctl = IFC1211_IDMA_CSR_ENA;
+    if( dma_ctl_p->rd_mode & DMA_MODE_CACHE_ENA)
+    {
+      ctl |= IFC1211_IDMA_CSR_CACHE_ENA;
+    }
+    iowrite32( ctl, ifc->csr_ptr + csr_rdo - 4);
     iowrite32( rdo, ifc->csr_ptr + csr_rdo);
   }
   if( wro)
   {
+    int ctl;
+
     dma_ctl_p->status |= sts_wro;
+    ctl = IFC1211_IDMA_CSR_ENA;
+    if( dma_ctl_p->wr_mode & DMA_MODE_CACHE_ENA)
+    {
+      ctl |= IFC1211_IDMA_CSR_CACHE_ENA;
+    }
+    iowrite32( ctl, ifc->csr_ptr + csr_wro - 4);
     iowrite32( wro, ifc->csr_ptr + csr_wro);
   }
   dma_ctl_p->state = DMA_STS_STARTED;
@@ -691,6 +797,16 @@ dma_status( struct dma_ctl *dma_ctl_p,
     rdo = IFC1211_CSR_IDMA_RD_1_CSR;
     wro = IFC1211_CSR_IDMA_WR_1_CSR;
   }
+  else if( ds_p->dma.chan == DMA_CHAN_2)
+  {
+    rdo = IFC1211_CSR_IDMA2_RD_0_CSR;
+    wro = IFC1211_CSR_IDMA2_WR_0_CSR;
+  }
+  else if( ds_p->dma.chan == DMA_CHAN_3)
+  {
+    rdo = IFC1211_CSR_IDMA2_RD_1_CSR;
+    wro = IFC1211_CSR_IDMA2_WR_1_CSR;
+  }
   else
   {
     retval = -EINVAL;
@@ -730,5 +846,27 @@ tsc_dma_status( struct ifc1211_device *ifc,
   dma_ctl_p = ifc->dma_ctl[(int)ds_p->dma.chan];
   retval = dma_status( dma_ctl_p, ds_p);
   return( retval);
+}
+
+int
+tsc_dma_mode( struct ifc1211_device *ifc,
+	      struct tsc_ioctl_dma_mode *dm_p)
+{
+  struct dma_ctl *dma_ctl_p;
+
+  if( (dm_p->chan < 0) || (dm_p->chan >= DMA_CHAN_NUM))
+  {
+    return( -EINVAL);
+  }
+  dma_ctl_p = ifc->dma_ctl[(int)dm_p->chan];
+  if(dm_p->op & DMA_MODE_SET)
+  {
+    dma_ctl_p->wr_mode = dm_p->wr_mode;
+    dma_ctl_p->rd_mode = dm_p->rd_mode;
+  }
+  dm_p->wr_mode = dma_ctl_p->wr_mode;
+  dm_p->rd_mode = dma_ctl_p->rd_mode;
+
+  return( 0);
 }
 
