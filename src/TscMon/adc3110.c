@@ -248,6 +248,7 @@ adc3110_acq( struct cli_cmd_para *c,
   char *default_name = "acq_file";
   struct adc3110_acq_res acq_res;
   int file_his, file_dat;
+  int csr_base;
 
   nerr = 0;
   last_addr = 0;
@@ -256,7 +257,8 @@ adc3110_acq( struct cli_cmd_para *c,
   csr = 0x81;
   acq_name_h = NULL;
   acq_name_d = NULL;
-
+  csr_base = 0x11e0;
+  if( fmc == 2) csr_base = 0x11f0;
   file_his = 0;
   file_dat = 0;
   printf("parameter count: %ld\n", c->cnt);
@@ -349,7 +351,8 @@ adc3110_acq( struct cli_cmd_para *c,
   bzero( &adc_mas_map_win, sizeof(adc_mas_map_win));
   adc_mas_map_win.req.mode.sg_id= MAP_ID_MAS_PCIE_MEM;
   adc_mas_map_win.req.mode.space = MAP_SPACE_SHM;
-  adc_mas_map_win.req.rem_addr = 0x11000000;
+  adc_mas_map_win.req.rem_addr = 0x1000000;
+  if( fmc == 2) adc_mas_map_win.req.rem_addr = 0x11000000;
   adc_mas_map_win.req.size = 0x2000000;
   tsc_map_alloc( &adc_mas_map_win);
   adc_buf = (char *)tsc_pci_mmap( adc_mas_map_win.sts.loc_base, adc_mas_map_win.sts.size);
@@ -362,22 +365,22 @@ adc3110_acq( struct cli_cmd_para *c,
   pev_map_alloc( &adc_mas_map);
   adc_buf = pev_mmap( &adc_mas_map);
 #endif
-  pev_csr_wr( 0x11fc, smem);
-  pev_csr_wr( 0x11f4, trig);
+  pev_csr_wr( csr_base+0xc, smem);
+  pev_csr_wr( csr_base+0x4, trig);
   csr &= 0xfff00fff;
   if( idx == 0) csr |= 0x10000;
   if( idx == 1) csr |= 0x32000;
   if( idx == 2) csr |= 0x54000;
   if( idx == 3) csr |= 0x76000;
-  pev_csr_wr( 0x11f0, 0x80000000 | csr);
-  pev_csr_wr( 0x11f0, 0x40000000 | csr);
+  pev_csr_wr( csr_base+0x0, 0x80000000 | csr);
+  pev_csr_wr( csr_base+0x0, 0x40000000 | csr);
   usleep( 200000);
-  pev_csr_wr( 0x11f8, 0x40000000 | last_addr);
+  pev_csr_wr( csr_base+0x8, 0x40000000 | last_addr);
 
   tmo = 800;
   while( --tmo)
   {
-    csr = pev_csr_rd( 0x11f0);
+    csr = pev_csr_rd( csr_base+0x0);
     if( ( csr & 0x30000000) == 0x30000000) break;
     usleep( 1000);
   }
@@ -669,8 +672,8 @@ tsc_adc3110( struct cli_cmd_para *c)
 #ifdef TSC
       bzero( &shm_mas_map_win, sizeof(shm_mas_map_win));
       shm_mas_map_win.req.mode.sg_id= MAP_ID_MAS_PCIE_PMEM;
-      //shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
-      shm_mas_map_win.req.mode.space = MAP_SPACE_USR1;
+      shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
+      //shm_mas_map_win.req.mode.space = MAP_SPACE_USR1;
       shm_mas_map_win.req.rem_addr = offset;
       shm_mas_map_win.req.size = size;
       tsc_map_alloc( &shm_mas_map_win);
@@ -685,14 +688,6 @@ tsc_adc3110( struct cli_cmd_para *c)
       acq_buf = pev_mmap( &shm_mas_map);
 #endif
     }
-#ifdef TSC
-    printf("acq_buf = %p\n", acq_buf);
-    printf("*(int *)acq_buf = %08x %08x %08x %08x \n", *(int *)acq_buf, *(int *)(acq_buf+4), *(int *)(acq_buf+8), *(int *)(acq_buf+0xc));
-    map_show( "mas_pmem");
-    tsc_pci_munmap( acq_buf, shm_mas_map_win.sts.size);
-    tsc_map_free( &shm_mas_map_win);
-    return( 0);
-#endif
     if( !acq_buf || ( size <= 0))
     {
       printf("cannot allocate acquisition buffer\n");
@@ -947,7 +942,7 @@ tsc_adc3110( struct cli_cmd_para *c)
     {
       int cmd_sav;
 
-      cmd_sav = pev_csr_rd( 0x1184);
+      cmd_sav = pev_csr_rd( 0x1188);
       cmd_sav &= ~( 0xff << (8*add->idx));
 
       cmd = cmd_sav | (1 << (8*add->idx));
@@ -990,7 +985,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 
       cmd = cmd_sav | (1 << (8*add->idx));
       pev_csr_wr( 0x1184, cmd);
-       pev_csr_rd( 0x1184);
+      pev_csr_rd( 0x1184);
 
       cmd = cmd_sav;;
       pev_csr_wr( 0x1184, cmd);
