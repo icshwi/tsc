@@ -954,7 +954,10 @@ tsc_adc3110( struct cli_cmd_para *c)
       pev_csr_rd( 0x1188);
 
       pev_csr_wr( ADC_BASE_BMOV_B, offset);
-      cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00);
+      //cmd = 0x80000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
+      //cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
+      //cmd = 0xa0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
+      cmd = 0xb0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       pev_csr_wr( ADC_BASE_BMOV_B + 4, cmd);
       pev_csr_rd( ADC_BASE_BMOV_B + 4);
 
@@ -992,7 +995,10 @@ tsc_adc3110( struct cli_cmd_para *c)
       pev_csr_rd( 0x1184);
 
       pev_csr_wr( ADC_BASE_BMOV_A, offset);
-      cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00);
+      //cmd = 0x80000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
+      //cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
+      //cmd = 0xa0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
+      cmd = 0xb0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       pev_csr_wr( ADC_BASE_BMOV_A + 4, cmd);
       pev_csr_rd( ADC_BASE_BMOV_A+4);
 
