@@ -26,8 +26,6 @@
  *----------------------------------------------------------------------------
  *  Change History
  *  
- *
- *  
  *=============================< end file header >============================*/
 
 #ifndef _H_CLI
@@ -39,6 +37,10 @@
 struct cli_cmd_history *cli_history_init( struct cli_cmd_history *);
 char *cli_get_cmd( struct cli_cmd_history *, char*);
 struct cli_cmd_para *cli_cmd_parse( char *, struct cli_cmd_para *);
+int cli_get_para_str( struct cli_cmd_para *c, int idx, char *str, int len);
+int cli_get_para_hex( struct cli_cmd_para *c, int idx, int *val_p);
+char *cli_history_find_idx( struct cli_cmd_history *h, int idx);
+char *cli_history_find_str( struct cli_cmd_history *h, char *cmd);
 
 struct cli_cmd_list
 {
@@ -76,6 +78,10 @@ struct cli_xconf
 };
 
 struct cli_xconf xconf_structure;
+
+#define CLI_ERR   -1
+#define CLI_OK     0
+
 
 #define CLI_ERR_ADDR   0x1
 #define CLI_ERR_DATA   0x2

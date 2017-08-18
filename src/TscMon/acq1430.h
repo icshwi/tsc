@@ -1,10 +1,10 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : TscMon.h
+ *    filename : acq1430.h
  *    author   : JFG
  *    company  : IOxOS
- *    creation : Sept 14,2015
+ *    creation : may 30,2012
  *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
@@ -26,34 +26,15 @@
  *----------------------------------------------------------------------------
  *  Change History
  *  
+ * $Log: acq1430.h,v $
+ * Revision 1.1  2013/04/15 13:55:14  ioxos
+ * first checkin [JFG]
+ *
  *=============================< end file header >============================*/
 
-#ifndef _H_TSCMON
-#define _H_TSCMON
+#ifndef _H_ACQ1430
+#define _H_ACQ1430
 
-#define TSC_OK    0
-#define TSC_ERR  -1
-#define TSC_QUIT -2
+int tsc_acq1430( struct cli_cmd_para *);
 
-#include "conf.h"   
-#include "ddr.h"
-#include "rdwr.h"   
-#include "map.h"
-#include "dma.h"   
-#include "timer.h"   
-#include "sflash.h"   
-#include "script.h"   
-#include "buf.h"   
-#include "tst.h"
-#include "semaphore.h"
-#include "fifo.h"
-#include "lmk.h"
-#include "i2c.h"
-#include "adc3110.h"  
-#include "adc3117.h"  
-#include "acq1430.h"  
-#include "alias.h"
-
-int tsc_print_usage(struct cli_cmd_para *c);
-
-#endif /* _H_TSCMON */
+#endif /* _H_ACQ1430 */

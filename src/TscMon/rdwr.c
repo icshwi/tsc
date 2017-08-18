@@ -1268,7 +1268,7 @@ rdwr_tx_error( void *buf_in,
 	       void *buf_out,
 	       uint idx,
 	       int ds,
-		   ulong base)
+	       ulong base)
 {
   printf("Data error at address %x \n", idx);
   script_exit = 1;

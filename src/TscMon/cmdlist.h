@@ -31,7 +31,46 @@
 #include "TscMon.h"
 
 int tsc_func_help(struct cli_cmd_para *);
+int tsc_func_history(struct cli_cmd_para *);
 int tsc_wait(struct cli_cmd_para *);
+
+char *alias_msg[]   = 
+{
+  "  Handle aliases for Altmon commands. Command is executed by entering $<alias>",
+  "  alias show",
+  "  alias clear",
+  "  alias set <alias> \"<cmdline>\"",
+  "  alias save <filename>",
+  "  alias load <filename>",
+  "     where <alias> = alias name to be created by the set operation",
+  "           <cmdline> = command line to be executed when $<alias> is entered",
+  "           <flename> = name of the file to be used by save and load operations",
+0};
+
+char *acq1430_msg[] = 
+{
+  "ACQ1430 operations",
+  "acq1430.<x> <dev> read <reg>",
+  "acq1430.<x> <dev> write <reg> <data>",
+  "acq1430.<x> <dev> acqfif <offset> <size>",
+  "acq1430.<x> <dev> check <offset> <size>",
+  "acq1430.<x> <dev> acq<size> h:<file_his> d:<file_dat> t:<trig> s:<smem> c:<csr> a:<last_addr> ",
+  "acq1430.<x> <dev> calib",
+  "acq1430.<x> <file> save <offset> <size>",
+  "acq1430.<x> tmp102 show",
+  "acq1430.<x> eeprom sign set",
+  "acq1430.<x> eeprom sign def b:<board> s:<serial> v:<ver> r:<rev>",
+  "acq1430.<x> eeprom dump",
+  "   where <x>        = index",
+  "         <dev>      = lmk, ads01, ads23, ads45, ads67, ads89",
+  "         <reg>      = register",
+  "         <data>     = data",
+  "         <offset>   = offset of data buffer",
+  "         <size>     = size of data buffer",
+
+  "         <file_his> = histogram filename",
+  "         <file_dat> = raw data filename",
+0};
 
 char *adc3110_msg[] = 
 {
@@ -341,6 +380,13 @@ char *help_msg[]   =
   "  help <cmd>",
 0};
 
+char *history_msg[]   = 
+{
+  "  Display history of commands",
+  "  Commands in history list can re-executed by entering '!' followed by histoy line number",
+  "  history",
+0};
+
 char *i2c_msg[]     = 
 {
   "Perform i2c command ",
@@ -633,8 +679,10 @@ char *tu_msg[]  =
 
 struct cli_cmd_list cmd_list[] =
 {
+  { "acq1430"   , tsc_acq1430,      acq1430_msg	, 0},
   { "adc3110"   , tsc_adc3110,      adc3110_msg	, 0},
   { "adc3117"   , tsc_adc3117,      adc3117_msg	, 0},
+  { "alias"     , tsc_alias,        alias_msg     , 0},
   { "ci"     	, tsc_rdwr_cr,      ci_msg     	  , 0},
   { "cmp"     	, tsc_rdwr_cmp,     cmp_msg       , 0},
   { "conf"   	, tsc_conf_show,    conf_msg      , 0},
@@ -674,6 +722,7 @@ struct cli_cmd_list cmd_list[] =
   { "fu1"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
   { "fu2"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
   { "help"   	, tsc_func_help,    help_msg   	  , 0},
+  { "his"       , tsc_func_history, history_msg   , 0},
   { "i2c"    	, tsc_i2c,          i2c_msg       , 0},
   { "kbuf"    	, tsc_kbuf,         kbuf_msg  	  , 0},
   { "lmk"    	, tsc_lmk,          lmk_msg    	  , 0},

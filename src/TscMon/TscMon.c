@@ -239,7 +239,47 @@ TscMon_end_loop:
       tsc_func_help( &cmd_para);
       continue;
     }
-    tsc_cmd_exec( &cmd_list[0], &cmd_para);
+    if( cmdline[0] == '!')
+    {
+      char *new_cmd;
+      int idx;
+
+      cmd_para.cmd = NULL;
+      if( sscanf( &cmdline[1], "%d", &idx) == 1)
+      {
+        new_cmd = cli_history_find_idx( &cmd_history, idx);
+	if( new_cmd)
+	{
+	  printf("%s\n", new_cmd);
+	  cli_cmd_parse( new_cmd, &cmd_para);
+	}
+      }
+      else 
+      {
+        new_cmd = cli_history_find_str( &cmd_history, &cmdline[1]);
+	if( new_cmd)
+	{
+	  printf("%s\n", new_cmd);
+	  cli_cmd_parse( new_cmd, &cmd_para);
+	}
+      }
+    }
+    if( cmdline[0] == '$')
+    {
+      char *new_cmd;
+
+      new_cmd = alias_find( &cmdline[1]);
+      cmd_para.cmd = NULL;
+      if( new_cmd)
+      {
+	printf("%s\n", new_cmd);
+	cli_cmd_parse( new_cmd, &cmd_para);
+      }
+    }
+    if( cmd_para.cmd)
+    {
+      tsc_cmd_exec( &cmd_list[0], &cmd_para);
+    }
   }
 
 TscMon_exit:
@@ -359,6 +399,14 @@ tsc_func_help( struct cli_cmd_para *c)
   return(0);
 }
 
+
+int 
+tsc_func_history( struct cli_cmd_para *c)
+{
+  cli_history_print( &cmd_history);
+
+  return(0);
+}
 
 int 
 tsc_wait(struct cli_cmd_para *c)

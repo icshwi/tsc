@@ -1,7 +1,7 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : adc3110.c
+ *    filename : acq1430.c
  *    author   : JFG
  *    company  : IOxOS
  *    creation : november 14,2011
@@ -26,12 +26,12 @@
  *----------------------------------------------------------------------------
  *  Change History
  *  
- * $Log: adc3110.c,v $
+ * $Log: acq1430.c,v $
  * Revision 1.10  2014/12/19 09:36:19  ioxos
  * add data check [JFG]
  *
  * Revision 1.9  2014/08/27 07:11:26  ioxos
- * add adc3110 check operation [JFG]
+ * add acq1430 check operation [JFG]
  *
  * Revision 1.8  2014/07/11 14:08:57  ioxos
  * correct size of sign [JFG]
@@ -43,7 +43,7 @@
  * i2c macros [JFG]
  *
  * Revision 1.5  2014/03/17 10:18:52  ioxos
- * acq command for adc3110/11 [JFG]
+ * acq command for acq1430/11 [JFG]
  *
  * Revision 1.4  2014/01/20 14:47:24  ioxos
  * cosmetics [JFG]
@@ -58,10 +58,10 @@
  * first checkin [JFG]
  *
  * Revision 1.7  2012/09/03 13:19:05  ioxos
- * adapt pec_adc3110_xx(), pev_pex_xx() and pev_bmr_xx() to new FPGA and library [JFG]
+ * adapt pec_acq1430_xx(), pev_pex_xx() and pev_bmr_xx() to new FPGA and library [JFG]
  *
  * Revision 1.6  2012/08/28 13:40:46  ioxos
- * cleanup + update adc3110 status + reset [JFG]
+ * cleanup + update acq1430 status + reset [JFG]
  *
  * Revision 1.5  2012/06/01 13:59:44  ioxos
  * -Wall cleanup [JFG]
@@ -70,7 +70,7 @@
  * add support for FMC [JFG]
  *
  * Revision 1.3  2012/02/03 16:27:37  ioxos
- * dynamic use of elbc for adc3110 [JFG]
+ * dynamic use of elbc for acq1430 [JFG]
  *
  * Revision 1.2  2012/01/27 15:55:44  ioxos
  * prepare release 4.01 supporting x86 & ppc [JFG]
@@ -82,9 +82,10 @@
  *=============================< end file header >============================*/
 
 #ifndef lint
-static char *rcsid = "$Id: adc3110.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
+static char *rcsid = "$Id: acq1430.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #endif
 #define TSC
+#define ACQ1430
 
 #define DEBUGno
 #include <debug.h>
@@ -120,30 +121,33 @@ static char *rcsid = "$Id: adc3110.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #define ADC_BASE_BMOV_B       0x00001110
 #endif
 
-struct pev_adc3110_devices
+struct pev_acq1430_devices
 {
   char *name;
   uint cmd;
   int idx;
   int bus;
 }
-adc3110_devices[] =
+acq1430_devices[] =
 {
-  { "lmk",  0x02000000, -1, BUS_SBC},
+  { "lmk",   0x02000000, -1, BUS_SBC},
   { "ads01", 0x01000000, 0, BUS_SBC},
   { "ads23", 0x01010000, 1, BUS_SBC},
   { "ads45", 0x01020000, 2, BUS_SBC},
   { "ads67", 0x01030000, 3, BUS_SBC},
+  { "ads89", 0x01040000, 4, BUS_SBC},
+  { "dac",   0x01070000, 7, BUS_SBC},
+  { "all",   0x00000000, 15, BUS_SBC},
   { "tmp102",0x01040048, 0, BUS_I2C},
   { "eeprom",0x40010050, 1, BUS_I2C},
   { NULL, 0}
 };
 
-int adc3110_init_flag = 0;
-struct cli_cmd_history adc3110_history;
-char adc3110_prompt[32];
-uint adc3110_histo[2][0x10000];
-struct adc3110_calib_res
+int acq1430_init_flag = 0;
+struct cli_cmd_history acq1430_history;
+char acq1430_prompt[32];
+uint acq1430_histo[2][0x10000];
+struct acq1430_calib_res
 {
   uint tot[2];
   uint min[2];
@@ -152,7 +156,7 @@ struct adc3110_calib_res
   float sig[2];
 };
 
-struct adc3110_sign
+struct acq1430_sign
 {
   char board_name[8];
   char serial[4];
@@ -164,9 +168,9 @@ struct adc3110_sign
   char offset_adc[8][8];
   char pad[144];
   int cks;
-} adc3110_sign;
+} acq1430_sign;
 
-struct adc3110_acq_res
+struct acq1430_acq_res
 {
   uint tot[2];
   short min[2];
@@ -181,28 +185,28 @@ struct adc3110_acq_res
 #define I2C_CTL_EXEC_MASK  0x00300000
 
 char *
-adc3110_rcsid()
+acq1430_rcsid()
 {
   return( rcsid);
 }
 
 char filename[0x100];
-struct cli_cmd_history adc3110_history;
+struct cli_cmd_history acq1430_history;
 
 void 
-adc3110_init()
+acq1430_init()
 {
-  if( !adc3110_init_flag)
+  if( !acq1430_init_flag)
   {
-    cli_history_init( &adc3110_history);
-    adc3110_init_flag = 1;
+    cli_history_init( &acq1430_history);
+    acq1430_init_flag = 1;
   }
   return;
 }
 
 
 int 
-adc3110_acq_res( struct adc3110_acq_res *r,
+acq1430_acq_res( struct acq1430_acq_res *r,
 		 short *buf,
 		 int size,
 		 int chan)
@@ -232,7 +236,7 @@ adc3110_acq_res( struct adc3110_acq_res *r,
 }
 
 int
-adc3110_acq( struct cli_cmd_para *c,
+acq1430_acq( struct cli_cmd_para *c,
 	     int idx,
 	     int fmc,
 	     int size,
@@ -246,7 +250,7 @@ adc3110_acq( struct cli_cmd_para *c,
   char *acq_name_h, *acq_name_d, *acq_name_h1, *acq_name_h2, *acq_name_d1, *acq_name_d2;
   FILE *acq_file_h1, *acq_file_h2,  *acq_file_d1, *acq_file_d2;
   char *default_name = "acq_file";
-  struct adc3110_acq_res acq_res;
+  struct acq1430_acq_res acq_res;
   int file_his, file_dat;
   int csr_base;
 
@@ -372,6 +376,7 @@ adc3110_acq( struct cli_cmd_para *c,
   if( idx == 1) csr |= 0x32000;
   if( idx == 2) csr |= 0x54000;
   if( idx == 3) csr |= 0x76000;
+  if( idx == 4) csr |= 0x89000;
   pev_csr_wr( csr_base+0x0, 0x80000000 | csr);
   pev_csr_wr( csr_base+0x0, 0x40000000 | csr);
   usleep( 200000);
@@ -504,8 +509,8 @@ adc3110_acq( struct cli_cmd_para *c,
     }
     printf("%06x -> done\n", i);
 #endif
-    adc3110_acq_res( &acq_res, buf0, size, 0);
-    adc3110_acq_res( &acq_res, buf1, size, 1);
+    acq1430_acq_res( &acq_res, buf0, size, 0);
+    acq1430_acq_res( &acq_res, buf1, size, 1);
     free( (void *)buf0);
     free( (void *)buf1);
     printf("Channel 0 : %f +/- %f [%d : %d]\n", acq_res.mean[0], acq_res.sig[0], acq_res.min[0], acq_res.max[0]);
@@ -541,7 +546,7 @@ adc3110_acq( struct cli_cmd_para *c,
 }
 
 int 
-adc3110_calib_res( struct adc3110_calib_res *r)
+acq1430_calib_res( struct acq1430_calib_res *r)
 {
   int i;
 
@@ -556,28 +561,28 @@ adc3110_calib_res( struct adc3110_calib_res *r)
   r->max[1] = 0x0;
   for( i = 0; i < 0x10000; i++)
   {
-    if(adc3110_histo[0][i])
+    if(acq1430_histo[0][i])
     {
       if( i < r->min[0])r->min[0] = i;
       if( i > r->max[0])r->max[0] = i;
     }
-    r->tot[0] += adc3110_histo[0][i];
-    r->mean[0] += (float)(i*adc3110_histo[0][i]);
-    if(adc3110_histo[1][i])
+    r->tot[0] += acq1430_histo[0][i];
+    r->mean[0] += (float)(i*acq1430_histo[0][i]);
+    if(acq1430_histo[1][i])
     {
       if( i < r->min[1])r->min[1] = i;
       if( i > r->max[1])r->max[1] = i;
     }
-    r->tot[1] += adc3110_histo[1][i];
-    r->mean[1] += (float)(i*adc3110_histo[1][i]);
+    r->tot[1] += acq1430_histo[1][i];
+    r->mean[1] += (float)(i*acq1430_histo[1][i]);
   }
   r->mean[0] = r->mean[0]/r->tot[0];
   r->mean[1] = r->mean[1]/r->tot[1];
 
   for( i = 0; i < 0x10000; i++)
   {
-    r->sig[0] += (i - r->mean[0])*(i - r->mean[0])*adc3110_histo[0][i];
-    r->sig[1] += (i - r->mean[1])*(i - r->mean[1])*adc3110_histo[1][i];
+    r->sig[0] += (i - r->mean[0])*(i - r->mean[0])*acq1430_histo[0][i];
+    r->sig[1] += (i - r->mean[1])*(i - r->mean[1])*acq1430_histo[1][i];
   }
   r->sig[0] = sqrt(r->sig[0]/r->tot[0]);
   r->sig[1] = sqrt(r->sig[1]/r->tot[1]);
@@ -585,21 +590,29 @@ adc3110_calib_res( struct adc3110_calib_res *r)
   return(0);
 }
 
-int 
-tsc_adc3110( struct cli_cmd_para *c)
+int
+acq1430_calib_idelay( struct cli_cmd_para *c, 
+		      int chan)
 {
-  struct pev_adc3110_devices *add;
+  printf("Adjust idelay for ads%d%d\n", 2*chan, 2*chan + 1);
+  return(0);
+}
+
+int 
+tsc_acq1430( struct cli_cmd_para *c)
+{
+  struct pev_acq1430_devices *add;
   uint cmd, data, reg, fmc, tmo;
   char *p;
 
-  adc3110_init();
+  acq1430_init();
 
   if( c->cnt < 2)
   {
-    printf("adc3110 command needs more arguments\n");
-    printf("usage: adc3110.<fmc> <dev> <op> <reg> [<data>]\n");
-    printf("adc3110 device list:\n");
-    add = &adc3110_devices[0];
+    printf("acq1430 command needs more arguments\n");
+    printf("usage: acq1430.<fmc> <dev> <op> <reg> [<data>]\n");
+    printf("acq1430 device list:\n");
+    add = &acq1430_devices[0];
     while( add->name)
     {
       printf("   - %s\n", add->name);
@@ -608,32 +621,51 @@ tsc_adc3110( struct cli_cmd_para *c)
     return(-1);
   }
 
-  if( !strcmp( "save", c->para[1]))
+  if( !strncmp( "save", c->para[1], 4))
   {
     int i, offset, size, data, chan;
-    char *acq_name_h1, *acq_name_h2;
-    FILE *acq_file_h1, *acq_file_h2;
+    char *acq_name;
+    FILE *acq_file;
     char *acq_buf;
-    //struct pev_ioctl_map_pg shm_mas_map;
+    int space;
     struct tsc_ioctl_map_win shm_mas_map_win;
-    struct adc3110_calib_res res;
+    struct acq1430_calib_res res;
 
+    space = MAP_SPACE_SHM;
+    if(  c->para[1][4] == '.')
+    {
+      if(  c->para[1][5] == 's')
+      {
+        if(  c->para[1][6] == '2')
+        {
+	  space = MAP_SPACE_SHM2;
+        }
+      }
+      if(  c->para[1][5] == 'u')
+      {
+	space = MAP_SPACE_USR1;
+        if(  c->para[1][6] == '2')
+        {
+	  space = MAP_SPACE_USR2;
+        }
+      }
+    }
     if( c->cnt < 4)
     {
-      printf("adc3110 acq command needs more arguments\n");
-      printf("usage: adc3110.<fmc> <filename> save <offset> <size>\n");
+      printf("acq1430 acq command needs more arguments\n");
+      printf("usage: acq1430.<fmc> <filename> save <offset> <size>\n");
       return(-1);
     }
     if( sscanf( c->para[2],"%x", &offset) != 1)
     {
       printf("wrong offset value\n");
-      printf("usage: adc3110.<fmc> <filename> save <offset> <size>\n");
+      printf("usage: acq1430.<fmc> <filename> save <offset> <size>\n");
       return(-1);
     }
     if( sscanf( c->para[3],"%x", &size) != 1)
     {
       printf("wrong size value\n");
-      printf("usage: adc3110.<fmc> <filename> save <offset> <size>\n");
+      printf("usage: acq1430.<fmc> <filename> save <offset> <size>\n");
       return(-1);
     }
     fmc = 1;
@@ -651,121 +683,60 @@ tsc_adc3110( struct cli_cmd_para *c)
     {
       if(  c->para[0][0] == '?')
       {
-        strcpy( adc3110_prompt, "enter filename: "); 
-        c->para[0] = cli_get_cmd( &adc3110_history, adc3110_prompt);
+        strcpy( acq1430_prompt, "enter filename: "); 
+        c->para[0] = cli_get_cmd( &acq1430_history, acq1430_prompt);
       }
-      acq_name_h1 = (char *)malloc( strlen( c->para[0]) + 8);
-      strcpy( acq_name_h1, c->para[0]);
-      strcat( acq_name_h1, "_1.his");
-      acq_name_h2 = (char *)malloc( strlen( c->para[0]) + 8);
-      strcpy( acq_name_h2, c->para[0]);
-      strcat( acq_name_h2, "_2.his");
+      acq_name = (char *)malloc( strlen( c->para[0]) + 8);
+      strcpy( acq_name, c->para[0]);
+      strcat( acq_name, ".his");
 
-      printf("save data acquision data from offset %x [%x] to file %s and %s\n", offset, size, acq_name_h1, acq_name_h2);
-      acq_file_h1 = fopen( acq_name_h1, "w");
-      if( !acq_file_h1)
+      printf("save data acquision data from offset %x [%x] to file %s\n", offset, size, acq_name);
+      acq_file = fopen( acq_name, "w");
+      if( !acq_file)
       {
-        printf("cannot create acquisition file %s\n", acq_name_h1);
-        return( -1);
-      }
-      acq_file_h2 = fopen( acq_name_h2, "w");
-      if( !acq_file_h2)
-      {
-        printf("cannot create acquisition file %s\n", acq_name_h2);
-        fclose( acq_file_h1);
+        printf("cannot create acquisition file %s\n", acq_name);
         return( -1);
       }
     }
     acq_buf = NULL;
     if( size > 0)
     {
-#ifdef TSC
       bzero( &shm_mas_map_win, sizeof(shm_mas_map_win));
       shm_mas_map_win.req.mode.sg_id= MAP_ID_MAS_PCIE_PMEM;
-      shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
-      if( fmc == 2)
-      {
-	shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
-      }
-      //shm_mas_map_win.req.mode.space = MAP_SPACE_USR1;
+      shm_mas_map_win.req.mode.space = space;
       shm_mas_map_win.req.rem_addr = offset;
       shm_mas_map_win.req.size = size;
       tsc_map_alloc( &shm_mas_map_win);
       acq_buf = (char *)tsc_pci_mmap( shm_mas_map_win.sts.loc_base, shm_mas_map_win.sts.size);
-#else
-      shm_mas_map.rem_addr = offset;
-      shm_mas_map.mode = MAP_ENABLE|MAP_ENABLE_WR|MAP_SPACE_SHM;
-      shm_mas_map.flag = 0x0;
-      shm_mas_map.sg_id = MAP_MASTER_32;
-      shm_mas_map.size = size;
-      pev_map_alloc( &shm_mas_map);
-      acq_buf = pev_mmap( &shm_mas_map);
-#endif
     }
     if( !acq_buf || ( size <= 0))
     {
       printf("cannot allocate acquisition buffer\n");
       return( -1);
     }
-    for( i = 0; i < 0x10000; i++)
-    {
-      adc3110_histo[0][i] = 0;
-      adc3110_histo[1][i] = 0;
-    }
     chan = 0;
-    for( i = 0; i < size; i += 16)
+    for( i = 0; i < size; i+=2)
     {
-      data = *(unsigned char *)&acq_buf[i] |  (*(unsigned char *)&acq_buf[i+1] << 8);
-      adc3110_histo[0][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h1, "%d %d\n", chan, data);
-      data = *(unsigned char *)&acq_buf[i+2] |  (*(unsigned char *)&acq_buf[i+3] << 8);
-      adc3110_histo[0][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h1, "%d %d\n", chan+1, data);
-      data = *(unsigned char *)&acq_buf[i+4] |  (*(unsigned char *)&acq_buf[i+5] << 8);
-      adc3110_histo[0][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h1, "%d %d\n", chan+2, data);
-      data = *(unsigned char *)&acq_buf[i+6] |  (*(unsigned char *)&acq_buf[i+7] << 8);
-      adc3110_histo[0][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h1, "%d %d\n", chan+3, data);
-      data = *(unsigned char *)&acq_buf[i+8] |  (*(unsigned char *)&acq_buf[i+9] << 8);
-      adc3110_histo[1][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h2, "%d %d\n", chan,  data);
-      data = *(unsigned char *)&acq_buf[i+10] |  (*(unsigned char *)&acq_buf[i+11] << 8);
-      adc3110_histo[1][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h2, "%d %d\n", chan+1, data);
-      data = *(unsigned char *)&acq_buf[i+12] |  (*(unsigned char *)&acq_buf[i+13] << 8);
-      adc3110_histo[1][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h2, "%d %d\n", chan+2, data);
-      data = *(unsigned char *)&acq_buf[i+14] |  (*(unsigned char *)&acq_buf[i+15] << 8);
-      adc3110_histo[1][data & 0xffff] += 1;
-      if(  c->para[0][0] != '-') fprintf( acq_file_h2, "%d %d\n", chan+3, data);
-      chan += 4;
+      short data_s;
+
+      data_s = *(unsigned char *)&acq_buf[i] | (*(unsigned char *)&acq_buf[i+1] << 8);
+      fprintf( acq_file, "%d %d\n", chan, data_s);
+      chan++;
     }
-    adc3110_calib_res( &res);
-    printf("tot_A: %d - mean_A: %f - sig_A: %f [%d %d]\n", res.tot[0], res.mean[0], res.sig[0], res.min[0], res.max[0]);
-    printf("tot_B: %d - mean_B: %f - sig_B: %f [%d %d]\n", res.tot[1], res.mean[1], res.sig[1], res.min[1], res.max[1]);
   
     if(  c->para[0][0] != '-')
     {
-      fclose( acq_file_h1);
-      fclose( acq_file_h2);
+      fclose( acq_file);
     }
-#ifdef TSC
     tsc_pci_munmap( acq_buf, shm_mas_map_win.sts.size);
     tsc_map_free( &shm_mas_map_win);
-#else
-    pev_munmap( &shm_mas_map);
-    pev_map_free( &shm_mas_map);
-#endif
 
     return( 0);
   }
 
   if( !c->ext) 
   {
-    printf("you must specify fmc [1 or 2]\n");
-    printf("usage: adc3110.<fmc> <dev> <op> <reg> [<data>]\n");
-    return(-1);
+    fmc = 1;
   }
   else
   {
@@ -776,7 +747,7 @@ tsc_adc3110( struct cli_cmd_para *c)
       return( -1);
     }
   }
-  add = &adc3110_devices[0];
+  add = &acq1430_devices[0];
   while( add->name)
   {
     if( !strcmp(  c->para[0], add->name))
@@ -788,9 +759,9 @@ tsc_adc3110( struct cli_cmd_para *c)
   if( !add->name)
   {
     printf("wrong device name\n");
-    printf("usage: adc3110.<fmc> <dev> <op> <reg> [<data>]\n");
-    printf("adc3110 device list:\n");
-    add = &adc3110_devices[0];
+    printf("usage: acq1430.<fmc> <dev> <op> <reg> [<data>]\n");
+    printf("acq1430 device list:\n");
+    add = &acq1430_devices[0];
     while( add->name)
     {
       printf("   - %s\n", add->name);
@@ -802,15 +773,15 @@ tsc_adc3110( struct cli_cmd_para *c)
   {
     if( c->cnt < 3)
     {
-      printf("adc3110 read command needs more arguments\n");
-      printf("usage: adc3110.<fmc> <dev> read <reg>\n");
+      printf("acq1430 read command needs more arguments\n");
+      printf("usage: acq1430.<fmc> <dev> read <reg>\n");
       return(-1);
     }
     printf("%s.%s %s %s %s\n", c->cmd, c->ext, c->para[0], c->para[1], c->para[2]);
     if( sscanf( c->para[2],"%x", &reg) != 1)
     {
       printf("wrong register number\n");
-      printf("usage: adc3110.<fmc> <dev> <op> <reg> [<data>]\n");
+      printf("usage: acq1430.<fmc> <dev> <op> <reg> [<data>]\n");
       return(-1);
     }
     if( add->bus == BUS_SBC)
@@ -868,14 +839,14 @@ tsc_adc3110( struct cli_cmd_para *c)
   {
     if( c->cnt < 4)
     {
-      printf("adc3110 write command needs more arguments\n");
-      printf("usage: adc3110.<fmc> <dev> write <reg> <data>\n");
+      printf("acq1430 write command needs more arguments\n");
+      printf("usage: acq1430.<fmc> <dev> write <reg> <data>\n");
       return(-1);
     }
     if( sscanf( c->para[2],"%x", &reg) != 1)
     {
       printf("wrong register number\n");
-      printf("usage: adc3110.<fmc> <dev> <op> <reg> [<data>]\n");
+      printf("usage: acq1430.<fmc> <dev> <op> <reg> [<data>]\n");
       return(-1);
     }
     if( sscanf( c->para[3],"%x", &data) != 1)
@@ -930,25 +901,25 @@ tsc_adc3110( struct cli_cmd_para *c)
     if( (add->idx < 0) || (add->bus != BUS_SBC))
     {
       printf("wrong device name\n");
-      printf("usage: adc3110.<fmc> ads<ij> %s <offset> [<size>]\n", c->para[1]);
+      printf("usage: acq1430.<fmc> ads<ij> %s <offset> [<size>]\n", c->para[1]);
       return(-1);
     }
     if( c->cnt < 4)
     {
-      printf("adc3110 %s command needs more arguments\n", c->para[1]);
-      printf("usage: adc3110.<fmc> <dev> %s <offset> <size>\n", c->para[1]);
+      printf("acq1430 %s command needs more arguments\n", c->para[1]);
+      printf("usage: acq1430.<fmc> <dev> %s <offset> <size>\n", c->para[1]);
       return(-1);
     }
     if( sscanf( c->para[2],"%x", &offset) != 1)
     {
       printf("wrong offset value\n");
-      printf("usage: adc3110.<fmc> <dev> %s <offset> <size>\n", c->para[1]);
+      printf("usage: acq1430.<fmc> <dev> %s <offset> <size>\n", c->para[1]);
       return(-1);
     }
     if( sscanf( c->para[3],"%x", &size) != 1)
     {
       printf("wrong size value\n");
-      printf("usage: adc3110.<fmc> <dev> %s <offset> <size>\n", c->para[1]);
+      printf("usage: acq1430.<fmc> <dev> %s <offset> <size>\n", c->para[1]);
       return(-1);
     }
     printf("start data acquision on device  %s [%d] at offset %x [%x]\n",  c->para[0], add->idx, offset, size);
@@ -1082,8 +1053,8 @@ tsc_adc3110( struct cli_cmd_para *c)
       }
       for( i = 0; i < 0x10000; i++)
       {
-        adc3110_histo[0][i] = 0;
-        adc3110_histo[1][i] = 0;
+        acq1430_histo[0][i] = 0;
+        acq1430_histo[1][i] = 0;
       }
 
 
@@ -1101,7 +1072,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp0 = data;
 	}
 	cmp0 = ( cmp0 + 1) & 0xffff;
-        adc3110_histo[0][data & 0xffff] += 1;
+        acq1430_histo[0][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+2] |  (*(unsigned char *)&acq_buf[i+3] << 8);
 	if( cmp0 != data)
@@ -1111,7 +1082,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp0 = data;
 	}
 	cmp0 = ( cmp0 + 1) & 0xffff;
-        adc3110_histo[0][data & 0xffff] += 1;
+        acq1430_histo[0][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+4] |  (*(unsigned char *)&acq_buf[i+5] << 8);
 	if( cmp0 != data)
@@ -1121,7 +1092,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp0 = data;
 	}
 	cmp0 = ( cmp0 + 1) & 0xffff;
-        adc3110_histo[0][data & 0xffff] += 1;
+        acq1430_histo[0][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+6] |  (*(unsigned char *)&acq_buf[i+7] << 8);
 	if( cmp0 != data)
@@ -1131,7 +1102,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp0 = data;
 	}
 	cmp0 = ( cmp0 + 1) & 0xffff;
-        adc3110_histo[0][data & 0xffff] += 1;
+        acq1430_histo[0][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+8] |  (*(unsigned char *)&acq_buf[i+9] << 8);
 	if( cmp1 != data)
@@ -1141,7 +1112,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp1 = data;
 	}
 	cmp1 = ( cmp1 + 1) & 0xffff;
-        adc3110_histo[1][data & 0xffff] += 1;
+        acq1430_histo[1][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+10] |  (*(unsigned char *)&acq_buf[i+11] << 8);
 	if( cmp1 != data)
@@ -1151,7 +1122,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp1 = data;
 	}
 	cmp1 = ( cmp1 + 1) & 0xffff;
-        adc3110_histo[1][data & 0xffff] += 1;
+        acq1430_histo[1][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+12] |  (*(unsigned char *)&acq_buf[i+13] << 8);
 	if( cmp1 != data)
@@ -1161,7 +1132,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp1 = data;
 	}
 	cmp1 = ( cmp1 + 1) & 0xffff;
-        adc3110_histo[1][data & 0xffff] += 1;
+        acq1430_histo[1][data & 0xffff] += 1;
 
         data = *(unsigned char *)&acq_buf[i+14] |  (*(unsigned char *)&acq_buf[i+15] << 8);
 	if( cmp1 != data)
@@ -1171,23 +1142,23 @@ tsc_adc3110( struct cli_cmd_para *c)
 	  cmp1 = data;
 	}
 	cmp1 = ( cmp1 + 1) & 0xffff;
-        adc3110_histo[1][data & 0xffff] += 1;
+        acq1430_histo[1][data & 0xffff] += 1;
       }
       if( nerr0 == 0)
       {
-	printf("ADC3110 test pattern FMC%d chan#%d -> OK\n", fmc, (2*add->idx));
+	printf("ACQ1430 test pattern FMC%d chan#%d -> OK\n", fmc, (2*add->idx));
       }
       else
       {
-	printf("ADC3110 test pattern FMC%d chan#%d nerr = %d -> NOK\n", fmc, (2*add->idx), nerr0);
+	printf("ACQ1430 test pattern FMC%d chan#%d nerr = %d -> NOK\n", fmc, (2*add->idx), nerr0);
       }
       if( nerr1 == 0)
       {
-	printf("ADC3110 test pattern FMC%d chan#%d -> OK\n", fmc, (2*add->idx) + 1);
+	printf("ACQ1430 test pattern FMC%d chan#%d -> OK\n", fmc, (2*add->idx) + 1);
       }
       else
       {
-	printf("ADC3110 test pattern FMC%d chan#%d nerr = %d -> NOK\n", fmc, (2*add->idx) + 1, nerr1);
+	printf("ACQ1430 test pattern FMC%d chan#%d nerr = %d -> NOK\n", fmc, (2*add->idx) + 1, nerr1);
       }
 #ifdef TSC
       tsc_pci_munmap( acq_buf, shm_mas_map_win.sts.size);
@@ -1208,7 +1179,7 @@ tsc_adc3110( struct cli_cmd_para *c)
     if( (add->idx < 0) || (add->bus != BUS_SBC))
     {
       printf("wrong device name\n");
-      printf("usage: adc3110.<fmc> ads<ij> acq64K\n");
+      printf("usage: acq1430.<fmc> ads<ij> acq64K\n");
       return(-1);
     }
     size = 0x10000;
@@ -1226,10 +1197,38 @@ tsc_adc3110( struct cli_cmd_para *c)
     }
     do
     {
-      nerr = adc3110_acq( c, add->idx, fmc, size, check);
+      nerr = acq1430_acq( c, add->idx, fmc, size, check);
       if( !nerr) break;
     } while( check--);
 
+    return(0);
+  }
+  else if( !strncmp( "calib", c->para[1], 3))
+  {
+    int size;
+    int check;
+    int retval;
+
+    printf("usage: acq1430.<fmc> ads<ij> calib\n");
+    if( (add->idx < 0) || (add->bus != BUS_SBC))
+    {
+      printf("wrong device name\n");
+      printf("usage: acq1430.<fmc> ads<ij> calib\n");
+      return(-1);
+    }
+    if( add->idx == 15)
+    {
+      int chan;
+
+      for( chan = 0; chan < 5; chan++)
+      {
+	retval = acq1430_calib_idelay( c, chan);
+      }
+    }
+    else
+    {
+	retval = acq1430_calib_idelay( c, add->idx);
+    }
     return(0);
   }
   else if( !strcmp( "show", c->para[1]))
@@ -1302,20 +1301,20 @@ tsc_adc3110( struct cli_cmd_para *c)
     }
     if( c->cnt < 4)
     {
-      printf("adc3110 set command needs more arguments\n");
-      printf("usage: adc3110.<fmc> tmp109 set <lo> <hi>\n");
+      printf("acq1430 set command needs more arguments\n");
+      printf("usage: acq1430.<fmc> tmp109 set <lo> <hi>\n");
       return(-1);
     }
     if( sscanf( c->para[2],"%f", &flo) != 1)
     {
       printf("wrong lo value\n");
-      printf("usage: adc3110.<fmc> tmp109 set <lo> <hi>\n");
+      printf("usage: acq1430.<fmc> tmp109 set <lo> <hi>\n");
       return(-1);
     }
     if( sscanf( c->para[3],"%f", &fhi) != 1)
     {
       printf("wrong hi value\n");
-      printf("usage: adc3110.<fmc> tmp109 set <lo> <hi>\n");
+      printf("usage: acq1430.<fmc> tmp109 set <lo> <hi>\n");
       return(-1);
     }
     status = tsc_i2c_read( device, 1, &ctl);
@@ -1365,7 +1364,7 @@ tsc_adc3110( struct cli_cmd_para *c)
     {
       device |= 2;
     }
-    p = (unsigned char *)&adc3110_sign;
+    p = (unsigned char *)&acq1430_sign;
     for( i = 0x0; i < 0x100; i++)
     {
       //tsc_i2c_read( device, tsc_swap_16( 0x7000 + i), &data);
@@ -1389,10 +1388,10 @@ tsc_adc3110( struct cli_cmd_para *c)
     {
       char prompt[64];
 
-      bzero( &adc3110_history, sizeof( struct cli_cmd_history));
-      cli_history_init( &adc3110_history);
-      printf("setting ADC3110 signature\n");
-      para_p = cli_get_cmd( &adc3110_history, "Enter password ->  ");
+      bzero( &acq1430_history, sizeof( struct cli_cmd_history));
+      cli_history_init( &acq1430_history);
+      printf("setting ACQ1430 signature\n");
+      para_p = cli_get_cmd( &acq1430_history, "Enter password ->  ");
       if( strcmp(  para_p, "goldorak"))
       {
 	printf("wrong password\n");
@@ -1400,103 +1399,103 @@ tsc_adc3110( struct cli_cmd_para *c)
       }
 
       strcpy( &prompt[0], "Board Name [");
-      strncat( &prompt[0], &adc3110_sign.board_name[0], 8);
+      strncat( &prompt[0], &acq1430_sign.board_name[0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.board_name[0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.board_name[0], para_p, 8);
 
 
       strcpy( &prompt[0], "Serial Number [");
-      strncat( &prompt[0], &adc3110_sign.serial[0], 4);
+      strncat( &prompt[0], &acq1430_sign.serial[0], 4);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.serial[0], para_p, 4);
+      if( para_p[0]) strncpy( &acq1430_sign.serial[0], para_p, 4);
 
       strcpy( &prompt[0], "PCB Version :  [");
-      strncat( &prompt[0], &adc3110_sign.version[0], 8);
+      strncat( &prompt[0], &acq1430_sign.version[0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.version[0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.version[0], para_p, 8);
 
       strcpy( &prompt[0], "Hardware Revision :  [");
-      strncat( &prompt[0], &adc3110_sign.revision[0], 2);
+      strncat( &prompt[0], &acq1430_sign.revision[0], 2);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.revision[0], para_p, 2);
+      if( para_p[0]) strncpy( &acq1430_sign.revision[0], para_p, 2);
 
       strcpy( &prompt[0], "Test Date :  [");
-      strncat( &prompt[0], &adc3110_sign.test_date[0], 8);
+      strncat( &prompt[0], &acq1430_sign.test_date[0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.test_date[0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.test_date[0], para_p, 8);
 
       strcpy( &prompt[0], "Calibration Date :  [");
-      strncat( &prompt[0], &adc3110_sign.calib_date[0], 8);
+      strncat( &prompt[0], &acq1430_sign.calib_date[0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.calib_date[0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.calib_date[0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan0 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[0][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[0][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[0][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[0][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan1 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[1][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[1][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[1][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[1][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan2 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[2][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[2][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[2][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[2][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan3 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[3][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[3][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[3][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[3][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan4 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[4][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[4][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[4][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[4][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan5 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[5][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[5][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[5][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[5][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan6 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[6][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[6][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[6][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[6][0], para_p, 8);
 
       strcpy( &prompt[0], "Offset Compensation Chan7 :  [");
-      strncat( &prompt[0], &adc3110_sign.offset_adc[7][0], 8);
+      strncat( &prompt[0], &acq1430_sign.offset_adc[7][0], 8);
       strcat( &prompt[0], "] : "); 
-      para_p = cli_get_cmd( &adc3110_history, prompt);
+      para_p = cli_get_cmd( &acq1430_history, prompt);
       if( para_p[0] == 'q') return(-1);
-      if( para_p[0]) strncpy( &adc3110_sign.offset_adc[7][0], para_p, 8);
+      if( para_p[0]) strncpy( &acq1430_sign.offset_adc[7][0], para_p, 8);
 
     }
     if( op == 2)
@@ -1509,20 +1508,20 @@ tsc_adc3110( struct cli_cmd_para *c)
       strftime( ct, 10, "%d%m%Y", gmtime(&tm));
       printf("current date : %s\n", ct);
 
-      strncpy( &adc3110_sign.board_name[0], " ADC3111", 8);
-      strncpy( &adc3110_sign.serial[0], "0000", 4);
-      strncpy( &adc3110_sign.version[0], "00000001", 8);
-      strncpy( &adc3110_sign.revision[0], "A0", 2);
-      strncpy( &adc3110_sign.test_date[0], ct, 8);
-      strncpy( &adc3110_sign.calib_date[0], ct, 8);
-      strncpy( &adc3110_sign.offset_adc[0][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[1][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[2][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[3][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[4][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[5][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[6][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[7][0], "00000000", 8);
+      strncpy( &acq1430_sign.board_name[0], " ADC3111", 8);
+      strncpy( &acq1430_sign.serial[0], "0000", 4);
+      strncpy( &acq1430_sign.version[0], "00000001", 8);
+      strncpy( &acq1430_sign.revision[0], "A0", 2);
+      strncpy( &acq1430_sign.test_date[0], ct, 8);
+      strncpy( &acq1430_sign.calib_date[0], ct, 8);
+      strncpy( &acq1430_sign.offset_adc[0][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[1][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[2][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[3][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[4][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[5][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[6][0], "00000000", 8);
+      strncpy( &acq1430_sign.offset_adc[7][0], "00000000", 8);
 
       cnt = c->cnt - 3;
       i = 3;
@@ -1533,50 +1532,50 @@ tsc_adc3110( struct cli_cmd_para *c)
         q =  c->para[i++];
         if( p[0] == 'b')
         {
-          strncpy( &adc3110_sign.board_name[0], &q[2], 8);
+          strncpy( &acq1430_sign.board_name[0], &q[2], 8);
         }
         if( p[0] == 's')
         {
-	  strncpy( &adc3110_sign.serial[0], &q[2], 4);
+	  strncpy( &acq1430_sign.serial[0], &q[2], 4);
         }
         if( p[0] == 'v')
         {
-	  strncpy( &adc3110_sign.version[0], &q[2], 8);
+	  strncpy( &acq1430_sign.version[0], &q[2], 8);
         }
         if( p[0] == 'r')
         {
-	  strncpy( &adc3110_sign.revision[0], &q[2], 2);
+	  strncpy( &acq1430_sign.revision[0], &q[2], 2);
         }
       }
     }
-    printf("ADC3110 signature\n");
-    p = (unsigned char *)&adc3110_sign.board_name[0];
+    printf("ACQ1430 signature\n");
+    p = (unsigned char *)&acq1430_sign.board_name[0];
     printf("Board Name :  %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.serial[0];
+    p = (unsigned char *)&acq1430_sign.serial[0];
     printf("Serial Number : %c%c%c%c\n", p[0],p[1],p[2],p[3]);
-    p = (unsigned char *)&adc3110_sign.version[0];
+    p = (unsigned char *)&acq1430_sign.version[0];
     printf("PCB Version : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.revision[0];
+    p = (unsigned char *)&acq1430_sign.revision[0];
     printf("Hardware Revision : %c%c\n", p[0],p[1]);
-    p = (unsigned char *)&adc3110_sign.test_date[0];
+    p = (unsigned char *)&acq1430_sign.test_date[0];
     printf("Test Date :  %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.calib_date[0];
+    p = (unsigned char *)&acq1430_sign.calib_date[0];
     printf("Calibration Date :  %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[0][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[0][0];
     printf("Offset Compensation Chan#0 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[1][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[1][0];
     printf("Offset Compensation Chan#1 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[2][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[2][0];
     printf("Offset Compensation Chan#2 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[3][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[3][0];
     printf("Offset Compensation Chan#3 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[4][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[4][0];
     printf("Offset Compensation Chan#4 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[5][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[5][0];
     printf("Offset Compensation Chan#5 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[6][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[6][0];
     printf("Offset Compensation Chan#6 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
-    p = (unsigned char *)&adc3110_sign.offset_adc[7][0];
+    p = (unsigned char *)&acq1430_sign.offset_adc[7][0];
     printf("Offset Compensation Chan#7 : %c%c%c%c%c%c%c%c\n", p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7]);
     printf("\n");
 
@@ -1584,14 +1583,14 @@ tsc_adc3110( struct cli_cmd_para *c)
     {
       if( op == 1)
       {
-        para_p = cli_get_cmd( &adc3110_history, "Overwrite ADC3110 signature ? [y/n] ");
+        para_p = cli_get_cmd( &acq1430_history, "Overwrite ACQ1430 signature ? [y/n] ");
         if( para_p[0] != 'y')
         {
   	  printf("EEPROM signature update aborted\n");
   	  return(-1);
         }
       }
-      p = (unsigned char *)&adc3110_sign;
+      p = (unsigned char *)&acq1430_sign;
       for( i = 0x0; i < 0x100; i++)
       {
 	data = p[i];
@@ -1616,8 +1615,8 @@ tsc_adc3110( struct cli_cmd_para *c)
     }
     if( c->cnt < 4)
     {
-      printf("adc3110 eeprom dump command needs more arguments\n");
-      printf("usage: adc3110.<fmc> eeprom dump <offset> <size>\n");
+      printf("acq1430 eeprom dump command needs more arguments\n");
+      printf("usage: acq1430.<fmc> eeprom dump <offset> <size>\n");
       return(-1);
     }
     if( fmc == 2)
@@ -1627,13 +1626,13 @@ tsc_adc3110( struct cli_cmd_para *c)
     if( sscanf( c->para[2],"%x", &off) != 1)
     {
       printf("bad offset\n");
-      printf("usage: adc3110.<fmc> eeprom dump <offset> <size>\n");
+      printf("usage: acq1430.<fmc> eeprom dump <offset> <size>\n");
       return(-1);
     }
     if( sscanf( c->para[3],"%x", &size) != 1)
     {
       printf("bad size\n");
-      printf("usage: adc3110.<fmc> eeprom dump <offset> <size>\n");
+      printf("usage: acq1430.<fmc> eeprom dump <offset> <size>\n");
       return(-1);
     }
     printf("Displaying EEPROM from %x to %x\n", off, off+size);
@@ -1659,11 +1658,11 @@ tsc_adc3110( struct cli_cmd_para *c)
   else 
   {
     printf("bad operation : %s\n",  c->para[1]);
-    printf("usage: adc3110.<fmc> <dev> read <reg>\n");
-    printf("       adc3110.<fmc> <dev> write <reg> <data>\n");
-    printf("       adc3110.<fmc> <dev> acq <off> <size>\n");
-    printf("       adc3110.<fmc> <file> save <off> <size>\n");
-    printf("       adc3110.<fmc> <dev> show\n");
+    printf("usage: acq1430.<fmc> <dev> read <reg>\n");
+    printf("       acq1430.<fmc> <dev> write <reg> <data>\n");
+    printf("       acq1430.<fmc> <dev> acq <off> <size>\n");
+    printf("       acq1430.<fmc> <file> save <off> <size>\n");
+    printf("       acq1430.<fmc> <dev> show\n");
     return(-1);
   }
   return(0);

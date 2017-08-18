@@ -29,7 +29,6 @@
  *----------------------------------------------------------------------------
  *  Change History
  *
- *
  *=============================< end file header >============================*/
 
 #ifndef lint
@@ -41,6 +40,8 @@ static char rcsid[] = "$Id: clilib.c,v 1.3 2015/12/03 15:13:06 ioxos Exp $";
 #include <string.h>
 #include <cli.h>
 #include <sys/types.h>
+
+char cli_error_line[256] = {0,};
 
 char *
 cli_rcsid()
@@ -217,9 +218,9 @@ cli_get_cmd( struct cli_cmd_history *h,
 	      {
 		if( h->rd_idx == 0)
 		{
-		  if( h->cnt > h->size)
+		  if( h->cnt >= h->size)
 		  {
-		    h->rd_idx = h->size;
+		    h->rd_idx = h->size - 1;
 		  }
 		}
                 else
@@ -300,6 +301,10 @@ cli_get_cmd( struct cli_cmd_history *h,
   {
     int last_idx;
 
+    if( cmdline[0] == '!')
+    {
+      return( cmdline);
+    }
     last_idx = h->wr_idx -1;
     if( last_idx < 0)
     {
@@ -333,7 +338,7 @@ struct cli_cmd_para
 {
   char *p;
   long i;
-
+  while( *cmdline == ' ') cmdline++;
   strcpy( c->cmdline, cmdline); 
   c->cmd = c->cmdline;
   p = strpbrk( c->cmd, ". \t");
@@ -382,4 +387,195 @@ struct cli_cmd_para
   c->cnt = i;
 
   return( c);
+}
+
+int
+cli_get_para_str( struct cli_cmd_para *c,
+	          int idx,
+  	          char *str,
+		  int len)
+{
+  if(idx < c->cnt)
+  {
+    if( len)
+    {
+      if( !strncmp( str, c->para[idx], len))
+      {
+        return( CLI_OK);
+      }
+    }
+    else 
+    {
+      if( !strcmp( str, c->para[idx]))
+      {
+        return( CLI_OK);
+      }
+    }
+    sprintf(cli_error_line, "Bad parameters %s\n", c->para[idx]);
+  }
+  else
+  {
+    sprintf(cli_error_line, "Not enough parameters..\n");
+  }
+  return( CLI_ERR);
+}
+
+int
+cli_get_para_hex( struct cli_cmd_para *c,
+	          int idx,
+  	          int *val_p)
+{
+  if(idx < c->cnt)
+  {
+    if( sscanf( c->para[idx], "%x\n", val_p) == 1)
+    {
+      return( CLI_OK);
+    }
+    sprintf(cli_error_line, "Bad parameters %s\n", c->para[idx]);
+  }
+  else
+  {
+    sprintf(cli_error_line, "Not enough parameters..\n");
+  }
+  return( CLI_ERR);
+}
+
+int
+cli_get_para_dec( struct cli_cmd_para *c,
+	          int idx,
+  	          int *val_p)
+{
+  if(idx < c->cnt)
+  {
+    if( sscanf( c->para[idx], "%i\n", val_p) == 1)
+    {
+      return( CLI_OK);
+    }
+    sprintf(cli_error_line, "Bad parameters %s\n", c->para[idx]);
+  }
+  else
+  {
+    sprintf(cli_error_line, "Not enough parameters..\n");
+  }
+  return( CLI_ERR);
+}
+
+void
+cli_error_print( void)
+{
+  printf("%s", cli_error_line);
+  return;
+}
+
+void
+cli_history_print( struct cli_cmd_history *h)
+{
+  int i;
+
+  if( h->cnt < h->size)
+  {
+    for( i = 0; i < h->wr_idx-1; i++)
+    {
+      printf("%4d %s\n", i, &h->bufline[i][0]);
+    }
+  }
+  else
+  {
+    int n;
+
+    n =  h->cnt - h->size;
+    for( i = h->wr_idx; i < h->size; i++)
+    {
+      printf("%4d %s\n", n++, &h->bufline[i][0]);
+    }
+    for( i = 0; i < h->wr_idx; i++)
+    {
+      printf("%4d %s\n", n++, &h->bufline[i][0]);
+    }
+  }
+  return;
+}
+
+char *
+cli_history_find_idx( struct cli_cmd_history *h,
+		      int idx)
+{
+  int i;
+
+  if( h->cnt < h->size)
+  {
+    for( i = 0; i < h->wr_idx; i++)
+    {
+      //printf("%4d %s\n", i, &h->bufline[i][0]);
+      if( i == idx)
+      {
+	return( &h->bufline[i][0]);
+      }
+    }
+  }
+  else
+  {
+    int n;
+
+    n =  h->cnt - h->size;
+    for( i = h->wr_idx; i < h->size; i++)
+    {
+      //printf("%s\n", n++, &h->bufline[i][0]);
+      if( n == idx)
+      {
+	return( &h->bufline[i][0]);
+      }
+    }
+    for( i = 0; i < h->wr_idx; i++)
+    {
+      //printf("%4d %s\n", n++, &h->bufline[i][0]);
+      if( n == idx)
+      {
+	return( &h->bufline[i][0]);
+      }
+    }
+  }
+  return(NULL);
+}
+
+char *
+cli_history_find_str( struct cli_cmd_history *h,
+		      char *cmd)
+{
+  int i;
+
+  if( h->cnt < h->size)
+  {
+    for( i = h->wr_idx; i >= 0; i--)
+    {
+      //printf("%4d %s\n", i, &h->bufline[i][0]);
+      if( !strncmp( cmd,  &h->bufline[i][0], strlen(cmd)))
+      {
+	return( &h->bufline[i][0]);
+      }
+    }
+  }
+  else
+  {
+    int n;
+
+    n =  h->cnt - h->size;
+    for(i = h->size - 1;  i == h->wr_idx; i--)
+    {
+      //printf("%d %s\n", n++, &h->bufline[i][0]);
+      if( !strncmp( cmd,  &h->bufline[i][0], strlen(cmd)))
+      {
+	return( &h->bufline[i][0]);
+      }
+    }
+    for( i = h->wr_idx; i >= 0; i--)
+    {
+      //printf("%4d %s\n", n++, &h->bufline[i][0]);
+      if( !strncmp( cmd,  &h->bufline[i][0], strlen(cmd)))
+      {
+	return( &h->bufline[i][0]);
+      }
+    }
+  }
+  return(NULL);
 }

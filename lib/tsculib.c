@@ -549,7 +549,7 @@ tsc_read_blk( ulong rem_addr,
   return( retval);
 }
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_write_blk
+ * Function name : tsc_write_loop
  * Prototype     : int
  * Parameters    : remote adrress
  *                 data buffer pointer
@@ -581,7 +581,7 @@ tsc_write_loop( ulong rem_addr,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_read_blk
+ * Function name : tsc_read_loop
  * Prototype     : int
  * Parameters    : remote adrress
  *                 data buffer pointer
