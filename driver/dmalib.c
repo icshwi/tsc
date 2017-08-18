@@ -402,7 +402,8 @@ dma_wait( struct dma_ctl *dma_ctl_p,
   }
   else 
   {
-    debugk(("DMA IRQ received -> %x\n", dma_ctl_p->status));
+    debugk(("DMA IRQ received -> %x [%x]\n", dma_ctl_p->status, dma_ctl_p->state));
+    dma_ctl_p->state = DMA_STS_DONE;
     dma_ctl_p->status |= DMA_STATUS_ENDED;
   }
   return(0);
