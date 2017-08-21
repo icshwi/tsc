@@ -48,7 +48,7 @@ typedef long dma_addr_t;
 #include "../include/tscioctl.h"
 #include "../include/i2c-dev.h"
 
-char tsc_lib_version[] = "1.00";
+char tsc_lib_version[] = "1.30";
 int tsc_fd         = -1;
 int tsc_fd_io      = -1;
 int tsc_fd_central = -1;

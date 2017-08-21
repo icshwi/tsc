@@ -60,7 +60,7 @@ static void ifc1211_remove(struct pci_dev *);
 
 #include "debug.h"
 
-#define DRIVER_VERSION "1.00"
+#define DRIVER_VERSION "1.30"
 
 struct ifc1211 ifc1211;      /* driver main data structure for device */
 
