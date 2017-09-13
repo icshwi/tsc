@@ -323,17 +323,13 @@ int althea_ddr_idel_calib(int mem){
 	printf("\n");
 	printf("Enter hardware default DQ delay (default value: %i): ", CURRENT_DLY);
 	gets(para_buf);
-	if (sscanf( para_buf, " %d", &CURRENT_DLY) != 1) {
-	  printf("ERROR ! \n");
-	}
+	sscanf( para_buf, " %d", &CURRENT_DLY);
 	printf(" %i", CURRENT_DLY);
 
 	printf("\n");
 	printf("Enter hardware default INC / DEC STEP (default value: %i): ", CURRENT_STEP);
 	gets(para_buf);
-	if (sscanf( para_buf, " %d", &CURRENT_STEP) != 1) {
-	  printf("ERROR ! \n");
-	}
+	sscanf( para_buf, " %d", &CURRENT_STEP);
 	printf(" %i", CURRENT_STEP);
 
 	printf("\n");
@@ -629,56 +625,57 @@ int tsc_ddr(struct cli_cmd_para *c){
 	if(cnt--) {
 
 // DDR command
-		if((!strcmp("calib", c->para[0])) && (c->cnt == 2)) {
+		if((!strcmp("calib", c->para[1])) && (c->cnt == 3)) {
 			// Acquire and transform parameter
-			sscanf(c->para[1], "%x", &mem);
+			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_calib(mem);
 			}
 		}
-		else if((!strcmp("reset", c->para[0])) && (c->cnt == 2)) {
-			sscanf(c->para[1], "%x", &mem);
+		else if((!strcmp("reset", c->para[1])) && (c->cnt == 3)) {
+			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_reset(mem);
 			}
 		}
-		else if((!strcmp("status", c->para[0])) && (c->cnt == 2)) {
-			sscanf(c->para[1], "%x", &mem);
+		else if((!strcmp("status", c->para[1])) && (c->cnt == 3)) {
+			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_status(mem);
 			}
 		}
-		else if((!strcmp("set", c->para[0])) && (c->cnt == 5)) {
+		else if((!strcmp("set", c->para[1])) && (c->cnt == 6)) {
 			// Acquire and transform parameter to unsigned int
-			sscanf(c->para[1], "%x", &mem);
-			sscanf(c->para[2], "%x", &dq);
-			sscanf(c->para[3], "%x", &step);
+			sscanf(c->para[2], "%x", &mem);
+			sscanf(c->para[3], "%x", &dq);
+			sscanf(c->para[4], "%x", &step);
 
 			if((mem < 1) | (mem > 2) | (dq > 0xffff) | (step > 16) | (step < 1)) {
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_set(mem, dq, step, c->para[4]);
 			}
 		}
 		else {
-			printf("Bad parameter! Type \"? ddr\" for help \n");
+			printf("Bad parameter! Type \"? smem\" for help \n");
 			return(-1);
 		}
 	}
-// Bad command
+	// Bad command
 	else {
-		printf("Bad parameter! Type \"? ddr\" for help \n");
+		printf("Bad parameter! Type \"? smem\" for help \n");
 		return(-1);
 	}
+
 return 0;
 }
