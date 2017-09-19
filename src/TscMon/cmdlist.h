@@ -33,6 +33,7 @@
 int tsc_func_help(struct cli_cmd_para *);
 int tsc_func_history(struct cli_cmd_para *);
 int tsc_wait(struct cli_cmd_para *);
+int tsc_tdma(struct cli_cmd_para *);
 
 char *alias_msg[]   = 
 {
@@ -132,7 +133,7 @@ char *cmp_msg[] =
   "Compare two data buffer",
   "cmp <off1>.<sp1><idx1> <off2>.<sp2><idx2> <len>",
   "   where <off>     = address offset in hexadecimal",
-  "         <sp><idx> = buffer space [s1,s2,u1,u2,k1->k8]",
+  "         <sp><idx> = buffer space [s1,s2,u1,u2,k0->k7]",
   "         <len>     = buffer size in bytes",
 0};
 
@@ -570,6 +571,13 @@ char *sflash_msg[]=
   "sflash dynopt",
 0};
 
+char *tdma_msg[] = 
+{
+  "Perform DMA operation using channel <x>",
+  "dma.<x> start <des_start>:<des_space>[.s] <src_start>:<src_space>[.s] <size>",
+  "dma.<x> status",
+0};
+
 char *timer_msg[] = 
 {
   "Perform operation on IFC1211 global timer ",
@@ -751,6 +759,7 @@ struct cli_cmd_list cmd_list[] =
   //{ "semaphore" , tsc_semaphore,  semaphore_msg , 0},
   //{ "sflash" 	, tsc_sflash,       sflash_msg 	  , 0},
   { "set" 	    , tsc_set_device,   set_device_msg, 0},
+  { "tdma"     	, tsc_tdma,         tdma_msg      , 0},
   //{ "timer"  	, tsc_timer,        timer_msg  	  , 0},
   { "tinit"  	, tsc_tinit,        tinit_msg  	  , 0},
   { "tkill"  	, tsc_tkill,        tkill_msg  	  , 0},

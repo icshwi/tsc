@@ -34,7 +34,7 @@ LIBDIR = ../../lib
 INC = -I $(INCDIR)
 LIB = -L $(LIBDIR)
 
-OFILES = TscMon.o script.o rdwr.o conf.o map.o dma.o timer.o sflash.o buf.o tst.o semaphore.o fifo.o lmk.o ddr.o i2c.o adc3110.o adc3117.o acq1430.o alias.o
+OFILES = TscMon.o script.o rdwr.o conf.o map.o dma.o timer.o sflash.o buf.o tst.o semaphore.o fifo.o lmk.o ddr.o i2c.o adc3110.o adc3117.o acq1430.o alias.o tdma.o
 HFILES = $(INCDIR)/cli.h 
 
 all : TscMon
@@ -92,6 +92,9 @@ acq1430.o: acq1430.c cmdlist.h Makefile
 
 alias.o: alias.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c alias.c
+
+tdma.o: tdma.c cmdlist.h Makefile
+	$(CC) $(FLAGS) $(INC) -c tdma.c
 
 TscMon.o: TscMon.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c TscMon.c

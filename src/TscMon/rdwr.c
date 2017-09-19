@@ -1912,13 +1912,13 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
     tsc_print_usage( c);
     return( retval);
   }
-  if( sscanf( c->para[0],"%x.%c%d", &off1, &sp1, &idx1) < 2)
+  if( sscanf( c->para[0],"%x:%c%d", &off1, &sp1, &idx1) < 2)
   {
     printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);
     return( retval);
   }
-  if( sscanf( c->para[1],"%x.%c%d", &off2, &sp2, &idx2) < 2)
+  if( sscanf( c->para[1],"%x:%c%d", &off2, &sp2, &idx2) < 2)
   {
     printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);

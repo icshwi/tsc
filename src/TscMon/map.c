@@ -205,9 +205,9 @@ map_alloc( struct cli_cmd_para *c)
   printf("Allocating mapping...\n");
 
   bzero( &map_win, sizeof(map_win));
-  if( c->cnt < 5)
+  if( c->cnt < 4)
   {
-    printf("missing parameter : %ld need at least 5\n",  c->cnt);
+    printf("missing parameter : %ld need at least 4\n",  c->cnt);
     goto map_alloc_usage;
   }
 
@@ -223,12 +223,14 @@ map_alloc( struct cli_cmd_para *c)
       }
       case's':
       {
-	map_win.req.mode.space = MAP_SPACE_SHM;
+	map_win.req.mode.space = MAP_SPACE_SHM1;
+	if( c->ext[1] == '2') map_win.req.mode.space = MAP_SPACE_SHM2;
 	break;
       }
       case'u':
       {
-	map_win.req.mode.space = MAP_SPACE_USR;
+	map_win.req.mode.space = MAP_SPACE_USR1;
+	if( c->ext[1] == '2') map_win.req.mode.space = MAP_SPACE_USR2;
 	break;
       }
     }
@@ -273,11 +275,15 @@ map_alloc( struct cli_cmd_para *c)
     printf("bad window size : %s\n",  c->para[3]);
     goto map_alloc_usage;
   }
-  map_win.req.mode.am = (char)strtoul( c->para[4], &p, 16);
-  if( p == c->para[4])
+  map_win.req.mode.am     = 0x0;
+  if( c->cnt > 4)
   {
-    printf("bad mapping mode : %s\n",  c->para[4]);
-    goto map_alloc_usage;
+    map_win.req.mode.am = (char)strtoul( c->para[4], &p, 16);
+    if( p == c->para[4])
+    {
+      printf("bad mapping mode : %s\n",  c->para[4]);
+      goto map_alloc_usage;
+    }
   }
   map_win.req.mode.flags     = 0x0;
   if( c->cnt > 5)

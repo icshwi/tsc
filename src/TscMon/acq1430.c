@@ -107,19 +107,32 @@ static char *rcsid = "$Id: acq1430.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #define BUS_I2C 2
 #define BUS_SBC 3
 
-#define MAP_OLDno
-
-#ifdef MAP_OLD
-#define ADC_BASE_SERIAL_A     0x80001048
-#define ADC_BASE_SERIAL_B     0x80001448
-#define ADC_BASE_BMOV_A       0x80001058
-#define ADC_BASE_BMOV_B       0x80001458
-#else
-#define ADC_BASE_SERIAL_A     0x0000120c
-#define ADC_BASE_SERIAL_B     0x0000130c
 #define ADC_BASE_BMOV_A       0x00001100
 #define ADC_BASE_BMOV_B       0x00001110
-#endif
+  
+#define ADC_BASE_A          0x00001200
+#define ADC_BASE_B          0x00001300
+
+#define ADC_BASE_SIGN_A     (ADC_BASE_A +0x00)
+#define ADC_BASE_SIGN_B     (ADC_BASE_B +0x00)
+
+#define ADC_BASE_CSR_A     (ADC_BASE_A +0x04)
+#define ADC_BASE_CSR_B     (ADC_BASE_B +0x04)
+
+#define ADC_BASE_LED_A     (ADC_BASE_A +0x08)
+#define ADC_BASE_LED_B     (ADC_BASE_B +0x08)
+
+#define ADC_BASE_SERIAL_A   (ADC_BASE_A +0x0c)
+#define ADC_BASE_SERIAL_B   (ADC_BASE_B +0x0c)
+
+#define ADC_BASE_GPIO_A     (ADC_BASE_A +0x014)
+#define ADC_BASE_GPIO_B     (ADC_BASE_B +0x014)
+
+#define ADC_BASE_DACCTLL_A  (ADC_BASE_A +0x034)
+#define ADC_BASE_DACCTLL_B  (ADC_BASE_B +0x034)
+
+#define ADC_BASE_IDELAY_A  (ADC_BASE_A +0x038)
+#define ADC_BASE_IDELAY_B  (ADC_BASE_B +0x038)
 
 struct pev_acq1430_devices
 {
@@ -192,6 +205,88 @@ acq1430_rcsid()
 
 char filename[0x100];
 struct cli_cmd_history acq1430_history;
+
+static void
+lmk_write( int reg,
+	   int data,
+	   int fmc)
+{
+  int cmd;
+
+  cmd =  0xc2000000 | reg;
+  printf("cmd = %08x - data = %08x\n", cmd, data);
+  if( fmc == 2)
+  {
+    pev_csr_wr( ADC_BASE_SERIAL_B + 4, data);
+    pev_csr_wr( ADC_BASE_SERIAL_B, cmd);
+  }
+  else 
+  {
+    pev_csr_wr( ADC_BASE_SERIAL_A + 4, data);
+    pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
+  }
+}
+static void
+lmk_init_intref( int fmc)
+{
+  int reg;
+
+  /**************************************************************************/
+  /* Initialize  LMK04806  with CLKREF internal oscillator  CCHD575-100MHz  */
+  /**************************************************************************/
+
+  lmk_write( 0, 0x20000, fmc);       /* LMK04806__R00 Generate a programmable RESET to the LMK04806_  */
+  usleep(2000);                      /* wait for 2 ms */
+  lmk_write( 0, 0x140, fmc);         /* LMK04806__R00 Enable  ClkOut_0-1   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
+  lmk_write( 1, 0x140, fmc);         /* LMK04806__R01 Enable  ClkOut_2-3   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
+  lmk_write( 2, 0x140, fmc);         /* LMK04806__R02 Enable  ClkOut_4-5   + ClkOUT0_DIV = 5   -> 2500/5  = 250 MHz */
+  lmk_write( 3, 0x140, fmc);         /* LMK04806__R03 Enable  ClkOut_6-7   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
+  lmk_write( 4, 0x140, fmc);         /* LMK04806__R04 Enable  ClkOut_8-9   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
+  lmk_write( 5, 0x140, fmc);         /* LMK04806__R05 Enable  ClkOut_10-11 + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
+  lmk_write( 6, 0x11100000, fmc);    /* LMK04806__R06 Type = 1(LVDS) ClkOUT3/ClkOUT2/ClkOUT1  Type = 0(Power down) ClkOUT0  */
+  lmk_write( 7, 0x10100000, fmc);    /* LMK04806__R07 Type = 1(LVDS) ClkOUT7/ClkOUT5          Type = 0(Power down) ClkOUT6/ClkOUT4 */
+  lmk_write( 8, 0x01010000, fmc);    /* LMK04806__R08 Type = 1(LVDS) ClkOUT10/ClkOUT8         Type = 0(Power down) ClkOUT11/ClkOUT9 */
+  lmk_write( 9, 0x55555540, fmc);    /* LMK04806__R09 TI/NS write MUST */
+  lmk_write( 0xa, 0x11404200, fmc);  /* LMK04806__R10 OscOUT_Type = 1 (LVDS)  Powerdown  */
+  lmk_write( 0xb, 0x34028000, fmc);  /* LMK04806__R11 Device MODE=0x6 + No SYNC output */
+  lmk_write( 0xc, 0x13000000, fmc);  /* LMK04806__R12 LD pin programmable (PLL2_DLD)  */
+  lmk_write( 0xd, 0x3B7002c8, fmc);  /* LMK04806__R13 HOLDOVER pin uWIRE SDATOUT  Enable CLKin1 */
+  lmk_write( 0xe, 0x00000000, fmc);  /* LMK04806__R14 Bipolar Mode CLKin1 INPUT  */
+  lmk_write( 0xf, 0x00000000, fmc);  /* LMK04806__R15 DAC unused  */
+  lmk_write( 0x10, 0x01550400, fmc); /* LMK04806__R16 OSC IN level */
+  lmk_write( 0x18, 0x00000000, fmc); /* LMK04806__R24 PLL1 not used   PPL2  */
+  lmk_write( 0x19, 0x00000000, fmc); /* LMK04806__R25 DAC config not used  */
+  /* Pgm VCO/PLL2 = 2500 MHz */
+  lmk_write( 0x1a, 0x8fa00000, fmc); /* LMK04806__R26 PLL2 used   ICP = 3200 uA */
+  lmk_write( 0x1b, 0x00000000, fmc); /* LMK04806__R27 PLL1 not used */
+  lmk_write( 0x1c, 0x00200000, fmc); /* LMK04806__R28 PLL2_R = 2 /PPL1 N divider = 00  */
+  lmk_write( 0x1d, 0x01800320, fmc); /* LMK04806__R29 OSCIN_FREQ /PLL2_NCAL = 25)  */
+  lmk_write( 0x1e, 0x02000320, fmc); /* LMK04806__R30 /PLL2_P = 2 PLL2_N = 25  */
+  lmk_write( 0x1f, 0x00000000, fmc); /* LMK04806__R31 uWIRE Not LOCK */
+  /*---------------------------------------------*/
+  /* Enable Internal 100 MHz clock from  +OSC575 */
+  /*---------------------------------------------*/
+  if( fmc == 2)
+  {
+    pev_csr_wr( ADC_BASE_LED_B, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
+  }
+  else 
+  {
+    pev_csr_wr( ADC_BASE_LED_A, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
+  }
+  usleep(2000);                      /* wait for 2 ms */
+  lmk_write( 0x1e, 0x02000320, fmc); /* LMK04806__R30 PLL2 P/N Recallibration  */
+  usleep(10000);                      /* wait for 10 ms */
+  if( fmc == 2)
+  {
+    pev_csr_wr( ADC_BASE_CSR_B, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
+  }
+  else 
+  {
+    pev_csr_wr( ADC_BASE_CSR_A, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
+  }
+  usleep(10000);                      /* wait for 10 ms */
+}
 
 void 
 acq1430_init()
@@ -351,7 +446,6 @@ acq1430_acq( struct cli_cmd_para *c,
       return( -1);
     }
   }
-#ifdef TSC
   bzero( &adc_mas_map_win, sizeof(adc_mas_map_win));
   adc_mas_map_win.req.mode.sg_id= MAP_ID_MAS_PCIE_MEM;
   adc_mas_map_win.req.mode.space = MAP_SPACE_SHM;
@@ -360,15 +454,7 @@ acq1430_acq( struct cli_cmd_para *c,
   adc_mas_map_win.req.size = 0x2000000;
   tsc_map_alloc( &adc_mas_map_win);
   adc_buf = (char *)tsc_pci_mmap( adc_mas_map_win.sts.loc_base, adc_mas_map_win.sts.size);
-#else
-  adc_mas_map.rem_addr = 0x11000000;
-  adc_mas_map.mode = MAP_ENABLE|MAP_ENABLE_WR|MAP_SPACE_SHM;
-  adc_mas_map.flag = 0x0;
-  adc_mas_map.sg_id = MAP_MASTER_32;
-  adc_mas_map.size = 0x2000000;
-  pev_map_alloc( &adc_mas_map);
-  adc_buf = pev_mmap( &adc_mas_map);
-#endif
+
   pev_csr_wr( csr_base+0xc, smem);
   pev_csr_wr( csr_base+0x4, trig);
   csr &= 0xfff00fff;
@@ -590,11 +676,266 @@ acq1430_calib_res( struct acq1430_calib_res *r)
   return(0);
 }
 
+static void
+adc_write( int reg,
+	   int data,
+	   int chan,
+	   int fmc)
+{
+  int cmd;
+
+  cmd =  0xc1000000 | (chan << 16) | reg;
+  //printf("cmd = %08x - data = %08x\n", cmd, data);
+  if( fmc == 2)
+  {
+    pev_csr_wr( ADC_BASE_SERIAL_B + 4, data);
+    pev_csr_wr( ADC_BASE_SERIAL_B, cmd);
+  }
+  else 
+  {
+    pev_csr_wr( ADC_BASE_SERIAL_A + 4, data);
+    pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
+  }
+}
+
 int
 acq1430_calib_idelay( struct cli_cmd_para *c, 
-		      int chan)
+		      int chan,
+		      int fmc)
 {
-  printf("Adjust idelay for ads%d%d\n", 2*chan, 2*chan + 1);
+  struct tsc_ioctl_map_win adc_mas_map_usr[5];
+  char *adc_buf1[5], *adc_buf2[5], *p;
+  int csr_base[5], idelay, idelay_base;
+  int i, n;
+  int res[5][2][64];
+  unsigned short data_ref;
+  int min, max;
+  int start, end;
+
+  idelay_base = ADC_BASE_IDELAY_A;
+  if(fmc == 2)
+  {
+    idelay_base = ADC_BASE_IDELAY_B;
+  }
+  if( chan != -1)
+  {
+    if( (chan < 0) || (chan > 4))
+    {
+      printf("Bad ADC channel [%d]\n");
+      return(-1);
+    }
+  }
+  start = 0;
+  end = 0x200;
+  if( c->cnt > 2)
+  {
+    int s,e;
+    if( sscanf( c->para[2],"%x..%x", &s, &e) != 2)
+    {
+      printf("Bad idelay range [%s]\n", c->para[2]);
+      return(-1);
+    }
+    if( (s < end) && ( s >= 0) && (e < 0x200))
+    {
+      start = s;
+      end = e;
+    }
+  }
+ 
+  for( i = 0; i < 5; i++)
+  {
+    bzero( &adc_mas_map_usr[i], sizeof(adc_mas_map_usr[i]));
+    adc_mas_map_usr[i].req.mode.sg_id= MAP_ID_MAS_PCIE_MEM;
+    if( fmc == 2)
+    {
+        adc_mas_map_usr[i].req.mode.space = MAP_SPACE_USR2;
+        adc_mas_map_usr[i].req.rem_addr = 0x1100000 + (0x20000*i);
+        csr_base[i] = 0x11d0;
+    }
+    else
+    {
+      if( i < 4)
+      {
+        adc_mas_map_usr[i].req.mode.space = MAP_SPACE_USR1;
+        adc_mas_map_usr[i].req.rem_addr = 0x1100000 + (0x20000*i);
+        csr_base[i] = 0x11c0;
+      }
+      else 
+      {
+        adc_mas_map_usr[i].req.mode.space = MAP_SPACE_USR2;
+        adc_mas_map_usr[i].req.rem_addr = 0x1100000;
+        csr_base[i] = 0x11d0;
+      }
+    }
+    adc_mas_map_usr[i].req.size = 0x20000;
+    tsc_map_alloc( &adc_mas_map_usr[i]);
+    adc_buf1[i] = (char *)tsc_pci_mmap( adc_mas_map_usr[i].sts.loc_base, adc_mas_map_usr[i].sts.size);
+    adc_buf2[i] = adc_buf1[i] + 0x10000;
+    for( n = 0; n < 64; n++)
+    {
+      res[i][0][n] = 1;
+      res[i][1][n] = 1;
+    }
+  }
+
+  /* ADC channel initialization : 0x44 -> digital ramp */
+  if( chan == -1)
+  {
+    printf("Adjust idelay for all ADC channels [ads01 -> adc89]\n");
+    for( i = 0; i < 5; i++)
+    {
+      adc_write( 0xf, 0x44, i, fmc);
+    }
+  }
+  else 
+  {
+    printf("Adjust idelay for ads%d%d\n", 2*chan, 2*chan + 1);
+    adc_write( 0xf, 0x44, chan, fmc);
+  }
+  usleep( 5000);
+
+  pev_csr_wr( idelay_base, 0x8000ffff); /*  RESET IDELAYE3 + ISERDES3 */
+  pev_csr_wr( idelay_base, 0x00000000); /*                            */
+  usleep( 1000);
+ 
+  /* scan IDELAY     */
+  for( i = 0; i < 5; i++)
+  {
+    //printf("adc_buf1[i] = %p -> %08x\n", adc_buf1[i], *(int *)&adc_buf1[i][0]);
+  }
+
+  for( idelay = start; idelay < end; idelay +=8)
+    //for( idelay = 0xa0; idelay < 0xa1; idelay +=8)
+  {
+    printf("idelay = %02x\r", idelay);
+    fflush(stdout);
+
+    for( i = 0; i < 5; i++)
+    {
+      if( (chan == -1) || (chan == i))
+      {
+        /* fill memory with 0xa5 */
+        memset( adc_buf1[i], 0xa5, adc_mas_map_usr[i].sts.size);
+        //printf("%3d : set adc_buf: %08x\n", idelay, *(unsigned long *)&adc_buf1[i][0]);
+
+        /* set IDELAY value */
+        pev_csr_wr( idelay_base, 0x00000FFF | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+        pev_csr_wr( idelay_base, 0x10000FFF | (idelay << 16) | (i << 12)); /*                              */
+      }
+    }
+
+    /* trig data acquistion */
+    if(( chan == -1) || ( chan < 4))
+    {
+      //printf("trig acquisition for channel %d\n", chan);
+      pev_csr_wr( csr_base[0] + 4, 0x00000000); /*  SCOPE_ACQ1430 SRAM1 Trigger mode    */
+      pev_csr_wr( csr_base[0] + 0, 0x80000021); /*  SCOPE_ACQ1430 SRAM1 Trigger mode    */
+      pev_csr_wr( csr_base[0] + 0, 0x40000021); /*  SCOPE_ACQ1430 SRAM1 Mode            */
+      usleep( 1000);
+      pev_csr_wr( csr_base[0] + 8, 0x40000000); /*  Force Trigger          */
+    }
+    if(( chan == -1) || ( chan == 4))
+    {
+      //printf("trig acquisition for channel %d\n", chan);
+      pev_csr_wr( csr_base[4] + 4, 0x00000000); /*  SCOPE_ACQ1430 SRAM2 Trigger mode    */
+      pev_csr_wr( csr_base[4] + 0, 0x80000021); /*  SCOPE_ACQ1430 SRAM2 Trigger mode    */
+      pev_csr_wr( csr_base[4] + 0, 0x40000021); /*  SCOPE_ACQ1430 SRAM2 Mode            */
+      usleep( 1000);
+      pev_csr_wr( csr_base[4] + 8, 0x40000000); /*  Force Trigger          */
+    }
+    usleep( 2000);                       /*  wait for acquisition to complete          */
+
+    for( i = 0; i < 5; i++)
+    {
+      if( (chan == -1) || (chan == i))
+      {
+        //printf("check data integrity  for channel %d [%d]\n", i, chan);
+        data_ref = *(unsigned char *)&adc_buf1[i][0x2000] | (*(unsigned char *)&adc_buf1[i][0x2001] << 8);
+        /* check data first channel*/
+        for( n = 0x2002; n < 0x10000; n+=2)
+        {
+          unsigned short data;
+          //if( n < 16) printf("%04x\n", data_ref);
+          data = *(unsigned char *)&adc_buf1[i][n] | (*(unsigned char *)&adc_buf1[i][n+1] << 8);
+          if( data != ((data_ref + 1)&0xffff))
+          {
+  	    //printf("CHAN%d:%3d : error at offset %04x : %04x != %04x\n", i*2, idelay/8, n, data, data_ref+1);
+	    res[i][0][idelay/8] = 0;
+	    break;
+          }
+          data_ref = data;
+        }
+        /* check data second channel*/
+        data_ref = *(unsigned char *)&adc_buf2[i][0x2000] | (*(unsigned char *)&adc_buf2[i][0x2001] << 8);
+        for( n = 0x2002; n < 0x10000; n+=2)
+        {
+          unsigned short data;
+
+          //if( n < 16)printf("%04x\n", data_ref);
+          data = *(unsigned char *)&adc_buf2[i][n] | (*(unsigned char *)&adc_buf2[i][n+1] << 8);
+          if( data != ((data_ref + 1)&0xffff))
+          {
+	    //printf("CHAN%d:%3d : error at offset %04x : %04x != %04x\n", i*2+1, idelay/8, n, data, data_ref+1);
+	    res[i][1][idelay/8] = 0;
+	    break;
+          }
+          data_ref = data;
+        }
+      }
+    }
+  }
+  for( i = 0; i < 5; i++)
+  {
+    if( (chan == -1) || (chan == i))
+    {
+      printf("\n");
+      min = end/8; max = start/8;
+      printf("chan %d : ", 2*i);
+      for( n = start/8; n < end/8; n++)
+      {
+        printf("%d", res[i][0][n]);
+        if( res[i][0][n])
+        {
+          if( n < min) min = n;
+          if( n > max) max = n;
+        }
+      }
+      idelay = (min+max)*4;
+      printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
+      /* set IDELAY value */
+      pev_csr_wr( idelay_base, 0x0000003F | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+      pev_csr_wr( idelay_base, 0x1000003F | (idelay << 16) | (i << 12)); /*                              */
+      printf("Loading IDELAY %03x in channel %d\n", idelay, i*2);
+
+      printf("\n");
+      min = end/8; max = start/8;
+      printf("chan %d : ", 2*i+1);
+      for( n = start/8; n < end/8; n++)
+      {
+        printf("%d", res[i][1][n]);
+        if( res[i][1][n])
+        {
+          if( n < min) min = n;
+          if( n > max) max = n;
+        }
+      }
+      idelay = (min+max)*4;
+      printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
+      /* set IDELAY value */
+      pev_csr_wr( idelay_base, 0x00000FC0 | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+      pev_csr_wr( idelay_base, 0x10000FC0 | (idelay << 16) | (i << 12)); /*                              */
+      printf("Loading IDELAY %03x in channel %d\n", idelay, i*2 + 1);
+
+    }
+  }
+  for( i = 0; i < 5; i++)
+  {
+    //printf("unmapping adc_buf\n");
+    tsc_pci_munmap( adc_buf1[i], adc_mas_map_usr[i].sts.size);
+    //printf("free adc_mas_map_usr\n");
+    tsc_map_free( &adc_mas_map_usr[i]);
+  }
+
   return(0);
 }
 
@@ -1203,31 +1544,25 @@ tsc_acq1430( struct cli_cmd_para *c)
 
     return(0);
   }
-  else if( !strncmp( "calib", c->para[1], 3))
+  else if( !strncmp( "calidel", c->para[1], 3))
   {
     int size;
     int check;
     int retval;
 
-    printf("usage: acq1430.<fmc> ads<ij> calib\n");
     if( (add->idx < 0) || (add->bus != BUS_SBC))
     {
       printf("wrong device name\n");
-      printf("usage: acq1430.<fmc> ads<ij> calib\n");
+      printf("usage: acq1430.<fmc> ads<ij> calidel\n");
       return(-1);
     }
     if( add->idx == 15)
     {
-      int chan;
-
-      for( chan = 0; chan < 5; chan++)
-      {
-	retval = acq1430_calib_idelay( c, chan);
-      }
+      retval = acq1430_calib_idelay( c, -1, fmc);
     }
     else
     {
-	retval = acq1430_calib_idelay( c, add->idx);
+      retval = acq1430_calib_idelay( c, add->idx, fmc);
     }
     return(0);
   }
