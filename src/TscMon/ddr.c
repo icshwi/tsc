@@ -168,6 +168,7 @@ int althea_ddr_idel_status(int mem){
 int althea_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
+	int  DQ_NOK[16];
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
@@ -323,17 +324,13 @@ int althea_ddr_idel_calib(int mem){
 	printf("\n");
 	printf("Enter hardware default DQ delay (default value: %i): ", CURRENT_DLY);
 	gets(para_buf);
-	if (sscanf( para_buf, " %d", &CURRENT_DLY) != 1) {
-	  printf("ERROR ! \n");
-	}
+	sscanf( para_buf, " %d", &CURRENT_DLY);
 	printf(" %i", CURRENT_DLY);
 
 	printf("\n");
 	printf("Enter hardware default INC / DEC STEP (default value: %i): ", CURRENT_STEP);
 	gets(para_buf);
-	if (sscanf( para_buf, " %d", &CURRENT_STEP) != 1) {
-	  printf("ERROR ! \n");
-	}
+	sscanf( para_buf, " %d", &CURRENT_STEP);
 	printf(" %i", CURRENT_STEP);
 
 	printf("\n");
@@ -419,7 +416,7 @@ int althea_ddr_idel_calib(int mem){
 		// Get data from DDR3
 		memcpy(buf_rx, buf_ddr, size);
 
-		// Add steps by steps for current DQ
+/////	// Add steps by steps for current DQ
 		for(k = 0; k < MAX ; k++){
 			// Fill DDR3 with test pattern
 			memcpy(buf_ddr, buf_tx, size);
@@ -578,12 +575,20 @@ int althea_ddr_idel_calib(int mem){
 		// Get data from DDR3
 		memcpy(buf_rx, buf_ddr, size);
 
+		if (ok == 0){
+			NOK = 1;
+			DQ_NOK[j] = 1;
+		}
+		else {
+			DQ_NOK[j] = 0;
+		}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG
-/*
+
 		printf("start: %i, end: %i, ok: %i, avg: %i, marker: %i \n", start, end, ok, avg_x, marker);
 		printf("\n");
-*/
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
@@ -594,7 +599,12 @@ int althea_ddr_idel_calib(int mem){
     printf("\n");
 	// Execution is finished OK or NOK
 	if (NOK == 1){
-	 	printf("Calibration is not possible, error ! \n");
+	 	printf("Calibration is not possible, error on line(s) : \n");
+		for (m = 0; m < 16; m++){
+			if (DQ_NOK[m] == 1){
+				printf("DQK[%i] \n", m);
+			}
+		}
 	}
 	else {
 		printf("Calibration done ! \n");
@@ -629,56 +639,57 @@ int tsc_ddr(struct cli_cmd_para *c){
 	if(cnt--) {
 
 // DDR command
-		if((!strcmp("calib", c->para[0])) && (c->cnt == 2)) {
+		if((!strcmp("calib", c->para[1])) && (c->cnt == 3)) {
 			// Acquire and transform parameter
-			sscanf(c->para[1], "%x", &mem);
+			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_calib(mem);
 			}
 		}
-		else if((!strcmp("reset", c->para[0])) && (c->cnt == 2)) {
-			sscanf(c->para[1], "%x", &mem);
+		else if((!strcmp("reset", c->para[1])) && (c->cnt == 3)) {
+			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_reset(mem);
 			}
 		}
-		else if((!strcmp("status", c->para[0])) && (c->cnt == 2)) {
-			sscanf(c->para[1], "%x", &mem);
+		else if((!strcmp("status", c->para[1])) && (c->cnt == 3)) {
+			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_status(mem);
 			}
 		}
-		else if((!strcmp("set", c->para[0])) && (c->cnt == 5)) {
+		else if((!strcmp("set", c->para[1])) && (c->cnt == 6)) {
 			// Acquire and transform parameter to unsigned int
-			sscanf(c->para[1], "%x", &mem);
-			sscanf(c->para[2], "%x", &dq);
-			sscanf(c->para[3], "%x", &step);
+			sscanf(c->para[2], "%x", &mem);
+			sscanf(c->para[3], "%x", &dq);
+			sscanf(c->para[4], "%x", &step);
 
 			if((mem < 1) | (mem > 2) | (dq > 0xffff) | (step > 16) | (step < 1)) {
-				printf("Bad value! Type \"? althea\" for help \n");
+				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
 				althea_ddr_idel_set(mem, dq, step, c->para[4]);
 			}
 		}
 		else {
-			printf("Bad parameter! Type \"? ddr\" for help \n");
+			printf("Bad parameter! Type \"? smem\" for help \n");
 			return(-1);
 		}
 	}
-// Bad command
+	// Bad command
 	else {
-		printf("Bad parameter! Type \"? ddr\" for help \n");
+		printf("Bad parameter! Type \"? smem\" for help \n");
 		return(-1);
 	}
+
 return 0;
 }
