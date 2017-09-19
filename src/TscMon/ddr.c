@@ -168,6 +168,7 @@ int althea_ddr_idel_status(int mem){
 int althea_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
+	int  DQ_NOK[16];
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
@@ -415,7 +416,7 @@ int althea_ddr_idel_calib(int mem){
 		// Get data from DDR3
 		memcpy(buf_rx, buf_ddr, size);
 
-		// Add steps by steps for current DQ
+/////	// Add steps by steps for current DQ
 		for(k = 0; k < MAX ; k++){
 			// Fill DDR3 with test pattern
 			memcpy(buf_ddr, buf_tx, size);
@@ -574,12 +575,20 @@ int althea_ddr_idel_calib(int mem){
 		// Get data from DDR3
 		memcpy(buf_rx, buf_ddr, size);
 
+		if (ok == 0){
+			NOK = 1;
+			DQ_NOK[j] = 1;
+		}
+		else {
+			DQ_NOK[j] = 0;
+		}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG
-/*
+
 		printf("start: %i, end: %i, ok: %i, avg: %i, marker: %i \n", start, end, ok, avg_x, marker);
 		printf("\n");
-*/
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
@@ -590,7 +599,12 @@ int althea_ddr_idel_calib(int mem){
     printf("\n");
 	// Execution is finished OK or NOK
 	if (NOK == 1){
-	 	printf("Calibration is not possible, error ! \n");
+	 	printf("Calibration is not possible, error on line(s) : \n");
+		for (m = 0; m < 16; m++){
+			if (DQ_NOK[m] == 1){
+				printf("DQK[%i] \n", m);
+			}
+		}
 	}
 	else {
 		printf("Calibration done ! \n");
