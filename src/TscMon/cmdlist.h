@@ -476,6 +476,13 @@ char *map_msg[] =
   "         <offset> = requested address offset (optional)",
 0};
 
+char *mbox_msg[] = 
+{
+  "MMC/FPGA operations",
+  "mbox read <address>",
+  "mbox write <address> <value>",
+0};
+
 char *pc_msg[] = 
 { "  read/write data from/to IFC1211 PCI CFG register",
   "  pc <offset> [<data>]",
@@ -742,6 +749,7 @@ struct cli_cmd_list cmd_list[] =
   { "lu1"    	, tsc_rdwr_lx,      lu_msg     	  , 0},
   { "lu"     	, tsc_rdwr_lx,      lu_msg     	  , 0},
   { "map"    	, tsc_map,          map_msg    	  , 0},
+  { "mbox"      , tsc_mbox,         mbox_msg      , 0},
   { "pc"     	, tsc_rdwr_pr,      pc_msg     	  , 0},
   { "pi"     	, tsc_rdwr_pr,      pi_msg     	  , 0},
   { "pk"     	, tsc_rdwr_px,      pk_msg     	  , 0},
