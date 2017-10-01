@@ -61,14 +61,21 @@ mbox_read( struct cli_cmd_para *c)
 {
   int retval;
   int offset = 0;
+  int count = 1;
   int data = 0;
 
-  if (c->cnt != 2)
+  if ((c->cnt < 2) || (c->cnt > 3))
   {
     tsc_print_usage( c);
     return( CLI_ERR);
   }
-  else if( sscanf( c->para[1], "%x", &offset) != 1)
+  if( sscanf( c->para[1], "%x", &offset) != 1)
+  {
+    printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+  if( (c->cnt == 3) && sscanf( c->para[2], "%x", &count) != 1)
   {
     printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);
@@ -76,20 +83,24 @@ mbox_read( struct cli_cmd_para *c)
   }
 
   offset >>= 2;
-  retval = tsc_pon_write( 0xd0, &offset);
-  if( retval < 0)
+  while( count--)
   {
-    puts("cannot write to mailbox address register");
-    return( CLI_ERR);
-  }
-  retval = tsc_pon_read( 0xd4, &data);
-  if( retval < 0)
-  {
-    puts("cannot read from mailbox data register");
-    return( CLI_ERR);
+    retval = tsc_pon_write( 0xd0, &offset);
+    if( retval < 0)
+    {
+      puts("cannot write to mailbox address register");
+      return( CLI_ERR);
+    }
+    retval = tsc_pon_read( 0xd4, &data);
+    if( retval < 0)
+    {
+      puts("cannot read from mailbox data register");
+      return( CLI_ERR);
+    }
+    printf("0x%04x : 0x%08x\n", offset << 2, data);
+    offset++;
   }
 
-  printf("0x%04x : 0x%08x\n", offset, data);
   return CLI_OK;
 }
 
