@@ -481,6 +481,7 @@ char *mbox_msg[] =
   "MMC/FPGA operations",
   "mbox read <address>",
   "mbox write <address> <value>",
+  "mbox info",
 0};
 
 char *pc_msg[] = 

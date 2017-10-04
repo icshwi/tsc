@@ -48,12 +48,23 @@ static char *rcsid = "$Id: mbox.c,v 1.4 2015/12/02 08:26:51 ioxos Exp $";
 #include <ctype.h>
 #include <time.h>
 #include "mbox.h"
+#include "ponmboxlib.h"
 
 char *
 mbox_rcsid()
 {
   return( rcsid);
 }
+
+
+char *mbox_sensor_status[] =
+{
+  "(reserved)",
+  "not initialized",
+  "update in progress",
+  "valid",
+  "error: unable to update"
+};
 
 
 int 
@@ -146,6 +157,57 @@ mbox_write( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
+
+int 
+mbox_info( struct cli_cmd_para *c)
+{
+
+  if (c->cnt > 1)
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  mbox_info_t *info = get_mbox_info();
+  if (!info)
+  {
+    puts("failed to get mbox info");
+    return( CLI_ERR);
+  }
+
+  printf("Firmware revision:     %d.%d\n", info->firmware_revision_major, info->firmware_revision_minor);
+  printf("AMC slot number:       %d\n", info->amc_slot_number);
+  printf("Board name:            %s\n", info->board_name);
+  printf("Board revision:        %s\n", info->board_revision);
+  printf("Board serial number:   %s\n", info->board_serial_number);
+  printf("Product name:          %s\n", info->product_name);
+  printf("Product revision:      %s\n", info->product_revision);
+  printf("Product serial number: %s\n", info->product_serial_number);
+
+  mbox_sensor_data_value_t *sensor = info->sensors_values;
+  int value = 0;
+  int retval;
+  int timestamp = 0;
+  while (sensor)
+  {
+    printf("Sensor %s:", sensor->name);
+    if (retval = get_mbox_sensor_value(info, sensor->name, &value, &timestamp))
+    {
+      printf(" failed to get data of sensor: %s\n", strerror(retval));
+    }
+    else puts("");
+    printf("  status = (%d) %s\n", sensor->status, mbox_sensor_status[sensor->status]);
+    printf("  value = %d\n", value);
+    printf("  timestamp = %d\n", timestamp);
+    sensor = sensor->next;
+  }
+
+  free_mbox_info(info);
+
+  return CLI_OK;
+}
+
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_mbox
  * Prototype     : int
@@ -172,6 +234,10 @@ tsc_mbox( struct cli_cmd_para *c)
     if( !strcmp( "write", c->para[i]))
     {
       return( mbox_write( c));
+    }
+    if( !strcmp( "info", c->para[i]))
+    {
+      return( mbox_info( c));
     }
   }
   return(-1);
