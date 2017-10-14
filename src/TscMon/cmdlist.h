@@ -478,10 +478,10 @@ char *map_msg[] =
 
 char *mbox_msg[] = 
 {
-  "MMC/FPGA operations",
-  "mbox read <address>",
-  "mbox write <address> <value>",
-  "mbox info",
+  "MTCA.4 PON mailbox operations",
+  "  mbox read <address> [<count>]",
+  "  mbox write <address> <value>",
+  "  mbox info",
 0};
 
 char *pc_msg[] = 
@@ -550,6 +550,14 @@ char *pu_msg[] =
   "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
   "           <offset> = address offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
+0};
+
+char *rtm_msg[] = 
+{
+  "MTCA.4 RTM operations",
+  "rtm led <led_name> <led_state>",
+  "   where <led_name> = green, red",
+  "         <led_state> = on, off, slow_blink, fast_blink",
 0};
 
 char *semaphore_msg[]=
@@ -764,6 +772,7 @@ struct cli_cmd_list cmd_list[] =
   { "pu1"     	, tsc_rdwr_px,      pu_msg     	  , 0},
   { "pu2"     	, tsc_rdwr_px,      pu_msg     	  , 0},
   { "pu"     	, tsc_rdwr_px,      pu_msg     	  , 0},
+  { "rtm"       , tsc_rtm,          rtm_msg       , 0},
   //{ "semaphore" , tsc_semaphore,  semaphore_msg , 0},
   //{ "sflash" 	, tsc_sflash,       sflash_msg 	  , 0},
   { "set" 	    , tsc_set_device,   set_device_msg, 0},

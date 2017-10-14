@@ -29,7 +29,7 @@
  *=============================< end file header >============================*/
 
 #ifndef lint
-static char *rcsid = "$Id: mbox.c,v 1.4 2015/12/02 08:26:51 ioxos Exp $";
+static char *rcsid = "$Id: mbox.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #endif
 
 #define DEBUGno
@@ -240,6 +240,6 @@ tsc_mbox( struct cli_cmd_para *c)
       return( mbox_info( c));
     }
   }
-  return(-1);
-
+  tsc_print_usage( c);
+  return( CLI_ERR);
 }
