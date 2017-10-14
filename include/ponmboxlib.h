@@ -1,17 +1,17 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : tsculib.h
- *    author   : JFG
+ *    filename : ponmboxlib.h
+ *    author   : RH
  *    company  : IOxOS
- *    creation : june 30,2008
+ *    creation : october 4,2017
  *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
  *    This file contain the declarations of all exported functions define in
- *    tsculib.c
+ *    ponmboxlib.c
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -49,6 +49,9 @@ typedef struct mbox_sensor_data_value
 
 typedef struct
 {
+  unsigned short management_service_requests_offset;
+  unsigned short payload_descriptors_offset;
+  unsigned short payload_service_requests_offset;
   unsigned char firmware_revision_major;
   unsigned char firmware_revision_minor;
   unsigned char amc_slot_number;
@@ -65,6 +68,7 @@ typedef struct
 mbox_info_t *get_mbox_info(void);
 void free_mbox_info(mbox_info_t *info);
 int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, int *timestamp);
+unsigned char send_mbox_service_request(mbox_info_t *info, unsigned char command, unsigned char argc, ...);
 
 
 #endif
