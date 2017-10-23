@@ -78,18 +78,25 @@ void bin(unsigned n, unsigned int bit_size){
 // ----------------------------------------------------------------------------------
 int althea_ddr_idel_reset(int mem){
 	unsigned int data = 0;
+	unsigned int init = 0;
 
 	printf("Loading Althea DDR3 #%d default IDELAY ... \n", mem);
 
-	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
-	data = (data | (1 << 31) | (1 << 20) | (0xffff << 0)) & (~(0x7 << 21));
-	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Load default delay for all lines with step at 1
+	//tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
+	//data = (data | (1 << 31) | (1 << 20) | (0xffff << 0)) & (~(0x7 << 21));
+	//tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Load default delay for all lines with step at 1
+	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &init); 			// Acquire initial value of the register
+	data = (init | (1 << 31) | (3 << 16) | (0xffff << 0));	// Set value to reset delay
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); 			// Load default delay for all lines with step at 1
 
 	usleep(1000);
 
-	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
-	data = (data | (1 << 20)) & (~(0xffff << 0)) & (~(0x7 << 21));
-	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Step at 1, unselect all lines
+	//tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
+	//data = (data | (1 << 20)) & (~(0xffff << 0)) & (~(0x7 << 21));
+	//tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Step at 1, unselect all lines
+	data = 0;
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Full reset the register
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &init); // Load initial value in the register
 
 	printf("DDR3 #%d done ... \n", mem);
 
@@ -179,6 +186,7 @@ int althea_ddr_idel_calib(int mem){
     unsigned int    offset 		    = 0x100000; // DDR3 offset memory
     unsigned int    d0, d1, d2	    = 0;
     unsigned int    data            = 0;
+    unsigned int    init            = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////
     // ADJUST DEFAULT VALUE FOR CURRENT_DLY ACCORDING TO HARDWARE IMPLEMENTATION      //
@@ -360,15 +368,26 @@ int althea_ddr_idel_calib(int mem){
     printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
 
 	// Reset all
-	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
-	data = (data | (1 << 31) | (1 << 20) | (0xffff << 0)) & (~(0x7 << 21));
+	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &init);
+// DEBUG
+//printf("reset value at init: 0x%x \n", init); //0x0E110000
+
+
+	data = (init | (1 << 31) | (3 << 16) | (0xffff << 0));
 	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Load default delay for all lines with step at 1
+// DEBUG
+//printf("reset value0: 0x%x \n", data);        //0x8E13ffff
 
 	usleep(1000);
 
-	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
-	data = (data | (1 << 20)) & (~(0xffff << 0)) & (~(0x7 << 21));
+	data = 0;
 	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // Step at 1, unselect all lines
+	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &init); // Step at 1, unselect all lines
+
+// DEBUG
+//usleep(1000);
+//tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
+//printf("reset value1: 0x%x \n", data);
 
     // Set STEP
 	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
