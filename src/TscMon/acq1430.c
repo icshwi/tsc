@@ -449,6 +449,10 @@ acq1430_acq( struct cli_cmd_para *c,
   bzero( &adc_mas_map_win, sizeof(adc_mas_map_win));
   adc_mas_map_win.req.mode.sg_id= MAP_ID_MAS_PCIE_MEM;
   adc_mas_map_win.req.mode.space = MAP_SPACE_SHM;
+  if( idx == 4)
+  {
+    adc_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
+  }
   adc_mas_map_win.req.rem_addr = 0x1000000;
   if( fmc == 2) adc_mas_map_win.req.rem_addr = 0x11000000;
   adc_mas_map_win.req.size = 0x2000000;
@@ -888,6 +892,11 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
   {
     if( (chan == -1) || (chan == i))
     {
+      int max_found;
+      int start_found;
+
+      max_found = 0;
+      start_found = 0;
       printf("\n");
       min = end/8; max = start/8;
       printf("chan %d : ", 2*i);
@@ -896,9 +905,28 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
         printf("%d", res[i][0][n]);
         if( res[i][0][n])
         {
-          if( n < min) min = n;
-          if( n > max) max = n;
+          if( n < min)
+	  {
+	    if( start_found == 1)
+	    {
+	      min = n;
+	      start_found = 2;
+	    }
+	  }
+          if( n > max)
+          {
+	    if( max_found != 2)
+	    {
+	      max = n;
+	      max_found = 1;
+	    }
+	  }
         }
+	else
+	{
+	  if( start_found == 0) start_found = 1;
+	  if( max_found == 1) max_found = 2;
+	}
       }
       idelay = (min+max)*4;
       printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
@@ -907,17 +935,38 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
       pev_csr_wr( idelay_base, 0x1000003F | (idelay << 16) | (i << 12)); /*                              */
       printf("Loading IDELAY %03x in channel %d\n", idelay, i*2);
 
+      max_found = 0;
+      start_found = 0;
       printf("\n");
       min = end/8; max = start/8;
       printf("chan %d : ", 2*i+1);
       for( n = start/8; n < end/8; n++)
       {
-        printf("%d", res[i][1][n]);
-        if( res[i][1][n])
+        printf("%d", res[i][0][n]);
+        if( res[i][0][n])
         {
-          if( n < min) min = n;
-          if( n > max) max = n;
+          if( n < min)
+	  {
+	    if( start_found == 1)
+	    {
+	      min = n;
+	      start_found = 2;
+	    }
+	  }
+          if( n > max)
+          {
+	    if( max_found != 2)
+	    {
+	      max = n;
+	      max_found = 1;
+	    }
+	  }
         }
+	else
+	{
+	  if( start_found == 0) start_found = 1;
+	  if( max_found == 1) max_found = 2;
+	}
       }
       idelay = (min+max)*4;
       printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
