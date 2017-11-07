@@ -49,8 +49,11 @@
 
 #include "ddr.h"
 
+// SMEM control & status register
+unsigned int SMEM_DDR3_CSR[2] = {0x800, 0xc00};
+
 // IDEL adjustment register for both DDR3 memory
-unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc0b};
+unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
 
 // IDEL control register for both DDR3 memory
 unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
@@ -252,18 +255,21 @@ int althea_ddr_idel_calib(int mem){
     map_win.req.loc_addr   = 0;
 	map_win.req.size       = size;
 	map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
+
 	if ((mem - 1) == 0){
 		map_win.req.mode.space = MAP_SPACE_SHM1; // SHM #1
 	}
 	else if((mem - 1) == 1){
 		map_win.req.mode.space = MAP_SPACE_SHM2; // SHM #2
 	}
+
 	map_win.req.mode.flags = 0;
 	retval = tsc_map_alloc(&map_win);
 	if(retval < 0){
 		printf("Error in mapping SHM");
 		return (-1);
 	}
+
 	buf_ddr = mmap(NULL, map_win.req.size, PROT_READ | PROT_WRITE, MAP_SHARED, tsc_fd, map_win.req.loc_addr);
 	if(buf_ddr == MAP_FAILED){
 	    printf("Error MAP FAILED \n");
@@ -333,26 +339,36 @@ int althea_ddr_idel_calib(int mem){
     d0 = 3;
     tsc_smon_write(0x40, &d0);
 
-	printf("\n");
-	printf("Enter hardware default DQ delay (default value: %i): ", CURRENT_DLY);
-	gets(para_buf);
-	sscanf( para_buf, " %d", &CURRENT_DLY);
-	printf(" %i", CURRENT_DLY);
+	//printf("\n");
+	//printf("Enter hardware default DQ delay (default value: %i): ", CURRENT_DLY);
+	//gets(para_buf);
+	//sscanf( para_buf, " %d", &CURRENT_DLY);
+	//printf(" %i", CURRENT_DLY);
 
-	printf("\n");
-	printf("Enter hardware default INC / DEC STEP (default value: %i): ", CURRENT_STEP);
-	gets(para_buf);
-	sscanf( para_buf, " %d", &CURRENT_STEP);
-	printf(" %i", CURRENT_STEP);
+	//printf("\n");
+	//printf("Enter hardware default INC / DEC STEP (default value: %i): ", CURRENT_STEP);
+	//gets(para_buf);
+	//sscanf( para_buf, " %d", &CURRENT_STEP);
+	//printf(" %i", CURRENT_STEP);
 
 	printf("\n");
     printf("Calibration pattern   : 0101 1001 0011 0100 1011 0101 1001 0011 \n");
-    printf("Default absolute IDEL : %i \n", CURRENT_DLY);
-    printf("Default STEP          : %d \n", CURRENT_STEP);
+    //printf("Default absolute IDEL : %i \n", CURRENT_DLY);
+    printf("Default INC           : %d \n", CURRENT_STEP);
+    printf("Default CNT           : 0 \n");
     printf("\n");
 
-    printf("Tap = Delay x STEP\n");
-    printf("\n");
+    //printf("Tap = Delay x STEP\n");
+    //printf("\n");
+
+    //Reset memory calibration
+    data = 0x8000;
+    tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+    data = 0x2080;
+    tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+    data = 0;
+    tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+    tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 
     // Pass the entire possible delay taps
     printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
@@ -382,10 +398,16 @@ int althea_ddr_idel_calib(int mem){
     	tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
     	tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
 
-    	init_cnt_value_store[j] = cnt_value & 0xff;
+init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
     	temp_cnt_value_store[j] = init_cnt_value_store[j];
-printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_value, init_cnt_value_store[j]);
-    	printf(" DQ[%02d] test   :", j);
+//printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_value, init_cnt_value_store[j]);
+
+    	if(j < 8){
+    		printf(" DQ[%02d] test   :", j + 8);
+    	}
+    	else{
+    		printf(" DQ[%02d] test   :", j - 8);
+    	}
 
 		// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
 		avg_x = 0;
@@ -405,6 +427,35 @@ printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_valu
 				pattern[m * 2]       =  (buf_rx[m] & (0x1 << j)) >>  j;
 				pattern[(m * 2) + 1] =  (buf_rx[m] & (0x1 << (16 + j))) >> (16 + j);
 			}
+
+			/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+			// DEBUG
+			// Print pattern
+			/*
+						if (k != 0){
+							printf("            :");
+						}
+
+						for(m = 0; m < 32; m++){
+							printf(" %x ",pattern[m]);
+						}
+						printf("\n");
+
+						printf("               :");
+						for(m = 0; m < 32; m++){
+							printf(" %x ",ref_pattern[m]);
+						}
+						printf("\n");
+
+						// Print pattern
+						//for(m = 0; m < 16; m++){
+						//	printf("buf [%i] %x \n", m, buf_rx[m]);
+						//	printf("buf lsb [%i] %x \n", m, (buf_rx[m] & (0x00000001 << j)) >>  j);
+						//	printf("buf msb [%i] %x \n", m, (buf_rx[m] & (0x1 << (16 + j))) >> (16 + j));
+						//}
+			*/
+			/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 			// Check data received with reference pattern
 			if (!memcmp(pattern, ref_pattern, 32 * sizeof(int))){
@@ -428,15 +479,18 @@ printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_valu
 //printf("Current cnt:%x New cnt: %x Computed cnt: %x \n", temp_cnt_value_store[j], (temp_cnt_value_store[j] + CURRENT_STEP), data);
 
 					// Load new count value
-					data = (1 << 31) | (0x1 << (j /*+ 8*/));
+					data = (1 << 31) | (0x1 << (j + 8));
 					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 
 // Check
-//data = j << 12;
+//data = (j + 8) << 12;
 //tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 //tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &data);
 //printf("IFSTA after writing new cnt value: %x \n", data);
 
+//if (j == 1){
+//return (0);
+//}
 					// Update new value of count
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 				}
@@ -447,11 +501,11 @@ printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_valu
 //printf("Current cnt:%x New cnt: %x Computed cnt: %x \n", temp_cnt_value_store[j], (temp_cnt_value_store[j] + CURRENT_STEP), data);
 
 					// Load new count value
-					data = (1 << 31) | (0x1 << (j /*- 8*/));
+					data = (1 << 31) | (0x1 << (j - 8));
 					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
 
 // Check
-//data = j << 12;
+//data = (j - 8) << 12;
 //tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 //tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &data);
 //printf("IFSTA after writing new cnt value: %x \n", data);
@@ -509,14 +563,14 @@ printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_valu
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 
 			// Load new count value
-			data = (1 << 31) | (0x1 << (j /*+ 8*/));
+			data = (1 << 31) | (0x1 << (j + 8));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 
 // Check
-data = (j << 12);
-tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
-tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &data);
-printf("reread IFSTA after update : %x \n", data);
+//data = (j + 8) << 12;
+//tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+//tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &data);
+//printf("reread IFSTA after update : %x \n", data);
 
 		}
 		else {
@@ -525,14 +579,14 @@ printf("reread IFSTA after update : %x \n", data);
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 
 			// Load new count value
-			data = (1 << 31) | (0x1 << (j /*- 8*/));
+			data = (1 << 31) | (0x1 << (j - 8));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
 
 // Check
-data = (j << 12);
-tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
-tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &data);
-printf("reread IFSTA after update : %x \n", data);
+//data = (j - 8) << 12;
+//tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+//tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &data);
+//printf("reread IFSTA after update : %x \n", data);
 
 		}
 #else
@@ -554,13 +608,15 @@ printf("reread IFSTA after update : %x \n", data);
 			DQ_NOK[j] = 0;
 		}
 
-printf(" start: 0x%x, end: 0x%x, ok: %i, avg: 0x%x, marker: 0x%x \n", start, end, ok, avg_x, marker);
+//printf(" start: 0x%x, end: 0x%x, ok: %i, avg: 0x%x, marker: 0x%x \n", start, end, ok, avg_x, marker);
 
 		printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
 
-	    // Set IDEL to 0
+	    // Set IDEL and IFSTA to 0
 		data = 0;
 		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+
     }
 
     // Execution is finished OK or NOK
@@ -577,9 +633,10 @@ printf(" start: 0x%x, end: 0x%x, ok: %i, avg: 0x%x, marker: 0x%x \n", start, end
 		printf("Calibration done ! \n");
 	}
 
-    // Set IDEL to 0
+    // Set IDEL and IFSTA to 0
 	data = 0;
 	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+	tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 
 	// Unmap DDR3 memory
 	munmap(buf_ddr, map_win.req.size);
