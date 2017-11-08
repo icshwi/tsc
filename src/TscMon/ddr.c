@@ -1158,17 +1158,6 @@ int ORIGINAL_althea_ddr_idel_calib(int mem){
 	return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
 // Main function for Althea command
 // ----------------------------------------------------------------------------------
 int tsc_ddr(struct cli_cmd_para *c){
@@ -1186,7 +1175,7 @@ int tsc_ddr(struct cli_cmd_para *c){
 	if(cnt--) {
 
 // DDR command
-		if((!strcmp("calib", c->para[1])) && (c->cnt == 3)) {
+		if((!strcmp("calib", c->para[1])) /*&& (c->cnt == 3)*/) {
 			// Acquire and transform parameter
 			sscanf(c->para[2], "%x", &mem);
 			if ((mem < 1) | (mem > 2)){
