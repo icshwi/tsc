@@ -203,7 +203,7 @@ int althea_ddr_idel_calib(int mem){
     // ADJUST DEFAULT VALUE FOR CURRENT_DLY ACCORDING TO HARDWARE IMPLEMENTATION      //
     unsigned int    CURRENT_DLY     = 256;	   // Current delay value                 //
     // ADJUST DEFAULT STEP VALUE FOR INC / DEC VALUE                                  //
-    unsigned int    CURRENT_STEP    = 8;	   // Current step value                  //
+    unsigned int    CURRENT_STEP    = 4 /* 8 */;	   // Current step value          //
     ////////////////////////////////////////////////////////////////////////////////////
 
     unsigned int    MAX             = 0x1ff/*64*/;      // Max delay tap value
@@ -416,7 +416,7 @@ init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 		ok    = 0;
 
 		// Add steps by steps for current DQ from initial count value to max
-		for(k = init_cnt_value_store[j]; k < MAX ; k = k + 0x8){
+		for(k = init_cnt_value_store[j]; k < MAX ; k = k + CURRENT_STEP){
 			// Fill DDR3 with test pattern
 			memcpy(buf_ddr, buf_tx, size);
 			// Get data from DDR3
@@ -469,7 +469,7 @@ init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 			}
 
 			// Increment only the tap delay when we are < MAX tap
-			if(k < (MAX - 8)) {
+			if(k < (MAX - CURRENT_STEP)) {
 
 #ifdef PPC
 				if(j < 8){
@@ -535,10 +535,10 @@ init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 		// Update the new count value with the median value
 		else {
 			// Compute the start window
-			start = (end - (ok * 8)) + 8/*1*/;
+			start = (end - (ok * CURRENT_STEP)) + CURRENT_STEP/*1*/;
 
 			// Compute the average of the window
-			avg_x = (ok * 8) / 2;
+			avg_x = (ok * CURRENT_STEP) / 2;
 
 			// Compute the new delay marker to apply
 			marker = start + avg_x;
@@ -550,7 +550,7 @@ init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 		// Trace new delay
 		printf("\n");
 		printf(" Final delay 0x%x:", marker);
-		for(n = init_cnt_value_store[j] ; n < marker; n = n + 8){
+		for(n = init_cnt_value_store[j] ; n < marker; n = n + CURRENT_STEP){
 			printf("   ");
 		}
 		printf("  *");
