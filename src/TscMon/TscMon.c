@@ -159,7 +159,7 @@ main( int argc,
   }
   printf("     |  IOxOS Technologies Copyright 2015-2016 |\n");
   printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
-  printf("     |  FPGA Built %s %2d 20%02d %02d:%02d:%02d     |\n", month[mm], dd, yy, hh, mn, ss);
+  printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d        |\n", month[mm], dd, yy, hh, mn, ss);
   printf("     |  FPGA Sign  %08x                    |\n", ifc1211_sign);
   printf("     |  Driver %s  Version %s   |\n", tsc_get_drv_name(), tsc_get_drv_version());
   printf("     +-----------------------------------------+\n");
