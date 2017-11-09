@@ -103,6 +103,7 @@
 #define IFC1211_CSR_ILOC_BASE	             0x000
 #define IFC1211_CSR_ILOC_STATIC	             0x000
 #define IFC1211_CSR_ILOC_OPT_DYN_SEL         0x004
+#define IFC1211_CSR_IPCIE                    0x004
 #define IFC1211_CSR_ILOC_OPT_DYN_DAT         0x008
 #define IFC1211_CSR_ILOC_PON_FSM             0x00c
 #define IFC1211_CSR_ILOC_SPI                 0x010
