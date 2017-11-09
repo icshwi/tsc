@@ -66,24 +66,11 @@ conf_rcsid()
 void
 conf_show_static( void)
 {
-  int d0, d1;
+  int d0;
   int a24_base;
 
   tsc_csr_read( 0x00, &d0);
-  tsc_csr_read( 0x04, &d1);
-  printf("   Static Options [0x%08x - 0x%08x]\n", d0, d1&~3);
-
-  printf("      PON FSM_DIS          : ");
-  if( d0 & (1<<4)) printf("Enabled\n");
-  else printf("Disabled\n");
-
-  printf("      SPI_WRPROT           : ");
-  if( d0 & (1<<6)) printf("Enabled\n");
-  else printf("Disabled\n");
-
-  printf("      SPI_CFG_ENA          : ");
-  if( d0 & (1<<7)) printf("Enabled\n");
-  else printf("Disabled\n");
+  printf("   Static Options [0x%08x]\n", d0);
 
   if( d0 & (1<<31))
   {
@@ -96,7 +83,6 @@ conf_show_static( void)
   if( d0 & 0x7000)
   {
     printf("      PCI MEM size         : ");
-    printf("A32 -> "),
     printf("%d MBytes\n", 2 << ((d0>>12)&7));
   }
   else
@@ -111,7 +97,6 @@ conf_show_static( void)
     printf("      PCI PMEM size        : ");
     if( d0 & (1<<8))
     {
-      printf("A64 -> ");
       printf("%d MBytes\n", 32 << tmp);
     }
     else
@@ -132,99 +117,122 @@ conf_show_static( void)
     printf("      PCI PMEM size        : disabled\n");
   }
 
-  printf("      CONFIG MODE          : ");
-  if( d1 & (1<<25)) printf("Dynamic\n");
-  else printf("Static\n");
-  printf("      USER AGENT           : ");
-  switch( (d1>>26)&3)
-  {
-    case 0:
-    {
-      printf("Disabled\n");
-      break;
-    }
-    case 1:
-    {
-      printf("LPC Bus\n");
-      break;
-    }
-    case 2:
-    {
-      printf("IFC Bus\n");
-      break;
-    }
-    case 3:
-    {
-      printf("Reserved\n");
-      break;
-    }
-  }
-
-  printf("      TRX_ABT245           : ");
-  if( d1 & (1<<29)) printf("Yes\n");
-  else printf("No\n");
-  printf("      DDR3_SIZE            : ");
-  switch( (d1>>30)&3)
-  {
-    case 0:
-    {
-      printf("Not Present\n");
-      break;
-    }
-    case 1:
-    {
-      printf("2 Gbit [0x10000000]\n");
-      break;
-    }
-    case 2:
-    {
-      printf("4 Gbit [0x40000000]\n");
-      break;
-    }
-    case 3:
-    {
-      printf("8 Gbit [0x80000000]\n");
-      break;
-    }
-  }
-
   return;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : conf_show_dynamic
+ * Function name : conf_show_ddr
  * Prototype     : void
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display dynamic configuration
+ * Description   : display IFC1211 DDR information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void
-conf_show_dynamic( void)
+conf_show_ddr( void)
 {
-  int sel, d0, d1, d2, d3;
+  int d0;
 
-  printf("   Dynamic Options [SFLASH]\n");
-  sel = 0;
-  tsc_csr_write( 0x04, &sel);
-  tsc_csr_read( 0x08, &d0);
-  sel = 1;
-  tsc_csr_write( 0x04, &sel);
-  tsc_csr_read( 0x08, &d1);
-  sel = 2;
-  tsc_csr_write( 0x04, &sel);
-  tsc_csr_read( 0x08, &d2);
-  sel = 3;
-  tsc_csr_write( 0x04, &sel);
-  tsc_csr_read( 0x08, &d3);
+  printf("   DDR3 configuration\n");
 
-  printf("      DEVICE_ID            : 0x%04x\n", (d0>>16)&0xffff);
-  printf("      VENDOR_ID            : 0x%04x\n", d0&0xffff);
-  printf("      opt1                 : 0x%08x\n", d1);
-  printf("      opt2                 : 0x%08x\n", d2);
-  printf("      opt3                 : 0x%08x\n", d3);
+  tsc_csr_read( IFC1211_CSR_SMEM_DDR3_CSR, &d0);
+  printf("      DDR3_SIZE            : ");
+    switch( (d0 >> 2) & 3)
+    {
+      case 0:
+      {
+        printf("Not Present\n");
+        break;
+      }
+      case 1:
+      {
+        printf("2 Gbit [0x10000000]\n");
+        break;
+      }
+      case 2:
+      {
+        printf("4 Gbit [0x40000000]\n");
+        break;
+      }
+      case 3:
+      {
+        printf("8 Gbit [0x80000000]\n");
+        break;
+      }
+    }
+  return;
+}
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : conf_show_ipcie
+ * Prototype     : void
+ * Parameters    : none
+ * Return        : none
+ *----------------------------------------------------------------------------
+ * Description   : display IFC1211 DDR information
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+void
+conf_show_ipcie( void)
+{
+  int d0;
+
+  printf("    PCIE identifier \n");
+
+  tsc_csr_read( IFC1211_CSR_IPCIE, &d0);
+  printf("      Board ID             : ");
+    switch( d0 & 0xf)
+    {
+      case 0:
+      {
+        printf("Reserved\n");
+        break;
+      }
+      case 1:
+      {
+        printf("IFC 1410\n");
+        break;
+      }
+      case 2:
+      {
+        printf("IFC 1411\n");
+        break;
+      }
+      default:
+      {
+        printf("Others\n");
+        break;
+      }
+    }
+  printf("      Revision ID          : %x\n", (d0 >> 3) & 0xf);
+  printf("      PCIe EP              : ");
+    switch( (d0 >> 8) & 0xf)
+      {
+        case 0:
+        {
+          printf("PCIe EP 0\n");
+          break;
+        }
+        case 1:
+        {
+          printf("PCIe EP 1\n");
+          break;
+        }
+        case 2:
+        {
+          printf("PCIe EP 2\n");
+          break;
+        }
+        default:
+        {
+          printf("Undefined\n");
+          break;
+        }
+      }
+    if (((d0 & 0xf) == 1) | ((d0 & 0xf) == 2)){
+      printf("      MTCA Slot ID         : %x\n", (d0 >> 12) & 0xf);
+    }
   return;
 }
 
@@ -255,41 +263,6 @@ conf_show_identifiers( void)
 
   tsc_csr_read( IFC1211_CSR_ILOC_TOSCA2_SIGN, &d0);
   printf("      TOSCA Signature      : 0x%08x\n", d0);
-
-
-  return;
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : conf_show_pciep
- * Prototype     : void
- * Parameters    : none
- * Return        : none
- *----------------------------------------------------------------------------
- * Description   : display IFC1211 PCIe End Point status
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-void
-conf_show_pcie( void)
-{
-  int d0;
-
-  printf("   PCIe End Point status\n");
-
-  tsc_csr_read( IFC1211_CSR_A7_PCIEP_LINK_STA, &d0);
-  printf("      Link Status          : 0x%08x\n", d0);
-
-  tsc_csr_read( IFC1211_CSR_A7_PCIEP_CFG_STA_0, &d0);
-  printf("      CFG STA 0            : 0x%08x\n", d0);
-
-  tsc_csr_read( IFC1211_CSR_A7_PCIEP_CFG_STA_1, &d0);
-  printf("      CFG STA 1            : 0x%08x\n", d0);
-
-  tsc_csr_read( IFC1211_CSR_A7_PCIEP_CFG_STA_2, &d0);
-  printf("      CFG STA 2            : 0x%08x\n", d0);
-
-  tsc_csr_read( IFC1211_CSR_A7_PCIEP_CFG_STA_3, &d0);
-  printf("      CFG STA 3            : 0x%08x\n", d0);
 
 
   return;
@@ -636,9 +609,9 @@ tsc_conf_show(struct cli_cmd_para *c)
   if( !c->cnt)
   {
     conf_show_static();
-    conf_show_dynamic();
+    conf_show_ipcie();
+    conf_show_ddr();
     conf_show_identifiers();
-    conf_show_pcie();
     conf_show_msi();
     conf_show_smon();
     //conf_show_lm95235();
@@ -671,17 +644,9 @@ tsc_conf_show(struct cli_cmd_para *c)
 	{
 	  show_set |= 0x1;
 	}
-	if( !strncmp( "dynamic", c->para[i], 3))
-	{
-	  show_set |= 0x2;
-	}
 	if( !strncmp( "identifiers", c->para[i], 3))
 	{
 	  show_set |= 0x4;
-	}
-	if( !strncmp( "pcie", c->para[i], 3))
-	{
-	  show_set |= 0x8;
 	}
 	if( !strncmp( "msi", c->para[i], 3))
 	{
@@ -690,6 +655,10 @@ tsc_conf_show(struct cli_cmd_para *c)
 	if( !strncmp( "smon", c->para[i], 3))
 	{
 	  show_set |= 0x20;
+	}
+	if( !strncmp( "pciei", c->para[i], 3))
+	{
+	  show_set |= 0x40;
 	}
 	//if( !strncmp( "lm95255", c->para[i], 2))
 	//{
@@ -707,13 +676,21 @@ tsc_conf_show(struct cli_cmd_para *c)
 	{
 	  show_set |= 0x400;
 	}
+	if( !strncmp( "ddr", c->para[i], 3))
+	{
+	  show_set |= 0x8;
+	}
+	if( !strncmp( "pciei", c->para[i], 3))
+	{
+	  show_set |= 0x40;
+	}
       }
       if( show_set & 0x1) conf_show_static();
-      if( show_set & 0x2) conf_show_dynamic();
       if( show_set & 0x4) conf_show_identifiers();
-      if( show_set & 0x8) conf_show_pcie();
+      if( show_set & 0x8) conf_show_ddr();
       if( show_set & 0x10) conf_show_msi();
       if( show_set & 0x20) conf_show_smon();
+      if( show_set & 0x40) conf_show_ipcie();
       //if( show_set & 0x80) conf_show_lm95235();
       if( show_set & 0x100) conf_show_bmr463();
       if( show_set & 0x200) conf_show_max5970();
