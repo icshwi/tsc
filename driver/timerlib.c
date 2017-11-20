@@ -108,13 +108,13 @@ tsc_timer_start( struct tsc_device *ifc,
 {
   uint tmr_csr;
   /* stop timer */
-  iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
+  iowrite32( 0, ifc->csr_ptr + TSC_CSR_GLTIM_CSR);
   /* set time */
-  iowrite32( tmr->time.msec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT1);
-  iowrite32( tmr->time.usec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT2);
+  iowrite32( tmr->time.msec, ifc->csr_ptr + TSC_CSR_GLTIM_CNT1);
+  iowrite32( tmr->time.usec, ifc->csr_ptr + TSC_CSR_GLTIM_CNT2);
   /* restart timer according to new mode */
-  tmr_csr = TSC_PVME_GLTIM_ENA | TIMER_SYNC_ENA | tmr->mode;
-  iowrite32( tmr_csr, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
+  tmr_csr = TSC_GLTIM_ENA | TIMER_SYNC_ENA | tmr->mode;
+  iowrite32( tmr_csr, ifc->csr_ptr + TSC_CSR_GLTIM_CSR);
   return( 0);
 }
 EXPORT_SYMBOL( tsc_timer_start);
@@ -136,15 +136,15 @@ tsc_timer_restart( struct tsc_device *ifc,
 {
   uint tmr_csr;
 
-  tmr_csr =  ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
-  if( ~(tmr_csr & TSC_PVME_GLTIM_ENA))
+  tmr_csr =  ioread32( ifc->csr_ptr + TSC_CSR_GLTIM_CSR);
+  if( ~(tmr_csr & TSC_GLTIM_ENA))
   {
     if( tm)
     {
-      iowrite32( tm->msec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT1);
-      iowrite32( tm->usec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT2);
+      iowrite32( tm->msec, ifc->csr_ptr + TSC_CSR_GLTIM_CNT1);
+      iowrite32( tm->usec, ifc->csr_ptr + TSC_CSR_GLTIM_CNT2);
     }
-    iowrite32( (TSC_PVME_GLTIM_ENA | tmr_csr), ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
+    iowrite32( (TSC_GLTIM_ENA | tmr_csr), ifc->csr_ptr + TSC_CSR_GLTIM_CSR);
     return( 0);
   }
   return( -1);
@@ -164,9 +164,9 @@ int
 tsc_timer_stop( struct tsc_device *ifc)
 {
   uint tmr_csr;
-  tmr_csr =  ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
-  tmr_csr &=  ~TSC_PVME_GLTIM_ENA;
-  iowrite32( tmr_csr, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
+  tmr_csr =  ioread32( ifc->csr_ptr + TSC_CSR_GLTIM_CSR);
+  tmr_csr &=  ~TSC_GLTIM_ENA;
+  iowrite32( tmr_csr, ifc->csr_ptr + TSC_CSR_GLTIM_CSR);
   return( 0);
 }
 EXPORT_SYMBOL( tsc_timer_stop);
@@ -186,8 +186,8 @@ int
 tsc_timer_read( struct tsc_device *ifc,
 		struct tsc_time *tm)
 {
-  tm->msec = ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT1);
-  tm->usec = ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT2);
+  tm->msec = ioread32( ifc->csr_ptr + TSC_CSR_GLTIM_CNT1);
+  tm->usec = ioread32( ifc->csr_ptr + TSC_CSR_GLTIM_CNT2);
   return( 0);
 }
 EXPORT_SYMBOL( tsc_timer_read);

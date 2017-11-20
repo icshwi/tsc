@@ -81,7 +81,6 @@ set_para_char( char *prompt,
     *data = para[0];
     return( 0);
   }
-  //printf("Bad parameter! Type \"? vme\" for help \n"); 
   return( -1);
 }
 
@@ -98,7 +97,6 @@ set_para_dec( char *prompt,
     *data = strtoul( para, &p, 10);
     if( p == para)
     {
-      //printf("%s : Bad parameter value\n", para);
       return(-1);
     }
   }

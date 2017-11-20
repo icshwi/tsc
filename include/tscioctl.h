@@ -452,15 +452,15 @@ struct tsc_ioctl_timer
 #define TIMER_SYNC_LOC     0x00000000  /* timer synchronization local            */
 #define TIMER_SYNC_USR1    0x00000010  /* timer synchronization user signal #1   */
 #define TIMER_SYNC_USR2    0x00000020  /* timer synchronization user signal #2   */
-#define TIMER_SYNC_SYSFAIL 0x00000040  /* timer synchronization VME sysfail      */
-#define TIMER_SYNC_IRQ1    0x00000050  /* timer synchronization VME IRQ#1        */
-#define TIMER_SYNC_IRQ2    0x00000060  /* timer synchronization VME IRQ#2        */
+#define TIMER_SYNC_SYSFAIL 0x00000040  /* timer synchronization sysfail          */
+#define TIMER_SYNC_IRQ1    0x00000050  /* timer synchronization IRQ#1            */
+#define TIMER_SYNC_IRQ2    0x00000060  /* timer synchronization IRQ#2            */
 #define TIMER_SYNC_ENA     0x00000080  /* timer synchronization enable           */
-#define TIMER_OUT_SYSFAIL  0x00000100  /* issue sync signal on VME sysfail       */
-#define TIMER_OUT_IRQ1     0x00000200  /* issue sync signal on VME IRQ#1         */
-#define TIMER_OUT_IRQ2     0x00000300  /* issue sync signal on VME IRQ#2         */
-#define TIMER_SYNC_ERR     0x00010000  /* timer synchronization error           */
-#define TIMER_UTIME_MASK   0x0000ffff  /* mask for usec                           */
+#define TIMER_OUT_SYSFAIL  0x00000100  /* issue sync signal on sysfail           */
+#define TIMER_OUT_IRQ1     0x00000200  /* issue sync signal on IRQ#1             */
+#define TIMER_OUT_IRQ2     0x00000300  /* issue sync signal on IRQ#2   	         */
+#define TIMER_SYNC_ERR     0x00010000  /* timer synchronization error            */
+#define TIMER_UTIME_MASK   0x0000ffff  /* mask for usec                          */
 
 
 #define TSC_IOCTL_SFLASH                0x000b0000

@@ -10,7 +10,7 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *	  VME transfers test with local board
+ *	  Transfers test with local board
  *----------------------------------------------------------------------------
  *  Copyright Notice
  *
@@ -291,7 +291,7 @@ int tst_kbuf(struct tst_ctl *tc, char *tst_id){
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
 	TST_LOG( tc, (logline, "%s->Executing Read / Write KBUF0\n", tst_id));
 
-	// Compute VME board offset in decoding window
+	// Compute board offset in decoding window
 	size_ref = tc->at->shm_size_0;
 	offset   = tc->at->shm_offset_0;
 

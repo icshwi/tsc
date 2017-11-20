@@ -99,22 +99,22 @@ tsc_map_slv_set_sg( struct tsc_device *ifc,
   }
   debugk(("loading MMU : %x\n", mmu_ptr));
   mutex_lock( &ifc->csr_lock);
-  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_PVME_MMUADD);
+  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_MMUADD);
   debugk(("mode = %x : rem_addr = %lx\n", (int)p[offset].mode, p[offset].rem_addr));
   for( npg = 0; npg < p[offset].npg; npg++)
   {
     uint tmp;
 
-    iowrite32( (int)p[offset].mode, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( (int)p[offset].mode, ifc->csr_ptr + TSC_CSR_MMUDAT);
     rem_addr = (int)(p[offset].rem_addr + (npg*pg_size));
     debugk(("rem_addr = %lx", rem_addr));
     tmp = (uint)(rem_addr >> 16) & 0xfff0;
     debugk((" - %x - 0", tmp));
-    iowrite32( tmp, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( tmp, ifc->csr_ptr + TSC_CSR_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_MMUDAT);
     tmp = (uint)(rem_addr >> 4) & 0xfff0;
     debugk((" - %x\n", tmp));
-    iowrite32( tmp, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( tmp, ifc->csr_ptr + TSC_CSR_MMUDAT);
   }
   mutex_unlock( &ifc->csr_lock);
   return(0);
@@ -156,13 +156,13 @@ tsc_map_slv_clear_sg( struct tsc_device *ifc,
   }
   debugk(("clearing MMU : %x %x\n", mmu_ptr, npg));
   mutex_lock( &ifc->csr_lock);
-  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_PVME_MMUADD);
+  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_MMUADD);
   while( npg--)
   {
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_MMUDAT);
   }
   mutex_unlock( &ifc->csr_lock);
   return(0);
@@ -189,18 +189,18 @@ tsc_map_slv_set_mode( struct tsc_device *ifc,
   mode = 0;
   if( m->space == MAP_SPACE_PCIE)
   {
-    mode |= TSC_PVME_MMUDAT_DES_PCIE;
+    mode |= TSC_MMUDAT_DES_PCIE;
   }
   else if( m->space == MAP_SPACE_SHM)
   {
-    mode |= TSC_PVME_MMUDAT_DES_SHM;
+    mode |= TSC_MMUDAT_DES_SHM;
   }
   else if( m->space == MAP_SPACE_USR)
   {
-    mode |= TSC_PVME_MMUDAT_DES_USR;
+    mode |= TSC_MMUDAT_DES_USR;
   }
 
-  mode |= TSC_PVME_MMUDAT_PG_ENA | TSC_PVME_MMUDAT_WR_ENA;
+  mode |= TSC_MMUDAT_PG_ENA | TSC_MMUDAT_WR_ENA;
 
   return( mode);
 

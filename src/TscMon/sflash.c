@@ -505,7 +505,7 @@ int tsc_sflash_dynopt(struct cli_cmd_para *c){
   /* get statsw from data structure*/
   statsw = le32toh(dynopt.statsw);
   tmp = statsw & 0x3;
-  sprintf(prompt, "VME_SYSCONMOD     [0x%01x] -> ", tmp);
+  sprintf(prompt, "SYSCONMOD     [0x%01x] -> ", tmp);
   if(sflash_set_para_hex(prompt, &tmp) < 0){
     return( TSC_ERR);
   }
@@ -533,7 +533,7 @@ int tsc_sflash_dynopt(struct cli_cmd_para *c){
   statsw = (statsw & ~0x10) | (yn?0x10:0);
 
   yn =  (statsw&0x20)?1:0;
-  sprintf(prompt, "PERSTVME_ENA        [%c] -> ", (statsw&0x20)?'y':'n');
+  sprintf(prompt, "PERST_ENA        [%c] -> ", (statsw&0x20)?'y':'n');
   if(sflash_set_para_yn(prompt, &yn) < 0){
     return( TSC_ERR);
   }

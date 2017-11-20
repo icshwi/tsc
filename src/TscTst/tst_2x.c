@@ -136,7 +136,7 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
 	    goto ERROR;
 	}
 
-	// Compute VME board offset in decoding window
+	// Compute board offset in decoding window
 	size_ref = tc->at->shm_size_0;
 	offset   = tc->at->shm_offset_0;
 

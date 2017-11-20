@@ -438,7 +438,7 @@ static const int TSC_CSR_IDMA2_DCNT[4] = { TSC_CSR_IDMA2_RD_0_DCNT, TSC_CSR_IDMA
 #define TSC_PCIE_MMUDAT_AS_A32_ADO          (14<<8)  /* address space A32 Address Only    */
 #define TSC_PCIE_MMUDAT_AS_IACK             (15<<8)  /* address space IACK                */
 #define TSC_PCIE_MMUDAT_AS_MASK             (15<<8)  /* address space mask                */
-#define TSC_PCIE_MMUDAT_DES_             (1<<12)  /* destination VME bus               */
+#define TSC_PCIE_MMUDAT_DES_                (1<<12)  /* destination bus                   */
 #define TSC_PCIE_MMUDAT_DES_SHM             (2<<12)  /* destination Shared Memory         */
 #define TSC_PCIE_MMUDAT_DES_SHM1            (2<<12)  /* destination Shared Memory 1       */
 #define TSC_PCIE_MMUDAT_DES_SHM2            (3<<12)  /* destination Shared Memory 2       */
@@ -552,7 +552,7 @@ static const int TSC_PCIE_MMUDAT_AM[0x40] = {
  */
 #define TSC_ALL_ITC_CSR_GLENA           (1<<0)   /* Interrupt Controller global enable */
 #define TSC_ALL_ITC_CSR_CLEARIP         (1<<1)   /* Clear all pending interrupts       */
-#define TSC_ITC_CSR_AUTOIACK       (1<<2)   /* Enable VME auto IACK mechanism     */
+#define TSC_ITC_CSR_AUTOIACK       (1<<2)   /* Enable auto IACK mechanism     */
 
 #define TSC_ITC_IACK_VEC(iack)            (iack&0xff)  /* extract vector from iack       */
 #define TSC_ALL_ITC_IACK_SRC(iack)         ((iack>>8)&0x3f)  /* extract source from iack      */
@@ -563,46 +563,6 @@ static const int TSC_PCIE_MMUDAT_AM[0x40] = {
  */
 #define TSC_ALL_ITC_MASK_ALL            0xffff   /* Mask for all interrupt sources     */
 #define TSC_ALL_ITC_IM( src)    (1<<(src&0xf))   /* get interrupt mask from source     */
-
-/*
- *  VME Slot 1 & General Control and Status(CSR + $400)
- */
-#define TSC_SLOT1_ARB_PRI                  0   /* ARB mode : Not pipelined PRI Mode      */
-#define TSC_SLOT1_ARB_RRS                  1   /* ARB mode : Not pipelined RRS Mode      */
-#define TSC_SLOT1_ARB_PRI_PP               2   /* ARB mode : pipelined PRI Mode          */
-#define TSC_SLOT1_ARB_RRS_PP               3   /* ARB mode : pipelined RRS Mode          */
-#define TSC_SLOT1_ARB_MASK                 3   /* ARB mode : mask                        */
-#define TSC_SLOT1_ARB_TMO_FL           (1<<2)  /* ARB time out flag                      */
-#define TSC_SLOT1_ENA                  (1<<3)  /* VME slot 1 Enable                      */
-#define TSC_SLOT1_REQ_TMO_MODE         (1<<4)  /* Arbitration Request monitoring mode    */
-#define TSC_SLOT1_REQ_TMO_FL           (1<<5)  /* Arbitration Requester monitoringflag   */
-#define TSC_SLOT1_BBSY_NOFILT          (1<<6)  /* Disable BBSY Filtering                 */
-#define TSC_SLOT1_BCLR_DIS             (1<<7)  /* Disable BCLR generatiom                */
-#define TSC_SLOT1_BTO_16US             (0<<8)  /* set Bus Timeout to 16 usec             */
-#define TSC_SLOT1_BTO_32US             (1<<8)  /* set Bus Timeout to 32 usec             */
-#define TSC_SLOT1_BTO_128US            (2<<8)  /* set Bus Timeout to 128 usec            */
-#define TSC_SLOT1_BTO_256US            (3<<8)  /* set Bus Timeout to 256 usec            */
-#define TSC_SLOT1_BTO_MSK              (3<<8)  /* set Bus Timeout to 256 usec            */
-#define TSC_SLOT1_BTO_FL              (1<<10)  /* Bus Timeout status flag                */
-#define TSC_SLOT1_TX_BBSY             (1<<15)  /* Assert Bus busy                        */
-#define TSC_SLOT1_RX_BBSY             (1<<15)  /* Detect Bus busy                        */
-#define TSC_SLOT1_SYSRST              (1<<15)  /* Generate a 200msec VME sys reset       */
-#define TSC_SLOT1_GEO_SHIFT                16  /* Bit shift for Geographic address       */
-#define TSC_SLOT1_GEO_MASK         (0xff<<16)  /* Bit mask for Geographic address        */
-#define TSC_SLOT1_64X_SW           (1<<24)     /* VME64X switch status                   */
-#define TSC_SLOT1_SLOT1_SW            (1<<25)  /* SLOT1 switch status                    */
-#define TSC_SLOT1_SYSRST_SW           (1<<26)  /* SYS Reset propagation switch status    */
-#define TSC_SLOT1_AUTOID_ENA          (1<<27)  /* AUTIID switch status                   */
-#define TSC_SLOT1_AUTOID_IDLE         (0<<28)  /* AUTIID idle state or disabled          */
-#define TSC_SLOT1_AUTOID_IRQ2         (1<<28)  /* AUTIID IRQ2 pending (waiting IACK)     */
-#define TSC_SLOT1_AUTOID_WAIT         (2<<28)  /* AUTIID waiting CRCSR update            */
-#define TSC_SLOT1_AUTOID_DONE         (3<<28)  /* AUTIID completed                       */
-#define TSC_SLOT1_SYSFAIL             (3<<30)  /* VME64X SYSFAIL status                  */
-#define TSC_SLOT1_AUTOID_SEMI         (3<<31)  /* AUTIID semi automatic mode             */
-#define TSC_SLOT1_ARB_SET(x)            (x&3)  /* set ARB mode in csr                    */
-#define TSC_SLOT1_ARB_GET(x)            (x&3)  /* get ARB mode from csr                  */
-#define TSC_SLOT1_BTO_SET(x)        ((x&7)<<8) /* set Bus Timeout to x in csr            */
-#define TSC_SLOT1_BTO_GET(x) (0x10<<((x>>8)&7))/* get Bus Timeout to csr                 */
 
 /*
  *  VME master & General Control and Status(CSR + $404)
@@ -753,7 +713,7 @@ static const int TSC_INTG_LEVEL[8] = { 0, TSC_INTG_LEVEL_1,
 #define TSC_LOCMON_ADDR_MASK     (0xffffffe0<<0)  /*  Location Monitor Address Masl          */
 
 /*
- *  VME Global Timer (CSR + $440)
+ *  Global Timer (CSR + $440)
  */
 #define TSC_GLTIM_1MHZ         (0<<0)  /* timer frequency 1 MHz                  */
 #define TSC_GLTIM_5MHZ         (1<<0)  /* timer frequency 5 MHz                  */
@@ -764,45 +724,15 @@ static const int TSC_INTG_LEVEL[8] = { 0, TSC_INTG_LEVEL_1,
 #define TSC_GLTIM_SYNC_LOC     (0<<4)  /* timer synchronization local            */
 #define TSC_GLTIM_SYNC_USR1    (1<<4)  /* timer synchronization user signal #1   */
 #define TSC_GLTIM_SYNC_USR2    (2<<4)  /* timer synchronization user signal #2   */
-#define TSC_GLTIM_SYNC_SYSFAIL (4<<4)  /* timer synchronization VME sysfail      */
-#define TSC_GLTIM_SYNC_IRQ1    (5<<4)  /* timer synchronization VME IRQ#1        */
-#define TSC_GLTIM_SYNC_IRQ2    (6<<4)  /* timer synchronization VME IRQ#2        */
+#define TSC_GLTIM_SYNC_SYSFAIL (4<<4)  /* timer synchronization sysfail          */
+#define TSC_GLTIM_SYNC_IRQ1    (5<<4)  /* timer synchronization IRQ#1            */
+#define TSC_GLTIM_SYNC_IRQ2    (6<<4)  /* timer synchronization IRQ#2            */
 #define TSC_GLTIM_SYNC_ENA     (1<<7)  /* timer synchronization enable           */
-#define TSC_GLTIM_OUT_SYSFAIL  (1<<8)  /* issue sync signal on VME sysfail       */
-#define TSC_GLTIM_OUT_IRQ1     (2<<8)  /* issue sync signal on VME IRQ#1         */
-#define TSC_GLTIM_OUT_IRQ2     (3<<8)  /* issue sync signal on VME IRQ#2         */
-#define TSC_GLTIM_SYNC_ERR    (1<<16)  /* timer synchronization error           */
+#define TSC_GLTIM_OUT_SYSFAIL  (1<<8)  /* issue sync signal on sysfail           */
+#define TSC_GLTIM_OUT_IRQ1     (2<<8)  /* issue sync signal on IRQ#1             */
+#define TSC_GLTIM_OUT_IRQ2     (3<<8)  /* issue sync signal on IRQ#2             */
+#define TSC_GLTIM_SYNC_ERR    (1<<16)  /* timer synchronization error            */
 #define TSC_GLTIM_ENA         (1<<31)  /* timer global enable                    */
-
-
-/*
- *  VME slave A24 Port Control and Status(CSR + $450)
- */
-#define TSC_SLVCSR_A24_SIZE_MASK      (0x7<<0)  /* Mask for window size bitfield      */
-#define TSC_SLVCSR_A24_ENA             (1<<31)  /* Enable Master port      */
-#define TSC_SLVCSR_A24_PG               0x1000  /* granularity     */
-#define TSC_SLVCSR_A24_SIZE(x)  (0x4000<<(x&7)) /*VME A24 slave size */
-#define TSC_SLVCSR_A24_SIZE_MAX     (0x4000<<7) /*VME A24 msx slave size */
-
-
-/*
- *  VME slave A16 Port Control and Status(CSR + $454)
- */
-#define TSC_SLVCSR_A16_SIZE_MASK      (0x7<<0)  /* Mask for window size bitfield      */
-#define TSC_SLVCSR_A16_ENA             (1<<31)  /* Enable Master port      */
-#define TSC_SLVCSR_A16_PG                0x100  /* granularity     */
-#define TSC_SLVCSR_A16_SIZE(x)  (0x100<<(x&7)) /*VME A16 slave size */
-#define TSC_SLVCSR_A16_SIZE_MAX     (0x100<<7) /*VME A16 slave size */
-
-/*
- *  VME slave 2eBRC Port Control and Status(CSR + $458)
- */
-#define TSC_SLVCSR_2eBRC_SIZE_MASK         (0x7<<0)  /* Mask for window size bitfield      */
-#define TSC_SLVCSR_2eBRC_ENA                (1<<31)  /* Enable Master port      */
-#define TSC_SLVCSR_2eBRC_PG                0x400000  /* granularity     */
-#define TSC_SLVCSR_2eBRC_SIZE(x)  (0x1000000<<(x&7)) /*VME 2eBRC slave size */
-#define TSC_SLVCSR_2eBRC_SIZE_MAX     (0x1000000<<7) /*VME 2eBRC slave size */
-
 
 /*
  *  interrupt IACK (CSR + $480)
@@ -834,7 +764,7 @@ static const int TSC_INTG_LEVEL[8] = { 0, TSC_INTG_LEVEL_1,
 #define TSC_ITC_IM_LM2                (1<<14)  /*  Location Monitor 2 interrupt   */
 #define TSC_ITC_IM_LM3                (1<<15)  /*  Location Monitor 3 interrupt   */
 #define TSC_ITC_IM_LM_ALL           (0xf<<12)  /*  Location Monitor all interrupt */
-#define TSC_ITC_IM_ALL                 0xffff  /*  All interrupts                 */
+#define TSC_ITC_IM_VME_ALL             0xffff  /*  All interrupts                 */
 
 static const int TSC_ITC_IM_LM[4] = { TSC_ITC_IM_LM0,
 						  TSC_ITC_IM_LM1,
@@ -965,20 +895,7 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_IDMA_DES1_DES_SHM2            (2<<24)  /* remote space is SHM #2        */
 #define TSC_IDMA_DES1_DES_USER            (3<<24)  /* remote space is USER          */
 #define TSC_IDMA_DES1_AS_CRCSR            (0<<28)  /* remote mode configuration */
-#define TSC_IDMA_DES1_AS_A16              (1<<28)  /* remote mode A16           */
-#define TSC_IDMA_DES1_AS_A24              (2<<28)  /* remote mode A24           */
-#define TSC_IDMA_DES1_AS_A32              (3<<28)  /* remote mode A32           */
-#define TSC_IDMA_DES1_AS_A32_BLT          (4<<28)  /* remote mode A32_BLT       */
-#define TSC_IDMA_DES1_AS_A32_MBLT         (5<<28)  /* remote mode A32_MBLT      */
-#define TSC_IDMA_DES1_AS_A32_2eVME        (6<<28)  /* remote mode A32_2eVME     */
 #define TSC_IDMA_DES1_AS_USER             (7<<28)  /* remote mode USER          */
-#define TSC_IDMA_DES1_AS_A32_2eSST_160    (8<<28)  /* remote mode A32_2eSST_160 */
-#define TSC_IDMA_DES1_AS_A32_2eSST_233    (9<<28)  /* remote mode A32_2eSST_233 */
-#define TSC_IDMA_DES1_AS_A32_2eSST_320   (10<<28)  /* remote mode A32_2eSST_320 */
-#define TSC_IDMA_DES1_AS_A32_2eSST_400   (11<<28)  /* remote mode A32_2eSST_400 */
-#define TSC_IDMA_DES1_AS_A32_2eBCR       (12<<28)  /* remote mode A32_2eBCR     */
-#define TSC_IDMA_DES1_AS_AS_A24_ADO      (13<<28)  /* remote mode A24_ADO       */
-#define TSC_IDMA_DES1_AS_AS_A32_ADO      (14<<28)  /* remote mode A32_ADO       */
 #define TSC_IDMA_DES1_AS_IACK            (15<<28)  /* remote mode IACK          */
 #define TSC_IDMA_DES1_AS_MASK           (0xf<<28)  /* remote mode IACK          */
 
@@ -1007,7 +924,6 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 
 #define TSC_IDMA_DES7_       (1<<0)  /*       */
 
- 
 #define TSC_FIFO_CTL_WCNT_MAX	              255  /* FIFO word counter maximum       */
 #define TSC_FIFO_CTL_WCNT_MASK	        0x000000ff  /* FIFO word counter mask       */
 #define TSC_FIFO_CTL_WCNT(x)	          (x&0xff)  /* FIFO word counter            */
@@ -1016,10 +932,10 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_FIFO_CTL_RDPT_MASK	        0x00ff0000  /* FIFO read pointer mask       */
 #define TSC_FIFO_CTL_RDPT(x)	    ((x>>16)&0xff)  /* FIFO read pointer            */
 #define TSC_FIFO_CTL_NOEMPTY	           (1<<24)  /* FIFO not empty               */
-#define TSC_FIFO_CTL_FULL	           (1<<25)  /* FIFO full                    */
-#define TSC_FIFO_CTL_MBX	                   (1<<26)  /* FIFO mailbox mode            */
-#define TSC_FIFO_CTL_ERRF	           (1<<27)  /* FIFO error                   */
-#define TSC_FIFO_CTL_RESET	           (1<<28)  /* FIFO reset                   */
+#define TSC_FIFO_CTL_FULL	            	(1<<25)  /* FIFO full                    */
+#define TSC_FIFO_CTL_MBX	                (1<<26)  /* FIFO mailbox mode            */
+#define TSC_FIFO_CTL_ERRF	           		(1<<27)  /* FIFO error                   */
+#define TSC_FIFO_CTL_RESET	           		(1<<28)  /* FIFO reset                   */
 #define TSC_FIFO_CTL_REA	                   (1<<29)  /* FIFO read enable             */
 #define TSC_FIFO_CTL_WEA	                   (1<<30)  /* FIFO write enable            */
 #define TSC_FIFO_CTL_ENA	                   (1<<31)  /* FIFO enable                  */

@@ -194,14 +194,14 @@ tsc_irq_init( struct tsc_device *ifc)
   /* initialize interrupt controllers */
   /* mask all interrupt sources */
   iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_PVME_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ITC_IMS);
   iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
   iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_USER_ITC_IMS);
 
   /* clear all pending interrupts and enable controller */
   ena = TSC_ALL_ITC_CSR_CLEARIP | TSC_ALL_ITC_CSR_GLENA;
   iowrite32( ena, ifc->csr_ptr + TSC_CSR_ILOC_ITC_CSR);
-  iowrite32( ena | TSC_PVME_ITC_CSR_AUTOIACK, ifc->csr_ptr + TSC_CSR_PVME_ITC_CSR);
+  iowrite32( ena | TSC_ITC_CSR_AUTOIACK, ifc->csr_ptr + TSC_CSR_ITC_CSR);
   iowrite32( ena, ifc->csr_ptr + TSC_CSR_IDMA_ITC_CSR);
   iowrite32( ena, ifc->csr_ptr + TSC_CSR_USER_ITC_CSR);
 
@@ -228,14 +228,14 @@ tsc_irq_exit( struct tsc_device *ifc)
   /* disable interrupt controllers */
   /* mask all interrupt sources */
   iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_PVME_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ITC_IMS);
   iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
   iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_USER_ITC_IMS);
 
   /* clear all pending interrupts and disable controller */
   dis = TSC_ALL_ITC_CSR_CLEARIP;
   iowrite32( dis, ifc->csr_ptr + TSC_CSR_ILOC_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + TSC_CSR_PVME_ITC_CSR);
+  iowrite32( dis, ifc->csr_ptr + TSC_CSR_ITC_CSR);
   iowrite32( dis, ifc->csr_ptr + TSC_CSR_IDMA_ITC_CSR);
   iowrite32( dis, ifc->csr_ptr + TSC_CSR_USER_ITC_CSR);
 
@@ -482,7 +482,7 @@ tsc_timer_init( struct tsc_device *ifc)
   debugk(("in tsc_timer_init( %p)\n", ifc));
 
   timer_init( ifc);
-  tmr.mode = TSC_PVME_GLTIM_BASE_1000 | TSC_PVME_GLTIM_SYNC_ENA | TSC_PVME_GLTIM_100MHZ;
+  tmr.mode = TSC_GLTIM_BASE_1000 | TSC_GLTIM_SYNC_ENA | TSC_GLTIM_100MHZ;
   tmr.time.msec = 0;
   tmr.time.usec = 0;
   tsc_timer_start( ifc, &tmr);
