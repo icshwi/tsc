@@ -470,7 +470,7 @@ char *map_msg[] =
   "map.<space> alloc <map> <addr> <size>[<offset>]",
   "map free <map> offset",
   "   where <map>    = mas_mem, mas_pmem",
-  "         <space>  = p,v,s or u -> remote space ( PCI, Shared Memory or USER)",
+  "         <space>  = p,s or u -> remote space ( PCI, Shared Memory or USER)",
   "         <addr>   = remote address in hexadecimal",
   "         <size>   = requested mapping size",
   "         <offset> = requested address offset (optional)",
