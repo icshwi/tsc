@@ -158,7 +158,7 @@ main( int argc,
   else if(tsc_get_device_id() == 0x1001){
 	  printf("     |  TscMon - %s %04x diagnostic tool  |\n", "CENTRAL", tsc_get_device_id());
   }
-  printf("     |  IOxOS Technologies Copyright 2015-2016 |\n");
+  printf("     |  IOxOS Technologies Copyright 2015-2017 |\n");
   printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
   printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d        |\n", month[mm], dd, yy, hh, mn, ss);
   printf("     |  FPGA Sign  %08x                    |\n", ifc1211_sign);
