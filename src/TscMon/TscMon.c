@@ -48,7 +48,7 @@ static char rcsid[] = "$Id: TscMon.c,v 1.3 2016/01/26 13:00:40 ioxos Exp $";
 #include <tsculib.h>
 #include "cmdlist.h"
 
-char TscMon_version[] = "1.30";
+char TscMon_version[] = "1.40";
 
 int tsc_cmd_exec( struct cli_cmd_list *, struct cli_cmd_para *);
 
@@ -91,6 +91,7 @@ main( int argc,
   int iex, retval;
   int cmd_cnt;
   int mm,dd,yy,hh,mn,ss;
+  int data = 0;
 
   if( tsc_init() < 0)
   {
@@ -161,7 +162,14 @@ main( int argc,
   printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
   printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d        |\n", month[mm], dd, yy, hh, mn, ss);
   printf("     |  FPGA Sign  %08x                    |\n", ifc1211_sign);
-  printf("     |  Driver %s  Version %s   |\n", tsc_get_drv_name(), tsc_get_drv_version());
+
+  tsc_pon_read(0x0, &data);
+  if (data == 0x73571211) {
+	  printf("     |  Driver IFC1211 Version %s            |\n", tsc_get_drv_version());
+  }
+  else if (data == 0x73571410){
+	  printf("     |  Driver IFC1410 Version %s            |\n", tsc_get_drv_version());
+  }
   printf("     +-----------------------------------------+\n");
   printf("\n");
 
