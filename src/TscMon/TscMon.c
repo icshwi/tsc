@@ -61,8 +61,8 @@ struct aiocb aiocb;
 char aio_buf[256];
 char *cmdline;
 int script_exit = 0;
-int ifc1211_sign;
-int ifc1211_date;
+int tsc_sign;
+int tsc_date;
 
 static char *month[16] ={ NULL,"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",NULL,NULL};
 
@@ -99,18 +99,18 @@ main( int argc,
     exit( -1);
   }
 
-  retval = tsc_csr_read( 0x18, &ifc1211_sign);
+  retval = tsc_csr_read( 0x18, &tsc_sign);
   if( retval < 0)
   {
     printf("  ERROR -> cannot access ILOC_SIGN register !!\n");
   }
-  tsc_csr_read( 0x28, &ifc1211_date);
-  ss = ifc1211_date & 0x3f;
-  mn = (ifc1211_date>>6) & 0x3f;
-  hh = (ifc1211_date>>12) & 0x1f;
-  yy = (ifc1211_date>>17) & 0x3f;
-  mm = (ifc1211_date>>23) & 0xf;
-  dd = (ifc1211_date>>27) & 0x1f;
+  tsc_csr_read( 0x28, &tsc_date);
+  ss = tsc_date & 0x3f;
+  mn = (tsc_date>>6) & 0x3f;
+  hh = (tsc_date>>12) & 0x1f;
+  yy = (tsc_date>>17) & 0x3f;
+  mm = (tsc_date>>23) & 0xf;
+  dd = (tsc_date>>27) & 0x1f;
 
   /* configure the terminal in canonical mode with echo */
   ioctl( 0, TIOCGWINSZ, &winsize);
@@ -161,7 +161,7 @@ main( int argc,
   printf("     |  IOxOS Technologies Copyright 2015-2017 |\n");
   printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
   printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d        |\n", month[mm], dd, yy, hh, mn, ss);
-  printf("     |  FPGA Sign  %08x                    |\n", ifc1211_sign);
+  printf("     |  FPGA Sign  %08x                    |\n", tsc_sign);
 
   tsc_pon_read(0x0, &data);
   if (data == 0x73571211) {

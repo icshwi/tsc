@@ -139,7 +139,7 @@ char *cmp_msg[] =
 
 char *conf_msg[] = 
 {
-  "  Show IFC1211 current configuration",
+  "  Show TSC current configuration",
   "  conf [show <device>]",
   "     where <device> = all",
   "                      static",
@@ -197,7 +197,7 @@ char *cu_msg[] =
 0};
 
 char *dc_msg[] = 
-{ "  display content of a set of IFC1211 PCI CFG registers",
+{ "  display content of a set of TSC PCI CFG registers",
   "  dc <start>[..<end>]",
   "     where <start> = offset in hexadecimal of first register",
   "            <end>  = offset in hexadecimal of last register",
@@ -278,7 +278,7 @@ char *dp_msg[] =
 0};
 
 char *dr_msg[] = 
-{ "  display content of a set of IFC1211 CSR registers",
+{ "  display content of a set of TSC CSR registers",
   "  dr <start>[..<end>]",
   "     where <start> = ofset in hexadecimal of first register",
   "           <end>   = ofset in hexadecimal of last register",
@@ -405,7 +405,7 @@ char *i2c_msg[]     =
 
 char *kbuf_msg[] = 
 {
-  "IFC1211 kernel buffer operations",
+  "TSC kernel buffer operations",
   "kbuf.<id> alloc <size>",
   "kbuf.<id> show",
   "kbuf.<id> free",
@@ -464,7 +464,7 @@ char *lu_msg[]     =
 
 char *map_msg[] = 
 {
-  "IFC1211 address mapping operations",
+  "TSC address mapping operations",
   "map show [<map>]",
   "map clear <map>",
   "map.<space> alloc <map> <addr> <size>[<offset>]",
@@ -485,7 +485,7 @@ char *mbox_msg[] =
 0};
 
 char *pc_msg[] = 
-{ "  read/write data from/to IFC1211 PCI CFG register",
+{ "  read/write data from/to TSC PCI CFG register",
   "  pc <offset> [<data>]",
   "     where <offset> = register offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
@@ -526,7 +526,7 @@ char *pp_msg[] =
 0};
 
 char *pr_msg[] = 
-{ "  read/write data from/to IFC1211 CSR register",
+{ "  read/write data from/to TSC CSR register",
   "  pr <offset> [<data>]",
   "     where <offset> = register offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
@@ -596,7 +596,7 @@ char *tdma_msg[] =
 
 char *timer_msg[] = 
 {
-  "Perform operation on IFC1211 global timer ",
+  "Perform operation on TSC global timer ",
   "timer start",
   "timer restart",
   "timer stop",

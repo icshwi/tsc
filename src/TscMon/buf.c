@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by XprsMon to perform read
- *     or write cycles through the IFC1211 interface.
+ *     or write cycles through the TSC interface.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
