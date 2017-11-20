@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by TscMon to handle the
- *     IFC1211 SFLASH interface.
+ *     TSC SFLASH interface.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -323,7 +323,7 @@ int tsc_sflash_load( struct cli_cmd_para *c){
     char yn;
 
     printf("!! You are going to overwrite the FPGA backup bitstream [%x]!!!\n", offset);
-    printf("!! That operation can kill the IFC1211 interface...\n");
+    printf("!! That operation can kill the TSC interface...\n");
     printf("!! Do you want to continue [y/n] n ->  ");
     scanf("%c", &yn);
     printf("\n");

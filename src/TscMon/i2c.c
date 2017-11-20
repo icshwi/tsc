@@ -84,7 +84,7 @@ struct tsc_i2c_devices i2c_devices_ifc[] =
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : Compare IFC1211 CSR registers with expected content
+ * Description   : Compare TSC CSR registers with expected content
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 

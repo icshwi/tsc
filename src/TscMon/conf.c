@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by XprsMon to configure
- *     the IFC1211 interface.
+ *     the TSC interface.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -126,7 +126,7 @@ conf_show_static( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display IFC1211 DDR information
+ * Description   : display TSC DDR information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void
@@ -136,7 +136,7 @@ conf_show_ddr( void)
 
   printf("   DDR3 configuration\n");
 
-  tsc_csr_read( IFC1211_CSR_SMEM_DDR3_CSR, &d0);
+  tsc_csr_read( TSC_CSR_SMEM_DDR3_CSR, &d0);
   printf("      DDR3_SIZE            : ");
     switch( (d0 >> 2) & 3)
     {
@@ -170,7 +170,7 @@ conf_show_ddr( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display IFC1211 DDR information
+ * Description   : display TSC DDR information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void
@@ -180,7 +180,7 @@ conf_show_ipcie( void)
 
   printf("    PCIE identifier \n");
 
-  tsc_csr_read( IFC1211_CSR_IPCIE, &d0);
+  tsc_csr_read( TSC_CSR_IPCIE, &d0);
   printf("      Board ID             : ");
     switch( d0 & 0xf)
     {
@@ -242,7 +242,7 @@ conf_show_ipcie( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display IFC1211 identifiers
+ * Description   : display TSC identifiers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void
@@ -252,16 +252,16 @@ conf_show_identifiers( void)
 
   printf("   Identifiers\n");
 
-  tsc_csr_read( IFC1211_CSR_ILOC_EFUSE_USR, &d0);
+  tsc_csr_read( TSC_CSR_ILOC_EFUSE_USR, &d0);
   printf("      FPGA eFUSE           : 0x%08x\n", d0);
 
-  tsc_csr_read( IFC1211_CSR_ILOC_SIGN, &d0);
+  tsc_csr_read( TSC_CSR_ILOC_SIGN, &d0);
   printf("      FPGA Signature       : 0x%08x\n", d0);
 
-  tsc_csr_read( IFC1211_CSR_ILOC_GENCTL, &d0);
+  tsc_csr_read( TSC_CSR_ILOC_GENCTL, &d0);
   printf("      FPGA Version         : 0x%08x\n", d0);
 
-  tsc_csr_read( IFC1211_CSR_ILOC_TOSCA2_SIGN, &d0);
+  tsc_csr_read( TSC_CSR_ILOC_TOSCA2_SIGN, &d0);
   printf("      TOSCA Signature      : 0x%08x\n", d0);
 
 
@@ -274,7 +274,7 @@ conf_show_identifiers( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display IFC1211 PCIe MSI counters
+ * Description   : display TSC PCIe MSI counters
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void
@@ -284,16 +284,16 @@ conf_show_msi( void)
 
   printf("   PCIe MSI counters\n");
 
-  tsc_csr_read( IFC1211_CSR_A7_PCIE_REQCNT, &d0);
+  tsc_csr_read( TSC_CSR_A7_PCIE_REQCNT, &d0);
   printf("      MSI Requests         : 0x%08x\n", d0);
 
-  tsc_csr_read( IFC1211_CSR_A7_PCIE_ARMCNT, &d0);
+  tsc_csr_read( TSC_CSR_A7_PCIE_ARMCNT, &d0);
   printf("      MSI Armed            : 0x%08x\n", d0);
 
-  tsc_csr_read( IFC1211_CSR_A7_PCIE_ACKCNT, &d0);
+  tsc_csr_read( TSC_CSR_A7_PCIE_ACKCNT, &d0);
   printf("      MSI Acknowledge      : 0x%08x\n", d0);
 
-  tsc_csr_read( IFC1211_CSR_A7_PCIE_CTL, &d0);
+  tsc_csr_read( TSC_CSR_A7_PCIE_CTL, &d0);
   printf("      MSI Status           : 0x%08x\n", d0);
 
   return;
@@ -361,14 +361,14 @@ conf_show_lm95235( void)
   char temp;
   uint sts;
 
-  if( (tsc_get_device_id() != TSC_BOARD_IFC1211_IO) || (tsc_get_device_id() != TSC_BOARD_IFC1211_CENTRAL))
+  if( (tsc_get_device_id() != TSC_BOARD_TSC_IO) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL))
   {
     return;
   }
   dev = I2C_DEV( 0x4c, 0, 0);
   reg = 0xfe;
   sts = tsc_i2c_read( dev, reg, &data);
-  if( (sts & IFC1211_I2C_CTL_EXEC_MASK) == IFC1211_I2C_CTL_EXEC_ERR)
+  if( (sts & TSC_I2C_CTL_EXEC_MASK) == TSC_I2C_CTL_EXEC_ERR)
   {
     printf("   Cannot access LM95235 [%08x]\n", sts);
     return;
@@ -487,7 +487,7 @@ conf_show_max5970( void)
 
   printf("   MAX5970 Voltage Monitor\n");
   sts = tsc_i2c_read( max5970, 0, &data);
-  if( (sts & IFC1211_I2C_CTL_EXEC_MASK) == IFC1211_I2C_CTL_EXEC_ERR)
+  if( (sts & TSC_I2C_CTL_EXEC_MASK) == TSC_I2C_CTL_EXEC_ERR)
   {
     printf("      -> ERROR : cannot access device registers [%08x]\n", sts);
     return;
@@ -596,7 +596,7 @@ void conf_show_device(void){
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display IFC1211 configuration
+ * Description   : display TSC configuration
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 

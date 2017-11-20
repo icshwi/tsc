@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by XprsMon to perform read
- *     or write cycles through the IFC1211 interface.
+ *     or write cycles through the TSC interface.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -596,7 +596,7 @@ rdwr_patch_addr( ulong addr,
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acces to IFC1211 CSR registers
+ * Description   : perform read/write acces to TSC CSR registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
@@ -630,7 +630,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     {
       if( c->cmd[1] == 'c')
       {
-        retval =  tsc_pciep_read( IFC1211_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+        retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
       }
       else if( c->cmd[1] == 'i')
       {
@@ -642,7 +642,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
       }
       if( retval < 0)
       {
-        printf("cannot access IFC1211 register %x -> error %d\n", offset, retval);
+        printf("cannot access TSC register %x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       printf("0x%04x : 0x%08x -> \n", offset, data);
@@ -656,7 +656,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( c->cmd[1] == 'c')
     {
-      retval =  tsc_pciep_write( IFC1211_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+      retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
     }
     else if( c->cmd[1] == 'i')
     {
@@ -668,7 +668,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( retval < 0)
     {
-      printf("cannot access IFC1211 register %x -> error %d\n", offset, retval);
+      printf("cannot access TSC register %x -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
     return( RDWR_OK);
@@ -682,7 +682,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
   {
     if( c->cmd[1] == 'c')
     {
-      retval =  tsc_pciep_read( IFC1211_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+      retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
     }
     else if( c->cmd[1] == 'i')
     {
@@ -694,7 +694,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( retval < 0)
     {
-      printf("cannot access IFC1211 register 0x%x -> error %d\n", offset, retval);
+      printf("cannot access TSC register 0x%x -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
     next = rdwr_patch_addr( (ulong)offset, (void *)&data, cp->m.ads, 0);
@@ -730,7 +730,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
 	{
           if( c->cmd[1] == 'c')
           {
-	    retval =  tsc_pciep_write( IFC1211_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+	    retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
 	  }
 	  else if( c->cmd[1] == 'i')
           {
@@ -742,7 +742,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
 	  }
           if( retval < 0)
           {
-            printf("cannot access IFC1211 register %x -> error %d\n", offset, retval);
+            printf("cannot access TSC register %x -> error %d\n", offset, retval);
             return( RDWR_ERR);
           }
 	  offset += ds;
@@ -762,7 +762,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : Display IFC1211 CSR registers
+ * Description   : Display TSC CSR registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
@@ -812,10 +812,10 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     offset = start + i;
     if( c->cmd[1] == 'c')
     {
-      retval = tsc_pciep_read( IFC1211_A7_PCIEP_ADDPT_CFG | offset, &data);
+      retval = tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | offset, &data);
       if( retval < 0)
       {
-        printf("\ncannot access IFC1211 PCI CFG register 0x%x -> error %d\n", offset*4, retval);
+        printf("\ncannot access TSC PCI CFG register 0x%x -> error %d\n", offset*4, retval);
         return( RDWR_ERR);
       }
       if( !((i*4)&0xf)) printf("\n%08x : ", 4*offset);
@@ -837,7 +837,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
       retval = tsc_csr_read( offset, &data);
       if( retval < 0)
       {
-        printf("\ncannot access IFC1211 register 0x%x -> error %d\n", offset, retval);
+        printf("\ncannot access TSC register 0x%x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       if( !(i&0xf)) printf("\n%08x : ", offset);
@@ -856,7 +856,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : Display address range from IFC1211 remote resource SHM)
+ * Description   : Display address range from TSC remote resource SHM)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 static void
@@ -1035,7 +1035,7 @@ tsc_rdwr_dx_error:
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : fill IFC1211 remote resource address range SHM
+ * Description   : fill TSC remote resource address range SHM
  *                 with data
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -1232,7 +1232,7 @@ tsc_rdwr_fx_error:
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : test IFC1211 remote resource address range SHM
+ * Description   : test TSC remote resource address range SHM
  *                 with data
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -1474,7 +1474,7 @@ tsc_rdwr_tx_error:
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acce0s to IFC1211 remote resources
+ * Description   : perform read/write acce0s to TSC remote resources
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
@@ -1532,7 +1532,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       }
       if( retval < 0)
       {
-        printf("cannot access IFC1211 resoource at offfset %lx -> error %d\n", offset, retval);
+        printf("cannot access TSC resoource at offfset %lx -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       switch( ds)
@@ -1618,7 +1618,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       }
       if( retval < 0)
       {
-        printf("cannot access IFC1211 register %lx -> error %d\n", offset, retval);
+        printf("cannot access TSC register %lx -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       return( RDWR_OK);
@@ -1642,7 +1642,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
     }
     if( retval < 0)
     {
-      printf("cannot access IFC1211 register 0x%lx -> error %d\n", offset, retval);
+      printf("cannot access TSC register 0x%lx -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
     next = rdwr_patch_addr( offset, (void *)buf, cp->m.ads, cp->m.swap);
@@ -1714,7 +1714,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
           }
           if( retval < 0)
           {
-            printf("cannot access IFC1211 register %lx -> error %d\n", offset, retval);
+            printf("cannot access TSC register %lx -> error %d\n", offset, retval);
             return( RDWR_ERR);
           }
 	  offset += (ulong)ds;
@@ -1738,7 +1738,7 @@ tsc_rdwr_px_error:
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : Compare IFC1211 CSR registers with expected content
+ * Description   : Compare TSC CSR registers with expected content
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
@@ -1803,7 +1803,7 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : Compare IFC1211 CSR registers with expected content
+ * Description   : Compare TSC CSR registers with expected content
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 

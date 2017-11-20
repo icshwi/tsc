@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by TscMon to perform
- *     semaphore operation on IFC1211 board
+ *     semaphore operation on the board
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -46,7 +46,7 @@
 #include <time.h>
 #include "TscMon.h"
 
-// Main function for IFC1211 command
+// Main function for TSC command
 // ----------------------------------------------------------------------------------
 int tsc_semaphore(struct cli_cmd_para *c){
 	int cnt  = 0;

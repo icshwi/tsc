@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by TscMon to handle the
- *     IFC1211 TIMER interface.
+ *     TSC TIMER interface.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice

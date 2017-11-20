@@ -215,7 +215,7 @@ mbox_info( struct cli_cmd_para *c)
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acces to IFC1211 CSR registers
+ * Description   : perform read/write acces to TSC CSR registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 

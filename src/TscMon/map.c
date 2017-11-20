@@ -11,7 +11,7 @@
  *  Description
  *
  *     That file contains a set of function called by XprsMon to perform read
- *     or write cycles through the IFC1211 interface.
+ *     or write cycles through the TSC interface.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -361,7 +361,7 @@ map_free_usage:
  * Return        : RDWR_OK  if command executed
  *                 RDWR_ERR if error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acces to IFC1211 CSR registers
+ * Description   : perform read/write acces to TSC CSR registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
