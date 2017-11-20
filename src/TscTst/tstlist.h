@@ -215,7 +215,7 @@ char *tst_21_msg[] = {"DMA from SHM0 to KBUF0", 0};
 //char *tst_4e_msg[] = {"", 0};
 //char *tst_4f_msg[] = {"", 0};
 
-//char *tst_50_msg[] = {"", 0};
+char *tst_50_msg[] = {"Test FMC#1 & FMC#2 on IFC14xx boards", 0};
 //char *tst_51_msg[] = {"", 0};
 //char *tst_52_msg[] = {"", 0};
 //char *tst_53_msg[] = {"", 0};
@@ -328,7 +328,7 @@ struct tst_list tst_list[] = {
 		//{0x4e, tst_4e, tst_4e_msg, 0},
 		//{0x4f, tst_4f, tst_4f_msg, 0},
 
-		//{0x50, tst_50, tst_50_msg, 0},
+		{0x50, tst_50, tst_50_msg, 0},
 		//{0x51, tst_51, tst_51_msg, 0},
 		//{0x52, tst_52, tst_52_msg, 0},
 		//{0x53, tst_53, tst_53_msg, 0},
