@@ -179,7 +179,7 @@ tsc_get_drv_version()
  * Function name : tsc_get_vendor_id
  * Prototype     : char *
  * Parameters    : none
- * Return        : IFC1211 vendor id
+ * Return        : TSC vendor id
  *----------------------------------------------------------------------------
  * Description   : return a pointer to the driver versionidentifier string
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -193,7 +193,7 @@ tsc_get_vendor_id()
  * Function name : tsc_get_device_id
  * Prototype     : char *
  * Parameters    : none
- * Return        : IFC1211 device id
+ * Return        : TSC device id
  *----------------------------------------------------------------------------
  * Description   : return a pointer to the driver versionidentifier string
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -271,7 +271,7 @@ tsc_exit()
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the IFC1211 CSR pointed by idx with the content of
+ * Description   : write the TSC CSR pointed by idx with the content of
  *                 data_p. The status of the write operation is returned.
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -293,7 +293,7 @@ tsc_csr_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the IFC1211 CSR pointed by idx and return
+ * Description   : read the content of the TSC CSR pointed by idx and return
  *                 its current value in data_p. The status of the read is
  *                 returned
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -320,7 +320,7 @@ tsc_csr_read( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : set bit in the IFC1211 CSR pointed by idx with the content of
+ * Description   : set bit in the TSC CSR pointed by idx with the content of
  *                 data_p. The status of the write operation is returned.
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -343,7 +343,7 @@ tsc_csr_set( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the IFC1211 SMON register pointed by idx with the content
+ * Description   : write the TSC SMON register pointed by idx with the content
  *                 of data_p. The status of the write operation is returned.
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -366,7 +366,7 @@ tsc_smon_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the IFC1211 SMON register pointed by idx
+ * Description   : read the content of the TSC SMON register pointed by idx
  *                 and return its current value in data_p. The status of the
  *                 operation is returned
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -393,7 +393,7 @@ tsc_smon_read( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the IFC1211 PON register pointed by idx with the content
+ * Description   : write the TSC PON register pointed by idx with the content
  *                 of data_p. The status of the write operation is returned.
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -416,7 +416,7 @@ tsc_pon_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the IFC1211 PON register pointed by idx
+ * Description   : read the content of the TSC PON register pointed by idx
  *                 and return its current value in data_p. The status of the
  *                 operation is returned
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -443,7 +443,7 @@ tsc_pon_read( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the IFC1211 PCIEP register pointed by idx with the content
+ * Description   : write the TSC PCIEP register pointed by idx with the content
  *                 of data_p. The status of the write operation is returned.
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -465,7 +465,7 @@ tsc_pciep_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the IFC1211 PCIEP register pointed by idx
+ * Description   : read the content of the TSC PCIEP register pointed by idx
  *                 and return its current value in data_p. The status of the
  *                 operation is returned
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -1228,7 +1228,7 @@ tsc_sflash_write( int offset, char *buf, int len)
  *                 start time (msec)
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : start the IFC1211 global timer
+ * Description   : start the TSC global timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -1251,7 +1251,7 @@ tsc_timer_start( int mode,
  * Parameters    : none
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : restart the IFC1211 global timer
+ * Description   : restart the TSC global timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -1267,7 +1267,7 @@ tsc_timer_restart( void)
  * Parameters    : none
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : stop the IFC1211 global timer
+ * Description   : stop the TSC global timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
@@ -1283,7 +1283,7 @@ tsc_timer_stop( )
  * Parameters    : pointer to tsc_time data structure
  * Return        : status of set operation
  *----------------------------------------------------------------------------
- * Description   : return the current value og the IFC1211 global timer
+ * Description   : return the current value og the TSC global timer
  *                 in the tsc_time data structure
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int

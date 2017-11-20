@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the definition of all structures and define used
- *    in the IFC1211 environment test
+ *    in the TSC environment test
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice

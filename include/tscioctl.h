@@ -32,7 +32,7 @@
 #ifndef _H_TSCIOCTL
 #define _H_TSCIOCTL
 
-#include "ifc1211.h"
+#include "tsc.h"
 
 #ifndef _LINUX_TYPES_H
 //typedef u64 dma_addr_t;
@@ -45,8 +45,8 @@ typedef long dma_addr_t;
 #define TSC_BOARD_IFC1211        0x73571211
 #define TSC_BOARD_IFC1410        0x73571410
 
-#define TSC_BOARD_IFC1211_IO        PCI_DEVICE_ID_IOXOS_IFC1211_IO
-#define TSC_BOARD_IFC1211_CENTRAL        PCI_DEVICE_ID_IOXOS_IFC1211_CENTRAL
+#define TSC_BOARD_TSC_IO        PCI_DEVICE_ID_IOXOS_TSC_IO
+#define TSC_BOARD_TSC_CENTRAL        PCI_DEVICE_ID_IOXOS_TSC_CENTRAL
 
 
 
@@ -187,12 +187,12 @@ struct tsc_ioctl_map_win
 #define TSC_IOCTL_ITC_MSK_SET    (TSC_IOCTL_ITC | 0x1)
 #define TSC_IOCTL_ITC_MSK_CLEAR  (TSC_IOCTL_ITC | 0x2)
 
-/* IFC1211 interrupt sources */
-#define ITC_SRC_ILOC_ALM0         (IFC1211_IRQ_CTL_ILOC)
-#define ITC_SRC_I2C_CRIT          (IFC1211_IRQ_CTL_ILOC | IFC1211_IRQ_SRC_I2C_CRIT)
-#define ITC_SRC_I2C_POWER         (IFC1211_IRQ_CTL_ILOC | IFC1211_IRQ_SRC_I2C_POWER)
-#define ITC_SRC_I2C_OK            (IFC1211_IRQ_CTL_ILOC | IFC1211_IRQ_SRC_I2C_OK)
-#define ITC_SRC_I2C_ERR           (IFC1211_IRQ_CTL_ILOC | IFC1211_IRQ_SRC_I2C_ERR)
+/* TSC interrupt sources */
+#define ITC_SRC_ILOC_ALM0         (TSC_IRQ_CTL_ILOC)
+#define ITC_SRC_I2C_CRIT          (TSC_IRQ_CTL_ILOC | TSC_IRQ_SRC_I2C_CRIT)
+#define ITC_SRC_I2C_POWER         (TSC_IRQ_CTL_ILOC | TSC_IRQ_SRC_I2C_POWER)
+#define ITC_SRC_I2C_OK            (TSC_IRQ_CTL_ILOC | TSC_IRQ_SRC_I2C_OK)
+#define ITC_SRC_I2C_ERR           (TSC_IRQ_CTL_ILOC | TSC_IRQ_SRC_I2C_ERR)
 #define ITC_SRC_DMA_RD0_END       0x20
 #define ITC_SRC_DMA_RD0_ERR       0x21
 #define ITC_SRC_DMA_RD1_END       0x22

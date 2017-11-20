@@ -41,8 +41,8 @@ char *tsc_get_drv_version( void);
 char *tsc_get_drv_name( void);
 short tsc_get_vendor_id( void);
 short tsc_get_device_id( void);
-int tsc_csr_write( int idx, int *data_p);   /* write to IFC1211 CSR register      */
-int tsc_csr_read( int idx, int *data_p);    /* read from IFC1211 CSR register     */
+int tsc_csr_write( int idx, int *data_p);   /* write to TSC CSR register      */
+int tsc_csr_read( int idx, int *data_p);    /* read from TSC CSR register     */
 int tsc_smon_write( int idx, int *data_p);  /* write to ARTIX7 SMON register      */
 int tsc_smon_read( int idx, int *data_p);   /* read from ARTIX7 SMON register     */
 int tsc_pon_write( int idx, int *data_p);   /* write to PMON register             */

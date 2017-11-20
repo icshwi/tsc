@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contain the declarations for the ioctl commands supported
- *    by the IFC1211 slave driver.
+ *    by the TSC slave driver.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice

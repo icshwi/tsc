@@ -106,7 +106,7 @@ pev791x_bmr_read( uint bmr,
       return(-1);
     }
   }
-  device = I2C_DEV( device, 1, IFC1211_I2C_CTL_CMDSIZ(1)|IFC1211_I2C_CTL_DATSIZ(cnt));
+  device = I2C_DEV( device, 1, TSC_I2C_CTL_CMDSIZ(1)|TSC_I2C_CTL_DATSIZ(cnt));
 
   return( tsc_i2c_read( device, reg, data));
 }
@@ -143,7 +143,7 @@ pev791x_bmr_write( uint bmr,
       return(-1);
     }
   }
-  device = I2C_DEV( device, 1, IFC1211_I2C_CTL_CMDSIZ(1)|IFC1211_I2C_CTL_DATSIZ(2));
+  device = I2C_DEV( device, 1, TSC_I2C_CTL_CMDSIZ(1)|TSC_I2C_CTL_DATSIZ(2));
 
   return( tsc_i2c_write( device, reg, data));
 }
