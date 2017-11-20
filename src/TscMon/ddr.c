@@ -421,7 +421,6 @@ init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 			memcpy(buf_ddr, buf_tx, size);
 			// Get data from DDR3
 			memcpy(buf_rx, buf_ddr, size);
-
 			// Acquire test results in result array corresponding to the current DQ
 			for(m = 0; m < 16; m++){
 				pattern[m * 2]       =  (buf_rx[m] & (0x1 << j)) >>  j;
@@ -679,7 +678,7 @@ init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 // ----------------------------------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------------------------------
-
+/*
 // Althea ddr align
 // Align the DDR memory delay
 // When adjust delay, R/W is needed to apply delay
@@ -968,29 +967,29 @@ int ORIGINAL_althea_ddr_idel_calib(int mem){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEBUG
 // Print pattern
-/*
-			if (k != 0){
-				printf("            :");
-			}
-
-			for(m = 0; m < 32; m++){
-				printf(" %x ",pattern[m]);
-			}
-			printf("\n");
-
-			printf("               :");
-			for(m = 0; m < 32; m++){
-				printf(" %x ",ref_pattern[m]);
-			}
-			printf("\n");
-
-			// Print pattern
-			for(m = 0; m < 16; m++){
-				printf("buf [%i] %x \n", m, buf_rx[m]);
-				printf("buf lsb [%i] %x \n", m, (buf_rx[m] & (0x00000001 << j)) >>  j);
-				printf("buf msb [%i] %x \n", m, (buf_rx[m] & (0x1 << (16 + j))) >> (16 + j));
-			}
-*/
+//
+//			if (k != 0){
+//				printf("            :");
+//			}
+//
+//			for(m = 0; m < 32; m++){
+//				printf(" %x ",pattern[m]);
+//			}
+//			printf("\n");
+//
+//			printf("               :");
+//			for(m = 0; m < 32; m++){
+//				printf(" %x ",ref_pattern[m]);
+//			}
+//			printf("\n");
+//
+//			// Print pattern
+//			for(m = 0; m < 16; m++){
+//				printf("buf [%i] %x \n", m, buf_rx[m]);
+//				printf("buf lsb [%i] %x \n", m, (buf_rx[m] & (0x00000001 << j)) >>  j);
+//				printf("buf msb [%i] %x \n", m, (buf_rx[m] & (0x1 << (16 + j))) >> (16 + j));
+//			}
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			// Check data received with reference pattern
@@ -1157,6 +1156,7 @@ int ORIGINAL_althea_ddr_idel_calib(int mem){
     free(buf_rx);
 	return 0;
 }
+*/
 
 // Main function for Althea command
 // ----------------------------------------------------------------------------------
