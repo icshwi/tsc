@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to drive the address mappers
- *    implemented on the ifc1211.
+ *    implemented on the tsc.
  *
  *----------------------------------------------------------------------------
  *
@@ -59,7 +59,7 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_slv_set sg
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
  *                 mapping offset
  * Return        : none
@@ -70,7 +70,7 @@
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_map_slv_set_sg( struct ifc1211_device *ifc,
+tsc_map_slv_set_sg( struct tsc_device *ifc,
 		    struct map_ctl *map_ctl_p,
 		    int offset)
 {
@@ -99,22 +99,22 @@ tsc_map_slv_set_sg( struct ifc1211_device *ifc,
   }
   debugk(("loading MMU : %x\n", mmu_ptr));
   mutex_lock( &ifc->csr_lock);
-  iowrite32( mmu_ptr, ifc->csr_ptr + IFC1211_CSR_PVME_MMUADD);
+  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_PVME_MMUADD);
   debugk(("mode = %x : rem_addr = %lx\n", (int)p[offset].mode, p[offset].rem_addr));
   for( npg = 0; npg < p[offset].npg; npg++)
   {
     uint tmp;
 
-    iowrite32( (int)p[offset].mode, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
+    iowrite32( (int)p[offset].mode, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
     rem_addr = (int)(p[offset].rem_addr + (npg*pg_size));
     debugk(("rem_addr = %lx", rem_addr));
     tmp = (uint)(rem_addr >> 16) & 0xfff0;
     debugk((" - %x - 0", tmp));
-    iowrite32( tmp, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
+    iowrite32( tmp, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
     tmp = (uint)(rem_addr >> 4) & 0xfff0;
     debugk((" - %x\n", tmp));
-    iowrite32( tmp, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
+    iowrite32( tmp, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
   }
   mutex_unlock( &ifc->csr_lock);
   return(0);
@@ -123,7 +123,7 @@ tsc_map_slv_set_sg( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_slv_clear_sg
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to map control data structure
                    mapping offset
                    number of pages to clear
@@ -135,7 +135,7 @@ tsc_map_slv_set_sg( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_map_slv_clear_sg( struct ifc1211_device *ifc,
+tsc_map_slv_clear_sg( struct tsc_device *ifc,
 		      struct map_ctl *map_ctl_p,
 		      int offset,
 		      int npg)
@@ -156,13 +156,13 @@ tsc_map_slv_clear_sg( struct ifc1211_device *ifc,
   }
   debugk(("clearing MMU : %x %x\n", mmu_ptr, npg));
   mutex_lock( &ifc->csr_lock);
-  iowrite32( mmu_ptr, ifc->csr_ptr + IFC1211_CSR_PVME_MMUADD);
+  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_PVME_MMUADD);
   while( npg--)
   {
-    iowrite32( 0, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + IFC1211_CSR_PVME_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_MMUDAT);
   }
   mutex_unlock( &ifc->csr_lock);
   return(0);
@@ -171,7 +171,7 @@ tsc_map_slv_clear_sg( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_slv_set_mode
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to mapping mode control data structure
  * Return        : encoded hw mode field
  *                 0  in case of error
@@ -181,7 +181,7 @@ tsc_map_slv_clear_sg( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 short 
-tsc_map_slv_set_mode( struct ifc1211_device *ifc,
+tsc_map_slv_set_mode( struct tsc_device *ifc,
 		      struct tsc_ioctl_map_mode *m)
 {
   short mode;
@@ -189,18 +189,18 @@ tsc_map_slv_set_mode( struct ifc1211_device *ifc,
   mode = 0;
   if( m->space == MAP_SPACE_PCIE)
   {
-    mode |= IFC1211_PVME_MMUDAT_DES_PCIE;
+    mode |= TSC_PVME_MMUDAT_DES_PCIE;
   }
   else if( m->space == MAP_SPACE_SHM)
   {
-    mode |= IFC1211_PVME_MMUDAT_DES_SHM;
+    mode |= TSC_PVME_MMUDAT_DES_SHM;
   }
   else if( m->space == MAP_SPACE_USR)
   {
-    mode |= IFC1211_PVME_MMUDAT_DES_USR;
+    mode |= TSC_PVME_MMUDAT_DES_USR;
   }
 
-  mode |= IFC1211_PVME_MMUDAT_PG_ENA | IFC1211_PVME_MMUDAT_WR_ENA;
+  mode |= TSC_PVME_MMUDAT_PG_ENA | TSC_PVME_MMUDAT_WR_ENA;
 
   return( mode);
 
@@ -209,7 +209,7 @@ tsc_map_slv_set_mode( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_slv_alloc
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 mapper identifier
  *                 pointer to mapping request data structure
  *                  - remote address
@@ -223,7 +223,7 @@ tsc_map_slv_set_mode( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_map_slv_alloc( struct ifc1211_device *ifc,
+tsc_map_slv_alloc( struct tsc_device *ifc,
                    struct tsc_ioctl_map_win *w)
 {
   struct map_ctl *map_ctl_p;
@@ -278,7 +278,7 @@ EXPORT_SYMBOL( tsc_map_slv_alloc);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_slv_free
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 mapper identifier
  *                 offset returne by allocation function
  * Return        : error/success
@@ -288,7 +288,7 @@ EXPORT_SYMBOL( tsc_map_slv_alloc);
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_map_slv_free( struct ifc1211_device *ifc,
+tsc_map_slv_free( struct tsc_device *ifc,
 		  int sg_id,
 		  uint offset)
 {

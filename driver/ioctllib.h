@@ -33,16 +33,16 @@
 #ifndef _H_IOCTLLIB
 #define _H_IOCTLLIB
 
-int  ioctl_csr(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_map(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_rdwr(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_dma(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_kbuf(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_sflash(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_timer(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_fifo(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_i2c(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_semaphore(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_csr(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_map(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_rdwr(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_dma(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_kbuf(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_sflash(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_timer(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_fifo(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_i2c(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+int  ioctl_semaphore(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
 
 #endif /*  _H_IOCTLLIB */
 

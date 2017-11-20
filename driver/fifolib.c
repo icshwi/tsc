@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to contro FIFOs implemented
- *    in the ifc1211.
+ *    in the tsc.
  *
  *----------------------------------------------------------------------------
  *
@@ -57,7 +57,7 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_init
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  * Return        : 0
  *----------------------------------------------------------------------------
@@ -65,31 +65,31 @@
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_init(struct ifc1211_device *ifc, int idx, int mode){
+int tsc_fifo_init(struct tsc_device *ifc, int idx, int mode){
 	uint ctl = 0;
 
-	if(idx > IFC1211_FIFO_NUM){
+	if(idx > TSC_FIFO_NUM){
 		return ( -EINVAL);
 	}
 	if(mode == 1){ // Mailbox mode
-		ctl = IFC1211_FIFO_CTL_ENA
-			| IFC1211_FIFO_CTL_WEA
-			| IFC1211_FIFO_CTL_REA
-			| IFC1211_FIFO_CTL_MBX;
+		ctl = TSC_FIFO_CTL_ENA
+			| TSC_FIFO_CTL_WEA
+			| TSC_FIFO_CTL_REA
+			| TSC_FIFO_CTL_MBX;
 	}
 	else{ // Fifo mode
-		ctl = IFC1211_FIFO_CTL_ENA
-			| IFC1211_FIFO_CTL_WEA
-			| IFC1211_FIFO_CTL_REA;
+		ctl = TSC_FIFO_CTL_ENA
+			| TSC_FIFO_CTL_WEA
+			| TSC_FIFO_CTL_REA;
 	}
-	iowrite32(ctl, ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+	iowrite32(ctl, ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_clear
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  * Return        : 0
  *----------------------------------------------------------------------------
@@ -97,26 +97,26 @@ int tsc_fifo_init(struct ifc1211_device *ifc, int idx, int mode){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_clear( struct ifc1211_device *ifc, int idx){
+int tsc_fifo_clear( struct tsc_device *ifc, int idx){
 	uint ctl;
 
-	if(idx > IFC1211_FIFO_NUM){
+	if(idx > TSC_FIFO_NUM){
 		return ( -EINVAL);
 	}
 	// Clear
-	ctl = IFC1211_FIFO_CTL_RESET
-		| IFC1211_FIFO_CTL_ERRF;
-	iowrite32(ctl, ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+	ctl = TSC_FIFO_CTL_RESET
+		| TSC_FIFO_CTL_ERRF;
+	iowrite32(ctl, ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	// Reset all to 0
 	ctl = 0;
-	iowrite32(ctl, ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+	iowrite32(ctl, ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_status
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  * Return        : 0
  *----------------------------------------------------------------------------
@@ -124,8 +124,8 @@ int tsc_fifo_clear( struct ifc1211_device *ifc, int idx){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_status(struct ifc1211_device *ifc, int idx, int *sts){
-	*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+int tsc_fifo_status(struct tsc_device *ifc, int idx, int *sts){
+	*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	  debugk(("status%x\n", *sts));
 	return 0;
 }
@@ -133,7 +133,7 @@ int tsc_fifo_status(struct ifc1211_device *ifc, int idx, int *sts){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_wait_ef
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  * Return        : 0
  *----------------------------------------------------------------------------
@@ -141,14 +141,14 @@ int tsc_fifo_status(struct ifc1211_device *ifc, int idx, int *sts){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_wait_ef(struct ifc1211_device *ifc, struct tsc_ioctl_fifo *fifo){
+int tsc_fifo_wait_ef(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
 	return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_wait_ff
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  * Return        : 0
  *----------------------------------------------------------------------------
@@ -156,14 +156,14 @@ int tsc_fifo_wait_ef(struct ifc1211_device *ifc, struct tsc_ioctl_fifo *fifo){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_wait_ff(struct ifc1211_device *ifc, struct tsc_ioctl_fifo *fifo){
+int tsc_fifo_wait_ff(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
 	return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_read
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  *                 data pointer
  *                 data count
@@ -174,35 +174,35 @@ int tsc_fifo_wait_ff(struct ifc1211_device *ifc, struct tsc_ioctl_fifo *fifo){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_read(struct ifc1211_device *ifc, int idx, int *data, int cnt, int *sts){
+int tsc_fifo_read(struct tsc_device *ifc, int idx, int *data, int cnt, int *sts){
 	int wcnt, tot;
 
-	if(idx >IFC1211_FIFO_NUM){
+	if(idx >TSC_FIFO_NUM){
 		return ( -EINVAL);
 	}
 	tot = 0;
-	*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+	*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	while(1){
-		wcnt = IFC1211_FIFO_CTL_WCNT( *sts);
+		wcnt = TSC_FIFO_CTL_WCNT( *sts);
 		if (!wcnt){
 			return(tot);
 		}
 		while( wcnt--){
-			*data++ = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_PORT[idx]);
+			*data++ = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_PORT[idx]);
 			tot++;
 			if(tot >= cnt){
-				*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+				*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 				return(tot);
 			}
 		}
-		*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+		*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	}
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_write
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 FIFO index
  *                 data pointer
  *                 data count
@@ -213,27 +213,27 @@ int tsc_fifo_read(struct ifc1211_device *ifc, int idx, int *data, int cnt, int *
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_fifo_write(struct ifc1211_device *ifc, int idx, int *data, int cnt, int *sts){
+int tsc_fifo_write(struct tsc_device *ifc, int idx, int *data, int cnt, int *sts){
 	int wcnt, tot;
 
-	if(idx >IFC1211_FIFO_NUM){
+	if(idx >TSC_FIFO_NUM){
 		return ( -EINVAL);
 	}
 	tot = 0;
-	*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+	*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	while(1){
-		wcnt = IFC1211_FIFO_CTL_WCNT_MAX - IFC1211_FIFO_CTL_WCNT( *sts);
+		wcnt = TSC_FIFO_CTL_WCNT_MAX - TSC_FIFO_CTL_WCNT( *sts);
 		if (!wcnt){
 			return(tot);
 		}
 		while(wcnt--){
-			iowrite32( *data++ , ifc->csr_ptr + IFC1211_CSR_FIFO_PORT[idx]);
+			iowrite32( *data++ , ifc->csr_ptr + TSC_CSR_FIFO_PORT[idx]);
 			tot++;
 			if(tot >= cnt){
-				*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+				*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 				return(tot);
 			}
 		}
-		*sts = ioread32( ifc->csr_ptr + IFC1211_CSR_FIFO_CTL[idx]);
+		*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
 	}
 }

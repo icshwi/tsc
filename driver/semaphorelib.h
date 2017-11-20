@@ -32,7 +32,7 @@
 #ifndef _H_SEMAPHORELIB
 #define _H_SEMAPHORELIB
 
-int semaphore_status(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore  *semaphore);
+int semaphore_status(struct tsc_device *ifc, struct tsc_ioctl_semaphore  *semaphore);
 int semaphore_release(uint idx, void *base_shm_ptr);
 int semaphore_get(uint idx, void *base_shm_ptr, uint *tag);
 

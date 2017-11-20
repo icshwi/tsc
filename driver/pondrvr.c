@@ -10,17 +10,17 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *   This file is the main file of the device driver modules for the IFC1211
+ *   This file is the main file of the device driver modules for the TSC
  *   It contain all entry points for the driver:
- *     -> pon1211_init()    :
- *     -> pon1211_exit()    :
- *     -> pon1211_open()    :
- *     -> pon1211_release() :
- *     -> pon1211_read()    :
- *     -> pon1211_write()   :
- *     -> pon1211_llseek()  :
- *     -> pon1211_ioctl()   :
- *     -> pon1211_mmap()    :
+ *     -> pontsc_init()    :
+ *     -> pontsc_exit()    :
+ *     -> pontsc_open()    :
+ *     -> pontsc_release() :
+ *     -> pontsc_read()    :
+ *     -> pontsc_write()   :
+ *     -> pontsc_llseek()  :
+ *     -> pontsc_ioctl()   :
+ *     -> pontsc_mmap()    :
  *
  *----------------------------------------------------------------------------
  *  
@@ -65,43 +65,43 @@
 #include "debug.h"
 
 #define DRIVER_VERSION "1.00"
-#define PON1211_COUNT 1
-#define PON1211_NAME "pon1211"
+#define PONTSC_COUNT 1
+#define PONTSC_NAME "pontsc"
 
-struct pon1211_device
+struct pontsc_device
 {
-  struct device *dev_ctl;                    /* IFC1211 control device                */
+  struct device *dev_ctl;                    /* TSC control device                */
   void __iomem *pon_ptr;                     /* Base Address of pon registers     */
 };
-struct pon1211 
+struct pontsc1
 {
   struct cdev cdev;
   dev_t dev_id;
-  struct pon1211_device *pon;
-} pon1211; /* driver main data structure */
+  struct pontsc_device *pon;
+} pontsc; /* driver main data structure */
 
-static const char device_name[] = "IFC1211_PON";
+static const char device_name[] = "TSC_PON";
 static struct class *pon_sysfs_class;	/* Sysfs class */
 
 /*----------------------------------------------------------------------------
- * File operations for pon1211 device
+ * File operations for pontsc device
  *----------------------------------------------------------------------------*/
-struct file_operations pon1211_fops = 
+struct file_operations pontsc_fops =
 {
   .owner =    THIS_MODULE,
 #ifdef JFG
-  .mmap =     pon1211_mmap,
-  .llseek =   pon1211_llseek,
-  .read =     pon1211_read,
-  .write =    pon1211_write,
-  .open =     pon1211_open,
-  .unlocked_ioctl = pon1211_ioctl,
-  .release =  pon1211_release,
+  .mmap =     pontsc_mmap,
+  .llseek =   pontsc_llseek,
+  .read =     pontsc_read,
+  .write =    pontsc_write,
+  .open =     pontsc_open,
+  .unlocked_ioctl = pontsc_ioctl,
+  .release =  pontsc_release,
 #endif
 };
 
 /*----------------------------------------------------------------------------
- * Function name : pon1211_init
+ * Function name : pontsc_init
  * Prototype     : int
  * Parameters    : none
  * Return        : 0 if OK
@@ -114,41 +114,41 @@ struct file_operations pon1211_fops =
  * 
  *----------------------------------------------------------------------------*/
 
-static int pon1211_init( void)
+static int pontsc_init( void)
 {
   int retval;
-  dev_t pon1211_dev_id;
-  struct pon1211_device *pon;
+  dev_t pontsc_dev_id;
+  struct pontsc_device *pon;
 
-  debugk(( KERN_ALERT "pon1211: entering pon1211_init( void)\n"));
+  debugk(( KERN_ALERT "pontsc: entering pontsc_init( void)\n"));
 
   /*--------------------------------------------------------------------------
    * device number dynamic allocation 
    *--------------------------------------------------------------------------*/
-  retval = alloc_chrdev_region( &pon1211_dev_id, 0, PON1211_COUNT, PON1211_NAME);
+  retval = alloc_chrdev_region( &pontsc_dev_id, 0, PONTSC_COUNT, PONTSC_NAME);
   if( retval < 0) {
-    debugk(( KERN_WARNING "pon1211: Error %d cannot allocate device number\n", retval));
-    goto pon1211_init_err_alloc_chrdev;
+    debugk(( KERN_WARNING "pontsc: Error %d cannot allocate device number\n", retval));
+    goto pontsc_init_err_alloc_chrdev;
   }
   else {
-    debugk((KERN_WARNING "pon1211: registered with major number:%i\n", MAJOR( pon1211_dev_id)));
+    debugk((KERN_WARNING "pontsc: registered with major number:%i\n", MAJOR( pontsc_dev_id)));
   }
-  pon1211.dev_id = pon1211_dev_id;
+  pontsc.dev_id = pontsc_dev_id;
 
   /*--------------------------------------------------------------------------
    * register driver
    *--------------------------------------------------------------------------*/
-  cdev_init( &pon1211.cdev, &pon1211_fops);
-  pon1211.cdev.owner = THIS_MODULE;
-  pon1211.cdev.ops = &pon1211_fops;
-  retval = cdev_add( &pon1211.cdev, pon1211.dev_id ,PON1211_COUNT);
+  cdev_init( &pontsc.cdev, &pontsc_fops);
+  pontsc.cdev.owner = THIS_MODULE;
+  pontsc.cdev.ops = &pontsc_fops;
+  retval = cdev_add( &pontsc.cdev, pontsc.dev_id ,PONTSC_COUNT);
   if(retval) {
-    debugk((KERN_NOTICE "pon1211 : Error %d adding device\n", retval));
-    goto pon1211_init_err_cdev_add;
+    debugk((KERN_NOTICE "pontsc : Error %d adding device\n", retval));
+    goto pontsc_init_err_cdev_add;
   }
-  debugk((KERN_NOTICE "pon1211 : device added\n"));
-  pon1211.pon = (struct pon1211_device *)kzalloc(sizeof(struct pon1211_device), GFP_KERNEL);
-  pon = pon1211.pon;
+  debugk((KERN_NOTICE "pontsc : device added\n"));
+  pontsc.pon = (struct pontsc_device *)kzalloc(sizeof(struct pontsc_device), GFP_KERNEL);
+  pon = pontsc.pon;
 
   /*--------------------------------------------------------------------------
    * Create sysfs entries - on udev systems this creates the dev files
@@ -158,41 +158,41 @@ static int pon1211_init( void)
   {
     dev_err( pon->dev_ctl, "Error creating pon class.\n");
     retval = PTR_ERR( pon_sysfs_class);
-    goto pon1211_err_class;
+    goto pontsc_err_class;
   }
   /*--------------------------------------------------------------------------
-   * Create IFC1211 control device in file system
+   * Create IFCTSC control device in file system
    *--------------------------------------------------------------------------*/
-  pon->dev_ctl = device_create( pon_sysfs_class, NULL, pon1211_dev_id, NULL, "ifc1211/pon");
+  pon->dev_ctl = device_create( pon_sysfs_class, NULL, pontsc_dev_id, NULL, "tsc/pon");
 
   return( 0);
 
   /*--------------------------------------------------------------------------
    * Cleanup after an error has been detected
    *--------------------------------------------------------------------------*/
-pon1211_err_class:
-  cdev_del( &pon1211.cdev);
-pon1211_init_err_cdev_add:
-  unregister_chrdev_region( pon1211.dev_id, PON1211_COUNT);
-pon1211_init_err_alloc_chrdev:
+pontsc_err_class:
+  cdev_del( &pontsc.cdev);
+pontsc_init_err_cdev_add:
+  unregister_chrdev_region( pontsc.dev_id, PONTSC_COUNT);
+pontsc_init_err_alloc_chrdev:
 
   return( retval);
 }
 
-static void pon1211_exit(void)
+static void pontsc_exit(void)
 {
-  debugk(( KERN_ALERT "pon1211: entering pon1211_exit( void)\n"));
-  device_destroy( pon_sysfs_class, pon1211.dev_id);
+  debugk(( KERN_ALERT "pontsc: entering pontsc_exit( void)\n"));
+  device_destroy( pon_sysfs_class, pontsc.dev_id);
   class_destroy( pon_sysfs_class);
-  cdev_del( &pon1211.cdev);
-  unregister_chrdev_region( pon1211.dev_id, PON1211_COUNT);
+  cdev_del( &pontsc.cdev);
+  unregister_chrdev_region( pontsc.dev_id, PONTSC_COUNT);
 }
 
-module_init( pon1211_init);
-module_exit( pon1211_exit);
+module_init( pontsc_init);
+module_exit( pontsc_exit);
 
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("IOxOS Technologies [JFG]");
 MODULE_VERSION(DRIVER_VERSION);
-MODULE_DESCRIPTION("driver for IOxOS Technologies IFC1211 PON registers");
+MODULE_DESCRIPTION("driver for IOxOS Technologies TSC PON registers");

@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to drive the address mappers
- *    implemented on the IFC1211.
+ *    implemented on the TSC.
  *
  *----------------------------------------------------------------------------
  *
@@ -67,16 +67,16 @@ struct sflash_para flash_para_S25FL128P =
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : sflash_load_cmd
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to SFLASH slave configuraton parameters
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read IFC1211 SFLASH
+ * Description   : read TSC SFLASH
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
-sflash_load_cmd( struct ifc1211_device *ifc,
+sflash_load_cmd( struct tsc_device *ifc,
                  uint cmd,
 		 uint para)
 {
@@ -120,28 +120,28 @@ sflash_load_cmd( struct ifc1211_device *ifc,
   while( ds--)
   {
     data = 0;
-    if( cmd & ( 1 <<  ds)) data = IFC1211_ILOC_SPI_DO;
-    data |= IFC1211_ILOC_SPI_CLK | IFC1211_ILOC_SPI_CS;
-    iowrite32( data, ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
+    if( cmd & ( 1 <<  ds)) data = TSC_ILOC_SPI_DO;
+    data |= TSC_ILOC_SPI_CLK | TSC_ILOC_SPI_CS;
+    iowrite32( data, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
   }
 
   return;
 }
 
 void
-sflash_start_cmd( struct ifc1211_device *ifc)
+sflash_start_cmd( struct tsc_device *ifc)
 {
-  iowrite32( IFC1211_ILOC_SPI_CS, ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
+  iowrite32( TSC_ILOC_SPI_CS, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
 }
 
 void
-sflash_end_cmd( struct ifc1211_device *ifc)
+sflash_end_cmd( struct tsc_device *ifc)
 {
-  iowrite32( IFC1211_ILOC_SPI_END, ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
+  iowrite32( TSC_ILOC_SPI_END, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
 }
 
 void
-sflash_write_byte( struct ifc1211_device *ifc,
+sflash_write_byte( struct tsc_device *ifc,
                    unsigned char b)
 {
   uint i, data;
@@ -150,16 +150,16 @@ sflash_write_byte( struct ifc1211_device *ifc,
   while( i--)
   {
     data = 0;
-    if( b & (1<<i)) data = IFC1211_ILOC_SPI_DO;
-    data |= IFC1211_ILOC_SPI_CLK | IFC1211_ILOC_SPI_CS;
-    iowrite32( data, ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
+    if( b & (1<<i)) data = TSC_ILOC_SPI_DO;
+    data |= TSC_ILOC_SPI_CLK | TSC_ILOC_SPI_CS;
+    iowrite32( data, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
   }
 
   return;
 }
 
 unsigned char
-sflash_read_byte( struct ifc1211_device *ifc)
+sflash_read_byte( struct tsc_device *ifc)
 {
   unsigned char b;
   uint i, data;
@@ -168,19 +168,19 @@ sflash_read_byte( struct ifc1211_device *ifc)
   b = 0;
   while( i--)
   {
-    data = ioread32( ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
-    if( data & IFC1211_ILOC_SPI_DI)
+    data = ioread32( ifc->csr_ptr + TSC_CSR_ILOC_SPI);
+    if( data & TSC_ILOC_SPI_DI)
     {
       b |= 1 <<  i;
     }
-    iowrite32( IFC1211_ILOC_SPI_CLK | IFC1211_ILOC_SPI_CS, ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
+    iowrite32( TSC_ILOC_SPI_CLK | TSC_ILOC_SPI_CS, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
   }
 
   return( b);
 }
 
 unsigned char
-sflash_wait_busy( struct ifc1211_device *ifc,
+sflash_wait_busy( struct tsc_device *ifc,
                   uint tmo)
 {
   unsigned char status;
@@ -202,7 +202,7 @@ sflash_wait_busy( struct ifc1211_device *ifc,
 }
 
 unsigned char
-sflash_write_enable( struct ifc1211_device *ifc,
+sflash_write_enable( struct tsc_device *ifc,
                      uint tmo)
 {
   unsigned char status;
@@ -227,7 +227,7 @@ sflash_write_enable( struct ifc1211_device *ifc,
 }
 
 int
-sflash_sector_erase( struct ifc1211_device *ifc,
+sflash_sector_erase( struct tsc_device *ifc,
                      uint offset)
 {
 
@@ -239,7 +239,7 @@ sflash_sector_erase( struct ifc1211_device *ifc,
 }
 
 int
-sflash_page_program( struct ifc1211_device *ifc,
+sflash_page_program( struct tsc_device *ifc,
                      uint offset,
 		     unsigned char *p,
 		     uint size)
@@ -263,7 +263,7 @@ sflash_page_program( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_read_ID
  * Prototype     : void
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to 
  * Return        : none
  *----------------------------------------------------------------------------
@@ -273,7 +273,7 @@ sflash_page_program( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_read_ID( struct ifc1211_device *ifc,
+tsc_sflash_read_ID( struct tsc_device *ifc,
                     char *data_p)
 {
   sflash_start_cmd( ifc);
@@ -289,15 +289,15 @@ EXPORT_SYMBOL( tsc_sflash_read_ID);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_read_status
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  * Return        : 2 bytes status
  *----------------------------------------------------------------------------
- * Description   : read IFC1211 SFLASH status (2 bytes)
+ * Description   : read TSC SFLASH status (2 bytes)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned short
-tsc_sflash_read_sr( struct ifc1211_device *ifc)
+tsc_sflash_read_sr( struct tsc_device *ifc)
 {
   unsigned short sr;
 
@@ -316,15 +316,15 @@ EXPORT_SYMBOL( tsc_sflash_read_sr);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_write_status
  * Prototype     : void
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : write IFC1211 SFLASH status (2 bytes)
+ * Description   : write TSC SFLASH status (2 bytes)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
-tsc_sflash_write_sr( struct ifc1211_device *ifc,
+tsc_sflash_write_sr( struct tsc_device *ifc,
 		     unsigned short sr)
 {
   int tmo;
@@ -343,7 +343,7 @@ EXPORT_SYMBOL( tsc_sflash_write_sr);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_conf
  * Prototype     : void
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to 
  * Return        : none
  *----------------------------------------------------------------------------
@@ -353,7 +353,7 @@ EXPORT_SYMBOL( tsc_sflash_write_sr);
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_conf( struct ifc1211_device *ifc)
+tsc_sflash_conf( struct tsc_device *ifc)
                  
 {
   struct sflash_para *fp;
@@ -373,16 +373,16 @@ EXPORT_SYMBOL( tsc_sflash_conf);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_read
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to SFLASH slave configuraton parameters
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read IFC1211 SFLASH
+ * Description   : read TSC SFLASH
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_read( struct ifc1211_device *ifc,
+tsc_sflash_read( struct tsc_device *ifc,
                  uint offset,
 	         char *kbuf,
 	         uint size)
@@ -416,30 +416,30 @@ EXPORT_SYMBOL( tsc_sflash_read);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_write
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to SFLASH slave configuraton parameters
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : write IFC1211 SFLASH
+ * Description   : write TSC SFLASH
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_wrprot( struct ifc1211_device *ifc)
+tsc_sflash_wrprot( struct tsc_device *ifc)
 {
   uint data;
 
   if( ifc->sflash_ctl)
   {
-    data = ioread32( ifc->csr_ptr + IFC1211_CSR_ILOC_SPI);
-    return( IFC1211_ILOC_SPI_WRPROT( data));
+    data = ioread32( ifc->csr_ptr + TSC_CSR_ILOC_SPI);
+    return( TSC_ILOC_SPI_WRPROT( data));
   }
   return( -ENODEV);
 }
 EXPORT_SYMBOL( tsc_sflash_wrprot);
 
 int
-sflash_sector_write( struct ifc1211_device *ifc,
+sflash_sector_write( struct tsc_device *ifc,
                      uint offset,
 	             unsigned char *buf)
 {
@@ -488,7 +488,7 @@ sflash_sector_write_exit:
 }
 
 int
-tsc_sflash_write( struct ifc1211_device *ifc,
+tsc_sflash_write( struct tsc_device *ifc,
                   uint offset,
 	          char *k_buf,
 	          uint size)

@@ -34,29 +34,29 @@
 #define _H_TSCKLIB
 
 unsigned int tsc_msb32( unsigned int x);
-int tsc_dev_init( struct ifc1211_device *ifc);
-void tsc_dev_exit( struct ifc1211_device *ifc);
-int tsc_irq_init( struct ifc1211_device *ifc);
-void tsc_irq_exit( struct ifc1211_device *ifc);
-int tsc_map_mas_init( struct ifc1211_device *ifc);
-void tsc_map_mas_exit( struct ifc1211_device *ifc);
-int tsc_map_slv_init( struct ifc1211_device *ifc);
-void tsc_map_slv_exit( struct ifc1211_device *ifc);
-int tsc_map_read( struct ifc1211_device *ifc, struct tsc_ioctl_map_ctl *m);
-int tsc_map_clear( struct ifc1211_device *ifct, struct tsc_ioctl_map_ctl *m);
-int tsc_csr_op( struct ifc1211_device *ifc, struct tsc_ioctl_csr_op *csr_op);
-int tsc_shm_init( struct ifc1211_device *ifc, int idx);
-void tsc_shm_exit( struct ifc1211_device *ifc, int idx);
-int tsc_kbuf_alloc( struct ifc1211_device *ifc, struct tsc_ioctl_kbuf_req *r);
-int tsc_kbuf_free( struct ifc1211_device *ifc, struct tsc_ioctl_kbuf_req *r);
-int tsc_sflash_init( struct ifc1211_device *ifc);
-int tsc_dma_init( struct ifc1211_device *ifc);
-void tsc_dma_exit( struct ifc1211_device *ifc);
-int tsc_timer_init( struct ifc1211_device *ifc);
-int tsc_i2c_init( struct ifc1211_device *ifc);
-void tsc_i2c_exit( struct ifc1211_device *ifc);
-int tsc_semaphore_release(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore *semaphore);
-int tsc_semaphore_get(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore *semaphore);
+int tsc_dev_init( struct tsc_device *ifc);
+void tsc_dev_exit( struct tsc_device *ifc);
+int tsc_irq_init( struct tsc_device *ifc);
+void tsc_irq_exit( struct tsc_device *ifc);
+int tsc_map_mas_init( struct tsc_device *ifc);
+void tsc_map_mas_exit( struct tsc_device *ifc);
+int tsc_map_slv_init( struct tsc_device *ifc);
+void tsc_map_slv_exit( struct tsc_device *ifc);
+int tsc_map_read( struct tsc_device *ifc, struct tsc_ioctl_map_ctl *m);
+int tsc_map_clear( struct tsc_device *ifct, struct tsc_ioctl_map_ctl *m);
+int tsc_csr_op( struct tsc_device *ifc, struct tsc_ioctl_csr_op *csr_op);
+int tsc_shm_init( struct tsc_device *ifc, int idx);
+void tsc_shm_exit( struct tsc_device *ifc, int idx);
+int tsc_kbuf_alloc( struct tsc_device *ifc, struct tsc_ioctl_kbuf_req *r);
+int tsc_kbuf_free( struct tsc_device *ifc, struct tsc_ioctl_kbuf_req *r);
+int tsc_sflash_init( struct tsc_device *ifc);
+int tsc_dma_init( struct tsc_device *ifc);
+void tsc_dma_exit( struct tsc_device *ifc);
+int tsc_timer_init( struct tsc_device *ifc);
+int tsc_i2c_init( struct tsc_device *ifc);
+void tsc_i2c_exit( struct tsc_device *ifc);
+int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore);
+int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore);
 
 #include "irqlib.h"
 #include "maplib.h"

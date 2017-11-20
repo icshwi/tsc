@@ -59,10 +59,10 @@ struct rdwr_ctl
   int offset;                               /* address offset allocated by mapper  */
 };
 
-int tsc_rdwr_init( struct ifc1211_device *ifc);
-void tsc_rdwr_exit( struct ifc1211_device *ifc);
-int tsc_rem_read( struct ifc1211_device *ifc, struct tsc_ioctl_rdwr *rw);
-int tsc_rem_write( struct ifc1211_device *ifc, struct tsc_ioctl_rdwr *rw);
+int tsc_rdwr_init( struct tsc_device *ifc);
+void tsc_rdwr_exit( struct tsc_device *ifc);
+int tsc_rem_read( struct tsc_device *ifc, struct tsc_ioctl_rdwr *rw);
+int tsc_rem_write( struct tsc_device *ifc, struct tsc_ioctl_rdwr *rw);
 
 #endif /*  _H_RDWRLIB */
 

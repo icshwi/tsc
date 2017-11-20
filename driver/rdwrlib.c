@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to drive the address mappers
- *    implemented on the IFC1211.
+ *    implemented on the TSC.
  *
  *----------------------------------------------------------------------------
  *
@@ -58,7 +58,7 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rdwr_init
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare translation windows to access RDWR
@@ -66,7 +66,7 @@
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_rdwr_init( struct ifc1211_device *ifc)
+tsc_rdwr_init( struct tsc_device *ifc)
 {
   int retval;
   struct tsc_ioctl_map_win mas_win;
@@ -88,14 +88,14 @@ tsc_rdwr_init( struct ifc1211_device *ifc)
   /* prepare dynamic window to access the RDWR bus  */
   memset(  &mas_win, 0, sizeof( mas_win));
   mas_win.req.rem_addr = 0;                          /* point to RDWR  base */
-  mas_win.req.size = IFC1211_PCIE_MMU_PG_64K;      /* map just 1 page */
+  mas_win.req.size = TSC_PCIE_MMU_PG_64K;      /* map just 1 page */
   mas_win.req.mode.space = MAP_SPACE_SHM;
   mas_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM ;
   ifc->rdwr_ctl->offset = tsc_map_mas_alloc( ifc, &mas_win);
   debugk(("rdwr loc_addr = %lx offset: %x\n",  mas_win.req.loc_addr, ifc->rdwr_ctl->offset));
   if( ifc->rdwr_ctl->offset >= 0)
   {
-    ifc->rdwr_ctl->rdwr_ptr = ioremap_nocache( mas_win.req.loc_addr,  IFC1211_PCIE_MMU_PG_64K);
+    ifc->rdwr_ctl->rdwr_ptr = ioremap_nocache( mas_win.req.loc_addr,  TSC_PCIE_MMU_PG_64K);
     retval = 0;
   }
 
@@ -106,7 +106,7 @@ tsc_rdwr_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rdwr_exit
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : release resources allocated for RDWR control
@@ -114,7 +114,7 @@ tsc_rdwr_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_rdwr_exit( struct ifc1211_device *ifc)
+tsc_rdwr_exit( struct tsc_device *ifc)
 {
   debugk(("in tsc_rdwr_exit( %p)\n", ifc));
 
@@ -132,7 +132,7 @@ tsc_rdwr_exit( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_blk
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -194,7 +194,7 @@ static void data_read( void *d, void __iomem *s, int len, int ds){
 }
 
 int 
-tsc_read_blk( struct ifc1211_device *ifc,
+tsc_read_blk( struct tsc_device *ifc,
 	      struct tsc_ioctl_rdwr *rw)
 {
 
@@ -209,11 +209,11 @@ tsc_read_blk( struct ifc1211_device *ifc,
   ubuf = rw->buf;
   rem_addr = rw->rem_addr;
   ds = RDWR_MODE_GET_DS(rw->m.ads);
-  kbuf = (char *)kzalloc( IFC1211_PCIE_MMU_PG_64K, GFP_KERNEL);
+  kbuf = (char *)kzalloc( TSC_PCIE_MMU_PG_64K, GFP_KERNEL);
   kbase = ifc->rdwr_ctl->rdwr_ptr;
-  mask = IFC1211_PCIE_MMU_PG_64K-1;
+  mask = TSC_PCIE_MMU_PG_64K-1;
   debugk(("in tsc_read_blk() ; ubuf = %p  kbuf = %p kbase = %p ds = %d\n", ubuf, kbuf, kbase, ds));
-  nblk = ((rem_addr + rw->len)/IFC1211_PCIE_MMU_PG_64K) - (rem_addr/IFC1211_PCIE_MMU_PG_64K);
+  nblk = ((rem_addr + rw->len)/TSC_PCIE_MMU_PG_64K) - (rem_addr/TSC_PCIE_MMU_PG_64K);
   first = 0;
   last = 0;
   if( !nblk)
@@ -222,7 +222,7 @@ tsc_read_blk( struct ifc1211_device *ifc,
   }
   else
   {
-    first = IFC1211_PCIE_MMU_PG_64K - ( rem_addr & mask);
+    first = TSC_PCIE_MMU_PG_64K - ( rem_addr & mask);
     last = (rem_addr + rw->len)&mask;
     nblk -= 1;
   }
@@ -265,15 +265,15 @@ tsc_read_blk( struct ifc1211_device *ifc,
       goto tsc_read_blk_exit;
     }
     kaddr = kbase + (rem_addr - rem_base);
-    data_read( kbuf, kaddr, IFC1211_PCIE_MMU_PG_64K, ds);
-    if( copy_to_user( ubuf, kbuf, IFC1211_PCIE_MMU_PG_64K))
+    data_read( kbuf, kaddr, TSC_PCIE_MMU_PG_64K, ds);
+    if( copy_to_user( ubuf, kbuf, TSC_PCIE_MMU_PG_64K))
     {
       retval = -EFAULT;
       goto tsc_read_blk_exit;
     }
-    rem_addr += IFC1211_PCIE_MMU_PG_64K;
-    ubuf += IFC1211_PCIE_MMU_PG_64K;
-    rw->len += IFC1211_PCIE_MMU_PG_64K;
+    rem_addr += TSC_PCIE_MMU_PG_64K;
+    ubuf += TSC_PCIE_MMU_PG_64K;
+    rw->len += TSC_PCIE_MMU_PG_64K;
   }
   /* transfer last byte from rem_addr+first +nblk*64k to kbuf and ubuf */
   if( last)
@@ -307,7 +307,7 @@ tsc_read_blk_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_sgl
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -316,7 +316,7 @@ tsc_read_blk_exit:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_read_sgl( struct ifc1211_device *ifc,
+tsc_read_sgl( struct tsc_device *ifc,
 	      struct tsc_ioctl_rdwr *rw,
 	      int loop)
 {
@@ -420,7 +420,7 @@ tsc_read_sgl_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rem_read
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -428,7 +428,7 @@ tsc_read_sgl_exit:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_rem_read( struct ifc1211_device *ifc,
+tsc_rem_read( struct tsc_device *ifc,
 	      struct tsc_ioctl_rdwr *rw)
 {
   if( rw->len & RDWR_LOOP)
@@ -450,7 +450,7 @@ tsc_rem_read( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_blk
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -489,7 +489,7 @@ data_write( void *d, void *s, int len, int ds, int *wpr)
 	  do
 	  {
 	    tmp =  ioread32( wpr);
-	  } while( (tmp & IFC1211_ILOC_SPI_WPOST_BUSY) && tmo--);
+	  } while( (tmp & TSC_ILOC_SPI_WPOST_BUSY) && tmo--);
 	}
 	switch( ds)
 	{
@@ -525,7 +525,7 @@ data_write( void *d, void *s, int len, int ds, int *wpr)
 }
 
 int 
-tsc_write_blk( struct ifc1211_device *ifc,
+tsc_write_blk( struct tsc_device *ifc,
 	       struct tsc_ioctl_rdwr *rw)
 {
   int retval;
@@ -541,11 +541,11 @@ tsc_write_blk( struct ifc1211_device *ifc,
   ubuf = rw->buf;
   rem_addr = rw->rem_addr;
   ds = RDWR_MODE_GET_DS(rw->m.ads);
-  kbuf = (char *)kzalloc( IFC1211_PCIE_MMU_PG_64K, GFP_KERNEL);
+  kbuf = (char *)kzalloc( TSC_PCIE_MMU_PG_64K, GFP_KERNEL);
   kbase = ifc->rdwr_ctl->rdwr_ptr;
-  mask = IFC1211_PCIE_MMU_PG_64K-1;
+  mask = TSC_PCIE_MMU_PG_64K-1;
   debugk(("in tsc_write() ; ubuf = %p  kbuf = %p kbase = %p ds = %d\n", ubuf, kbuf, kbase, ds));
-  nblk = ((rem_addr + rw->len)/IFC1211_PCIE_MMU_PG_64K) - (rem_addr/IFC1211_PCIE_MMU_PG_64K);
+  nblk = ((rem_addr + rw->len)/TSC_PCIE_MMU_PG_64K) - (rem_addr/TSC_PCIE_MMU_PG_64K);
   first = 0;
   last = 0;
   if( !nblk)
@@ -554,7 +554,7 @@ tsc_write_blk( struct ifc1211_device *ifc,
   }
   else
   {
-    first = IFC1211_PCIE_MMU_PG_64K - ( rem_addr & mask);
+    first = TSC_PCIE_MMU_PG_64K - ( rem_addr & mask);
     last = (rem_addr + rw->len)&mask;
     nblk -= 1;
   }
@@ -597,15 +597,15 @@ tsc_write_blk( struct ifc1211_device *ifc,
       goto tsc_write_exit;
     }
     kaddr = kbase + (rem_addr - rem_base);
-    if( copy_from_user( kbuf, ubuf, IFC1211_PCIE_MMU_PG_64K))
+    if( copy_from_user( kbuf, ubuf, TSC_PCIE_MMU_PG_64K))
     {
       retval = -EFAULT;
       goto tsc_write_exit;
     }
-    data_write( kaddr, kbuf, IFC1211_PCIE_MMU_PG_64K, ds, wpost_ready);
-    rem_addr += IFC1211_PCIE_MMU_PG_64K;
-    ubuf += IFC1211_PCIE_MMU_PG_64K;
-    rw->len += IFC1211_PCIE_MMU_PG_64K;
+    data_write( kaddr, kbuf, TSC_PCIE_MMU_PG_64K, ds, wpost_ready);
+    rem_addr += TSC_PCIE_MMU_PG_64K;
+    ubuf += TSC_PCIE_MMU_PG_64K;
+    rw->len += TSC_PCIE_MMU_PG_64K;
   }
   /* transfer last byte from rem_addr+first +nblk*64k to kbuf and ubuf */
   if( last)
@@ -638,7 +638,7 @@ tsc_write_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_sgl
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -647,7 +647,7 @@ tsc_write_exit:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_write_sgl( struct ifc1211_device *ifc,
+tsc_write_sgl( struct tsc_device *ifc,
 	       struct tsc_ioctl_rdwr *rw,
 	       int loop)
 {
@@ -752,7 +752,7 @@ tsc_write_sgl_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rem_write
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -760,7 +760,7 @@ tsc_write_sgl_exit:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_rem_write( struct ifc1211_device *ifc,
+tsc_rem_write( struct tsc_device *ifc,
 	       struct tsc_ioctl_rdwr *rw)
 {
   if( rw->len & RDWR_LOOP)

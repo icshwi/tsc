@@ -10,7 +10,7 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations neede by the ifc1211 device driver
+ *    This file contain the declarations neede by the tsc device driver
  *
  *----------------------------------------------------------------------------
  *
@@ -56,9 +56,9 @@
 
 #include "../include/tscioctl.h"
 
-#define IFC1211_SHM_NUM  2                       /* number of SHM agents */
-#define IFC1211_SHM1_IDX 0                       /* index of SHM1 agent  */
-#define IFC1211_SHM2_IDX 1                       /* index of SHM2 agent  */
+#define TSC_SHM_NUM  2                       /* number of SHM agents */
+#define TSC_SHM1_IDX 0                       /* index of SHM1 agent  */
+#define TSC_SHM2_IDX 1                       /* index of SHM2 agent  */
 
 struct shm_ctl
 {
@@ -67,48 +67,48 @@ struct shm_ctl
   int sram_offset;                           /* address offset allocated by mapper  */
 };
 
-struct ifc1211_device
+struct tsc_device
 {
   struct pci_dev *pdev;
-  struct device *dev_ctl;                    /* ifc1211 control device               */
+  struct device *dev_ctl;                    /* tsc control device               */
   struct mutex mutex_ctl;                    /* Mutex for locking control device     */
   void __iomem *csr_ptr;                     /* Base Address of device registers     */
   void __iomem *pon_ptr;                     /* Base Address of PON registers        */
-  struct ifc1211_irq_handler *irq_tbl;       /* Pointer to interrupt handler table   */
+  struct tsc_irq_handler *irq_tbl;       /* Pointer to interrupt handler table   */
   struct mutex csr_lock;                     /* Mutex for locking control device     */
   struct map_ctl *map_mas_pci_pmem;          /* master map PCI_PMEM BAR0/1           */
   struct map_ctl *map_mas_pci_mem;           /* master map PCI_PMEM BAR2             */
-  struct shm_ctl *shm_ctl[IFC1211_SHM_NUM];  /* control structure for SHM            */
+  struct shm_ctl *shm_ctl[TSC_SHM_NUM];  /* control structure for SHM            */
   struct rdwr_ctl *rdwr_ctl;                 /* control structure for RDWR access    */
   struct sflash_ctl *sflash_ctl;             /* control structure for SPI FLASH      */
   struct dma_ctl *dma_ctl[DMA_CHAN_NUM];     /* control structure for DMA controller */
   struct i2c_ctl *i2c_ctl;                   /* control structure for I2C access     */
 };
 
-struct ifc1211_irq_handler
+struct tsc_irq_handler
 {
-  void (* func)( struct ifc1211_device *, int, void *); /* pointer to interrupt handler                  */
+  void (* func)( struct tsc_device *, int, void *); /* pointer to interrupt handler                  */
   void *arg;                                            /* pointer to be passed when handler is executed */
   int cnt;                                              /* interrupt counter                             */
   int busy;                                             /* busy flag                                     */
 };
 
-struct ifc1211
+struct tsc
 {
   struct cdev cdev;
   dev_t dev_id;
-  struct ifc1211_device *ifc_io;
-  struct ifc1211_device *ifc_central;
+  struct tsc_device *ifc_io;
+  struct tsc_device *ifc_central;
 };
 
-#define IFC1211_COUNT                   64       /* Maximum number of IFC1211 devices    */
-#define IFC1211_NAME           "ifc1211"         /* Name of the ifc1211 device           */
-#define IFC1211_NAME_IO        "ifc1211_io"      /* Name of the ifc1211 io device        */
-#define IFC1211_NAME_CENTRAL   "ifc1211_central" /* Name of the ifc1211 central device   */
-#define IFC1211_MINOR_START              0       /* First minor number                   */
-#define IFC1211_IRQ_NUM                 64       /* Number of interrupt source (4*16)    */
+#define TSC_COUNT                   64       /* Maximum number of TSC devices    */
+#define TSC_NAME           "tsc"         /* Name of the tsc device           */
+#define TSC_NAME_IO        "tsc_io"      /* Name of the tsc io device        */
+#define TSC_NAME_CENTRAL   "tsc_central" /* Name of the tsc central device   */
+#define TSC_MINOR_START              0       /* First minor number                   */
+#define TSC_IRQ_NUM                 64       /* Number of interrupt source (4*16)    */
 
-#include "../include/ifc1211.h"
+#include "../include/tsc.h"
 #include "ioctllib.h"
 #include "tscklib.h"
 

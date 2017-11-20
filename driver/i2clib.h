@@ -37,12 +37,12 @@ struct i2c_ctl
   struct semaphore sem;         /* semaphore to synchronize with I2C interrput  */
 };
 
-void tsc_i2c_irq( struct ifc1211_device *ifc, int src, void *arg);
-int tsc_i2c_reset( struct ifc1211_device *ifc);
-int tsc_i2c_wait( struct ifc1211_device *ifc, int irq);
-int tsc_i2c_cmd( struct ifc1211_device *ifc, struct tsc_ioctl_i2c *i);
-int tsc_i2c_read( struct ifc1211_device *ifc, struct tsc_ioctl_i2c *i);
-int tsc_i2c_write( struct ifc1211_device *ifc, struct tsc_ioctl_i2c *i);
+void tsc_i2c_irq( struct tsc_device *ifc, int src, void *arg);
+int tsc_i2c_reset( struct tsc_device *ifc);
+int tsc_i2c_wait( struct tsc_device *ifc, int irq);
+int tsc_i2c_cmd( struct tsc_device *ifc, struct tsc_ioctl_i2c *i);
+int tsc_i2c_read( struct tsc_device *ifc, struct tsc_ioctl_i2c *i);
+int tsc_i2c_write( struct tsc_device *ifc, struct tsc_ioctl_i2c *i);
 
 #endif /*  _H_I2CLIB */
 

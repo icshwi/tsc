@@ -83,15 +83,15 @@ tsc_msb32( unsigned int x)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dev_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize ifc1211 device internal resources
+ * Description   : initialize tsc device internal resources
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_dev_init( struct ifc1211_device *ifc)
+tsc_dev_init( struct tsc_device *ifc)
 {
   int retval = 0;
 
@@ -105,8 +105,8 @@ tsc_dev_init( struct ifc1211_device *ifc)
   retval = tsc_map_mas_init( ifc);
 
   /* initialize data structures controlling access to SHM */
-  retval = tsc_shm_init( ifc, IFC1211_SHM1_IDX); /* SHM 1 */
-  retval = tsc_shm_init( ifc, IFC1211_SHM2_IDX); /* SHM 2 */
+  retval = tsc_shm_init( ifc, TSC_SHM1_IDX); /* SHM 1 */
+  retval = tsc_shm_init( ifc, TSC_SHM2_IDX); /* SHM 2 */
 
   /* initialize data structures controlling RDWR access */
   retval = tsc_rdwr_init( ifc);
@@ -129,23 +129,23 @@ tsc_dev_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dev_exit
  * Prototype     : void
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : void
  *----------------------------------------------------------------------------
  * Description   : return allocated resources to OS
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void 
-tsc_dev_exit( struct ifc1211_device *ifc)
+tsc_dev_exit( struct tsc_device *ifc)
 {
-  debugk(( KERN_NOTICE "ifc1211 :  entering tsc_dev_exit( %p)\n", ifc));
+  debugk(( KERN_NOTICE "tsc :  entering tsc_dev_exit( %p)\n", ifc));
 
   /* release data structures controlling RDWR */
   tsc_rdwr_exit( ifc);
 
   /* release data structures controlling SHM */
-  tsc_shm_exit( ifc, IFC1211_SHM1_IDX);
-  tsc_shm_exit( ifc, IFC1211_SHM2_IDX);
+  tsc_shm_exit( ifc, TSC_SHM1_IDX);
+  tsc_shm_exit( ifc, TSC_SHM2_IDX);
 
   /* release data structures controlling the PCI master mapping */
   tsc_map_mas_exit( ifc);
@@ -167,43 +167,43 @@ tsc_dev_exit( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize ifc1211 address mapping data structures for PCI
+ * Description   : initialize tsc address mapping data structures for PCI
  *                 master access.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_irq_init( struct ifc1211_device *ifc)
+tsc_irq_init( struct tsc_device *ifc)
 {
   int retval;
   int i;
   int ena;
 
   retval = 0;
-  debugk(( KERN_NOTICE "ifc1211 : Entering tsc_irq_init( %p)\n", ifc));
+  debugk(( KERN_NOTICE "tsc : Entering tsc_irq_init( %p)\n", ifc));
 
   /* install default interrupt handlers */
-  ifc->irq_tbl = (struct ifc1211_irq_handler *)kmalloc( IFC1211_IRQ_NUM * sizeof(struct ifc1211_irq_handler), GFP_KERNEL);
-  for( i = 0; i < IFC1211_IRQ_NUM; i++)
+  ifc->irq_tbl = (struct tsc_irq_handler *)kmalloc( TSC_IRQ_NUM * sizeof(struct tsc_irq_handler), GFP_KERNEL);
+  for( i = 0; i < TSC_IRQ_NUM; i++)
   {
     tsc_irq_unregister( ifc, i);
   }
   /* initialize interrupt controllers */
   /* mask all interrupt sources */
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_IMS);
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_PVME_ITC_IMS);
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMS);
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_USER_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_PVME_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_USER_ITC_IMS);
 
   /* clear all pending interrupts and enable controller */
-  ena = IFC1211_ALL_ITC_CSR_CLEARIP | IFC1211_ALL_ITC_CSR_GLENA;
-  iowrite32( ena, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_CSR);
-  iowrite32( ena | IFC1211_PVME_ITC_CSR_AUTOIACK, ifc->csr_ptr + IFC1211_CSR_PVME_ITC_CSR);
-  iowrite32( ena, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_CSR);
-  iowrite32( ena, ifc->csr_ptr + IFC1211_CSR_USER_ITC_CSR);
+  ena = TSC_ALL_ITC_CSR_CLEARIP | TSC_ALL_ITC_CSR_GLENA;
+  iowrite32( ena, ifc->csr_ptr + TSC_CSR_ILOC_ITC_CSR);
+  iowrite32( ena | TSC_PVME_ITC_CSR_AUTOIACK, ifc->csr_ptr + TSC_CSR_PVME_ITC_CSR);
+  iowrite32( ena, ifc->csr_ptr + TSC_CSR_IDMA_ITC_CSR);
+  iowrite32( ena, ifc->csr_ptr + TSC_CSR_USER_ITC_CSR);
 
   return( retval);
 }
@@ -211,33 +211,33 @@ tsc_irq_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_exit
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize ifc1211 address mapping data structures for PCI
+ * Description   : initialize tsc address mapping data structures for PCI
  *                 master access.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_irq_exit( struct ifc1211_device *ifc)
+tsc_irq_exit( struct tsc_device *ifc)
 {
   int dis;
 
-  debugk(( KERN_NOTICE "ifc1211 : Entering tsc_irq_exit( %p)\n", ifc));
+  debugk(( KERN_NOTICE "tsc : Entering tsc_irq_exit( %p)\n", ifc));
   /* disable interrupt controllers */
   /* mask all interrupt sources */
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_IMS);
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_PVME_ITC_IMS);
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMS);
-  iowrite32( IFC1211_ALL_ITC_MASK_ALL, ifc->csr_ptr + IFC1211_CSR_USER_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_PVME_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
+  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_USER_ITC_IMS);
 
   /* clear all pending interrupts and disable controller */
-  dis = IFC1211_ALL_ITC_CSR_CLEARIP;
-  iowrite32( dis, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + IFC1211_CSR_PVME_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + IFC1211_CSR_USER_ITC_CSR);
+  dis = TSC_ALL_ITC_CSR_CLEARIP;
+  iowrite32( dis, ifc->csr_ptr + TSC_CSR_ILOC_ITC_CSR);
+  iowrite32( dis, ifc->csr_ptr + TSC_CSR_PVME_ITC_CSR);
+  iowrite32( dis, ifc->csr_ptr + TSC_CSR_IDMA_ITC_CSR);
+  iowrite32( dis, ifc->csr_ptr + TSC_CSR_USER_ITC_CSR);
 
   /* release data structures controlling interrupt handling */
   if( ifc->irq_tbl)
@@ -250,16 +250,16 @@ tsc_irq_exit( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize ifc1211 address mapping data structures for PCI
+ * Description   : initialize tsc address mapping data structures for PCI
  *                 master access.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_map_mas_init( struct ifc1211_device *ifc)
+tsc_map_mas_init( struct tsc_device *ifc)
 {
   int retval;
   long base;
@@ -268,42 +268,42 @@ tsc_map_mas_init( struct ifc1211_device *ifc)
   uint pcie_mmuadd;
 
   retval = 0;
-  debugk(( KERN_NOTICE "ifc1211 : Entering tsc_map_mas_init( %p)\n", ifc));
+  debugk(( KERN_NOTICE "tsc : Entering tsc_map_mas_init( %p)\n", ifc));
 
   /* get master interface current configuration */
-  pcie_mmuadd = ioread32( ifc->csr_ptr + IFC1211_CSR_PCIE_MMUADD);
+  pcie_mmuadd = ioread32( ifc->csr_ptr + TSC_CSR_PCIE_MMUADD);
 
   /* initialize data structures controlling the PCI PMEM master mapping */
   size = pci_resource_len( ifc->pdev, 0);
-  debugk(("PMEM size: %08lx - %08x\n", size, IFC1211_PCIE_MMUADD_PMEM_SIZE(pcie_mmuadd)));
+  debugk(("PMEM size: %08lx - %08x\n", size, TSC_PCIE_MMUADD_PMEM_SIZE(pcie_mmuadd)));
   ifc->map_mas_pci_pmem = NULL;
   if( size)
   {
-    pg_num = size/IFC1211_PCIE_MMU_PG_4M;
+    pg_num = size/TSC_PCIE_MMU_PG_4M;
     base = pci_resource_start( ifc->pdev, 0);
     debugk(( KERN_NOTICE "calling map_init( %x, %lx, %x, %x)\n", 
-	     MAP_MAS_PCIE_PMEM, base, pg_num, IFC1211_PCIE_MMU_PG_4M));
-    ifc->map_mas_pci_pmem =  map_init( MAP_MAS_PCIE_PMEM, base, pg_num, IFC1211_PCIE_MMU_PG_4M);
+	     MAP_MAS_PCIE_PMEM, base, pg_num, TSC_PCIE_MMU_PG_4M));
+    ifc->map_mas_pci_pmem =  map_init( MAP_MAS_PCIE_PMEM, base, pg_num, TSC_PCIE_MMU_PG_4M);
     ifc->map_mas_pci_pmem->win_size = size;
     mutex_init( &ifc->map_mas_pci_pmem->map_lock);
   }
 
   /* initialize data structures controlling the PCI MEM master mapping */
   size = pci_resource_len( ifc->pdev, 2);
-  debugk(("MEM size: %08lx - %08x\n", size, IFC1211_PCIE_MMUADD_MEM_SIZE(pcie_mmuadd)));
-/*==> TOSCA   printk("MEM size: %08lx - %08x\n", size, IFC1211_PCIE_MMUADD_MEM_SIZE(pcie_mmuadd)*0x10);*/
+  debugk(("MEM size: %08lx - %08x\n", size, TSC_PCIE_MMUADD_MEM_SIZE(pcie_mmuadd)));
+/*==> TOSCA   printk("MEM size: %08lx - %08x\n", size, TSC_PCIE_MMUADD_MEM_SIZE(pcie_mmuadd)*0x10);*/
   ifc->map_mas_pci_mem = NULL;
   if( size)
   {
-    pg_num = size/IFC1211_PCIE_MMU_PG_64K;
-/*==> TOSCA         pg_num = size/IFC1211_PCIE_MMU_PG_1M; */
+    pg_num = size/TSC_PCIE_MMU_PG_64K;
+/*==> TOSCA         pg_num = size/TSC_PCIE_MMU_PG_1M; */
     base = pci_resource_start( ifc->pdev, 2);
     debugk(( KERN_NOTICE "calling map_init( %x, %lx, %x, %x)\n", 
-             MAP_MAS_PCIE_MEM, base, pg_num, IFC1211_PCIE_MMU_PG_64K));
-    ifc->map_mas_pci_mem =  map_init( MAP_MAS_PCIE_MEM, base, pg_num, IFC1211_PCIE_MMU_PG_64K);
+             MAP_MAS_PCIE_MEM, base, pg_num, TSC_PCIE_MMU_PG_64K));
+    ifc->map_mas_pci_mem =  map_init( MAP_MAS_PCIE_MEM, base, pg_num, TSC_PCIE_MMU_PG_64K);
 /*==> TOSCA     debugk(( KERN_NOTICE "calling tsc_map_init( %x, %lx, %x, %x)\n", */
-/*==> TOSCA 	     MAP_MAS_PCIE_MEM, base, pg_num, IFC1211_PCIE_MMU_PG_1M));      */
-/*==> TOSCA     ifc->map_mas_pci_mem =  map_init( MAP_MAS_PCIE_MEM, base, pg_num, IFC1211_PCIE_MMU_PG_1M); */
+/*==> TOSCA 	     MAP_MAS_PCIE_MEM, base, pg_num, TSC_PCIE_MMU_PG_1M));      */
+/*==> TOSCA     ifc->map_mas_pci_mem =  map_init( MAP_MAS_PCIE_MEM, base, pg_num, TSC_PCIE_MMU_PG_1M); */
     ifc->map_mas_pci_mem->win_size = size;
     mutex_init( &ifc->map_mas_pci_mem->map_lock);
   }
@@ -314,18 +314,18 @@ tsc_map_mas_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_exit
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize IFC1211 address mapping data structures for PCI
+ * Description   : initialize TSC address mapping data structures for PCI
  *                 master access.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
-tsc_map_mas_exit( struct ifc1211_device *ifc)
+tsc_map_mas_exit( struct tsc_device *ifc)
 {
-  debugk(( KERN_NOTICE "ifc1211 : Entering tsc_map_mas_exit( %p)\n", ifc));
+  debugk(( KERN_NOTICE "tsc : Entering tsc_map_mas_exit( %p)\n", ifc));
   if( ifc->map_mas_pci_mem)
   {
     /* clear HW sg */
@@ -348,7 +348,7 @@ tsc_map_mas_exit( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_read
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
  * Return        : none
  *                 < 0  in case of error
@@ -358,7 +358,7 @@ tsc_map_mas_exit( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static struct map_ctl *
-tsc_map_id( struct ifc1211_device *ifc,
+tsc_map_id( struct tsc_device *ifc,
 	    struct tsc_ioctl_map_ctl *m)
 {
   struct map_ctl *map_ctl_p;
@@ -379,7 +379,7 @@ tsc_map_id( struct ifc1211_device *ifc,
 }
 
 int 
-tsc_map_read( struct ifc1211_device *ifc,
+tsc_map_read( struct tsc_device *ifc,
 	      struct tsc_ioctl_map_ctl *m)
 {
   struct map_ctl *map_ctl_p;
@@ -414,7 +414,7 @@ tsc_map_read( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_clear
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
  * Return        : none
  *                 < 0  in case of error
@@ -424,7 +424,7 @@ tsc_map_read( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_map_clear( struct ifc1211_device *ifc,
+tsc_map_clear( struct tsc_device *ifc,
 	      struct tsc_ioctl_map_ctl *m)
 {
   struct map_ctl *map_ctl_p;
@@ -467,7 +467,7 @@ tsc_map_clear( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : initialize timer
@@ -475,14 +475,14 @@ tsc_map_clear( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_timer_init( struct ifc1211_device *ifc)
+tsc_timer_init( struct tsc_device *ifc)
 {
   struct tsc_ioctl_timer tmr;
 
   debugk(("in tsc_timer_init( %p)\n", ifc));
 
   timer_init( ifc);
-  tmr.mode = IFC1211_PVME_GLTIM_BASE_1000 | IFC1211_PVME_GLTIM_SYNC_ENA | IFC1211_PVME_GLTIM_100MHZ;
+  tmr.mode = TSC_PVME_GLTIM_BASE_1000 | TSC_PVME_GLTIM_SYNC_ENA | TSC_PVME_GLTIM_100MHZ;
   tmr.time.msec = 0;
   tmr.time.usec = 0;
   tsc_timer_start( ifc, &tmr);
@@ -494,7 +494,7 @@ tsc_timer_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare access to SFLASH
@@ -502,7 +502,7 @@ tsc_timer_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_sflash_init( struct ifc1211_device *ifc)
+tsc_sflash_init( struct tsc_device *ifc)
 {
   char sflash_id[4];
   struct sflash_para *p;
@@ -538,7 +538,7 @@ tsc_sflash_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_shm_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 SHM index
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -547,7 +547,7 @@ tsc_sflash_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_shm_init( struct ifc1211_device *ifc,
+tsc_shm_init( struct tsc_device *ifc,
 	      int idx)
 {
   int retval;
@@ -565,15 +565,15 @@ tsc_shm_init( struct ifc1211_device *ifc,
   retval = 0;
   switch( idx)
   {
-    case IFC1211_SHM1_IDX:
+    case TSC_SHM1_IDX:
     {
-      csr_offset = IFC1211_CSR_SMEM_SRAM_CSR;
+      csr_offset = TSC_CSR_SMEM_SRAM_CSR;
       space = MAP_SPACE_SHM;
       break;
     }
-    case IFC1211_SHM2_IDX:
+    case TSC_SHM2_IDX:
     {
-      csr_offset = IFC1211_CSR_SMEM2_SRAM_CSR;
+      csr_offset = TSC_CSR_SMEM2_SRAM_CSR;
       space = MAP_SPACE_SHM2;
       break;
     }
@@ -588,10 +588,10 @@ tsc_shm_init( struct ifc1211_device *ifc,
     return(-ENOMEM);
   }
 
-  /* prepare translation window to access ifc1211 SRAM  */
+  /* prepare translation window to access tsc SRAM  */
   /* get SRAM size from SMEM_RAM_CRS register */
   ifc->shm_ctl[idx]->sram_size = ioread32( ifc->csr_ptr + csr_offset);
-  ifc->shm_ctl[idx]->sram_size = IFC1211_SMEM_RAM_SIZE( ifc->shm_ctl[idx]->sram_size);
+  ifc->shm_ctl[idx]->sram_size = TSC_SMEM_RAM_SIZE( ifc->shm_ctl[idx]->sram_size);
   debugk(("sram_size = %x\n", ifc->shm_ctl[idx]->sram_size));
   if( ifc->shm_ctl[idx]->sram_size)
   { 
@@ -614,7 +614,7 @@ tsc_shm_init( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_shm_exit
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : release resources allocated for SHM control
@@ -622,18 +622,18 @@ tsc_shm_init( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_shm_exit( struct ifc1211_device *ifc,
+tsc_shm_exit( struct tsc_device *ifc,
 	      int idx)
 {
   debugk(("in tsc_shm_exit( %p, %d)\n", ifc, idx));
 
   switch( idx)
   {
-    case IFC1211_SHM1_IDX:
+    case TSC_SHM1_IDX:
     {
       break;
     }
-    case IFC1211_SHM2_IDX:
+    case TSC_SHM2_IDX:
     {
       break;
     }
@@ -656,7 +656,7 @@ tsc_shm_exit( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare access to DMA
@@ -664,7 +664,7 @@ tsc_shm_exit( struct ifc1211_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_dma_init( struct ifc1211_device *ifc)
+tsc_dma_init( struct tsc_device *ifc)
 {
   int chan;
 
@@ -689,7 +689,7 @@ tsc_dma_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_exit
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare access to DMA
@@ -697,7 +697,7 @@ tsc_dma_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_dma_exit( struct ifc1211_device *ifc)
+tsc_dma_exit( struct tsc_device *ifc)
 {
   int chan;
 
@@ -715,7 +715,7 @@ tsc_dma_exit( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare access to I2C
@@ -723,7 +723,7 @@ tsc_dma_exit( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_i2c_init( struct ifc1211_device *ifc)
+tsc_i2c_init( struct tsc_device *ifc)
 {
   ifc->i2c_ctl = kzalloc( sizeof( struct i2c_ctl), GFP_KERNEL);
   if( !ifc->i2c_ctl)
@@ -742,7 +742,7 @@ tsc_i2c_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_exit
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare access to I2C
@@ -750,7 +750,7 @@ tsc_i2c_init( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_i2c_exit( struct ifc1211_device *ifc)
+tsc_i2c_exit( struct tsc_device *ifc)
 {
   if( ifc->i2c_ctl)
   {
@@ -765,11 +765,11 @@ tsc_i2c_exit( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_csr_op
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to CSR operation control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform one of the following operations on ifc1211 registers
+ * Description   : perform one of the following operations on tsc registers
  *                 - read / read with mask
  *                 - write / write with mask
  *                 - or/ or with mask
@@ -779,7 +779,7 @@ tsc_i2c_exit( struct ifc1211_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_csr_op( struct ifc1211_device *ifc,
+tsc_csr_op( struct tsc_device *ifc,
 	    struct tsc_ioctl_csr_op *csr_op)
 {
   int retval;
@@ -795,7 +795,7 @@ tsc_csr_op( struct ifc1211_device *ifc,
       return( -EINVAL);
     }
     /* register offset must be below 0x1000 */
-    if( csr_op->offset > IFC1211_CSR_OFFSET_MAX)
+    if( csr_op->offset > TSC_CSR_OFFSET_MAX)
     {
       return( -EINVAL);
     }
@@ -879,14 +879,14 @@ tsc_csr_op( struct ifc1211_device *ifc,
     }
     case TSC_IOCTL_CSR_SMON_RD:
     { 
-      iowrite32(  csr_op->offset, ifc->csr_ptr + IFC1211_CSR_A7_SMON_ADDPT);
-      csr_op->data = ioread32( ifc->csr_ptr + IFC1211_CSR_A7_SMON_DAT);
+      iowrite32(  csr_op->offset, ifc->csr_ptr + TSC_CSR_A7_SMON_ADDPT);
+      csr_op->data = ioread32( ifc->csr_ptr + TSC_CSR_A7_SMON_DAT);
       break;
     }
     case TSC_IOCTL_CSR_SMON_WR:
     { 
-      iowrite32(  csr_op->offset, ifc->csr_ptr + IFC1211_CSR_A7_SMON_ADDPT);
-      iowrite32(  csr_op->data, ifc->csr_ptr + IFC1211_CSR_A7_SMON_DAT);
+      iowrite32(  csr_op->offset, ifc->csr_ptr + TSC_CSR_A7_SMON_ADDPT);
+      iowrite32(  csr_op->data, ifc->csr_ptr + TSC_CSR_A7_SMON_DAT);
       break;
     }
     case TSC_IOCTL_CSR_PON_RD:
@@ -901,31 +901,31 @@ tsc_csr_op( struct ifc1211_device *ifc,
     }
     case TSC_IOCTL_CSR_PCIEP_RD:
     { 
-      iowrite32( csr_op->offset, ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_ADDPT);
-      if( csr_op->offset & IFC1211_A7_PCIEP_ADDPT_DRP)
+      iowrite32( csr_op->offset, ifc->csr_ptr + TSC_CSR_A7_PCIEP_ADDPT);
+      if( csr_op->offset & TSC_A7_PCIEP_ADDPT_DRP)
       {
 	/* read PCIe EP DRP register */
-        csr_op->data = ioread32( ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_DRPDAT);
+        csr_op->data = ioread32( ifc->csr_ptr + TSC_CSR_A7_PCIEP_DRPDAT);
       }
       else 
       {
 	/* read PCIe EP CFG register */
-        csr_op->data = ioread32( ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_CFGDAT);
+        csr_op->data = ioread32( ifc->csr_ptr + TSC_CSR_A7_PCIEP_CFGDAT);
       }
       break;
     }
     case TSC_IOCTL_CSR_PCIEP_WR:
     { 
-      iowrite32(  csr_op->offset, ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_ADDPT);
-      if( csr_op->offset & IFC1211_A7_PCIEP_ADDPT_CFG)
+      iowrite32(  csr_op->offset, ifc->csr_ptr + TSC_CSR_A7_PCIEP_ADDPT);
+      if( csr_op->offset & TSC_A7_PCIEP_ADDPT_CFG)
       {
 	/* write PCIe EP CFG register */
-        iowrite32(  csr_op->data, ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_CFGDAT);
+        iowrite32(  csr_op->data, ifc->csr_ptr + TSC_CSR_A7_PCIEP_CFGDAT);
       }
       else 
       {
 	/* write PCIe EP DRP register */
-        iowrite32(  csr_op->data, ifc->csr_ptr + IFC1211_CSR_A7_PCIEP_DRPDAT);
+        iowrite32(  csr_op->data, ifc->csr_ptr + TSC_CSR_A7_PCIEP_DRPDAT);
       }
       break;
     }
@@ -941,7 +941,7 @@ tsc_csr_op( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_kbuf_alloc
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to kernel buffer control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -949,7 +949,7 @@ tsc_csr_op( struct ifc1211_device *ifc,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_kbuf_alloc( struct ifc1211_device *ifc,
+tsc_kbuf_alloc( struct tsc_device *ifc,
 		struct tsc_ioctl_kbuf_req *r)
 {
 //<<<<<<< HEAD
@@ -975,7 +975,7 @@ EXPORT_SYMBOL( tsc_kbuf_alloc);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_kbuf_free
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to kernel buffer control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -983,7 +983,7 @@ EXPORT_SYMBOL( tsc_kbuf_alloc);
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_kbuf_free( struct ifc1211_device *ifc,
+tsc_kbuf_free( struct tsc_device *ifc,
 	       struct tsc_ioctl_kbuf_req *r)
 {
   debugk(( KERN_ALERT "free kernel buffer : %p - %llx [%x]\n", r->k_base, (long long)r->b_base, r->size));
@@ -996,14 +996,14 @@ EXPORT_SYMBOL(tsc_kbuf_free);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_semaphore_release
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to semaphore structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : release semaphore function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int tsc_semaphore_release(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore *semaphore){
+int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore){
 	semaphore_release(semaphore->idx, ifc->shm_ctl[0]->sram_ptr);
 	return(0);
 }
@@ -1011,14 +1011,14 @@ int tsc_semaphore_release(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_semaphore_get
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to semaphore structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : get semaphore function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int tsc_semaphore_get(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore *semaphore){
+int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore){
 	uint *tag;
 	int retval = 0;
 	int ret    = 0;

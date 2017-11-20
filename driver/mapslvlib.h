@@ -33,12 +33,12 @@
 #ifndef _H_MAPSLVLIB
 #define _H_MAPSLVLIB
 
-short tsc_map_slv_set_mode( struct ifc1211_device *ifc, struct tsc_ioctl_map_mode *m);
-int tsc_map_slv_set_sg( struct ifc1211_device *ifc, struct map_ctl *map_ctl_p, int offset);
-int tsc_map_slv_clear_sg( struct ifc1211_device *ifc, struct map_ctl *map_ctl_p, int offset, int npg);
-int tsc_map_slv_alloc( struct ifc1211_device *ifc, struct tsc_ioctl_map_win *w);
-int tsc_map_slv_modify( struct ifc1211_device *ifc, struct tsc_ioctl_map_win *w);
-int tsc_map_slv_free( struct ifc1211_device *ifc, int sg_id, uint offset);
+short tsc_map_slv_set_mode( struct tsc_device *ifc, struct tsc_ioctl_map_mode *m);
+int tsc_map_slv_set_sg( struct tsc_device *ifc, struct map_ctl *map_ctl_p, int offset);
+int tsc_map_slv_clear_sg( struct tsc_device *ifc, struct map_ctl *map_ctl_p, int offset, int npg);
+int tsc_map_slv_alloc( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
+int tsc_map_slv_modify( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
+int tsc_map_slv_free( struct tsc_device *ifc, int sg_id, uint offset);
 
 #endif /*  _H_MAPSLVLIB */
 

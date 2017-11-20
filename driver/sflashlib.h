@@ -90,13 +90,13 @@ struct sflash_ctl
   struct mutex sflash_lock;            /* mutex to lock SFLASH access                     */
 };
 
-int tsc_sflash_conf( struct ifc1211_device *ifc);
-int tsc_sflash_read_ID( struct ifc1211_device *ifc,  char *id);
-unsigned short tsc_sflash_read_sr( struct ifc1211_device *ifc);
-void tsc_sflash_write_sr( struct ifc1211_device *ifc, unsigned short sr);
-int tsc_sflash_read( struct ifc1211_device *ifc, uint offset, char *buf, uint len);
-int tsc_sflash_write( struct ifc1211_device *ifc, uint offset, char *buf, uint len);
-int tsc_sflash_wrprot( struct ifc1211_device *ifc);
+int tsc_sflash_conf( struct tsc_device *ifc);
+int tsc_sflash_read_ID( struct tsc_device *ifc,  char *id);
+unsigned short tsc_sflash_read_sr( struct tsc_device *ifc);
+void tsc_sflash_write_sr( struct tsc_device *ifc, unsigned short sr);
+int tsc_sflash_read( struct tsc_device *ifc, uint offset, char *buf, uint len);
+int tsc_sflash_write( struct tsc_device *ifc, uint offset, char *buf, uint len);
+int tsc_sflash_wrprot( struct tsc_device *ifc);
 
 #endif /*  _H_SFLASHLIB */
 

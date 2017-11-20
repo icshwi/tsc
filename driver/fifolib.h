@@ -32,13 +32,13 @@
 #ifndef _H_FIFOLIB
 #define _H_FIFOLIB
 
-int tsc_fifo_init(struct ifc1211_device *ifc, int idx, int mode);
-int tsc_fifo_wait_ef(struct ifc1211_device *ifc, struct tsc_ioctl_fifo *fifo);
-int tsc_fifo_wait_ff(struct ifc1211_device *ifc, struct tsc_ioctl_fifo *fifo);
-int tsc_fifo_status(struct ifc1211_device *ifc, int idx, int *sts);
-int tsc_fifo_clear(struct ifc1211_device *ifc, int idx);
-int tsc_fifo_read(struct ifc1211_device *ifc, int idx, int *data, int cnt, int *sts);
-int tsc_fifo_write(struct ifc1211_device *ifc, int idx, int *data, int cnt, int *sts);
+int tsc_fifo_init(struct tsc_device *ifc, int idx, int mode);
+int tsc_fifo_wait_ef(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo);
+int tsc_fifo_wait_ff(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo);
+int tsc_fifo_status(struct tsc_device *ifc, int idx, int *sts);
+int tsc_fifo_clear(struct tsc_device *ifc, int idx);
+int tsc_fifo_read(struct tsc_device *ifc, int idx, int *data, int cnt, int *sts);
+int tsc_fifo_write(struct tsc_device *ifc, int idx, int *data, int cnt, int *sts);
 
 #endif /*  _H_FIFOLIB */
 

@@ -32,12 +32,12 @@
 
 #ifndef _H_TIMERLIB
 #define _H_TIMERLIB
-int tsc_timer_irq( struct ifc1211_device *ifc, int src, void *arg);
-int timer_init( struct ifc1211_device *ifc);
-int tsc_timer_start( struct ifc1211_device *ifc, struct tsc_ioctl_timer *tmr);
-int tsc_timer_restart( struct ifc1211_device *ifc, struct tsc_time *tm);
-int tsc_timer_stop( struct ifc1211_device *ifc);
-int tsc_timer_read( struct ifc1211_device *ifc, struct tsc_time *tm);
+int tsc_timer_irq( struct tsc_device *ifc, int src, void *arg);
+int timer_init( struct tsc_device *ifc);
+int tsc_timer_start( struct tsc_device *ifc, struct tsc_ioctl_timer *tmr);
+int tsc_timer_restart( struct tsc_device *ifc, struct tsc_time *tm);
+int tsc_timer_stop( struct tsc_device *ifc);
+int tsc_timer_read( struct tsc_device *ifc, struct tsc_time *tm);
 
 #endif /*  _H_TIMERLIB */
 

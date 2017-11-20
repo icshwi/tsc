@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to drive the semaphore
- *    implemented on the IFC1211.
+ *    implemented on the TSC.
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
@@ -38,22 +38,22 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_status
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to semaphore structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : get semaphore status
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int semaphore_status(struct ifc1211_device *ifc, struct tsc_ioctl_semaphore  *semaphore){
-	semaphore->sts = ioread32(ifc->csr_ptr + IFC1211_CSR_SEMAPHORE);
+int semaphore_status(struct tsc_device *ifc, struct tsc_ioctl_semaphore  *semaphore){
+	semaphore->sts = ioread32(ifc->csr_ptr + TSC_CSR_SEMAPHORE);
 	return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_release
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to semaphore structure
  * Return        : error/success
  *----------------------------------------------------------------------------
@@ -70,7 +70,7 @@ int semaphore_release(uint idx, void *base_shm_ptr){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_get
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer to semaphore structure
  * Return        : error/success
  *----------------------------------------------------------------------------

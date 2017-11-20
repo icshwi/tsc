@@ -59,17 +59,17 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_csr
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform access on IFC1211 registers
+ * Description   : perform access on TSC registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_csr( struct ifc1211_device *ifc,
+ioctl_csr( struct tsc_device *ifc,
 	   unsigned int cmd,
 	   unsigned long arg)
 {
@@ -98,17 +98,17 @@ ioctl_csr( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_map
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 address mapping operations
+ * Description   : perform TSC address mapping operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_map( struct ifc1211_device *ifc,
+ioctl_map( struct tsc_device *ifc,
 	   unsigned int cmd,
 	   unsigned long arg)
 {
@@ -228,17 +228,17 @@ ioctl_map( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_rdwr
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 read/write operations operations
+ * Description   : perform TSC read/write operations operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_rdwr( struct ifc1211_device *ifc,
+ioctl_rdwr( struct tsc_device *ifc,
 	    unsigned int cmd,
 	    unsigned long arg)
 {
@@ -286,17 +286,17 @@ ioctl_rdwr( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_dma
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 DMA operations
+ * Description   : perform TSC DMA operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_dma( struct ifc1211_device *ifc,
+ioctl_dma( struct tsc_device *ifc,
 	   unsigned int cmd,
 	   unsigned long arg)
 {
@@ -416,17 +416,17 @@ ioctl_dma( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_kbuf
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 DMA operations
+ * Description   : perform TSC DMA operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_kbuf( struct ifc1211_device *ifc,
+ioctl_kbuf( struct tsc_device *ifc,
 	   unsigned int cmd,
 	   unsigned long arg)
 {
@@ -508,17 +508,17 @@ ioctl_kbuf( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_sflash
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 DMA operations
+ * Description   : perform TSC DMA operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_sflash( struct ifc1211_device *ifc,
+ioctl_sflash( struct tsc_device *ifc,
 	   unsigned int cmd,
 	   unsigned long arg)
 {
@@ -616,17 +616,17 @@ ioctl_sflash( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_timer
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 DMA operations
+ * Description   : perform TSC DMA operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_timer( struct ifc1211_device *ifc,
+ioctl_timer( struct tsc_device *ifc,
 	   unsigned int cmd,
 	   unsigned long arg)
 {
@@ -692,16 +692,16 @@ ioctl_timer( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_fifo
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 DMA operations
+ * Description   : perform TSC DMA operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int ioctl_fifo( struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg){
+int ioctl_fifo( struct tsc_device *ifc, unsigned int cmd, unsigned long arg){
 	int retval;
 	struct tsc_ioctl_fifo fifo;
 
@@ -719,7 +719,7 @@ int ioctl_fifo( struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg)
     	case TSC_IOCTL_FIFO_WRITE:
     	{
     		int *data;
-    		data = (int *)kzalloc( sizeof( int) * (IFC1211_FIFO_CTL_WCNT_MAX+1), GFP_KERNEL);
+    		data = (int *)kzalloc( sizeof( int) * (TSC_FIFO_CTL_WCNT_MAX+1), GFP_KERNEL);
     		if(!data){
     			return(-ENOMEM);
     		}
@@ -775,17 +775,17 @@ int ioctl_fifo( struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_i2c
  * Prototype     : unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 I2C operations
+ * Description   : perform TSC I2C operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-ioctl_i2c( struct ifc1211_device *ifc,
+ioctl_i2c( struct tsc_device *ifc,
 	    unsigned int cmd,
 	    unsigned long arg)
 {
@@ -834,16 +834,16 @@ ioctl_i2c( struct ifc1211_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_semaphore
  * Prototype     :  unsigned int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform IFC1211 SEMAPHORE operations
+ * Description   : perform TSC SEMAPHORE operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int ioctl_semaphore(struct ifc1211_device *ifc, unsigned int cmd, unsigned long arg){
+int ioctl_semaphore(struct tsc_device *ifc, unsigned int cmd, unsigned long arg){
 	int retval = 0;
 	struct tsc_ioctl_semaphore  semaphore;
 	retval = 0;

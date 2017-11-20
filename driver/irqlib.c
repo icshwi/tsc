@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to drive the address mappers
- *    implemented on the IFC1211.
+ *    implemented on the TSC.
  *
  *----------------------------------------------------------------------------
  *
@@ -58,7 +58,7 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_register
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 interrupt source identifier
  *                 interrupt handler
  *                 argument to by passed to interrupt handler
@@ -70,9 +70,9 @@
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_irq_register( struct ifc1211_device *ifc,
+tsc_irq_register( struct tsc_device *ifc,
 		  int src,
-		  void (* func)( struct ifc1211_device*, int, void *),
+		  void (* func)( struct tsc_device*, int, void *),
 		  void *arg)
 {
   if( ifc->irq_tbl[src].busy)
@@ -91,28 +91,28 @@ EXPORT_SYMBOL( tsc_irq_register);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_spurious
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 interrupt source identifier
  *                 argument associated ti interrupt handler
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : IFC1211 default interrupt handle, does nothing...
+ * Description   : TSC default interrupt handle, does nothing...
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
-tsc_irq_spurious( struct ifc1211_device *p,
+tsc_irq_spurious( struct tsc_device *p,
 		         int src,
 		         void *arg)
 {
-  debugk(("IFC1211 spurious interrupt : %x - %p\n", src, arg));
+  debugk(("TSC spurious interrupt : %x - %p\n", src, arg));
   return;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_check_busy
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 interrupt source identifier
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
@@ -120,7 +120,7 @@ tsc_irq_spurious( struct ifc1211_device *p,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_irq_check_busy( struct ifc1211_device *ifc,
+tsc_irq_check_busy( struct tsc_device *ifc,
 		    int src)
 {
   return( ifc->irq_tbl[src].busy);
@@ -130,7 +130,7 @@ EXPORT_SYMBOL( tsc_irq_check_busy);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_unregister
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 interrupt source identifier
  * Return        : void
  *----------------------------------------------------------------------------
@@ -139,7 +139,7 @@ EXPORT_SYMBOL( tsc_irq_check_busy);
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 void 
-tsc_irq_unregister( struct ifc1211_device *ifc,
+tsc_irq_unregister( struct tsc_device *ifc,
 		    int src)
 {
   ifc->irq_tbl[src].func = tsc_irq_spurious;
@@ -152,18 +152,18 @@ EXPORT_SYMBOL( tsc_irq_unregister);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_mask
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 operation to be performed (set/clear)
  *                 source identifier
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize IFC1211 address mapping data structures for PCI
+ * Description   : initialize TSC address mapping data structures for PCI
  *                 master access.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_irq_mask( struct ifc1211_device *ifc,
+tsc_irq_mask( struct tsc_device *ifc,
 	      int op,
 	      int src)
 {
@@ -171,7 +171,7 @@ tsc_irq_mask( struct ifc1211_device *ifc,
   int ctl;
   int ip;
 
-  debugk(( KERN_NOTICE "ifc1211 : Entering tsc_irq_mask( %p, %x, %x)\n", ifc, op, src));
+  debugk(( KERN_NOTICE "tsc : Entering tsc_irq_mask( %p, %x, %x)\n", ifc, op, src));
 
   retval = -1;
   ctl = ITC_CTL(src);
@@ -183,12 +183,12 @@ tsc_irq_mask( struct ifc1211_device *ifc,
     {
       if( op == TSC_IOCTL_ITC_MSK_CLEAR)
       {
-	iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_IMC);
+	iowrite32( ip, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMC);
 	retval = 0;
       }
       if( op == TSC_IOCTL_ITC_MSK_SET)
       {
-        iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_ILOC_ITC_IMS);
+        iowrite32( ip, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
 	retval = 0;
       }
       break;
@@ -197,12 +197,12 @@ tsc_irq_mask( struct ifc1211_device *ifc,
     {
       if( op == TSC_IOCTL_ITC_MSK_CLEAR)
       {
-	iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMC);
+	iowrite32( ip, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMC);
 	retval = 0;
       }
       if( op == TSC_IOCTL_ITC_MSK_SET)
       {
-        iowrite32( ip, ifc->csr_ptr + IFC1211_CSR_IDMA_ITC_IMS);
+        iowrite32( ip, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
 	retval = 0;
       }
       break;

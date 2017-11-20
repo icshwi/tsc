@@ -64,7 +64,7 @@ struct dma_ctl
 {
   int chan;                      /* DMA controller channel number                                   */
   int state;                     /* DMA channel state                                               */
-  struct ifc1211_device *ifc;
+  struct tsc_device *ifc;
   void __iomem *desc_ptr;        /* kernel pointer to SHM allocated to DMA descriptor               */
   uint desc_offset;              /* PCI base address of SHM allocated to DMA descriptor             */
   uint ring_offset;              /* PCI base address of SHM allocated to DMA ring buffer            */
@@ -77,15 +77,15 @@ struct dma_ctl
   short rd_mode; short wr_mode;  /* DMA default mode                                                */
 };
 
-void tsc_dma_irq(struct ifc1211_device *ifc, int src, void *dma_ctl_p);
+void tsc_dma_irq(struct tsc_device *ifc, int src, void *dma_ctl_p);
 int  dma_init(struct dma_ctl *dma);
-int  tsc_dma_move(struct ifc1211_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
-int  tsc_dma_wait(struct ifc1211_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
-int  tsc_dma_status(struct ifc1211_device *ifc, struct tsc_ioctl_dma_sts *dma_sts_p);
-int  tsc_dma_mode(struct ifc1211_device *ifc, struct tsc_ioctl_dma_mode *dma_mode_p);
-int  tsc_dma_alloc(struct ifc1211_device *ifc, struct tsc_ioctl_dma *dma_p);
-int  tsc_dma_free(struct ifc1211_device *ifc, struct tsc_ioctl_dma *dma_p);
-int  tsc_dma_clear(struct ifc1211_device *ifc, struct tsc_ioctl_dma *dma_p);
+int  tsc_dma_move(struct tsc_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
+int  tsc_dma_wait(struct tsc_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
+int  tsc_dma_status(struct tsc_device *ifc, struct tsc_ioctl_dma_sts *dma_sts_p);
+int  tsc_dma_mode(struct tsc_device *ifc, struct tsc_ioctl_dma_mode *dma_mode_p);
+int  tsc_dma_alloc(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
+int  tsc_dma_free(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
+int  tsc_dma_clear(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
 
 #endif /*  _H_DMALIB */
 

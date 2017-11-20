@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contains the low level functions to drive the address mappers
- *    implemented on the ifc1211.
+ *    implemented on the tsc.
  *
  *----------------------------------------------------------------------------
  *
@@ -59,7 +59,7 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_irq
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 interrupt source identifier
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
@@ -67,7 +67,7 @@
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_timer_irq( struct ifc1211_device *ifc,
+tsc_timer_irq( struct tsc_device *ifc,
 	       int src,
 	       void *arg)
 {
@@ -78,14 +78,14 @@ EXPORT_SYMBOL( tsc_timer_irq);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : timer_init
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
  * Description   : 
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-timer_init( struct ifc1211_device *ifc)
+timer_init( struct tsc_device *ifc)
 {
   /* register timer IRQ */
   /* start timer        */
@@ -95,7 +95,7 @@ timer_init( struct ifc1211_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_start
  * Prototype     : int
- * Parameters    : pointer to ifc1211 device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to timer control structure
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
@@ -103,18 +103,18 @@ timer_init( struct ifc1211_device *ifc)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_timer_start( struct ifc1211_device *ifc,
+tsc_timer_start( struct tsc_device *ifc,
 		 struct tsc_ioctl_timer *tmr)
 {
   uint tmr_csr;
   /* stop timer */
-  iowrite32( 0, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CSR);
+  iowrite32( 0, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
   /* set time */
-  iowrite32( tmr->time.msec, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CNT1);
-  iowrite32( tmr->time.usec, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CNT2);
+  iowrite32( tmr->time.msec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT1);
+  iowrite32( tmr->time.usec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT2);
   /* restart timer according to new mode */
-  tmr_csr = IFC1211_PVME_GLTIM_ENA | TIMER_SYNC_ENA | tmr->mode;
-  iowrite32( tmr_csr, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CSR);
+  tmr_csr = TSC_PVME_GLTIM_ENA | TIMER_SYNC_ENA | tmr->mode;
+  iowrite32( tmr_csr, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
   return( 0);
 }
 EXPORT_SYMBOL( tsc_timer_start);
@@ -122,7 +122,7 @@ EXPORT_SYMBOL( tsc_timer_start);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_restart
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointer tin time data structure
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
@@ -131,20 +131,20 @@ EXPORT_SYMBOL( tsc_timer_start);
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_timer_restart( struct ifc1211_device *ifc,
+tsc_timer_restart( struct tsc_device *ifc,
 		   struct tsc_time *tm)
 {
   uint tmr_csr;
 
-  tmr_csr =  ioread32( ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CSR);
-  if( ~(tmr_csr & IFC1211_PVME_GLTIM_ENA))
+  tmr_csr =  ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
+  if( ~(tmr_csr & TSC_PVME_GLTIM_ENA))
   {
     if( tm)
     {
-      iowrite32( tm->msec, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CNT1);
-      iowrite32( tm->usec, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CNT2);
+      iowrite32( tm->msec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT1);
+      iowrite32( tm->usec, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT2);
     }
-    iowrite32( (IFC1211_PVME_GLTIM_ENA | tmr_csr), ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CSR);
+    iowrite32( (TSC_PVME_GLTIM_ENA | tmr_csr), ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
     return( 0);
   }
   return( -1);
@@ -154,19 +154,19 @@ EXPORT_SYMBOL( tsc_timer_restart);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_stop
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
  * Description   : 
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_timer_stop( struct ifc1211_device *ifc)
+tsc_timer_stop( struct tsc_device *ifc)
 {
   uint tmr_csr;
-  tmr_csr =  ioread32( ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CSR);
-  tmr_csr &=  ~IFC1211_PVME_GLTIM_ENA;
-  iowrite32( tmr_csr, ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CSR);
+  tmr_csr =  ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
+  tmr_csr &=  ~TSC_PVME_GLTIM_ENA;
+  iowrite32( tmr_csr, ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CSR);
   return( 0);
 }
 EXPORT_SYMBOL( tsc_timer_stop);
@@ -175,7 +175,7 @@ EXPORT_SYMBOL( tsc_timer_stop);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_read
  * Prototype     : int
- * Parameters    : pointer to IFC1211 device control structure
+ * Parameters    : pointer to TSC device control structure
  *                 pointr st structure to hold time information
  * Return        : 1 if source attached to handler
  *----------------------------------------------------------------------------
@@ -183,11 +183,11 @@ EXPORT_SYMBOL( tsc_timer_stop);
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
-tsc_timer_read( struct ifc1211_device *ifc,
+tsc_timer_read( struct tsc_device *ifc,
 		struct tsc_time *tm)
 {
-  tm->msec = ioread32( ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CNT1);
-  tm->usec = ioread32( ifc->csr_ptr + IFC1211_CSR_PVME_GLTIM_CNT2);
+  tm->msec = ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT1);
+  tm->usec = ioread32( ifc->csr_ptr + TSC_CSR_PVME_GLTIM_CNT2);
   return( 0);
 }
 EXPORT_SYMBOL( tsc_timer_read);

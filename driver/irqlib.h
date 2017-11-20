@@ -32,11 +32,11 @@
 #ifndef _H_IRQLIB
 #define _H_IRQLIB
 
-int tsc_irq_register( struct ifc1211_device *ifc, int src, void (* func)( struct ifc1211_device *, int, void *), void *arg);
-void tsc_irq_unregister( struct ifc1211_device *ifc, int src);
-int tsc_irq_check_busy( struct ifc1211_device *ifc, int src);
-void tsc_irq_spurious( struct ifc1211_device *p, int src, void *arg);
-int tsc_irq_mask( struct ifc1211_device *ifc, int op, int src);
+int tsc_irq_register( struct tsc_device *ifc, int src, void (* func)( struct tsc_device *, int, void *), void *arg);
+void tsc_irq_unregister( struct tsc_device *ifc, int src);
+int tsc_irq_check_busy( struct tsc_device *ifc, int src);
+void tsc_irq_spurious( struct tsc_device *p, int src, void *arg);
+int tsc_irq_mask( struct tsc_device *ifc, int op, int src);
 
 #endif /*  _H_IRQLIB */
 

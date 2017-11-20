@@ -33,13 +33,13 @@
 #ifndef _H_MAPMASLIB
 #define _H_MAPMASLIB
 
-short tsc_map_mas_set_mode( struct ifc1211_device *ifc, struct tsc_ioctl_map_mode *m);
-int tsc_map_mas_set_sg( struct ifc1211_device *ifc, struct map_ctl *map_ctl_p, int offset);
-int tsc_map_mas_clear_sg( struct ifc1211_device *ifc, struct map_ctl *map_ctl_p, int offset, int npg);
-int tsc_map_mas_alloc( struct ifc1211_device *ifc, struct tsc_ioctl_map_win *w);
-int tsc_map_mas_modify( struct ifc1211_device *ifc, struct tsc_ioctl_map_win *w, ulong *rem_base);
-int tsc_map_mas_free( struct ifc1211_device *ifc, int sg_id, uint offset);
-int tsc_map_mas_get( struct ifc1211_device *ifc, struct tsc_ioctl_map_win *w);
+short tsc_map_mas_set_mode( struct tsc_device *ifc, struct tsc_ioctl_map_mode *m);
+int tsc_map_mas_set_sg( struct tsc_device *ifc, struct map_ctl *map_ctl_p, int offset);
+int tsc_map_mas_clear_sg( struct tsc_device *ifc, struct map_ctl *map_ctl_p, int offset, int npg);
+int tsc_map_mas_alloc( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
+int tsc_map_mas_modify( struct tsc_device *ifc, struct tsc_ioctl_map_win *w, ulong *rem_base);
+int tsc_map_mas_free( struct tsc_device *ifc, int sg_id, uint offset);
+int tsc_map_mas_get( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
 
 #endif /*  _H_MAPMASLIB */
 
