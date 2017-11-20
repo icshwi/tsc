@@ -32,7 +32,7 @@ main( int argc, char *argv[])
   if( argc < 3)
   {
     printf("Not enough parameters..\n");
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
   ioctl_cmd = 0;
   ioctl_arg = NULL;
@@ -48,7 +48,7 @@ main( int argc, char *argv[])
     if( (idx < 0) || (idx > 15))
     {
       printf("Device index not valid..[%d]\n", idx);
-      goto ifc1211_usage;
+      goto TSC_usage;
     }
     if( !strncmp( argv[2], "set", 3))
     {
@@ -56,17 +56,17 @@ main( int argc, char *argv[])
       if( argc < 6)
       {
         printf("Not enough parameters..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       if( sscanf( argv[3],"%lx.%c", &r->rem_addr, &space) != 2)
       {
         printf("Bad address parameter..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       if( sscanf( argv[4],"%x", &r->size) != 1)
       {
         printf("Bad size parameter..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       if( !strncmp( argv[5], "A16", 3)) sg_id = MAP_ID_SLV_VME_A16;
       if( !strncmp( argv[5], "A24", 3)) sg_id = MAP_ID_SLV_VME_A24;
@@ -75,7 +75,7 @@ main( int argc, char *argv[])
       if( sg_id == MAP_ID_INVALID)
       {
 	printf("Bad SG identifier..\n");
-	goto ifc1211_usage;
+	goto TSC_usage;
       }
       r->loc_addr = MAP_LOC_ADDR_AUTO;
       if( argc > 6)
@@ -83,7 +83,7 @@ main( int argc, char *argv[])
         if( sscanf( argv[6],"%lx", &r->loc_addr) != 1)
         {
 	  printf("Bad local address parameter..\n");
-	  goto ifc1211_usage;
+	  goto TSC_usage;
 	}
         r->mode.flags = MAP_FLAG_FORCE;
       }
@@ -99,13 +99,13 @@ main( int argc, char *argv[])
     else 
     {
       printf("command not valid..[%s]\n", argv[2]);
-      goto ifc1211_usage;
+      goto TSC_usage;
     }
   }
   else
   {
     printf("Operation not supported..\n");
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
   r->mode.sg_id = sg_id;
   if( space == 'p') r->mode.space = MAP_SPACE_PCIE;
@@ -119,13 +119,13 @@ main( int argc, char *argv[])
   else 
   {
     printf("Bad remote space [%c]...\n", space);
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
-  printf(" entering IFC1211 slave device %d ( %lx, %x, %x)\n", idx, r->rem_addr, r->size, *(int *)&r->mode);
+  printf(" entering TSC slave device %d ( %lx, %x, %x)\n", idx, r->rem_addr, r->size, *(int *)&r->mode);
   fd = open( devname, O_RDWR);
   if( fd < 0)
   {
-    printf("cannot open IFC1211 slave device %s\n", devname);
+    printf("cannot open TSC slave device %s\n", devname);
     printf( "Error -> %s\n", strerror(errno));
     exit(-1);
   }
@@ -194,7 +194,7 @@ main( int argc, char *argv[])
   close( fd);
   exit(0);
 
-ifc1211_usage:
+TSC_usage:
   printf("usage: tscslv map<X> <cmd> <rem_addr>.<space> <size> <sg_id>\n");
 
   exit(-1);

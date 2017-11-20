@@ -19,7 +19,7 @@ main( int argc, char *argv[])
   if( argc < 3)
   {
     printf("Not enough parameters..\n");
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
   if( !strcmp( argv[1], "rd"))
   {
@@ -46,29 +46,29 @@ main( int argc, char *argv[])
     else
     {
       printf("Operation not supported..\n");
-      goto ifc1211_usage;
+      goto TSC_usage;
     }
     if( argc < 4)
     {
       printf("Not enough parameters..\n");
-      goto ifc1211_usage;
+      goto TSC_usage;
     }
     if( sscanf( argv[3],"%x", &csr_op.data) != 1)
     {
       printf("Bad data parameter..\n");
-      goto ifc1211_usage;
+      goto TSC_usage;
     }
   }
   if( sscanf( argv[2],"%x", &csr_op.offset) != 1)
   {
     printf("Bad offset parameter..\n");
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
-  printf(" entering IFC1211 test...\n");
+  printf(" entering TSC test...\n");
   fd = open("/dev/bus/bridge/tsc_ctl", O_RDWR);
   if( fd < 0)
   {
-    printf("cannot open IFC1211 control device\n");
+    printf("cannot open TSC control device\n");
     exit(-1);
   }
   retval = ioctl( fd, cmd, &csr_op);
@@ -83,8 +83,8 @@ main( int argc, char *argv[])
   close( fd);
   exit(0);
 
-ifc1211_usage:
-  printf("usage: ifc1211 <op> <off> [<data>]\n");
+TSC_usage:
+  printf("usage: TSC <op> <off> [<data>]\n");
 
   exit(-1);
 }

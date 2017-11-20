@@ -81,13 +81,13 @@ int tst_config(struct tst_ctl *tc, char *tst_id){
 	TST_LOG( tc, (logline, "\n%sDevice         = %x                           -> OK", ident, tsc_get_device_id()));
 
 	TST_LOG( tc, (logline, "\nFPGA idenfitiers\n"));
-	tsc_csr_read(IFC1211_CSR_ILOC_EFUSE_USR, &d0);
+	tsc_csr_read(TSC_CSR_ILOC_EFUSE_USR, &d0);
 	TST_LOG( tc, (logline, "FPGA  eFUSE          : 0x%08x\n", d0));
-	tsc_csr_read(IFC1211_CSR_ILOC_SIGN, &d0);
+	tsc_csr_read(TSC_CSR_ILOC_SIGN, &d0);
 	TST_LOG( tc, (logline, "FPGA  Signature      : 0x%08x\n", d0));
-	tsc_csr_read(IFC1211_CSR_ILOC_GENCTL, &d0);
+	tsc_csr_read(TSC_CSR_ILOC_GENCTL, &d0);
 	TST_LOG(tc, (logline, "FPGA  Version        : 0x%08x\n", d0));
-	tsc_csr_read(IFC1211_CSR_ILOC_TOSCA2_SIGN, &d0);
+	tsc_csr_read(TSC_CSR_ILOC_TOSCA2_SIGN, &d0);
 	TST_LOG(tc, (logline, "TOSCA Signature      : 0x%08x\n", d0));
 
 	tm = time(0);

@@ -30,7 +30,7 @@ main( int argc, char *argv[])
   fd = open( "/dev/bus/vme/tsc_mas0", O_RDWR);
   if( fd < 0)
   {
-    printf("cannot open IFC1211 master device %s\n", "/dev/bus/vme/tsc_mas0");
+    printf("cannot open TSC master device %s\n", "/dev/bus/vme/tsc_mas0");
     printf( "Error -> %s\n", strerror(errno));
     exit(-1);
   }

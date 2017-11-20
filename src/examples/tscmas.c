@@ -34,7 +34,7 @@ main( int argc, char *argv[])
   if( argc < 3)
   {
     printf("Not enough parameters..\n");
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
   mas_map.ivec = MAS_MAP_NO_IVEC;
   ioctl_cmd = 0;
@@ -46,7 +46,7 @@ main( int argc, char *argv[])
     if( (idx < 0) || (idx > 15))
     {
       printf("Device index not valid..[%d]\n", idx);
-      goto ifc1211_usage;
+      goto TSC_usage;
     }
     if( !strncmp( argv[2], "set", 3))
     {
@@ -54,24 +54,24 @@ main( int argc, char *argv[])
       if( argc < 6)
       {
         printf("Not enough parameters..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       if( sscanf( argv[3],"%lx", &rem_addr) != 1)
       {
         printf("Bad address parameter..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       mas_map.rem_addr = rem_addr;
       if( sscanf( argv[4],"%x", &size) != 1)
       {
         printf("Bad size parameter..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       mas_map.size = size;
       if( sscanf( argv[5],"%x", &mas_map.mode) != 1)
       {
         printf("Bad mode parameter..\n");
-        goto ifc1211_usage;
+        goto TSC_usage;
       }
       ioctl_cmd = TSC_IOCTL_MAS_MAP_SET;
       ioctl_arg = (void *)&mas_map;
@@ -86,13 +86,13 @@ main( int argc, char *argv[])
   else
   {
     printf("Operation not supported..\n");
-    goto ifc1211_usage;
+    goto TSC_usage;
   }
-  printf(" entering IFC1211 master device %d ( %lx, %x, %x)\n", idx, mas_map.rem_addr, mas_map.size, mas_map.mode);
+  printf(" entering TSC master device %d ( %lx, %x, %x)\n", idx, mas_map.rem_addr, mas_map.size, mas_map.mode);
   fd = open( devname, O_RDWR);
   if( fd < 0)
   {
-    printf("cannot open IFC1211 master device %s\n", devname);
+    printf("cannot open TSC master device %s\n", devname);
     printf( "Error -> %s\n", strerror(errno));
     exit(-1);
   }
@@ -193,7 +193,7 @@ main( int argc, char *argv[])
   close( fd);
   exit(0);
 
-ifc1211_usage:
+TSC_usage:
   printf("usage: tscmas mapX set <rem_addr> <size> <mode>\n");
 
   exit(-1);

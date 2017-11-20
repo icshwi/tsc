@@ -92,7 +92,7 @@ int tst_init(){
 
 	fd = tsc_init();
 	if(fd < 0){
-		printf("Cannot find IFC1211 interface\n");
+		printf("Cannot find interface\n");
 		return( -1);
 	}
 	tc->fd = fd;

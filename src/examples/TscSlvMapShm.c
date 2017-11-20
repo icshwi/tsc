@@ -31,7 +31,7 @@ main( int argc, char *argv[])
   fd = open( devname, O_RDWR);
   if( fd < 0)
   {
-    printf("cannot open IFC1211 slave device %s\n", devname);
+    printf("cannot open TSC slave device %s\n", devname);
     printf( "Error -> %s\n", strerror(errno));
     exit(-1);
   }
