@@ -297,7 +297,7 @@ static long ifc1211_ioctl( struct file *filp, unsigned int cmd, unsigned long ar
  *                 vma  -> pointer to 
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description   althea7910__mmap() maps a memory window in user space
+ * Description   tsc__mmap() maps a memory window in user space
  *
  *----------------------------------------------------------------------------*/
 
