@@ -214,7 +214,7 @@ char *ddr_msg[]=
   "         smem ddr reset <MEM>                = Reset to default SMEM DDR memory IDELAY",
   "         smem ddr status <MEM>               = Show the SMEM DDR3 memory DQ[15:0] line selection",
   "         smem ddr set <MEM> <DQ> <STEP> <PM> = Set the IDELAY for specifics lane",
-  "                 where <MEM>                 = Select the specific SMEM DDR3 1 or 2",
+  "                 where <MEM>                 = Select the specific SMEM DDR3 1 or 2 or both 12",
   "                 where <DQ>                  = Select the specific lane DQ[15:0]",
   "                 where <STEP>                = Select the specific step for increment / decrement",
   "                                               STEP = 1 to 16",
@@ -428,7 +428,7 @@ char *lmk_msg[]   =
 
 char *lp_msg[]     = 
 { 
-  "Read/write loop from/to shared memory",
+  "Read/write loop from/to PCI addresses",
   "lp<i>.<ds> <offset> <data> [l:<loop>]",
   "   where <i>      = 1, 2 [PCI tree index]",
   "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
