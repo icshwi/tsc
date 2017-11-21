@@ -428,7 +428,7 @@ char *lmk_msg[]   =
 
 char *lp_msg[]     = 
 { 
-  "Read/write loop from/to PEV1100 shared memory",
+  "Read/write loop from/to shared memory",
   "lp<i>.<ds> <offset> <data> [l:<loop>]",
   "   where <i>      = 1, 2 [PCI tree index]",
   "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
@@ -440,7 +440,7 @@ char *lp_msg[]     =
 
 char *ls_msg[]     = 
 { 
-  "Read/write loop from/to PEV1100 shared memory",
+  "Read/write loop from/to shared memory",
   "ls<i>.<ds> <offset> <data> [l:<loop>]",
   "   where <i>      = 1, 2 [shared memory index]",
   "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
@@ -452,7 +452,7 @@ char *ls_msg[]     =
 
 char *lu_msg[]     = 
 { 
-  "Read/write loop from/to PEV1100 user area",
+  "Read/write loop from/to user area",
   "lu<i>.<ds> <offset> <data> [l:<loop>]",
   "   where <i>      = 1, 2 [user area index]",
   "         <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
