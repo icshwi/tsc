@@ -155,7 +155,6 @@ int tsc_fifo(struct cli_cmd_para *c) {
 				}
 				printf("FIFO#%d waiting [%d msec] ...\n", idx, tmo);
 				retval = tsc_fifo_wait_ef( idx, &sts, tmo);		// Check not_empty flag with IRQ
-				//retval = pev_fifo_wait_ff( idx, &sts, tmo);	// Check full fifo with IRQ
 				if( retval == -1){
 					printf("Timeout : ");
 				}

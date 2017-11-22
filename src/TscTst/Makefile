@@ -10,7 +10,7 @@
 #----------------------------------------------------------------------------
 #  Description
 #
-#    This Makefile allows to build the PEV1100 test launcher AltTst
+#    This Makefile allows to build the TSC test launcher
 #
 #----------------------------------------------------------------------------
 #  Copyright Notice

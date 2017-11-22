@@ -11,7 +11,7 @@
  *  Description
  *
  *    This file contain the declarations of all exported functions define in
- *    pevulib.c
+ *    map.c
  *
  *----------------------------------------------------------------------------
  *  Copyright Notice
