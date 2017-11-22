@@ -57,6 +57,16 @@ rtm_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rtm_led
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : Rtm led
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 rtm_led( struct cli_cmd_para *c)
 {
@@ -119,16 +129,25 @@ rtm_led( struct cli_cmd_para *c)
  * Function name : tsc_rtm
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : int
+ *
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : Rtm operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 tsc_rtm( struct cli_cmd_para *c)
 {
-  int cnt, i;
+  int cnt  = 0;
+  int i    = 0;
+  int data = 0;
+
+  // Check if the board is a IFC1410
+  tsc_pon_read(0x0, &data);
+  if (data != 0x73571410) {
+	printf("Command available only on IFC14xx board");
+	return (CLI_ERR);
+  }
 
   cnt = c->cnt;
   i = 0;

@@ -56,7 +56,6 @@ mbox_rcsid()
   return( rcsid);
 }
 
-
 char *mbox_sensor_status[] =
 {
   "(reserved)",
@@ -66,7 +65,16 @@ char *mbox_sensor_status[] =
   "error: unable to update"
 };
 
-
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_read
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : Perform mbox read operation
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 mbox_read( struct cli_cmd_para *c)
 {
@@ -115,6 +123,16 @@ mbox_read( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_write
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : Perform mbox write operation
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 mbox_write( struct cli_cmd_para *c)
 {
@@ -158,6 +176,16 @@ mbox_write( struct cli_cmd_para *c)
 }
 
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_info
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : Perform mbox info operation
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 mbox_info( struct cli_cmd_para *c)
 {
@@ -212,16 +240,25 @@ mbox_info( struct cli_cmd_para *c)
  * Function name : tsc_mbox
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : int
+ *
  *----------------------------------------------------------------------------
- * Description   : perform read/write acces to TSC CSR registers
+ * Description   : Perform mbox operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int 
 tsc_mbox( struct cli_cmd_para *c)
 {
-  int cnt, i;
+  int cnt  = 0;
+  int i    = 0;;
+  int data = 0;
+
+  // Check if the board is a IFC1410
+  tsc_pon_read(0x0, &data);
+  if (data != 0x73571410) {
+	printf("Command available only on IFC14xx board");
+	return (CLI_ERR);
+  }
 
   cnt = c->cnt;
   i = 0;
