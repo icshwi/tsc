@@ -35,20 +35,14 @@
 #include "tsc.h"
 
 #ifndef _LINUX_TYPES_H
-//typedef u64 dma_addr_t;
-//typedef long long dma_addr_t;
-typedef long dma_addr_t;
+	typedef long dma_addr_t;
 #endif /* _LINUX_TYPES_H */
-
-#define TSC_BOARD_PEV7912        PCI_DEVICE_ID_IOXOS_ALTHEA7912
 
 #define TSC_BOARD_IFC1211        0x73571211
 #define TSC_BOARD_IFC1410        0x73571410
 
 #define TSC_BOARD_TSC_IO        PCI_DEVICE_ID_IOXOS_TSC_IO
 #define TSC_BOARD_TSC_CENTRAL        PCI_DEVICE_ID_IOXOS_TSC_CENTRAL
-
-
 
 #define TSC_IOCTL_OP_MASK        0xffff0000
 
