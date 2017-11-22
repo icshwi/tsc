@@ -49,6 +49,7 @@ static char rcsid[] = "$Id: TscMon.c,v 1.3 2016/01/26 13:00:40 ioxos Exp $";
 #include "cmdlist.h"
 
 char TscMon_version[] = "1.40";
+char TscMon_official_release[] = "1.4.2";
 
 int tsc_cmd_exec( struct cli_cmd_list *, struct cli_cmd_para *);
 
@@ -151,26 +152,27 @@ main( int argc,
     }
   }
   printf("\n");
-  printf("     +-----------------------------------------+\n");
+  printf("     +------------------------------------------+\n");
   if(tsc_get_device_id() == 0x1000){
-	  printf("     |  TscMon - %s %04x diagnostic tool        |\n", "IO", tsc_get_device_id());
+	  printf("     |  TscMon - %s %04x diagnostic tool         |\n", "IO", tsc_get_device_id());
   }
   else if(tsc_get_device_id() == 0x1001){
-	  printf("     |  TscMon - %s %04x diagnostic tool  |\n", "CENTRAL", tsc_get_device_id());
+	  printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
   }
-  printf("     |  IOxOS Technologies Copyright 2015-2017 |\n");
-  printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
-  printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d        |\n", month[mm], dd, yy, hh, mn, ss);
-  printf("     |  FPGA Sign  %08x                    |\n", tsc_sign);
+  printf("     |  IOxOS Technologies Copyright 2015-2017  |\n");
+  printf("     |  Version %s - %s %s     |\n", TscMon_version, __DATE__, __TIME__);
+  printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
+  printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
 
   tsc_pon_read(0x0, &data);
   if (data == 0x73571211) {
-	  printf("     |  Driver IFC1211 Version %s            |\n", tsc_get_drv_version());
+	  printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
   }
   else if (data == 0x73571410){
-	  printf("     |  Driver IFC1410 Version %s            |\n", tsc_get_drv_version());
+	  printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
   }
-  printf("     +-----------------------------------------+\n");
+  printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
+  printf("     +------------------------------------------+\n");
   printf("\n");
 
   cmd_cnt = 0;
