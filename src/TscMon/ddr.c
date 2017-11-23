@@ -182,6 +182,7 @@ int althea_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
 	int  DQ_NOK[16];
+	int  DQ_OK[16];
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
@@ -199,6 +200,9 @@ int althea_ddr_idel_calib(int mem){
     unsigned int    final_cnt_value_store[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    dq_path         = 0;
     unsigned int    r, rr	        = 0;
+    unsigned int    best            = 0;
+    unsigned int    worst           = 0;
+    unsigned int    location        = 0;
 
     ////////////////////////////////////////////////////////////////////////////////////
     // ADJUST DEFAULT VALUE FOR CURRENT_DLY ACCORDING TO HARDWARE IMPLEMENTATION      //
@@ -606,6 +610,7 @@ int althea_ddr_idel_calib(int mem){
 				DQ_NOK[j] = 0;
 			}
 
+			DQ_OK[j] = ok;
 			//printf(" start: 0x%x, end: 0x%x, ok: %i, avg: 0x%x, marker: 0x%x \n", start, end, ok, avg_x, marker);
 
 			printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
@@ -623,12 +628,56 @@ int althea_ddr_idel_calib(int mem){
 			printf("Calibration is not possible, error on line(s) : \n");
 			for (m = 0; m < 16; m++){
 				if (DQ_NOK[m] == 1){
-					printf("DQK[%i] \n", m);
+					printf("DQ[%i] \n", m);
 				}
 			}
 		}
 		else {
 			printf("Calibration done ! \n");
+
+			/*for (m = 0; m < 16; m++){
+				if (m < 8){
+				printf("DQ[%i] -> %i \n", m, DQ_OK[m + 8]);
+				}
+				else {
+					printf("DQ[%i] -> %i \n", m, DQ_OK[m - 8]);
+				}
+			}
+			 */
+			// Search best case
+		    best = DQ_OK[0];
+
+		    for (m = 1 ;m < 16 ;m++) {
+		    	if ( DQ_OK[m] > best ) {
+		    		best = DQ_OK[m];
+		    		if (m < 8){
+		    			location = m + 8;
+		    		}
+		    		else {
+		    			location = m - 8;
+		    		}
+		        }
+		    }
+		    printf("Best case is %i for DQ[%i]\n", best, location);
+
+			// Search worst case
+		    worst = DQ_OK[0];
+
+		    for (m = 1 ;m < 16 ;m++) {
+		    	if ( DQ_OK[m] < worst ) {
+		    		worst = DQ_OK[m];
+		    		if (m < 8){
+		    			location = m + 8;
+		    		}
+		    		else {
+		    			location = m - 8;
+		    		}
+		        }
+		    }
+		    printf("Worst case is %i for DQ[%i]\n", worst, location);
+
+
+
 		}
 
 		// ---------------------------------------------------------------------
