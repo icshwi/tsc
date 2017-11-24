@@ -132,12 +132,12 @@ int tst_5f(struct tst_ctl *);
 // -------------------------------------------------------------
 
 char *tst_01_msg[] = {"Get board configuration", 0};
-char *tst_02_msg[] = {"Read/Write SHM0 MEM", 0};
-char *tst_03_msg[] = {"Read/Write SHM0 PMEM", 0};
-//char *tst_04_msg[] = {"", 0};
-char *tst_05_msg[] = {"Read/Write KBUF0", 0};
-//char *tst_06_msg[] = {"", 0};
-//char *tst_07_msg[] = {"", 0};
+char *tst_02_msg[] = {"Calibrate  SMEM1 & SMEM2", 0};
+char *tst_03_msg[] = {"Read/Write SMEM1 MEM", 0};
+char *tst_04_msg[] = {"Read/Write SMEM1 PMEM", 0};
+char *tst_05_msg[] = {"Read/Write SMEM2 MEM", 0};
+char *tst_06_msg[] = {"Read/Write SMEM2 PMEM", 0};
+char *tst_07_msg[] = {"Read/Write KBUF0", 0};
 //char *tst_08_msg[] = {"", 0};
 //char *tst_09_msg[] = {"", 0};
 //char *tst_0a_msg[] = {"", 0};
@@ -164,10 +164,10 @@ char *tst_05_msg[] = {"Read/Write KBUF0", 0};
 //char *tst_1e_msg[] = {"", 0};
 //char *tst_1f_msg[] = {"", 0};
 
-char *tst_20_msg[] = {"DMA from KBUF0 to SHM0", 0};
-char *tst_21_msg[] = {"DMA from SHM0 to KBUF0", 0};
-//char *tst_22_msg[] = {"", 0};
-//char *tst_23_msg[] = {"", 0};
+char *tst_20_msg[] = {"DMA from KBUF0 to SMEM1", 0};
+char *tst_21_msg[] = {"DMA from KBUF0 to SMEM2", 0};
+char *tst_22_msg[] = {"DMA from SMEM1  to KBUF0", 0};
+char *tst_23_msg[] = {"DMA from SMEM2  to KBUF0", 0};
 //char *tst_24_msg[] = {"", 0};
 //char *tst_25_msg[] = {"", 0};
 //char *tst_26_msg[] = {"", 0};
@@ -247,10 +247,10 @@ struct tst_list tst_list[] = {
 		{0x01, tst_01, tst_01_msg, 0},
 		{0x02, tst_02, tst_02_msg, 0},
 		{0x03, tst_03, tst_03_msg, 0},
-		//{0x04, tst_04, tst_04_msg, 0},
+		{0x04, tst_04, tst_04_msg, 0},
 		{0x05, tst_05, tst_05_msg, 0},
-		//{0x06, tst_06, tst_06_msg, 0},
-		//{0x07, tst_07, tst_07_msg, 0},
+		{0x06, tst_06, tst_06_msg, 0},
+		{0x07, tst_07, tst_07_msg, 0},
 		//{0x08, tst_08, tst_08_msg, 0},
 		//{0x09, tst_09, tst_09_msg, 0},
 		//{0x0a, tst_0a, tst_0a_msg, 0},
