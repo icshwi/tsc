@@ -677,11 +677,12 @@ tsc_read_sgl( ulong rem_addr,
  *                 transfer size (0 for single data)
  *                 data size
  *                 hardware swapping mode
+ *                 Select smem1 or smem2
  * Return        : status of read operation
  *----------------------------------------------------------------------------
  * Description   : copy <len> bytes from buffer <buf> to SHM address space
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap){
+int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
@@ -690,7 +691,12 @@ int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap){
 	rdwr.rem_addr = (ulong)shm_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
-	rdwr.m.space = RDWR_SPACE_SHM;
+	if (mem == 1) {
+		rdwr.m.space = RDWR_SPACE_SHM1;
+	}
+	else if (mem == 2){
+		rdwr.m.space = RDWR_SPACE_SHM2;
+	}
 	rdwr.m.am = 0;
 	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
 	rdwr.m.swap = (char)swap;
@@ -707,12 +713,13 @@ int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap){
  *                 transfer size (0 for single data)
  *                 data size
  *                 hardware swapping mode
+ *                 Select smem1 or smem2
  * Return        : status of read operation
  *----------------------------------------------------------------------------
  * Description   : Read a block of data from SHM address space
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap){
+int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
@@ -721,7 +728,12 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap){
 	rdwr.rem_addr = (ulong)shm_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
-	rdwr.m.space = RDWR_SPACE_SHM;
+	if (mem == 1) {
+		rdwr.m.space = RDWR_SPACE_SHM1;
+	}
+	else if (mem == 2){
+		rdwr.m.space = RDWR_SPACE_SHM2;
+	}
 	rdwr.m.am = 0;
 	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
 	rdwr.m.swap = (char)swap;
