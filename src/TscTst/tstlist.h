@@ -279,8 +279,8 @@ struct tst_list tst_list[] = {
 
 		{0x20, tst_20, tst_20_msg, 0},
 		{0x21, tst_21, tst_21_msg, 0},
-		//{0x22, tst_22, tst_22_msg, 0},
-		//{0x23, tst_23, tst_23_msg, 0},
+		{0x22, tst_22, tst_22_msg, 0},
+		{0x23, tst_23, tst_23_msg, 0},
 		//{0x24, tst_24, tst_24_msg, 0},
 		//{0x25, tst_25, tst_25_msg, 0},
 		//{0x26, tst_26, tst_26_msg, 0},

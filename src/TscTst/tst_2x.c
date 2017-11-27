@@ -96,7 +96,7 @@ void dma_configure_local(int channel, int src, int des, int size, int space_src,
  *                 direction: 0 = kbuf0 -> shm0, 1 = shm0 -> kbuf0
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
+int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction, int smem){
 	struct tsc_ioctl_kbuf_req buf_p;
 	time_t tm;
 	char *ct           = NULL;
@@ -120,11 +120,21 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
 
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
 
-	if(direction == 0){
-		TST_LOG( tc, (logline, "%s->Executing DMA from KBUF0 to SHM0\n", tst_id));
+	if (smem == 1){
+		if(direction == 0){
+			TST_LOG( tc, (logline, "%s->Executing DMA from KBUF0 to SMEM1\n", tst_id));
+		}
+		else if(direction == 1){
+			TST_LOG( tc, (logline, "%s->Executing DMA from SMEM1 to KBUF0\n", tst_id));
+		}
 	}
-	else if(direction == 1){
-		TST_LOG( tc, (logline, "%s->Executing DMA from SHM0 to KBUF0\n", tst_id));
+	else if (smem == 2) {
+		if(direction == 0){
+			TST_LOG( tc, (logline, "%s->Executing DMA from KBUF0 to SMEM2\n", tst_id));
+		}
+		else if(direction == 1){
+			TST_LOG( tc, (logline, "%s->Executing DMA from SMEM2 to KBUF0\n", tst_id));
+		}
 	}
 
 	// Allocate kernel buffer suitable for DMA transfer
@@ -161,9 +171,13 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
 
 	}
 	else if(direction == 1){
-		// Write local SHM0 with consistent data
-		tsc_shm_write(offset, data_buf, size_ref, 4, 0);
-
+		// Write local SHM1 or SHM2 with consistent data
+		if (smem == 1){
+			tsc_shm_write(offset, data_buf, size_ref, 4, 0, 1);
+		}
+		else if (smem == 2) {
+			tsc_shm_write(offset, data_buf, size_ref, 4, 0, 2);
+		}
 	}
 
 	// Allocate DMA
@@ -193,15 +207,25 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
 			// Fill check buffer with 0
 			tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
 
-			// Choose direction: 0 = kbuf0 -> shm0, 1 = shm0 -> kbuf0
+			// Choose direction: 0 = kbuf0 -> shm, 1 = shm -> kbuf0
 			if(direction == 0){
-				// Write SHM0 with reference pattern 0xdeadface
-				tsc_shm_write(offset, ref_buf, size_ref, 4, 0);
+				// Write SHM1 or SHM2 with reference pattern 0xdeadface
+				if (smem == 1){
+					tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 1);
+				}
+				else if (smem == 2){
+					tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 2);
+				}
 
 				usleep(1000);
 
-				// Prepare DMA [channel, src, des, size, space_src, space_des]
-				dma_configure_local(dma_channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, DMA_SPACE_PCIE, DMA_SPACE_SHM);
+				// Prepare DMA [channel, src, des, size, space_src, space_des] for smem1 and smem2
+				if (smem == 1){
+					dma_configure_local(dma_channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, DMA_SPACE_PCIE, DMA_SPACE_SHM);
+				}
+				else if (smem == 2){
+					dma_configure_local(dma_channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, DMA_SPACE_PCIE, DMA_SPACE_SHM2);
+				}
 			}
 			else if (direction == 1){
 				// Write local KBUF0 with reference pattern 0xdeadface
@@ -209,8 +233,13 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
 
 				usleep(1000);
 
-				// Prepare DMA [channel, src, des, size, space_src, space_des]
-				dma_configure_local(dma_channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, DMA_SPACE_SHM, DMA_SPACE_PCIE);
+				// Prepare DMA [channel, src, des, size, space_src, space_des] for smem1 and smem2
+				if (smem == 1){
+					dma_configure_local(dma_channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, DMA_SPACE_SHM, DMA_SPACE_PCIE);
+				}
+				else if (smem == 2){
+					dma_configure_local(dma_channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, DMA_SPACE_SHM2, DMA_SPACE_PCIE);
+				}
 			}
 
 			// Do DMA transfer
@@ -222,10 +251,15 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction){
 				goto ERROR;
 			}
 
-			// Choose direction: 0 = kbuf0 -> shm0, 1 = shm0 -> kbuf0
+			// Choose direction: 0 = kbuf0 -> shm, 1 = shm -> kbuf0
 			if(direction == 0){
-				// Acquire data from SHM0
-				tsc_shm_read(offset, check_buf, size_ref, 4, 0);
+				// Acquire data from SHM1 or SHM2
+				if (smem == 1){
+					tsc_shm_read(offset, check_buf, size_ref, 4, 0, 1);
+				}
+				else if (smem == 2){
+					tsc_shm_read(offset, check_buf, size_ref, 4, 0, 2);
+				}
 
 			}
 			else if(direction == 1){
@@ -285,13 +319,22 @@ ERROR:
 	return( retval | TST_STS_DONE);
 }
 
-// DMA test : kbuf0 -> shm0
+// DMA test : kbuf0 -> shm1
 int tst_20(struct tst_ctl *tc){
-	return(tst_dma_kbuf_shm_local(tc, "Tst:20", 0));
+	return(tst_dma_kbuf_shm_local(tc, "Tst:20", 0, 1));
 }
 
-// DMA test : shm0 -> kbuf0
+// DMA test : kbuf0 -> shm2
 int tst_21(struct tst_ctl *tc){
-	return(tst_dma_kbuf_shm_local(tc, "Tst:21", 1));
+	return(tst_dma_kbuf_shm_local(tc, "Tst:21", 0, 2));
 }
 
+// DMA test : shm1 -> kbuf0
+int tst_22(struct tst_ctl *tc){
+	return(tst_dma_kbuf_shm_local(tc, "Tst:22", 1, 1));
+}
+
+// DMA test : shm2 -> kbuf0
+int tst_23(struct tst_ctl *tc){
+	return(tst_dma_kbuf_shm_local(tc, "Tst:23", 1, 2));
+}
