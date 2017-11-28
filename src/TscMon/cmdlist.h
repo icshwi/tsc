@@ -37,7 +37,7 @@ int tsc_tdma(struct cli_cmd_para *);
 
 char *alias_msg[]   = 
 {
-  "  Handle aliases for Altmon commands. Command is executed by entering $<alias>",
+  "  Handle aliases for TscMon commands. Command is executed by entering $<alias>",
   "  alias show",
   "  alias clear",
   "  alias set <alias> \"<cmdline>\"",
@@ -130,7 +130,7 @@ char *ci_msg[] =
 
 char *cmp_msg[] =
 {
-  "Compare two data buffer",
+  "Compare two data buffers",
   "cmp <off1>.<sp1><idx1> <off2>.<sp2><idx2> <len>",
   "   where <off>     = address offset in hexadecimal",
   "         <sp><idx> = buffer space [s1,s2,u1,u2,k0->k7]",
@@ -139,16 +139,16 @@ char *cmp_msg[] =
 
 char *conf_msg[] = 
 {
-  "  Show TSC current configuration",
-  "  conf [show <device>]",
-  "     where <device> = all",
-  "                      static",
-  "                      device",
-  "                      dynamic",
-  "                      identifiers",
-  "                      pcie",
-  "                      msi",
-  "                      smon",
+  "Show TSC current configuration",
+  "conf [show <device>]",
+  "   where <device> = all",
+  "                    static",
+  "                    device",
+  "                    dynamic",
+  "                    identifiers",
+  "                    pcie",
+  "                    msi",
+  "                    smon",
 0};
 
 char *cp_msg[] = 
@@ -223,29 +223,29 @@ char *ddr_msg[]=
 0};
 
 char *di_msg[] = 
-{ "  display content of a set of IFC PON registers",
-  "  di <start>[..<end>]",
-  "     where <start> = offset in hexadecimal of first register",
-  "            <end>  = offset in hexadecimal of last register",
+{ "Display content of a set of IFC PON registers",
+  "di <start>[..<end>]",
+  "   where <start> = offset in hexadecimal of first register",
+  "          <end>  = offset in hexadecimal of last register",
 0};
 
 char *dk_msg[] =
-{ "  display content of kernel buffer in System Memory",
-  "  dk<idx>.<ds><sw> <start>[..<end>]",
-  "     where <idx>   = buffer index [0 -> 7]",
-  "           <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <sw>    = s       -> display swapped data",
-  "           <start> = start offset in hexadecimal",
-  "           <end>   = end offset in hexadecimal (default = <start> + 0x40)",
+{ "Display content of kernel buffer in System Memory",
+  "dk<idx>.<ds><sw> <start>[..<end>]",
+  "   where <idx>   = buffer index [0 -> 7]",
+  "         <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <sw>    = s       -> display swapped data",
+  "         <start> = start offset in hexadecimal",
+  "         <end>   = end offset in hexadecimal (default = <start> + 0x40)",
 0};
 
 char *dm_msg[] = 
-{ "  display content of kernel buffer in System Memory",
-  "  dm.<ds><sw> <start>[..<end>]",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <sw>    = s       -> display swapped data", 
-  "           <start> = start offset in hexadecimal",
-  "           <end>   = end offset in hexadecimal (default = <start> + 0x40)",
+{ "Display content of kernel buffer in System Memory",
+  "dm.<ds><sw> <start>[..<end>]",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <sw>    = s       -> display swapped data",
+  "         <start> = start offset in hexadecimal",
+  "         <end>   = end offset in hexadecimal (default = <start> + 0x40)",
 0};
 
 char *dma_msg[] = 
@@ -267,43 +267,43 @@ char *dma_msg[] =
 0};
 
 char *dp_msg[] = 
-{ "  display content in PCI tree",
-  "  dp.<ds><sw> <start>[..<end>]",
-  "  dp1.<ds><sw> <start>[..<end>]",
-  "  dp2.<ds><sw> <start>[..<end>]",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <sw>    = s       -> display swapped data", 
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
+{ "Display content in PCI tree",
+  "dp.<ds><sw> <start>[..<end>]",
+  "dp1.<ds><sw> <start>[..<end>]",
+  "dp2.<ds><sw> <start>[..<end>]",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <sw>    = s       -> display swapped data",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
 0};
 
 char *dr_msg[] = 
-{ "  display content of a set of TSC CSR registers",
-  "  dr <start>[..<end>]",
-  "     where <start> = ofset in hexadecimal of first register",
-  "           <end>   = ofset in hexadecimal of last register",
+{ "Display content of a set of TSC CSR registers",
+  "dr <start>[..<end>]",
+  "   where <start> = ofset in hexadecimal of first register",
+  "         <end>   = ofset in hexadecimal of last register",
 0};
 
 char *ds_msg[] = 
-{ "  display content of Shared Memory",
-  "  ds.<ds><sw> <start>[..<end>]",
-  "  ds1.<ds><sw> <start>[..<end>]",
-  "  ds2.<ds><sw> <start>[..<end>]",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <sw>    = s       -> display swapped data", 
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
+{ "Display content of Shared Memory",
+  "ds.<ds><sw> <start>[..<end>]",
+  "ds1.<ds><sw> <start>[..<end>]",
+  "ds2.<ds><sw> <start>[..<end>]",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <sw>    = s       -> display swapped data",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
 0};
 
 char *du_msg[] =
-{ "  display content of USR space",
-  "  du.<ds><sw> <start>[..<end>]",
-  "  du1.<ds><sw> <start>[..<end>]",
-  "  du2.<ds><sw> <start>[..<end>]",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <sw>    = s       -> display swapped data",
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
+{ "Display content of USR space",
+  "du.<ds><sw> <start>[..<end>]",
+  "du1.<ds><sw> <start>[..<end>]",
+  "du2.<ds><sw> <start>[..<end>]",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <sw>    = s       -> display swapped data",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
 0};
 
 char *fifo_msg[] =
@@ -323,69 +323,69 @@ char *fifo_msg[] =
 0};
 
 char *fk_msg[] =
-{ "  fill kernel buffer in System Memory",
-  "  fk<idx>.<ds> <start>..<end> <data>",
-  "     where <idx>   = buffer index [0 -> 7]",
-  "           <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
-  "           <data>  = data in hexadecimal",
+{ "Fll kernel buffer in System Memory",
+  "fk<idx>.<ds> <start>..<end> <data>",
+  "   where <idx>   = buffer index [0 -> 7]",
+  "         <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "         <data>  = data in hexadecimal",
 0};
 
 char *fm_msg[] = 
-{ "  fill kernel buffer in System Memory",
-  "  fm.<ds> <start>..<end> <data>",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
-  "           <data>  = data in hexadecimal",
+{ "Fill kernel buffer in System Memory",
+  "fm.<ds> <start>..<end> <data>",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "         <data>  = data in hexadecimal",
 0};
 
 char *fs_msg[] = 
-{ "  fill Shared Memory with data",
-  "  fs.<ds> <start>..<end> <data>",
-  "  fs1.<ds> <start>..<end> <data>",
-  "  fs2.<ds> <start>..<end> <data>",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
-  "           <data>  = data in hexadecimal",
+{ "Fill Shared Memory with data",
+  "fs.<ds> <start>..<end> <data>",
+  "fs1.<ds> <start>..<end> <data>",
+  "fs2.<ds> <start>..<end> <data>",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "         <data>  = data in hexadecimal",
 0};
 
 char *fp_msg[] = 
-{ "  fill PCI tree addresses with data",
-  "  fp.<ds> <start>..<end> <data>",
-  "  fp1.<ds> <start>..<end> <data>",
-  "  fp2.<ds> <start>..<end> <data>",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
-  "           <data>  = data in hexadecimal",
+{ "Fill PCI tree addresses with data",
+  "fp.<ds> <start>..<end> <data>",
+  "fp1.<ds> <start>..<end> <data>",
+  "fp2.<ds> <start>..<end> <data>",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "         <data>  = data in hexadecimal",
 0};
 
 char *fu_msg[] =
-{ "  fill USR space with data",
-  "  fu.<ds> <start>..<end> <data>",
-  "  fu1.<ds> <start>..<end> <data>",
-  "  fu2.<ds> <start>..<end> <data>",
-  "     where <ds>    = b,s,w,l -> data size: 1,2,4,8",
-  "           <start> = start address in hexadecimal",
-  "           <end>   = end address in hexadecimal (default = <start> + 0x40)",
-  "           <data>  = data in hexadecimal",
+{ "Fill USR space with data",
+  "fu.<ds> <start>..<end> <data>",
+  "fu1.<ds> <start>..<end> <data>",
+  "fu2.<ds> <start>..<end> <data>",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "         <data>  = data in hexadecimal",
 0};
 
 char *help_msg[]   = 
 {
-  "  Display list of commands or syntax of command <cmd>",
-  "  help",
-  "  help <cmd>",
+  "Display list of commands or syntax of command <cmd>",
+  "help",
+  "help <cmd>",
 0};
 
 char *history_msg[]   = 
 {
-  "  Display history of commands",
-  "  Commands in history list can re-executed by entering '!' followed by histoy line number",
-  "  history",
+  "Display history of commands",
+  "Commands in history list can re-executed by entering '!' followed by history line number",
+  "history",
 0};
 
 char *i2c_msg[]     = 
@@ -405,7 +405,7 @@ char *i2c_msg[]     =
 
 char *kbuf_msg[] = 
 {
-  "TSC kernel buffer operations",
+  "Kernel buffer operations",
   "kbuf.<id> alloc <size>",
   "kbuf.<id> show",
   "kbuf.<id> free",
@@ -464,7 +464,7 @@ char *lu_msg[]     =
 
 char *map_msg[] = 
 {
-  "TSC address mapping operations",
+  "Address mapping operations",
   "map show [<map>]",
   "map clear <map>",
   "map.<space> alloc <map> <addr> <size>[<offset>]",
@@ -485,21 +485,21 @@ char *mbox_msg[] =
 0};
 
 char *pc_msg[] = 
-{ "  read/write data from/to TSC PCI CFG register",
+{ "Read/write data from/to PCI CFG register",
   "  pc <offset> [<data>]",
   "     where <offset> = register offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
 0};
 
 char *pi_msg[] = 
-{ "  read/write data from/to IFC PON register",
+{ "Read/write data from/to IFC PON register",
   "  pi <offset> [<data>]",
   "     where <offset> = register offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
 0};
 
 char *pk_msg[] =
-{ "  read/write data from/to kernel buffer in System Memory",
+{ "Read/write data from/to kernel buffer in System Memory",
   "  pk<idx>.<ds> <offset> [<data>]",
   "     where <idx>    = buffer index [0 -> 7]",
   "           <ds>     = b,s,w,l -> data size: 1,2,4,8",
@@ -508,7 +508,7 @@ char *pk_msg[] =
 0};
 
 char *pm_msg[] = 
-{ "  read/write data from/to kernel buffer in System Memory",
+{ "Read/write data from/to kernel buffer in System Memory",
   "  pm.<ds> <offset> [<data>]",
   "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
   "           <offset> = address offset in hexadecimal",
@@ -516,7 +516,7 @@ char *pm_msg[] =
 0};
 
 char *pp_msg[] = 
-{ "  read/write data from/to PCI tree address",
+{ "Read/write data from/to PCI tree address",
   "  pp.<ds> <offset> [<data>]",
   "  pp1.<ds> <offset> [<data>]",
   "  pp2.<ds> <offset> [<data>]",
@@ -526,14 +526,14 @@ char *pp_msg[] =
 0};
 
 char *pr_msg[] = 
-{ "  read/write data from/to TSC CSR register",
+{ "Read/write data from/to CSR register",
   "  pr <offset> [<data>]",
   "     where <offset> = register offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
 0};
 
 char *ps_msg[] = 
-{ "  read/write data from/to FPGA Shared Memory",
+{ "Read/write data from/to Shared Memory",
   "  ps.<ds> <offset> [<data>]",
   "  ps1.<ds> <offset> [<data>]",
   "  ps2.<ds> <offset> [<data>]",
@@ -543,7 +543,7 @@ char *ps_msg[] =
 0};
 
 char *pu_msg[] =
-{ "  read/write data from/to FPGA USR space",
+{ "Read/write data from/to FPGA USR space",
   "  pu.<ds> <offset> [<data>]",
   "  pu1.<ds> <offset> [<data>]",
   "  pu2.<ds> <offset> [<data>]",
@@ -562,7 +562,7 @@ char *rtm_msg[] =
 
 char *semaphore_msg[]=
 {
-  "Perform semaphore operation",
+  "Perform semaphore operations",
   "semaphore status",
   "semaphore get <idx> <tag>",
   "semaphore release <idx>",
@@ -579,6 +579,7 @@ char *set_device_msg[]=
 
 char *sflash_msg[]= 
 { 
+  "Perform sflash operations",
   "sflash rdid",
   "sflash rdsr",
   "sflash wrsr <sr>",
@@ -589,7 +590,7 @@ char *sflash_msg[]=
 
 char *tdma_msg[] = 
 {
-  "Perform DMA operation using channel <x>",
+  "Perform CPU DMA operations using channel <x>",
   "dma.<x> start <des_start>:<des_space>[.s] <src_start>:<src_space>[.s] <size>",
   "dma.<x> status",
 0};
