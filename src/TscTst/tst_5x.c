@@ -165,7 +165,11 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 	if (data != 0x73571410) {
 		TST_LOG( tc, (logline, "-> The board is not a IFC14xx abort test ! \n"));
 		retval = TST_STS_ERR;
-		goto ERROR;
+		tm = time(0);
+		ct = ctime(&tm);
+		TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+		return( retval | TST_STS_DONE);
 	}
 
 	// Check if the FMC#1 is present ---------------------------------------------------------
@@ -190,7 +194,11 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 	if ((present1 == 0) & (present2 == 0)){
 		TST_LOG( tc, (logline, "-> No FMC connected to the board abort test ! \n"));
 		retval = TST_STS_ERR;
-		goto ERROR;
+		tm = time(0);
+		ct = ctime(&tm);
+		TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+		return( retval | TST_STS_DONE);
 	}
 
 	// Check FPGA FMC signatures ------------------------------------------------------------
@@ -259,7 +267,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (1 << i)) != (1 << i)) {
 				TST_LOG( tc, (logline, "-> Error in local LA input value : expected 0x%08x read 0x%08x \n", (1 << i), (data & (1 << i))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> LA[%02i] <-> LA[%02i] ", i, fmc_la[i])); }
 
@@ -271,7 +278,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((1 << fmc_la[i]) != (data & (1 << fmc_la[i]))){
 				TST_LOG( tc, (logline, "-> Error in remote LA input value : expected 0x%08x read 0x%08x \n", (1 << fmc_la[i]), (data & (1 << fmc_la[i]))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '1' -> OK \n")); }
 
@@ -300,7 +306,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (0 << i)) != (0 << i)) {
 				TST_LOG( tc, (logline, "-> Error in local LA input value : expected 0x%08x read 0x%08x \n", (0 << i), (data & (0 << i))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> LA[%02i] <-> LA[%02i] ", i, fmc_la[i])); }
 
@@ -312,7 +317,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((0 << fmc_la[i]) != (data & (0 << fmc_la[i]))){
 				TST_LOG( tc, (logline, "-> Error in remote LA input value : expected 0x%08x read 0x%08x \n", (0 << fmc_la[i]), (data & (0 << fmc_la[i]))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '0' -> OK \n")); }
 		}
@@ -345,7 +349,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (1 << i)) != (1 << i)) {
 				TST_LOG( tc, (logline, "-> Error in local LA input value : expected 0x%08x read 0x%08x \n", (1 << i), (data & (1 << i))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> LA[%02i] <-> LA[%02i] ", i + 32, fmc_la[i + 32])); }
 
@@ -357,7 +360,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((1 << fmc_la[i + 32]) != (data & (1 << fmc_la[i + 32]))){
 				TST_LOG( tc, (logline, "-> Error in remote LA input value : expected 0x%08x read 0x%08x \n", (1 << fmc_la[i + 32]), (data & (1 << fmc_la[i + 32]))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '1' -> OK \n")); }
 
@@ -386,7 +388,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (0 << i)) != (0 << i)) {
 				TST_LOG( tc, (logline, "-> Error in local LA input value : expected 0x%08x read 0x%08x \n", (0 << i), (data & (0 << i))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> LA[%02i] <-> LA[%02i] ", i + 32, fmc_la[i + 32])); }
 
@@ -398,7 +399,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((0 << fmc_la[i + 32]) != (data & (0 << fmc_la[i + 32]))){
 				TST_LOG( tc, (logline, "-> Error in remote LA input value : expected 0x%08x read 0x%08x \n", (0 << fmc_la[i + 32]), (data & (0 << fmc_la[i + 32]))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '0' -> OK \n")); }
 		}
@@ -435,7 +435,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (1 << (i + 2))) != (1 << (i + 2))) {
 				TST_LOG( tc, (logline, "-> Error in local HA input value : expected 0x%08x read 0x%08x \n", (1 << (i + 2)), (data & (1 << (i + 2)))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> HA[%02i] <-> HA[%02i] ", i , fmc_ha[i])); }
 
@@ -447,7 +446,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if (((1 << fmc_ha[i]) << 2) != (data & ((1 << fmc_ha[i]) << 2))){
 				TST_LOG( tc, (logline, "-> Error in remote HA input value : expected 0x%08x read 0x%08x \n", ((1 << fmc_ha[i]) << 2), (data & ((1 << fmc_ha[i]) << 2))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '1' -> OK \n")); }
 
@@ -476,7 +474,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (0 << (i + 2))) != (0 << (i + 2))) {
 				TST_LOG( tc, (logline, "-> Error in local HA input value : expected 0x%08x read 0x%08x \n", (0 << (i + 2)), (data & (0 << (i + 2)))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> HA[%02i] <-> HA[%02i] ", i , fmc_ha[i])); }
 
@@ -488,7 +485,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if (((0 << fmc_ha[i]) << 2) != (data & ((0 << fmc_ha[i]) << 2))){
 				TST_LOG( tc, (logline, "-> Error in remote HA input value : expected 0x%08x read 0x%08x \n", ((0 << fmc_ha[i]) << 2), (data & ((0 << fmc_ha[i]) << 2))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '0' -> OK \n")); }
 		}
@@ -525,7 +521,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (1 << (i + 26))) != (1 << (i + 26))) {
 				TST_LOG( tc, (logline, "-> Error in local HB input value : expected 0x%08x read 0x%08x \n", (1 << (i + 26)), (data & (1 << (i + 26)))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> HB[%02i] <-> HB[%02i] ", i , fmc_hb[i])); }
 
@@ -537,7 +532,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if (((1 << fmc_hb[i]) << 26) != (data & ((1 << fmc_hb[i]) << 26))){
 				TST_LOG( tc, (logline, "-> Error in remote HB input value : expected 0x%08x read 0x%08x \n", ((1 << fmc_hb[i]) << 26), (data & ((1 << fmc_hb[i]) << 26))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '1' -> OK \n")); }
 
@@ -566,7 +560,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (0 << (i + 26))) != (0 << (i + 26))) {
 				TST_LOG( tc, (logline, "-> Error in local HB input value : expected 0x%08x read 0x%08x \n", (0 << (i + 26)), (data & (0 << (i + 26)))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> HB[%02i] <-> HB[%02i] ", i , fmc_hb[i])); }
 
@@ -578,7 +571,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if (((0 << fmc_hb[i]) << 26) != (data & ((0 << fmc_hb[i]) << 26))){
 				TST_LOG( tc, (logline, "-> Error in remote HB input value : expected 0x%08x read 0x%08x \n", ((0 << fmc_hb[i]) << 26), (data & ((0 << fmc_hb[i]) << 26))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '0' -> OK \n")); }
 		}
@@ -611,7 +603,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (1 << i)) != (1 << i)) {
 				TST_LOG( tc, (logline, "-> Error in local HB input value : expected 0x%08x read 0x%08x \n", (1 << i), (data & (1 << i))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> HB[%02i] <-> HB[%02i] ", i + 6 , fmc_hb[i + 6])); }
 
@@ -623,7 +614,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if (((1 << (fmc_hb[i + 6] - 6))) != (data & ((1 << (fmc_hb[i + 6] - 6))))){
 				TST_LOG( tc, (logline, "-> Error in remote HB input value : expected 0x%08x read 0x%08x \n", ((1 << (fmc_hb[i + 6] - 6))), (data & ((1 << (fmc_hb[i + 6] - 6))))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '1' -> OK \n")); }
 
@@ -652,7 +642,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if ((data & (0 << i)) != (0 << i)) {
 				TST_LOG( tc, (logline, "-> Error in local HB input value : expected 0x%08x read 0x%08x \n", (0 << i), (data & (0 << i))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> HB[%02i] <-> HB[%02i] ", i + 6 , fmc_hb[i + 6])); }
 
@@ -664,7 +653,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 			if (((0 << (fmc_hb[i + 6] - 6))) != (data & ((0 << (fmc_hb[i + 6] - 6))))){
 				TST_LOG( tc, (logline, "-> Error in remote HB input value : expected 0x%08x read 0x%08x \n", ((0 << (fmc_hb[i + 6] - 6))), (data & ((0 << (fmc_hb[i + 6] - 6))))));
 				retval = TST_STS_ERR;
-				//goto ERROR;
 			}
 			else { TST_LOG( tc, (logline, "-> Drive '0' -> OK \n")); }
 		}
