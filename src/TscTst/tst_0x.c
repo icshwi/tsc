@@ -729,7 +729,6 @@ int tst_sram_shm_mem_pmem(struct tst_ctl *tc, char *tst_id){
 				// Initialize whole memory area with reference pattern 0xdeadface
 				// Write into local SHM0
 				tst_cpu_fill(uaddr, size_ref, 0, ref_pattern, 0);
-//usleep(1000);
 
 				// Check for errors
 				eaddr = tst_cpu_check(uaddr, size_ref, 0, ref_pattern, 0);
@@ -742,8 +741,6 @@ int tst_sram_shm_mem_pmem(struct tst_ctl *tc, char *tst_id){
 				// Initialize consistent sub memory area with consistent data
 				// Write into SHM0
 				tst_cpu_fill(uaddr + sub_offset, sub_size, 1, offset + sub_offset, 4);
-
-//usleep(1000);
 
 				// Check for errors before consistent pattern
 				eaddr = tst_cpu_check(uaddr, sub_offset, 0, 0xdeadface, 0);
@@ -916,7 +913,6 @@ int tst_usr(struct tst_ctl *tc, char *tst_id){
 			// Initialize whole memory area with reference pattern 0xdeadface
 			// Write into local USR
 			tst_cpu_fill(uaddr, size_ref, 0, ref_pattern, 0);
-//usleep(1000);
 
 			// Check for errors
 			eaddr = tst_cpu_check(uaddr, size_ref, 0, ref_pattern, 0);
@@ -929,8 +925,6 @@ int tst_usr(struct tst_ctl *tc, char *tst_id){
 			// Initialize consistent sub memory area with consistent data
 			// Write into USR
 			tst_cpu_fill(uaddr + sub_offset, sub_size, 1, offset + sub_offset, 4);
-
-//usleep(1000);
 
 			// Check for errors before consistent pattern
 			eaddr = tst_cpu_check(uaddr, sub_offset, 0, 0xdeadface, 0);
@@ -1069,17 +1063,11 @@ int tst_kbuf(struct tst_ctl *tc, char *tst_id){
 		// Write local KBUF0 with reference pattern
 		tsc_kbuf_write(buf_p.k_base , ref_buf, size_ref);
 
-//usleep(1000);
-
 		// Write local KBUF0 with consistent data
 		tsc_kbuf_write(buf_p.k_base + sub_offset, data_buf + sub_offset, sub_size);
 
-//usleep(1000);
-
 		// Read local KBUF0 with to check data
 		tsc_kbuf_read(buf_p.k_base, check_buf, size_ref);
-
-//usleep(1000);
 
 		// Check for errors before consistent pattern
 		eaddr = tst_cpu_check(check_buf, sub_offset, 0, 0xdeadface, 0);
