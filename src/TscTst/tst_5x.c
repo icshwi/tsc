@@ -665,8 +665,6 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 	ct = ctime(&tm);
 	TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
 
-ERROR:
-
 	return( retval | TST_STS_DONE);
 }
 
