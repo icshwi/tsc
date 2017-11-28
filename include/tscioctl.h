@@ -285,8 +285,8 @@ struct tsc_ioctl_rdwr
 #define DMA_CHAN_NUM    4        /* number of DMA channels         */
 #define DMA_CHAN_0      0        /* DMA channel #0                 */
 #define DMA_CHAN_1      1        /* DMA channel #1                 */
-#define DMA_CHAN_2      2        /* DMA channel #0                 */
-#define DMA_CHAN_3      3        /* DMA channel #1                 */
+#define DMA_CHAN_2      2        /* DMA channel #2                 */
+#define DMA_CHAN_3      3        /* DMA channel #3                 */
 
 struct tsc_ioctl_dma_req
 {
