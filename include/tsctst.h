@@ -36,17 +36,15 @@ struct tsc_para{
 
 // Structure with all configuration parameters
 struct tscTst{
-	/* Use TSI148 board */
-	int use_tsi148;
 	/* Local board 0 */
 	int shm_base_0;
 	int shm_size_0;
 	int shm_offset_0;
-	/* Remote board 1 */
+	int sram_offset_0;
+	int usr_base_0;
+	int usr_size_0;
+	int usr_offset_0;
 
-	int shm_base_1;
-	int shm_size_1;
-	int shm_offset_1;
 };
 
 struct tst_ctl{

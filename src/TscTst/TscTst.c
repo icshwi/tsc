@@ -391,13 +391,6 @@ void tst_get_config(struct tscTst *at){
         if (buf[0] == '#') {
             continue;
         }
-        if (strstr(buf, "USE_TSI148 ")) {
-           	if(sscanf(buf, "%s %x\n", prm_name, &val)!= 2){
-           		printf("Error ! \n");
-           		break;
-        	}
-          	at->use_tsi148 = val;
-        }
         if (strstr(buf, "SHM_BASE_0 ")) {
         	if(sscanf(buf, "%s %x\n", prm_name, &val)!= 2){
         		printf("Error ! \n");
@@ -419,26 +412,33 @@ void tst_get_config(struct tscTst *at){
         	}
         	at->shm_offset_0 = val;
         }
-        if (strstr(buf, "SHM_BASE_1 ")) {
+        if (strstr(buf, "SRAM_OFFSET_0 ")) {
         	if(sscanf(buf, "%s %x\n", prm_name, &val)!= 2){
         		printf("Error ! \n");
         		break;
         	}
-        	at->shm_base_1 = val;
+        	at->sram_offset_0 = val;
         }
-        if (strstr(buf, "SHM_SIZE_1 ")) {
+        if (strstr(buf, "USR_BASE_0 ")) {
         	if(sscanf(buf, "%s %x\n", prm_name, &val)!= 2){
         		printf("Error ! \n");
-        		break;
-        	}
-        	at->shm_size_1 = val;
+                break;
+            }
+            at->usr_base_0 = val;
         }
-        if (strstr(buf, "SHM_OFFSET_1 ")) {
+        if (strstr(buf, "USR_SIZE_0 ")) {
         	if(sscanf(buf, "%s %x\n", prm_name, &val)!= 2){
         		printf("Error ! \n");
-        		break;
-        	}
-        	at->shm_offset_1 = val;
+                break;
+            }
+            at->usr_size_0 = val;
+        }
+        if (strstr(buf, "USR_OFFSET_0 ")) {
+        	if(sscanf(buf, "%s %x\n", prm_name, &val)!= 2){
+        		printf("Error ! \n");
+            break;
+            }
+            at->usr_offset_0 = val;
         }
     }
 }
