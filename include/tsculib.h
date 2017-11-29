@@ -58,6 +58,8 @@ int tsc_write_sgl( ulong addr, char *buf, uint mode);
 int tsc_read_sgl( ulong addr, char *buf, uint mode);
 int tsc_shm_write( uint shm_addr, char *buf, int len, int ds, int swap, int mem);
 int tsc_shm_read( uint shm_addr, char *buf, int len, int ds, int swap, int mem);
+int tsc_usr_write( uint shm_addr, char *buf, int len, int ds, int swap, int mem);
+int tsc_usr_read( uint shm_addr, char *buf, int len, int ds, int swap, int mem);
 int tsc_dma_move(  struct tsc_ioctl_dma_req *dr_p);
 int tsc_map_alloc( struct tsc_ioctl_map_win *w);
 int tsc_map_get( struct tsc_ioctl_map_win *w);

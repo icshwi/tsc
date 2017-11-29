@@ -743,6 +743,79 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_usr_write
+ * Prototype     : int
+ * Parameters    : shm address
+ *                 pointer to data buffer
+ *                 transfer size (0 for single data)
+ *                 data size
+ *                 hardware swapping mode
+ *                 Select smem1 or smem2
+ * Return        : status of read operation
+ *----------------------------------------------------------------------------
+ * Description   : copy <len> bytes from buffer <buf> to USR address space
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int tsc_usr_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
+	struct tsc_ioctl_rdwr rdwr;
+	int retval;
+
+	if(len < 0) return(-EINVAL);
+	if(tsc_fd < 0) return(-EBADF);
+	rdwr.rem_addr = (ulong)shm_addr;
+	rdwr.buf = buf;
+	rdwr.len = len;
+	if (mem == 1) {
+		rdwr.m.space = RDWR_SPACE_USR1;
+	}
+	else if (mem == 2){
+		rdwr.m.space = RDWR_SPACE_USR2;
+	}
+	rdwr.m.am = 0;
+	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
+	rdwr.m.swap = (char)swap;
+	retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+
+	return( retval);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_usr_read
+ * Prototype     : int
+ * Parameters    : shm address
+ *                 pointer to data buffer
+ *                 transfer size (0 for single data)
+ *                 data size
+ *                 hardware swapping mode
+ *                 Select smem1 or smem2
+ * Return        : status of read operation
+ *----------------------------------------------------------------------------
+ * Description   : Read a block of data from USR address space
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int tsc_usr_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
+	struct tsc_ioctl_rdwr rdwr;
+	int retval;
+
+	if(len < 0) return(-EINVAL);
+	if(tsc_fd < 0) return(-EBADF);
+	rdwr.rem_addr = (ulong)shm_addr;
+	rdwr.buf = buf;
+	rdwr.len = len;
+	if (mem == 1) {
+		rdwr.m.space = RDWR_SPACE_USR1;
+	}
+	else if (mem == 2){
+		rdwr.m.space = RDWR_SPACE_USR2;
+	}
+	rdwr.m.am = 0;
+	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
+	rdwr.m.swap = (char)swap;
+	retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+
+	return(retval);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_alloc
  * Prototype     : int
  * Parameters    : pointer to mapping control structure
