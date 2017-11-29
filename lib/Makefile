@@ -10,7 +10,7 @@
 #----------------------------------------------------------------------------
 #  Description
 #
-#    This Makefile allows to build the user library for the ALTHEA7910
+#    This Makefile allows to build the user library for the TSC
 #
 #----------------------------------------------------------------------------
 #  Copyright Notice
