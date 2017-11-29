@@ -35,8 +35,8 @@
 int tsc_ddr(struct cli_cmd_para *);
 void bin(unsigned n, uint bit_size);
 int checksum_sum1(void *buf, int size);
-int althea_ddr_idel_reset(int mem);
-int althea_ddr_idel_status(int mem);
-int althea_ddr_idel_set(int mem, uint dq, uint step, char *pm);
-int althea_ddr_idel_calib(int mem);
+int tsc_ddr_idel_reset(int mem);
+int tsc_ddr_idel_status(int mem);
+int tsc_ddr_idel_set(int mem, uint dq, uint step, char *pm);
+int tsc_ddr_idel_calib(int mem);
 #endif /* _H_DDR */
