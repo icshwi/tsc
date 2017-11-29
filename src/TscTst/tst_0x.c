@@ -596,6 +596,139 @@ int tst_02(struct tst_ctl *tc){
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_shm_addr
+ * Prototype     : int
+ * Parameters    : test control structure, test ID
+ * Return        : Done or Error
+ *
+ *----------------------------------------------------------------------------
+ * Description   : Test all SHM address bits : Read write SHM
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int tst_shm_addr(struct tst_ctl *tc, char *tst_id){
+	time_t tm;
+	char *ct           = NULL;
+	char *eaddr        = NULL;
+	char *data_buf     = NULL; // Consistent data
+	char *check_buf    = NULL; // Resulting data for check
+	int i              = 0;
+	int j              = 0;
+	int retval         = 0;
+	int size_ref       = 0x4;
+	int shm_addr       = 0x4000;
+	int shm_addr_ref   = 0x4000;
+	int ref_pattern    = 0xdeadface;
+
+	tm = time(0);
+	ct = ctime(&tm);
+
+	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
+	TST_LOG( tc, (logline, "%s->Executing Read / Write SHM and test bit address \n", tst_id));
+
+	// Prepare buffers
+	data_buf  = (char *)malloc(size_ref);
+	check_buf = (char *)malloc(size_ref);
+
+	// Fill 1 data  with test pattern
+	tst_cpu_fill(data_buf, size_ref, 0, 0xdeadface, 0);
+
+	// Loop on 2 DDR3 memory
+	for(j = 1; j < 3; j++){
+
+		shm_addr = shm_addr_ref;
+
+		// Generate test with sliding SHM address bit for low address bit
+		for(i = 0; i < 13; i++){
+
+			// Fill check buffer with 0
+			tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
+
+			TST_LOG(tc, (logline, "\nTesting SHM#%x address low  bit: %08x ", j, shm_addr));
+
+			// Write local SHM with 0
+			tsc_shm_write(shm_addr, check_buf, size_ref, 4, 0, j);
+
+			usleep(1000);
+
+			// Write local SHM with consistent data
+			tsc_shm_write(shm_addr, data_buf, size_ref, 4, 0, j);
+
+			usleep(1000);
+
+			// Read local SHM with to check data
+			tsc_shm_read(shm_addr, check_buf, size_ref, 4, 0, j);
+
+			usleep(1000);
+
+			// Check for errors in consistent pattern area
+			eaddr = tst_cpu_check(check_buf, size_ref, 0, ref_pattern, 0);
+			if(eaddr){
+				TST_LOG( tc, (logline, "->Error in consistent pattern area at address %x", shm_addr));
+				retval = TST_STS_ERR;
+				break;
+			}
+
+			TST_LOG( tc, (logline, "              -> OK\r"));
+
+			// Change SHM bit address
+			shm_addr = shm_addr_ref | (1 << i);
+		}
+
+		shm_addr = shm_addr_ref;
+
+		// Generate test with sliding SHM address bit
+		for(i = 0; i < 15; i++){
+
+			// Fill check buffer with 0
+			tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
+
+			TST_LOG(tc, (logline, "\nTesting SHM#%x address high bit: %08x ", j, shm_addr));
+
+			// Write local SHM with 0
+			tsc_shm_write(shm_addr, check_buf, size_ref, 4, 0, j);
+
+			usleep(1000);
+
+			// Write local SHM with consistent data
+			tsc_shm_write(shm_addr, data_buf, size_ref, 4, 0, j);
+
+			usleep(1000);
+
+			// Read local SHM with to check data
+			tsc_shm_read(shm_addr, check_buf, size_ref, 4, 0, j);
+
+			usleep(1000);
+
+			// Check for errors in consistent pattern area
+			eaddr = tst_cpu_check(check_buf, size_ref, 0, ref_pattern, 0);
+			if(eaddr){
+				TST_LOG( tc, (logline, "->Error in consistent pattern area at address %x", shm_addr));
+				retval = TST_STS_ERR;
+				break;
+			}
+
+			TST_LOG( tc, (logline, "              -> OK\r"));
+
+			// Change SHM bit address
+			shm_addr = shm_addr << 1;
+		}
+	}
+
+	tm = time(0);
+	ct = ctime(&tm);
+	TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+	free(data_buf);
+	free(check_buf);
+
+	return( retval | TST_STS_DONE);
+}
+
+int tst_03(struct tst_ctl *tc){
+	return(tst_shm_addr(tc, "Tst:03"));
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_sram_shm_mem_pmem
  * Prototype     : int
  * Parameters    : test control structure, test ID, mode
@@ -793,8 +926,8 @@ int tst_sram_shm_mem_pmem(struct tst_ctl *tc, char *tst_id){
 	return(retval | TST_STS_DONE);
 }
 
-int tst_03(struct tst_ctl *tc){
-	return(tst_sram_shm_mem_pmem(tc, "Tst:03"));
+int tst_04(struct tst_ctl *tc){
+	return(tst_sram_shm_mem_pmem(tc, "Tst:04"));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -976,8 +1109,8 @@ int tst_usr(struct tst_ctl *tc, char *tst_id){
 	return(retval | TST_STS_DONE);
 }
 
-int tst_04(struct tst_ctl *tc){
-	return(tst_usr(tc, "Tst:04"));
+int tst_05(struct tst_ctl *tc){
+	return(tst_usr(tc, "Tst:05"));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1113,6 +1246,6 @@ int tst_kbuf(struct tst_ctl *tc, char *tst_id){
 	return( retval | TST_STS_DONE);
 }
 
-int tst_05(struct tst_ctl *tc){
-	return(tst_kbuf(tc, "Tst:05"));
+int tst_06(struct tst_ctl *tc){
+	return(tst_kbuf(tc, "Tst:06"));
 }
