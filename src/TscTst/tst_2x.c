@@ -1,16 +1,16 @@
 /*=========================< begin file & file header >=======================
  *  References
  *
- *    filename : tst_3x.c
- *    author   : JFG, XP
+ *    filename : tst_2x.c
+ *    author   : XP
  *    company  : IOxOS
- *    creation : May 12,2016
+ *    creation : Nov, 29 2017
  *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *	  Local DMA tests
+ *	  DMA tests
  *----------------------------------------------------------------------------
  *  Copyright Notice
  *
@@ -53,10 +53,30 @@
 
 extern int tst_check_cmd_tstop(void);
 
-struct tsc_ioctl_dma_req req_p;   // dma request structure
+struct tsc_ioctl_dma_req req_p; // dma request structure
+
+			                     //SRAM1    SRAM2    DDR1    DDR2    USR1    USR2    KBUF
+int source[7]                  = { 2,       3,       2,      3,      4,      5,      0};
+const char * source_txt[]      = {"SRAM1", "SRAM2", "DDR1", "DDR2", "USR1", "USR2", "KBUF"};
+
+int destination[7]             = { 2,       3,       2,      3,      4,      5,      0};
+const char * destination_txt[] = {"SRAM1", "SRAM2", "DDR1", "DDR2", "USR1", "USR2", "KBUF"};
+
+/* ->    * SRAM1 * SRAM2 * DDR1 * DDR2 * USR1 * USR2 * KBUF * DEST
+ * **********************************************************
+ * SRAM1 * ----- *       * ---- *      *      *      *      *
+ * SRAM2 *       * ----- *      * ---- *      *      *      *
+ * DDR1  * ----- *       * ---- *      *      *      *      *
+ * DDR2  *       * ----- *      * ---- *      *      *      *
+ * USR1  *       *       *      *      * ---- *      *      *
+ * USR2  *       *       *      *      *      * ---- *      *
+ * KBUF  *       *       *      *      *      *      * ---- *
+ * **********************************************************
+ * SRC   *
+ */
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : dma_configure_local
+ * Function name : dma_configure
  * Prototype     : void
  * Parameters    : dma channel, source, destination, size, space src, space dest
  * Return        : Done or Error
@@ -65,7 +85,7 @@ struct tsc_ioctl_dma_req req_p;   // dma request structure
  * Description   : Dma configure [channel, src, des, size, space_src, space_des]
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-void dma_configure_local(int channel, int src, int des, int size, int space_src, int space_des){
+void dma_configure(int channel, int src, int des, int size, int space_src, int space_des){
 	req_p.des_addr   = des;
 	req_p.des_space  = space_des;
 	req_p.des_mode   = 0;
@@ -73,30 +93,38 @@ void dma_configure_local(int channel, int src, int des, int size, int space_src,
 	req_p.src_space  = space_src;
 	req_p.src_mode   = 0;
 	req_p.size       = size;
-	// User dma channel 0 and 1
+
+	// User dma channel 0, 1 for ENGINE-SHM1
 	if (channel == 0){
 		req_p.start_mode = (char)DMA_START_CHAN(DMA_CHAN_0);
 	}
 	else if (channel == 1){
 		req_p.start_mode = (char)DMA_START_CHAN(DMA_CHAN_1);
 	}
+	// User dma channel 2, 3 for ENGINE-SHM2
+	else if (channel == 2){
+		req_p.start_mode = (char)DMA_START_CHAN(DMA_CHAN_2);
+	}
+	else if (channel == 3){
+		req_p.start_mode = (char)DMA_START_CHAN(DMA_CHAN_3);
+	}
 	req_p.end_mode   = 0;
 	req_p.intr_mode  = DMA_INTR_ENA;
-	req_p.wait_mode  = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4);
+	req_p.wait_mode  = DMA_WAIT_INTR | DMA_WAIT_1S | (5 << 4);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tst_dma_kbuf_shm_local
+ * Function name : tst_dma_
  * Prototype     : int
  * Parameters    : test control structure, test ID, direction of transfer
  * Return        : Done or Error
  *
  *----------------------------------------------------------------------------
- * Description   : DMA test between KBUF0 to SHM0
- *                 direction: 0 = kbuf0 -> shm0, 1 = shm0 -> kbuf0
+ * Description   : DMA test between all agents (SRAM1, SRAM2, SHM1, SHM2, USR1,
+ *                 USR2, KBUF) on all channels (0, 1, 2, 3) in both direction
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction, int smem){
+int tst_dma(struct tst_ctl *tc, char *tst_id){
 	struct tsc_ioctl_kbuf_req buf_p;
 	time_t tm;
 	char *ct           = NULL;
@@ -113,47 +141,46 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction, int 
 	int sub_size       = tc->at->shm_size_0 - 0x2000; // Sliding size
 	int sub_size_ref   = tc->at->shm_size_0 - 0x2000;
 	int ref_pattern    = 0xdeadface;
-	int dma_channel    = 0; // 2 DMAs channels : 0 an 1
+	int src            = 0;
+	int dest           = 0;
+	int channel        = 0;
 
 	tm = time(0);
 	ct = ctime(&tm);
 
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
 
-	if (smem == 1){
-		if(direction == 0){
-			TST_LOG( tc, (logline, "%s->Executing DMA from KBUF0 to SMEM1\n", tst_id));
-		}
-		else if(direction == 1){
-			TST_LOG( tc, (logline, "%s->Executing DMA from SMEM1 to KBUF0\n", tst_id));
-		}
-	}
-	else if (smem == 2) {
-		if(direction == 0){
-			TST_LOG( tc, (logline, "%s->Executing DMA from KBUF0 to SMEM2\n", tst_id));
-		}
-		else if(direction == 1){
-			TST_LOG( tc, (logline, "%s->Executing DMA from SMEM2 to KBUF0\n", tst_id));
-		}
-	}
-
-	// Allocate kernel buffer suitable for DMA transfer
-	buf_p.size = 0x100000; // Allocate 1 MB kernel buffer
-	retval = tsc_kbuf_alloc(&buf_p);
-	if(retval != 0){
-	    TST_LOG( tc, (logline, "->Error allocatint kernel buffer\n"));
-	    retval = TST_STS_ERR;
-	    goto ERROR;
-	}
-
-	// Compute board offset in decoding window
+	// Reference size for DMA test (SRAM, DDDR, USR)
 	size_ref = tc->at->shm_size_0;
+
+	// Compute board offset in decoding window //////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!
 	offset   = tc->at->shm_offset_0;
+	//offset   = tc->at->sram_offset_0;
+	//offset   = tc->at->usr_offset_0;
 
 	// Prepare buffers
 	ref_buf   = (char *)malloc(size_ref);
 	data_buf  = (char *)malloc(size_ref);
 	check_buf = (char *)malloc(size_ref);
+
+	// Allocate a Kernel buffer
+	buf_p.size = 0x100000;
+	retval = tsc_kbuf_alloc(&buf_p);
+	if(retval != 0){
+	    TST_LOG( tc, (logline, "->Error allocatint kernel buffer\n"));
+	    retval = TST_STS_ERR;
+		// Free data buffers
+		free(ref_buf);
+		free(data_buf);
+		free(check_buf);
+		// Free kernel buffer
+		tsc_kbuf_free(&buf_p);
+
+		tm = time(0);
+		ct = ctime(&tm);
+		TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+		return( retval | TST_STS_DONE);
+	}
 
 	// Fill reference buffer with pattern 0xdeadface
 	tst_cpu_fill(ref_buf, size_ref, 0, ref_pattern, 0);
@@ -164,153 +191,222 @@ int tst_dma_kbuf_shm_local(struct tst_ctl *tc, char *tst_id, int direction, int 
 	// Fill check buffer with 0
 	tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
 
-	// Choose direction: 0 = kbuf0 -> shm0, 1 = shm0 -> kbuf0
-	if(direction == 0){
-		// Write local KBUF0 with consistent data
-		tsc_kbuf_write(buf_p.k_base, data_buf, size_ref);
+// Loop on four DMA channels (0,1 engines SHM1, 1,2 engines SHM2) -----------------------------------------
+	for (channel = 0; channel < 4; channel++) {
 
-	}
-	else if(direction == 1){
-		// Write local SHM1 or SHM2 with consistent data
-		if (smem == 1){
-			tsc_shm_write(offset, data_buf, size_ref, 4, 0, 1);
-		}
-		else if (smem == 2) {
-			tsc_shm_write(offset, data_buf, size_ref, 4, 0, 2);
-		}
-	}
+// Allocate DMA channel -----------------------------------------------------------------------------------
+		if(tsc_dma_alloc(channel)){
+			TST_LOG( tc, (logline, "->DMA channel %x is busy \n", channel));
+			retval = TST_STS_ERR;
+			// Free DMA engine
+			tsc_dma_free(0);
+			tsc_dma_free(1);
+			// Free data buffers
+			free(ref_buf);
+			free(data_buf);
+			free(check_buf);
+			// Free kernel buffer
+			tsc_kbuf_free(&buf_p);
 
-	// Allocate DMA
-	if(tsc_dma_alloc(dma_channel)){
-		TST_LOG( tc, (logline, "->DMA channel %x is busy \n", dma_channel));
-		retval = TST_STS_ERR;
-		goto ERROR;
-	}
-	if(tsc_dma_alloc(dma_channel + 1)){
-		TST_LOG( tc, (logline, "->DMA channel %x is busy \n", dma_channel + 1));
-		retval = TST_STS_ERR;
-		goto ERROR;
+			tm = time(0);
+			ct = ctime(&tm);
+			TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+			return( retval | TST_STS_DONE);
 		}
 
-	// Test both DMA channel
-	for (dma_channel = 0; dma_channel < 2; dma_channel++){
+// Loop on all DMA sources possible ----------------------------------------------------------------------
+		for (src = 0; src < 7; src++) {
 
-		// Reset offset and size
-		sub_size = sub_size_ref;
-		sub_offset = sub_offset_ref;;
-
-		TST_LOG( tc, (logline, "\nTesting DMA Channel #%x \n", dma_channel));
-		// Generate test with sliding size and offset
-		for(i = 0; i < 0x1000; i++){
-			TST_LOG(tc, (logline, "%s->Executing: iteration:%4d size:%05x offset:%05x", tst_id, i++, sub_size, sub_offset));
-
-			// Fill check buffer with 0
-			tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
-
-			// Choose direction: 0 = kbuf0 -> shm, 1 = shm -> kbuf0
-			if(direction == 0){
-				// Write SHM1 or SHM2 with reference pattern 0xdeadface
-				if (smem == 1){
-					tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 1);
-				}
-				else if (smem == 2){
-					tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 2);
-				}
-
-				usleep(1000);
-
-				// Prepare DMA [channel, src, des, size, space_src, space_des] for smem1 and smem2
-				if (smem == 1){
-					dma_configure_local(dma_channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, DMA_SPACE_PCIE, DMA_SPACE_SHM);
-				}
-				else if (smem == 2){
-					dma_configure_local(dma_channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, DMA_SPACE_PCIE, DMA_SPACE_SHM2);
-				}
+// Initialize source with consistent data ----------------------------------------------------------------
+			if (source[src] == 0){									// PCIe - KBUF
+				tsc_kbuf_write(buf_p.k_base, data_buf, size_ref);
 			}
-			else if (direction == 1){
-				// Write local KBUF0 with reference pattern 0xdeadface
-				tsc_kbuf_write(buf_p.k_base, ref_buf, size_ref);
-
-				usleep(1000);
-
-				// Prepare DMA [channel, src, des, size, space_src, space_des] for smem1 and smem2
-				if (smem == 1){
-					dma_configure_local(dma_channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, DMA_SPACE_SHM, DMA_SPACE_PCIE);
-				}
-				else if (smem == 2){
-					dma_configure_local(dma_channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, DMA_SPACE_SHM2, DMA_SPACE_PCIE);
-				}
+			else if (source[src] == 2){								// SRAM1 - DDR1
+				tsc_shm_write(offset, data_buf, size_ref, 4, 0, 1);
+			}
+			else if (source[src] == 3){								// SRAM2 - DDR2
+				tsc_shm_write(offset, data_buf, size_ref, 4, 0, 2);
+			}
+			else if (source[src] == 4){								// USR1
+				tsc_usr_write(offset, data_buf, size_ref, 4, 0, 1);
+			}
+			else if (source[src] == 5){								// USR2
+				tsc_usr_write(offset, data_buf, size_ref, 4, 0, 2);
 			}
 
-			// Do DMA transfer
-			retval = tsc_dma_move(&req_p);
+// Loop on all DMA destination possible ------------------------------------------------------------------
+			for (dest = 0; dest < 7; dest++){
 
-			if(retval < 0){
-				TST_LOG(tc, (logline, "->DMA move error \n"));
-				retval = TST_STS_ERR;
-				goto ERROR;
-			}
+				// Exclude DMA transfer on same agent
+				if (source[src] != destination[dest]){
+					TST_LOG( tc, (logline, "%s->Executing DMA channel#%x from %s to %s            \n", tst_id, channel, source_txt[src], destination_txt[dest]));
 
-			// Choose direction: 0 = kbuf0 -> shm, 1 = shm -> kbuf0
-			if(direction == 0){
-				// Acquire data from SHM1 or SHM2
-				if (smem == 1){
-					tsc_shm_read(offset, check_buf, size_ref, 4, 0, 1);
+					// Reset offset and size
+					sub_size   = sub_size_ref;
+					sub_offset = sub_offset_ref;
+
+// Generate test with sliding size and offset ------------------------------------------------------------
+					for(i = 0; i < 0x1000; i++){
+						TST_LOG(tc, (logline, "%s->Executing: iteration:%4d size:%05x offset:%05x", tst_id, i++, sub_size, sub_offset));
+
+						// Fill check buffer with 0
+						tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
+
+// Prepare data destination with reference pattern -------------------------------------------------------
+						if (destination[dest] == 0){							// PCIe - KBUF
+							tsc_kbuf_write(buf_p.k_base, ref_buf, size_ref);
+						}
+						else if (destination[dest] == 2){						// SRAM1 - DDR1
+							tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 1);
+						}
+						else if (destination[dest] == 3){						// SRAM2 - DDR2
+							tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 2);
+						}
+						else if (destination[dest] == 4){						// USR1
+							tsc_usr_write(offset, ref_buf, size_ref, 4, 0, 1);
+						}
+						else if (destination[dest] == 5){						// USR2
+							tsc_usr_write(offset, ref_buf, size_ref, 4, 0, 2);
+						}
+
+						usleep(1000);
+
+// Preapare DMA transfer ----------------------------------------------------------------------------------
+						// Source is KBUF
+						if (source[src] == 0){
+							dma_configure(channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, source[src], destination[dest]);
+						}
+						// Destination is KBUF
+						else if (destination[dest] == 0){
+							dma_configure(channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, source[src], destination[dest]);
+						}
+						// All others cases (SRAM, SHM, USR)
+						else {
+							dma_configure(channel, offset + sub_offset, offset + sub_offset, sub_size, source[src], destination[dest]);
+						}
+
+// Do DMA transfer ----------------------------------------------------------------------------------------
+						retval = tsc_dma_move(&req_p);
+						if(retval < 0){
+							TST_LOG(tc, (logline, "->DMA move error \n"));
+							retval = TST_STS_ERR;
+							// Free DMA engine
+							tsc_dma_free(channel);
+							// Free working buffers
+							free(ref_buf);
+							free(data_buf);
+							free(check_buf);
+							// Free kernel buffer
+							tsc_kbuf_free(&buf_p);
+
+							tm = time(0);
+							ct = ctime(&tm);
+							TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+							return( retval | TST_STS_DONE);
+						}
+
+// Acquire data -------------------------------------------------------------------------------------------
+						if (destination[dest] == 0){							// PCIe - KBUF
+							tsc_kbuf_read(buf_p.k_base, check_buf, size_ref);
+						}
+						else if (destination[dest] == 2){						// SRAM1 - DDR1
+							tsc_shm_read(offset, check_buf, size_ref, 4, 0, 1);
+						}
+						else if (destination[dest] == 3){						// SRAM2 - DDR2
+							tsc_shm_read(offset, check_buf, size_ref, 4, 0, 2);
+						}
+						else if (destination[dest] == 4){						// USR1
+							tsc_usr_read(offset, check_buf, size_ref, 4, 0, 1);
+						}
+						else if (destination[dest] == 5){						// USR2
+							tsc_usr_read(offset, check_buf, size_ref, 4, 0, 2);
+						}
+
+// Check data before DMA area -----------------------------------------------------------------------------
+						eaddr = tst_cpu_check(check_buf, sub_offset, 0, 0xdeadface, 0);
+						if(eaddr){
+							TST_LOG(tc, (logline, "->Error before consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset));
+							retval = TST_STS_ERR;
+							// Free DMA engine
+							tsc_dma_free(channel);
+							// Free data buffers
+							free(ref_buf);
+							free(data_buf);
+							free(check_buf);
+							// Free kernel buffer
+							tsc_kbuf_free(&buf_p);
+
+							tm = time(0);
+							ct = ctime(&tm);
+							TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+							return( retval | TST_STS_DONE);
+						}
+
+// Check data in DMA area ---------------------------------------------------------------------------------
+						eaddr = tst_cpu_check(check_buf + sub_offset, sub_size, 1, offset + sub_offset, 4);
+						if(eaddr){
+							TST_LOG(tc, (logline, "->Error in consistent pattern area at offset %x", (uint)(eaddr - check_buf) + offset));
+							retval = TST_STS_ERR;
+							// Free DMA engine
+							tsc_dma_free(channel);
+							// Free data buffers
+							free(ref_buf);
+							free(data_buf);
+							free(check_buf);
+							// Free kernel buffer
+							tsc_kbuf_free(&buf_p);
+
+							tm = time(0);
+							ct = ctime(&tm);
+							TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+							return( retval | TST_STS_DONE);
+						}
+
+// Check data after DMA area ------------------------------------------------------------------------------
+						eaddr = tst_cpu_check(check_buf + sub_offset + sub_size, size_ref - sub_size - sub_offset, 0, 0xdeadface, 0);
+						if(eaddr){
+							TST_LOG(tc, (logline, "->Error after consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset));
+							retval = TST_STS_ERR;
+							// Free DMA engine
+							tsc_dma_free(channel);
+							// Free data buffers
+							free(ref_buf);
+							free(data_buf);
+							free(check_buf);
+							// Free kernel buffer
+							tsc_kbuf_free(&buf_p);
+
+							tm = time(0);
+							ct = ctime(&tm);
+							TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
+
+							return( retval | TST_STS_DONE);
+						}
+
+						TST_LOG(tc, (logline, "                -> OK\r"));
+
+						// Slide size
+						sub_size = sub_size_ref + ((i & 0xf00) >> 5);
+						// Slide offset
+						sub_offset = sub_offset_ref + ((i & 0xf0)  >> 1);
+					}
 				}
-				else if (smem == 2){
-					tsc_shm_read(offset, check_buf, size_ref, 4, 0, 2);
-				}
-
 			}
-			else if(direction == 1){
-				// Acquire data from KBUF0
-				tsc_kbuf_read(buf_p.k_base, check_buf, size_ref);
-			}
-
-			// Check data before DMA area
-			eaddr = tst_cpu_check(check_buf, sub_offset, 0, 0xdeadface, 0);
-			if(eaddr){
-				TST_LOG(tc, (logline, "->Error before consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset));
-				retval = TST_STS_ERR;
-				goto ERROR;
-			}
-
-			// Check data in DMA area
-			eaddr = tst_cpu_check(check_buf + sub_offset, sub_size, 1, offset + sub_offset, 4);
-			if(eaddr){
-				TST_LOG(tc, (logline, "->Error in consistent pattern area at offset %x", (uint)(eaddr - check_buf) + offset));
-				retval = TST_STS_ERR;
-				goto ERROR;
-			}
-
-			// Check data after DMA area
-			eaddr = tst_cpu_check(check_buf + sub_offset + sub_size, size_ref - sub_size - sub_offset, 0, 0xdeadface, 0);
-			if(eaddr){
-				TST_LOG(tc, (logline, "->Error after consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset));
-				retval = TST_STS_ERR;
-				goto ERROR;
-			}
-
-			TST_LOG(tc, (logline, "                -> OK\r"));
-
-			// Slide size
-			sub_size = sub_size_ref + ((i & 0xf00) >> 5);
-			// Slide offset
-			sub_offset = sub_offset_ref + ((i & 0xf0)  >> 1);
 		}
+		// Free DMA engine
+		tsc_dma_free(channel);
 	}
 
-ERROR:
-
-	// Free DMA engine
-	tsc_dma_free(0);
-	tsc_dma_free(1);
-
+	// Free kernel buffer
+	tsc_kbuf_free(&buf_p);
+	// Free data buffer
 	free(ref_buf);
 	free(data_buf);
 	free(check_buf);
-
-	tsc_kbuf_free(&buf_p);
 
 	tm = time(0);
 	ct = ctime(&tm);
@@ -319,22 +415,7 @@ ERROR:
 	return( retval | TST_STS_DONE);
 }
 
-// DMA test : kbuf0 -> shm1
+// DMA test
 int tst_20(struct tst_ctl *tc){
-	return(tst_dma_kbuf_shm_local(tc, "Tst:20", 0, 1));
-}
-
-// DMA test : kbuf0 -> shm2
-int tst_21(struct tst_ctl *tc){
-	return(tst_dma_kbuf_shm_local(tc, "Tst:21", 0, 2));
-}
-
-// DMA test : shm1 -> kbuf0
-int tst_22(struct tst_ctl *tc){
-	return(tst_dma_kbuf_shm_local(tc, "Tst:22", 1, 1));
-}
-
-// DMA test : shm2 -> kbuf0
-int tst_23(struct tst_ctl *tc){
-	return(tst_dma_kbuf_shm_local(tc, "Tst:23", 1, 2));
+	return(tst_dma(tc, "Tst:20"));
 }
