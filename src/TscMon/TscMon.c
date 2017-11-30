@@ -89,7 +89,7 @@ extern int tsc_fd;
 // DQ[15..8] -> DATA[7..0]
 // DQ[07..0] -> DATA[15..8]
 // ----------------------------------------------------------------------------------
-int tsc_ddr_idel_calib_start(void){
+int tsc_ddr_idel_calib_start(int quiet){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
 	int  DQ_NOK[16];
@@ -202,11 +202,15 @@ int tsc_ddr_idel_calib_start(void){
 
 		if ((mem - 1) == 0){
 			map_win.req.mode.space = MAP_SPACE_SHM1; // SHM #1
-			printf("SMEM1 calibration\n");
+			if (quiet == 0) {
+				printf("SMEM1 calibration\n");
+			}
 		}
 		else if((mem - 1) == 1){
 			map_win.req.mode.space = MAP_SPACE_SHM2; // SHM #2
-			printf("SMEM2 calibration\n");
+			if (quiet == 0) {
+				printf("SMEM2 calibration\n");
+			}
 		}
 
 		map_win.req.mode.flags = 0;
@@ -288,10 +292,14 @@ int tsc_ddr_idel_calib_start(void){
 			temp_cnt_value_store[j] = init_cnt_value_store[j];
 
 			if(j < 8){
-				printf(" DQ[%02d] ->", j + 8);
+				if (quiet == 0) {
+					printf(" DQ[%02d] ->", j + 8);
+				}
 			}
 			else{
-				printf(" DQ[%02d] ->", j - 8);
+				if (quiet == 0) {
+					printf(" DQ[%02d] ->", j - 8);
+				}
 			}
 
 			// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
@@ -383,12 +391,15 @@ else {
 			final_cnt_value_store[j] = marker;
 
 			// Trace new delay
-			printf(" Delay 0x%x, %i steps", marker, ok);
+			if (quiet == 0) {
+				printf(" Delay 0x%x, %i steps", marker, ok);
+			}
 			for(n = init_cnt_value_store[j] ; n < marker; n = n + CURRENT_STEP){
 				printf("   ");
 			}
-
-			printf("\n");
+			if (quiet == 0) {
+				printf("\n");
+			}
 
 if (PPC == 1){
 			if(j < 8){
@@ -450,7 +461,9 @@ else{
 			}
 		}
 		else {
-			printf("Done !  -> ");
+			if (quiet == 0) {
+				printf("Done !  -> ");
+			}
 
 			// Search best case
 		    best = DQ_OK[0];
@@ -466,7 +479,9 @@ else{
 		    		}
 		        }
 		    }
-		    printf("best case DQ[%i], %i steps | ", location, best);
+		    if (quiet == 0) {
+		    	printf("best case DQ[%i], %i steps | ", location, best);
+		    }
 
 			// Search worst case
 		    worst = DQ_OK[0];
@@ -482,7 +497,9 @@ else{
 		    		}
 		        }
 		    }
-		    printf("worst case DQ[%i], %i steps\n", location, worst);
+		    if (quiet == 0) {
+		    	printf("worst case DQ[%i], %i steps\n", location, worst);
+		    }
 		}
 
 		// Set IDEL and IFSTA to 0
@@ -499,8 +516,9 @@ else{
 		free(buf_rx);
 
 		mem++;
-
-		printf("\n");
+		if (quiet == 0) {
+			printf("\n");
+		}
     }
     return 0;
 }
@@ -515,391 +533,370 @@ else{
  * Description   : main entry for TscMon application
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int
-main( int argc,
-      char *argv[])
-{
-  struct cli_cmd_history *h;
-  struct winsize winsize;
-  int iex, retval;
-  int cmd_cnt;
-  int mm,dd,yy,hh,mn,ss;
-  int data = 0;
+int main(int argc, char *argv[]){
+	struct cli_cmd_history *h;
+	struct winsize winsize;
+	int iex     = 0;
+	int retval  = 0;
+	int cmd_cnt = 0;
+	int mm      = 0;
+	int dd      = 0;
+	int yy      = 0;
+	int hh      = 0;
+	int mn      = 0;
+	int ss      = 0;
+	int data    = 0;
+	int ret     = 0;
+	int quiet   = 0;
 
-  if( tsc_init() < 0)
-  {
-    printf("Cannot find interface\n");
-    exit( -1);
-  }
-
-  retval = tsc_csr_read( 0x18, &tsc_sign);
-  if( retval < 0)
-  {
-    printf("  ERROR -> cannot access ILOC_SIGN register !!\n");
-  }
-  tsc_csr_read( 0x28, &tsc_date);
-  ss = tsc_date & 0x3f;
-  mn = (tsc_date>>6) & 0x3f;
-  hh = (tsc_date>>12) & 0x1f;
-  yy = (tsc_date>>17) & 0x3f;
-  mm = (tsc_date>>23) & 0xf;
-  dd = (tsc_date>>27) & 0x1f;
-
-  /* configure the terminal in canonical mode with echo */
-  ioctl( 0, TIOCGWINSZ, &winsize);
-  tcgetattr( 0, &termios_old);
-  memcpy( &termios_new, &termios_old, sizeof( struct termios)); 
-  termios_new.c_lflag &=  (uint)(~(ECHOCTL | ECHO | ICANON));
-  tcsetattr( 0, TCSANOW, &termios_new);
-
-  /* initialize command list history */
-  h = cli_history_init( &cmd_history);
-
-  rdwr_init();
-  tst_init();
-  dma_init();
-  tdma_init();
-
-  tsc_ddr_idel_calib_start();
-
-  if( argc > 1) 
-  {
-    struct cli_cmd_para script_para;
-
-    /* check for script execution */
-    if( argv[1][0] == '@') 
-    {
-      cli_cmd_parse( &argv[1][1], &script_para);
-      iex = tsc_script( &argv[1][1], &script_para);
-      if( iex == 2)
-      {
-        goto TscMon_exit;
-      }
-    }
-    /* if not, interpret argument as command and execute it */
-    else 
-    {
-      cli_cmd_parse(  argv[1], &cmd_para);
-      tsc_cmd_exec( &cmd_list[0], &cmd_para);
-      goto TscMon_exit;
-    }
-  }
-
-  printf("     +------------------------------------------+\n");
-  if(tsc_get_device_id() == 0x1000){
-	  printf("     |  TscMon - %s %04x diagnostic tool         |\n", "IO", tsc_get_device_id());
-  }
-  else if(tsc_get_device_id() == 0x1001){
-	  printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
-  }
-  printf("     |  IOxOS Technologies Copyright 2015-2017  |\n");
-  printf("     |  Version %s - %s %s     |\n", TscMon_version, __DATE__, __TIME__);
-  printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
-  printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
-
-  tsc_pon_read(0x0, &data);
-  if (data == 0x73571211) {
-	  printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
-  }
-  else if (data == 0x73571410){
-	  printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
-  }
-  printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
-  printf("     +------------------------------------------+\n");
-  printf("\n");
-
-  cmd_cnt = 0;
-  while(1)
-  {
-    sprintf(cli_prompt, "%d:TscMon>", ++cmd_cnt);
-    cmdline = cli_get_cmd( h, cli_prompt);
-
-    if( cmdline[0] == 'q')
-    {
-      break;
-    }
-  /* Check for script execution */
-    if( cmdline[0] == '@')
-    {
-      struct cli_cmd_para script_para;
-
-      cli_cmd_parse(&cmdline[1], &script_para);
-      iex = tsc_script( &cmdline[1], &script_para);
-      if( iex == 2)
-      {
-	break;
-      }
-      continue;
-    }   
-    if( cmdline[0] == '&')
-    {
-      printf("Entering loop mode [enter any character to stop loop]...\n");
-      if( aio_error( &aiocb) != EINPROGRESS)
-      {
-        retval = aio_read( &aiocb);
-        if( retval < 0)
-        {
-          perror("aio_read");
-          goto TscMon_end_loop;
-        }
-      }
-      while( 1)
-      {
-        if( cmdline[1] == '@')
-        {
-          struct cli_cmd_para script_para;
-
-          cli_cmd_parse(  &cmdline[2], &script_para);
-          iex = tsc_script( &cmdline[2], &script_para);
-          if(iex == 2)
-          {
-  	    break;
-          }
-        }
-        else
-	{
-	  cli_cmd_parse( &cmdline[1], &cmd_para);
-          if( tsc_cmd_exec( &cmd_list[0], &cmd_para) < 0)
-	  {
-            if( aio_error( &aiocb) == EINPROGRESS)
-            {
-              retval = aio_cancel( aiocb.aio_fildes, &aiocb);
-	    }
-	    goto TscMon_end_loop;
-  	  }
+	if (argc > 1){
+		if (argv[1][0] == 'q') {
+			quiet = 1;
+		}
+		else {
+			quiet = 0;
+		}
 	}
-        if(aio_error( &aiocb) != EINPROGRESS)
-        {
-          aio_return( &aiocb);
-	  goto TscMon_end_loop;
+
+
+	if( tsc_init() < 0){
+		printf("Cannot find interface\n");
+		exit( -1);
 	}
-      }
+
+	retval = tsc_csr_read( 0x18, &tsc_sign);
+	if( retval < 0){
+		printf("  ERROR -> cannot access ILOC_SIGN register !!\n");
+	}
+	tsc_csr_read( 0x28, &tsc_date);
+	ss = tsc_date & 0x3f;
+	mn = (tsc_date>>6) & 0x3f;
+	hh = (tsc_date>>12) & 0x1f;
+	yy = (tsc_date>>17) & 0x3f;
+	mm = (tsc_date>>23) & 0xf;
+	dd = (tsc_date>>27) & 0x1f;
+
+	/* configure the terminal in canonical mode with echo */
+	ioctl( 0, TIOCGWINSZ, &winsize);
+	tcgetattr( 0, &termios_old);
+	memcpy( &termios_new, &termios_old, sizeof( struct termios));
+	termios_new.c_lflag &=  (uint)(~(ECHOCTL | ECHO | ICANON));
+	tcsetattr( 0, TCSANOW, &termios_new);
+
+	/* initialize command list history */
+	h = cli_history_init( &cmd_history);
+
+	rdwr_init();
+	tst_init();
+	dma_init();
+	tdma_init(quiet);
+
+	// Launch automatically DDR3 calibration
+	tsc_ddr_idel_calib_start(quiet);
+
+	if( argc > 1){
+		struct cli_cmd_para script_para;
+
+		/* check for script execution */
+		if( argv[1][0] == '@') {
+			cli_cmd_parse( &argv[1][1], &script_para);
+			iex = tsc_script( &argv[1][1], &script_para);
+			if( iex == 2){
+				goto TscMon_exit;
+			}
+		}
+		/* if not, interpret argument as command and execute it */
+/*		else {
+			cli_cmd_parse(  argv[1], &cmd_para);
+			tsc_cmd_exec( &cmd_list[0], &cmd_para);
+			goto TscMon_exit;
+		}
+		*/
+	}
+
+if (quiet == 0){
+	printf("          _______       __  __             \n");
+	printf("         |__   __|     |  \\/  |            \n");
+	printf("            | |___  ___| \\  / | ___  _ __  \n");
+	printf("            | / __|/ __| |\\/| |/ _ \\| '_ \\ \n");
+	printf("            | \\__ \\ (__| |  | | (_) | | | |\n");
+	printf("            |_|___/\\___|_|  |_|\\___/|_| |_|\n");
+	printf("\n");
+	printf("     +------------------------------------------+\n");
+	printf("     |  IOxOS Technologies Copyright 2015-2017  |\n");
+	if(tsc_get_device_id() == 0x1000){
+		printf("     |  TscMon - %s %04x diagnostic tool         |\n", "IO", tsc_get_device_id());
+	}
+	else if(tsc_get_device_id() == 0x1001){
+		printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
+	}
+	printf("     |  Version %s - %s %s     |\n", TscMon_version, __DATE__, __TIME__);
+	printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
+	printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
+
+	tsc_pon_read(0x0, &data);
+	if (data == 0x73571211) {
+		printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
+	}
+	else if (data == 0x73571410){
+		printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
+	}
+	printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
+	printf("     +------------------------------------------+\n");
+}
+	printf("\n");
+
+	cmd_cnt = 0;
+	while(1){
+		sprintf(cli_prompt, "%d:TscMon>", ++cmd_cnt);
+		cmdline = cli_get_cmd( h, cli_prompt);
+
+		if( cmdline[0] == 'q'){
+			break;
+		}
+		// Check for script execution
+		if( cmdline[0] == '@'){
+			struct cli_cmd_para script_para;
+
+			cli_cmd_parse(&cmdline[1], &script_para);
+			iex = tsc_script( &cmdline[1], &script_para);
+			if( iex == 2){
+				break;
+			}
+			continue;
+		}
+		// Loop command
+		if( cmdline[0] == '&'){
+			printf("Entering loop mode [enter any character to stop loop]...\n");
+			if( aio_error( &aiocb) != EINPROGRESS){
+				retval = aio_read( &aiocb);
+				if( retval < 0){
+					perror("aio_read");
+					goto TscMon_end_loop;
+				}
+			}
+			while( 1){
+				// Execute script
+				if( cmdline[1] == '@'){
+					struct cli_cmd_para script_para;
+
+					cli_cmd_parse(  &cmdline[2], &script_para);
+					iex = tsc_script( &cmdline[2], &script_para);
+					if(iex == 2){
+						break;
+					}
+				}
+				else{
+					cli_cmd_parse( &cmdline[1], &cmd_para);
+					if( tsc_cmd_exec( &cmd_list[0], &cmd_para) < 0){
+						if( aio_error( &aiocb) == EINPROGRESS){
+							retval = aio_cancel( aiocb.aio_fildes, &aiocb);
+						}
+						goto TscMon_end_loop;
+					}
+				}
+				if(aio_error( &aiocb) != EINPROGRESS){
+					aio_return( &aiocb);
+					goto TscMon_end_loop;
+				}
+			}
 TscMon_end_loop:
-      continue;
-    }
-    cli_cmd_parse( cmdline, &cmd_para);
-    if( cmdline[0] == '?')
-    {
-      tsc_func_help( &cmd_para);
-      continue;
-    }
-    if( cmdline[0] == '!')
-    {
-      char *new_cmd;
-      int idx;
+      	  continue;
+		}
+		cli_cmd_parse( cmdline, &cmd_para);
+		if( cmdline[0] == '?'){
+			tsc_func_help( &cmd_para);
+			continue;
+		}
+		// Call specific command according to the history
+		if( cmdline[0] == '!'){
+			char *new_cmd;
+			int idx;
 
-      cmd_para.cmd = NULL;
-      if( sscanf( &cmdline[1], "%d", &idx) == 1)
-      {
-        new_cmd = cli_history_find_idx( &cmd_history, idx);
-	if( new_cmd)
-	{
-	  printf("%s\n", new_cmd);
-	  cli_cmd_parse( new_cmd, &cmd_para);
-	}
-      }
-      else 
-      {
-        new_cmd = cli_history_find_str( &cmd_history, &cmdline[1]);
-	if( new_cmd)
-	{
-	  printf("%s\n", new_cmd);
-	  cli_cmd_parse( new_cmd, &cmd_para);
-	}
-      }
-    }
-    if( cmdline[0] == '$')
-    {
-      char *new_cmd;
+			cmd_para.cmd = NULL;
+			if( sscanf( &cmdline[1], "%d", &idx) == 1){
+				new_cmd = cli_history_find_idx( &cmd_history, idx);
+				if( new_cmd){
+					printf("%s\n", new_cmd);
+					cli_cmd_parse( new_cmd, &cmd_para);
+				}
+			}
+			else {
+				new_cmd = cli_history_find_str( &cmd_history, &cmdline[1]);
+				if( new_cmd){
+					printf("%s\n", new_cmd);
+					cli_cmd_parse( new_cmd, &cmd_para);
+				}
+			}
+		}
+		// Call alias
+		if( cmdline[0] == '+'){
+			char *new_cmd;
 
-      new_cmd = alias_find( &cmdline[1]);
-      cmd_para.cmd = NULL;
-      if( new_cmd)
-      {
-	printf("%s\n", new_cmd);
-	cli_cmd_parse( new_cmd, &cmd_para);
-      }
-    }
-    if( cmd_para.cmd)
-    {
-      tsc_cmd_exec( &cmd_list[0], &cmd_para);
-    }
-  }
+			new_cmd = alias_find( &cmdline[1]);
+			cmd_para.cmd = NULL;
+			if( new_cmd){
+				printf("%s\n", new_cmd);
+				cli_cmd_parse( new_cmd, &cmd_para);
+			}
+		}
+		// Execute OS command
+		if( cmdline[0] == '$'){
+			char new_cmd[1024];
+
+			strcpy(new_cmd, &cmdline[1]);
+			printf("OS command: <%s>\n", new_cmd);
+
+			ret =  system(new_cmd);
+			printf("return code: %i\n", ret);
+
+		}
+		else if( cmd_para.cmd){
+			tsc_cmd_exec( &cmd_list[0], &cmd_para);
+		}
+
+	}
 
 TscMon_exit:
-  kbuf_free( NULL);
-  tst_exit();
-  rdwr_exit();
+	kbuf_free( NULL);
+  	tst_exit();
+  	rdwr_exit();
 
-  /* restore previous terminal setting */
-  tcsetattr( 0, TCSANOW, &termios_old);
-  tsc_exit();
-  exit(0);
+  	/* restore previous terminal setting */
+  	tcsetattr( 0, TCSANOW, &termios_old);
+  	tsc_exit();
+  	exit(0);
 }
 
-int
-tsc_cmd_exec( struct cli_cmd_list *l,
-	       struct cli_cmd_para *c)
-{
-  long i;
+int tsc_cmd_exec( struct cli_cmd_list *l, struct cli_cmd_para *c){
+	long i;
 
-  i = 0;
-  if(strlen(c->cmd)) {
-    while(1) {
-      if( !l->cmd) // Command doesn't exist, break 
-      {
-        break;
-      }
-      // Check that the user enter the correct function name !
-      if(!strncmp(l->cmd, c->cmd, strlen(l->cmd)))
-      {
-        c->idx = i;
-        return( l->func( c));
-      }
-      i++; l++;
-    }
-    printf("%s -> Invalid command name ", c->cmd);
-    printf("(\'help\' or \'?\' displays a list of valid commands)\n");
-  }
-  return(-1);
-}
-
-int 
-tsc_print_usage( struct cli_cmd_para *c)
-{
-  long i;
-
-  i = 0;
-  while( cmd_list[c->idx].msg[i])
-  {
-    printf("%s\n", cmd_list[c->idx].msg[i]);
-    i++;
-  }
-  return(0);
-}
-
-int 
-tsc_func_help( struct cli_cmd_para *c)
-{
-  char *cmd;
-  long i, j;
-
-  i = 0;
-  if( c->cnt > 0)
-  {
-    while(1)
-    {
-      cmd = cmd_list[i].cmd;
-      if( cmd)
-      {
-        if( !strcmp( c->para[0], cmd))
-        {
-	  long j;
-
-	  j = 0;
-	  while( cmd_list[i].msg[j])
-	  {
-	    printf("%s\n", cmd_list[i].msg[j]);
-	    j++;
-	  }
-	  return(0);
-        }
-	i++;
-      }
-      else
-      {
-	printf("%s -> Invalid command name ", c->para[0]);
-	printf("(\'help\' or \'?\' displays a list of valid commands)\n");
-	return(-1);
-      }
-    }
-  }
-
-  while(1)
-  {
-    cmd = cmd_list[i++].cmd;
-    if( cmd)
-    {
-      printf("%s", cmd);
-      if( i&3)
-      {
-	j = 10 - (int)strlen( cmd);
-	while(j--)
-	{
-	  putchar(' ');
+	i = 0;
+	if(strlen(c->cmd)) {
+		while(1) {
+			if( !l->cmd) {// Command doesn't exist, break
+				break;
+			}
+			// Check that the user enter the correct function name !
+			if(!strncmp(l->cmd, c->cmd, strlen(l->cmd))){
+				c->idx = i;
+				return( l->func( c));
+			}
+			i++; l++;
+		}
+		printf("%s -> Invalid command name ", c->cmd);
+		printf("(\'help\' or \'?\' displays a list of valid commands)\n");
 	}
-      }
-      else
-      {
-	putchar('\n');
-      }
-    }
-    else
-    {
-      putchar('\n');
-      break;
-    }
-  }
-  return(0);
+	return(-1);
 }
 
+int tsc_print_usage( struct cli_cmd_para *c){
+	long i;
 
-int 
-tsc_func_history( struct cli_cmd_para *c)
-{
-  cli_history_print( &cmd_history);
-
-  return(0);
+	i = 0;
+	while( cmd_list[c->idx].msg[i]){
+		printf("%s\n", cmd_list[c->idx].msg[i]);
+		i++;
+	}
+	return(0);
 }
 
-int 
-tsc_wait(struct cli_cmd_para *c)
-{
-  int retval, ret;
-  int tmo;
-  char ch;
+int tsc_func_help( struct cli_cmd_para *c){
+	char *cmd;
+	long i, j;
 
-  printf("Continue [y/n] -> ");
-  fflush( stdout);
-  retval = 0;
-  ch = 'y';
-  if( aio_error( &aiocb) != EINPROGRESS) {
-    ret = aio_read( &aiocb);
-    if( ret < 0)
-    {
-      perror("aio_read");
-      goto tsc_wait_exit;
-    }
-  }
-  tmo = -1;
-  if( c->cnt > 0)
-  {
-    sscanf( c->para[0], "%d", &tmo);
-    tmo = tmo * 10;
-  }
-  while( tmo--)
-  {
-    if( aio_error( &aiocb) != EINPROGRESS)
-    {
-      retval = 0;
-      ch = *(char *)aiocb.aio_buf;
-      if( ch == 'n')
-      {
-	retval = -1;
-      }
-      aio_return( &aiocb);
-      goto tsc_wait_exit;
-    }
-    usleep(100000);
-  }
+	i = 0;
+	if( c->cnt > 0){
+		while(1){
+			cmd = cmd_list[i].cmd;
+			if( cmd){
+				if( !strcmp( c->para[0], cmd)){
+					long j;
 
-  if( aio_error( &aiocb) == EINPROGRESS)
-  {
-    ret = aio_cancel( aiocb.aio_fildes, &aiocb);
-  }
+					j = 0;
+					while( cmd_list[i].msg[j]){
+						printf("%s\n", cmd_list[i].msg[j]);
+						j++;
+					}
+					return(0);
+				}
+				i++;
+			}
+			else{
+				printf("%s -> Invalid command name ", c->para[0]);
+				printf("(\'help\' or \'?\' displays a list of valid commands)\n");
+				return(-1);
+			}
+		}
+	}
+
+	while(1){
+		cmd = cmd_list[i++].cmd;
+		if( cmd){
+			printf("%s", cmd);
+			if( i&3){
+				j = 10 - (int)strlen( cmd);
+				while(j--){
+					putchar(' ');
+				}
+			}
+			else{
+				putchar('\n');
+			}
+		}
+		else{
+			putchar('\n');
+			break;
+		}
+	}
+	return(0);
+}
+
+int tsc_func_history( struct cli_cmd_para *c){
+	cli_history_print( &cmd_history);
+	return(0);
+}
+
+int tsc_wait(struct cli_cmd_para *c){
+	int retval, ret;
+	int tmo;
+	char ch;
+
+	printf("Continue [y/n] -> ");
+	fflush( stdout);
+	retval = 0;
+	ch = 'y';
+	if( aio_error( &aiocb) != EINPROGRESS){
+		ret = aio_read( &aiocb);
+		if( ret < 0){
+			perror("aio_read");
+			goto tsc_wait_exit;
+		}
+	}
+	tmo = -1;
+	if( c->cnt > 0){
+		sscanf( c->para[0], "%d", &tmo);
+		tmo = tmo * 10;
+	}
+	while( tmo--){
+		if( aio_error( &aiocb) != EINPROGRESS){
+			retval = 0;
+			ch = *(char *)aiocb.aio_buf;
+			if( ch == 'n'){
+				retval = -1;
+			}
+			aio_return( &aiocb);
+			goto tsc_wait_exit;
+		}
+		usleep(100000);
+	}
+
+	if( aio_error( &aiocb) == EINPROGRESS){
+		ret = aio_cancel( aiocb.aio_fildes, &aiocb);
+	}
 
 tsc_wait_exit:
 
-  printf("%c\n", ch);
-  return( retval);
+	printf("%c\n", ch);
+	return( retval);
 }
