@@ -131,32 +131,28 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 	char *ref_buf      = NULL; // 0xdeadface
 	char *data_buf     = NULL; // Consistent data
 	char *check_buf    = NULL; // Resulting data for check
-	char *eaddr        = NULL;
-	int i              = 0;
+	char *eaddr        = NULL; // Error address
+	int i              = 0;    // Loop DMA transfer increment
+	int src            = 0;	   // Loop source increment
+	int dest           = 0;    // Loop destination increment
+	int channel        = 0;	   // Loop DMA channels increment
 	int retval         = 0;
-	int size_ref       = 0;
-	int offset  	   = 0;
-	int sub_offset     = 0x1000; // Sliding sub_offset
-	int sub_offset_ref = 0x1000;
+	int size_ref       = tc->at->shm_size_0;    // Reference size for DMA test (SRAM, DDDR, USR)
+	int offset_shm 	   = tc->at->shm_offset_0;  // Offset in SHM1-2 (DDR)
+	int offset_sram    = tc->at->sram_offset_0; // Offset in SRAM1-2
+	int offset_usr 	   = tc->at->usr_offset_0;  // Offset in USR1-2
+	int offset_src     = 0;						// Specific offset for source
+	int offset_dest    = 0;						// Specific offset for destination
+	int sub_offset     = 0x1000; 				// Sliding sub_offset
+	int sub_offset_ref = 0x1000;				// Sliding sub_offset reference
 	int sub_size       = tc->at->shm_size_0 - 0x2000; // Sliding size
-	int sub_size_ref   = tc->at->shm_size_0 - 0x2000;
-	int ref_pattern    = 0xdeadface;
-	int src            = 0;
-	int dest           = 0;
-	int channel        = 0;
+	int sub_size_ref   = tc->at->shm_size_0 - 0x2000; // Sliding size reference
+	int ref_pattern    = 0xdeadface;			// Reference pattern
 
 	tm = time(0);
 	ct = ctime(&tm);
 
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
-
-	// Reference size for DMA test (SRAM, DDDR, USR)
-	size_ref = tc->at->shm_size_0;
-
-	// Compute board offset in decoding window //////////////////////////////////////////////////////////// !!!!!!!!!!!!!!!!!!!!!!!!!
-	offset   = tc->at->shm_offset_0;
-	//offset   = tc->at->sram_offset_0;
-	//offset   = tc->at->usr_offset_0;
 
 	// Prepare buffers
 	ref_buf   = (char *)malloc(size_ref);
@@ -184,9 +180,6 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 
 	// Fill reference buffer with pattern 0xdeadface
 	tst_cpu_fill(ref_buf, size_ref, 0, ref_pattern, 0);
-
-	// Fill data buffer with pattern 0 4 8 C ...
-	tst_cpu_fill(data_buf, size_ref, 1, offset, 4);
 
 	// Fill check buffer with 0
 	tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
@@ -218,28 +211,114 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 // Loop on all DMA sources possible ----------------------------------------------------------------------
 		for (src = 0; src < 7; src++) {
 
+			// Choose offset destination according to the destination agent
+			if (source[src] == 0){				// PCIe - KBUF
+				offset_src = offset_shm;
+			}
+			else if (source[src] == 2){			// SRAM1 - DDR1
+				if (src == 0) {					// SRAM1
+					offset_src = offset_sram;
+				}
+				else {							// DDR1
+					offset_src = offset_shm;
+				}
+			}
+			else if (source[src] == 3){			// SRAM2 - DDR2
+				if (src == 1){					// SRAM2
+					offset_src = offset_sram;
+				}
+				else {							// DDR2
+					offset_src = offset_shm;
+				}
+			}
+			else if (source[src] == 4){			// USR1
+				offset_src = offset_usr;
+			}
+			else if (source[src] == 5){			// USR2
+				offset_src = offset_usr;
+			}
+
 // Initialize source with consistent data ----------------------------------------------------------------
 			if (source[src] == 0){									// PCIe - KBUF
+				// Fill data buffer with pattern 0 4 8 C ...
+				tst_cpu_fill(data_buf, size_ref, 1, offset_shm, 4); // KBUF has similar offset than DDR
+				// Write to source
 				tsc_kbuf_write(buf_p.k_base, data_buf, size_ref);
 			}
 			else if (source[src] == 2){								// SRAM1 - DDR1
-				tsc_shm_write(offset, data_buf, size_ref, 4, 0, 1);
+				if (src == 0){										// SRAM1
+					// Fill data buffer with pattern 0 4 8 C ...
+					tst_cpu_fill(data_buf, size_ref, 1, offset_sram, 4);
+					// Write to source
+					tsc_shm_write(offset_sram, data_buf, size_ref, 4, 0, 1);
+				}
+				else{												// DDR1
+					// Fill data buffer with pattern 0 4 8 C ...
+					tst_cpu_fill(data_buf, size_ref, 1, offset_shm, 4);
+					// Write to source
+					tsc_shm_write(offset_shm, data_buf, size_ref, 4, 0, 1);
+				}
 			}
 			else if (source[src] == 3){								// SRAM2 - DDR2
-				tsc_shm_write(offset, data_buf, size_ref, 4, 0, 2);
+				if (src == 1){										// SRAM2
+					// Fill data buffer with pattern 0 4 8 C ...
+					tst_cpu_fill(data_buf, size_ref, 1, offset_sram, 4);
+					// Write to source
+					tsc_shm_write(offset_sram, data_buf, size_ref, 4, 0, 2);
+				}
+				else{												// DDR2
+					// Fill data buffer with pattern 0 4 8 C ...
+					tst_cpu_fill(data_buf, size_ref, 1, offset_shm, 4);
+					// Write to source
+					tsc_shm_write(offset_shm, data_buf, size_ref, 4, 0, 2);
+				}
 			}
 			else if (source[src] == 4){								// USR1
-				tsc_usr_write(offset, data_buf, size_ref, 4, 0, 1);
+				// Fill data buffer with pattern 0 4 8 C ...
+				tst_cpu_fill(data_buf, size_ref, 1, offset_usr, 4);
+				// Srite to source
+				tsc_usr_write(offset_shm, data_buf, size_ref, 4, 0, 1);
 			}
 			else if (source[src] == 5){								// USR2
-				tsc_usr_write(offset, data_buf, size_ref, 4, 0, 2);
+				// Fill data buffer with pattern 0 4 8 C ...
+				tst_cpu_fill(data_buf, size_ref, 1, offset_usr, 4);
+				// Write to source
+				tsc_usr_write(offset_shm, data_buf, size_ref, 4, 0, 2);
 			}
 
 // Loop on all DMA destination possible ------------------------------------------------------------------
 			for (dest = 0; dest < 7; dest++){
 
+				// Choose offset destination according to the destination agent
+				if (destination[dest] == 0){							// PCIe - KBUF
+					offset_dest = offset_shm;
+				}
+				else if (destination[dest] == 2){						// SRAM1 - DDR1
+					if (dest == 0) {									// SRAM1
+						offset_dest = offset_sram;
+					}
+					else {												// DDR1
+						offset_dest = offset_shm;
+					}
+				}
+				else if (destination[dest] == 3){						// SRAM2 - DDR2
+					if (dest == 1){										// SRAM2
+						offset_dest = offset_sram;
+					}
+					else {												// DDR2
+						offset_dest = offset_shm;
+					}
+				}
+				else if (destination[dest] == 4){						// USR1
+					offset_dest = offset_usr;
+				}
+				else if (destination[dest] == 5){						// USR2
+					offset_dest = offset_usr;
+				}
+
 				// Exclude DMA transfer on same agent
 				if (source[src] != destination[dest]){
+
 					TST_LOG( tc, (logline, "%s->Executing DMA channel#%x from %s to %s            \n", tst_id, channel, source_txt[src], destination_txt[dest]));
 
 					// Reset offset and size
@@ -250,7 +329,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 					for(i = 0; i < 0x1000; i++){
 						TST_LOG(tc, (logline, "%s->Executing: iteration:%4d size:%05x offset:%05x", tst_id, i++, sub_size, sub_offset));
 
-						// Fill check buffer with 0
+						// Fill check buffer with 0 after each transfer
 						tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
 
 // Prepare data destination with reference pattern -------------------------------------------------------
@@ -258,16 +337,26 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 							tsc_kbuf_write(buf_p.k_base, ref_buf, size_ref);
 						}
 						else if (destination[dest] == 2){						// SRAM1 - DDR1
-							tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 1);
+							if (dest == 0) {									// SRAM1
+								tsc_shm_write(offset_sram, ref_buf, size_ref, 4, 0, 1);
+							}
+							else {
+								tsc_shm_write(offset_shm, ref_buf, size_ref, 4, 0, 1);  // DDR1
+							}
 						}
 						else if (destination[dest] == 3){						// SRAM2 - DDR2
-							tsc_shm_write(offset, ref_buf, size_ref, 4, 0, 2);
+							if (dest == 1){										// SRAM"
+								tsc_shm_write(offset_sram, ref_buf, size_ref, 4, 0, 2);
+							}
+							else {												// DDR2
+								tsc_shm_write(offset_shm, ref_buf, size_ref, 4, 0, 2);
+							}
 						}
 						else if (destination[dest] == 4){						// USR1
-							tsc_usr_write(offset, ref_buf, size_ref, 4, 0, 1);
+							tsc_usr_write(offset_usr, ref_buf, size_ref, 4, 0, 1);
 						}
 						else if (destination[dest] == 5){						// USR2
-							tsc_usr_write(offset, ref_buf, size_ref, 4, 0, 2);
+							tsc_usr_write(offset_usr, ref_buf, size_ref, 4, 0, 2);
 						}
 
 						usleep(1000);
@@ -275,15 +364,15 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 // Preapare DMA transfer ----------------------------------------------------------------------------------
 						// Source is KBUF
 						if (source[src] == 0){
-							dma_configure(channel, buf_p.b_base + sub_offset, offset + sub_offset, sub_size, source[src], destination[dest]);
+							dma_configure(channel, buf_p.b_base + sub_offset, offset_dest + sub_offset, sub_size, source[src], destination[dest]);
 						}
 						// Destination is KBUF
 						else if (destination[dest] == 0){
-							dma_configure(channel, offset + sub_offset, buf_p.b_base + sub_offset, sub_size, source[src], destination[dest]);
+							dma_configure(channel, offset_src + sub_offset, buf_p.b_base + sub_offset, sub_size, source[src], destination[dest]);
 						}
 						// All others cases (SRAM, SHM, USR)
 						else {
-							dma_configure(channel, offset + sub_offset, offset + sub_offset, sub_size, source[src], destination[dest]);
+							dma_configure(channel, offset_src + sub_offset, offset_dest + sub_offset, sub_size, source[src], destination[dest]);
 						}
 
 // Do DMA transfer ----------------------------------------------------------------------------------------
@@ -312,22 +401,32 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 							tsc_kbuf_read(buf_p.k_base, check_buf, size_ref);
 						}
 						else if (destination[dest] == 2){						// SRAM1 - DDR1
-							tsc_shm_read(offset, check_buf, size_ref, 4, 0, 1);
+							if (dest == 0){										// SRAM2
+								tsc_shm_read(offset_sram, check_buf, size_ref, 4, 0, 1);
+							}
+							else {												// DDR1
+								tsc_shm_read(offset_shm, check_buf, size_ref, 4, 0, 1);
+							}
 						}
 						else if (destination[dest] == 3){						// SRAM2 - DDR2
-							tsc_shm_read(offset, check_buf, size_ref, 4, 0, 2);
+							if (dest == 1){										// SRAM2
+								tsc_shm_read(offset_sram, check_buf, size_ref, 4, 0, 2);
+							}
+							else {												// DDR2
+								tsc_shm_read(offset_shm, check_buf, size_ref, 4, 0, 2);
+							}
 						}
 						else if (destination[dest] == 4){						// USR1
-							tsc_usr_read(offset, check_buf, size_ref, 4, 0, 1);
+							tsc_usr_read(offset_usr, check_buf, size_ref, 4, 0, 1);
 						}
 						else if (destination[dest] == 5){						// USR2
-							tsc_usr_read(offset, check_buf, size_ref, 4, 0, 2);
+							tsc_usr_read(offset_usr, check_buf, size_ref, 4, 0, 2);
 						}
 
 // Check data before DMA area -----------------------------------------------------------------------------
 						eaddr = tst_cpu_check(check_buf, sub_offset, 0, 0xdeadface, 0);
 						if(eaddr){
-							TST_LOG(tc, (logline, "->Error before consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset));
+							TST_LOG(tc, (logline, "->Error before consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset_src));
 							retval = TST_STS_ERR;
 							// Free DMA engine
 							tsc_dma_free(channel);
@@ -346,9 +445,9 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 						}
 
 // Check data in DMA area ---------------------------------------------------------------------------------
-						eaddr = tst_cpu_check(check_buf + sub_offset, sub_size, 1, offset + sub_offset, 4);
+						eaddr = tst_cpu_check(check_buf + sub_offset, sub_size, 1, offset_src + sub_offset, 4);
 						if(eaddr){
-							TST_LOG(tc, (logline, "->Error in consistent pattern area at offset %x", (uint)(eaddr - check_buf) + offset));
+							TST_LOG(tc, (logline, "->Error in consistent pattern area at offset %x", (uint)(eaddr - check_buf) + offset_src));
 							retval = TST_STS_ERR;
 							// Free DMA engine
 							tsc_dma_free(channel);
@@ -369,7 +468,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 // Check data after DMA area ------------------------------------------------------------------------------
 						eaddr = tst_cpu_check(check_buf + sub_offset + sub_size, size_ref - sub_size - sub_offset, 0, 0xdeadface, 0);
 						if(eaddr){
-							TST_LOG(tc, (logline, "->Error after consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset));
+							TST_LOG(tc, (logline, "->Error after consistent pattern at offset %x", (uint)(eaddr - check_buf) + offset_src));
 							retval = TST_STS_ERR;
 							// Free DMA engine
 							tsc_dma_free(channel);
