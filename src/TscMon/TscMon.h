@@ -57,5 +57,6 @@
 #include "alias.h"
 
 int tsc_print_usage(struct cli_cmd_para *c);
+int tsc_ddr_idel_calib_start(void);
 
 #endif /* _H_TSCMON */
