@@ -79,14 +79,14 @@ void bin(unsigned n, unsigned int bit_size){
     }
 }
 
-// Althea ddr reset
+// tsc ddr reset
 // Reset to default DDR3 memory delay
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_reset(int mem){
+int tsc_ddr_idel_reset(int mem){
 	unsigned int data = 0;
 	unsigned int init = 0;
 
-	printf("Loading Althea DDR3 #%d default IDELAY ... \n", mem);
+	printf("Loading tsc DDR3 #%d default IDELAY ... \n", mem);
 
 	//tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 	//data = (data | (1 << 31) | (1 << 20) | (0xffff << 0)) & (~(0x7 << 21));
@@ -109,12 +109,12 @@ int althea_ddr_idel_reset(int mem){
 	return 0;
 }
 
-// Althea ddr set IDELAY
+// tsc ddr set IDELAY
 // Set the IDELAY +/- for selected lane
 // |----- x -----|
 // Step is 1 to 16
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_set(int mem, unsigned int dq, unsigned int step, char* pm){
+int tsc_ddr_idel_set(int mem, unsigned int dq, unsigned int step, char* pm){
 	unsigned int data = 0;
 
 	// -- Decrement the delay --
@@ -143,12 +143,12 @@ int althea_ddr_idel_set(int mem, unsigned int dq, unsigned int step, char* pm){
 
 // Show the current status of DDR DQ line
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_status(int mem){
+int tsc_ddr_idel_status(int mem){
 	unsigned int d0   = 0;
 	unsigned int temp = 0;
 	unsigned int mask = 0;
 
-	printf("Althea DDR3 #%d IDELAY status\n", mem);
+	printf("tsc DDR3 #%d IDELAY status\n", mem);
 	printf("-------------------------------- \n");
 	tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &d0);
 	// -- DQ[15:0] (data bus) --
@@ -169,7 +169,7 @@ int althea_ddr_idel_status(int mem){
     return 0;
 }
 
-// Althea ddr align
+// tsc ddr align
 // Align the DDR memory delay
 // When adjust delay, R/W is needed to apply delay
 // There are 32 delays taps 0..31
@@ -178,7 +178,7 @@ int althea_ddr_idel_status(int mem){
 // DQ[15..8] -> DATA[7..0]
 // DQ[07..0] -> DATA[15..8]
 // ----------------------------------------------------------------------------------
-int althea_ddr_idel_calib(int mem){
+int tsc_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
 	int  DQ_NOK[16];
@@ -734,7 +734,7 @@ int althea_ddr_idel_calib(int mem){
 // ----------------------------------------------------------------------------------------------------------------------------
 
 /*
-// Althea ddr align
+// tsc ddr align
 // Align the DDR memory delay
 // When adjust delay, R/W is needed to apply delay
 // There are 32 delays taps 0..31
@@ -743,7 +743,7 @@ int althea_ddr_idel_calib(int mem){
 // DQ[15..8] -> DATA[7..0]
 // DQ[07..0] -> DATA[15..8]
 // ----------------------------------------------------------------------------------
-int ORIGINAL_althea_ddr_idel_calib(int mem){
+int ORIGINAL_tsc_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
 	int  DQ_NOK[16];
@@ -1213,7 +1213,7 @@ int ORIGINAL_althea_ddr_idel_calib(int mem){
 }
 */
 
-// Main function for Althea command
+// Main function for tsc command
 // ----------------------------------------------------------------------------------
 int tsc_ddr(struct cli_cmd_para *c){
 	int cnt = 0;
@@ -1235,7 +1235,7 @@ int tsc_ddr(struct cli_cmd_para *c){
 			sscanf(c->para[2], "%x", &mem);
 			// SMEM1 or SMEM2 or both SMEM directly
 			if ((mem == 1) | (mem == 2) | (mem == 0x12)){
-				althea_ddr_idel_calib(mem);
+				tsc_ddr_idel_calib(mem);
 			}
 			else {
 				printf("Bad value! Type \"? smem\" for help \n");
@@ -1247,7 +1247,7 @@ int tsc_ddr(struct cli_cmd_para *c){
 				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
-				althea_ddr_idel_reset(mem);
+				tsc_ddr_idel_reset(mem);
 			}
 		}
 		else if((!strcmp("status", c->para[1])) && (c->cnt == 3)) {
@@ -1256,7 +1256,7 @@ int tsc_ddr(struct cli_cmd_para *c){
 				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
-				althea_ddr_idel_status(mem);
+				tsc_ddr_idel_status(mem);
 			}
 		}
 		else if((!strcmp("set", c->para[1])) && (c->cnt == 6)) {
@@ -1269,7 +1269,7 @@ int tsc_ddr(struct cli_cmd_para *c){
 				printf("Bad value! Type \"? smem\" for help \n");
 			}
 			else {
-				althea_ddr_idel_set(mem, dq, step, c->para[4]);
+				tsc_ddr_idel_set(mem, dq, step, c->para[4]);
 			}
 		}
 		else {
