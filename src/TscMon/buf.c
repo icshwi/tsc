@@ -249,7 +249,6 @@ int alloc_kbuf( int idx,
     return( TSC_ERR);
   }
   tsc_kbuf_ctl[idx].kbuf_p->size = (uint)size;
-  printf("Size requested: %x\n", size);
   if( tsc_kbuf_alloc( tsc_kbuf_ctl[idx].kbuf_p))
   {
     printf("Cannot allocate kernel buffer\n");
@@ -344,7 +343,6 @@ kbuf_free( struct cli_cmd_para *c)
     {
       if( tsc_kbuf_ctl[i].kbuf_p)
       {
-        printf("Freeing kernel buffer %d : %08llx\n", i, tsc_kbuf_ctl[i].kbuf_p->b_base);
         if( tsc_kbuf_ctl[i].map_p)
         {
           tsc_map_free( tsc_kbuf_ctl[i].map_p);
@@ -361,7 +359,6 @@ kbuf_free( struct cli_cmd_para *c)
   {
     if( tsc_kbuf_ctl[idx].kbuf_p )
     {
-      printf("Freeing kernel buffer %d : %08llx\n", idx, tsc_kbuf_ctl[idx].kbuf_p->b_base);
       if( tsc_kbuf_ctl[idx].map_p)
       {
         tsc_map_free( tsc_kbuf_ctl[idx].map_p);

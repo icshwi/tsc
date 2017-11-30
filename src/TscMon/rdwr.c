@@ -200,7 +200,7 @@ rdwr_init( void)
 
   if( !alloc_kbuf( 0, 0x100000))
   {
-    printf("kernel buffer allocated: %p %llx %x\n", tsc_kbuf_ctl[0].kbuf_p->k_base, tsc_kbuf_ctl[0].kbuf_p->b_base, tsc_kbuf_ctl[0].kbuf_p->size);
+    //printf("kernel buffer allocated: %p %llx %x\n", tsc_kbuf_ctl[0].kbuf_p->k_base, tsc_kbuf_ctl[0].kbuf_p->b_base, tsc_kbuf_ctl[0].kbuf_p->size);
     last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
   }
   else
