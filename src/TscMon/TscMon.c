@@ -549,6 +549,7 @@ int main(int argc, char *argv[]){
 	int ret     = 0;
 	int quiet   = 0;
 
+	// Test if TscMon is started in quiet mode
 	if (argc > 1){
 		if (argv[1][0] == 'q') {
 			quiet = 1;
