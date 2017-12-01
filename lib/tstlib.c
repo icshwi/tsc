@@ -2,15 +2,17 @@
  *  References
  *  
  *    filename : tstlib.c
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : october 10,2008
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
+ *    That library allows to access test functions.
+ *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -19,12 +21,7 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
- *
- *----------------------------------------------------------------------------
- *  Change History
  *  
- *
- *
  *=============================< end file header >============================*/
 
 #include <stdlib.h>

@@ -5,14 +5,14 @@
  *    author   : RH
  *    company  : IOxOS
  *    creation : october 18,2017
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain a set of function to act on a MTCA.4 RTM
+ *    This file contains a set of function to act on a MTCA.4 RTM.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -21,10 +21,6 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
- *
- *----------------------------------------------------------------------------
- *  Change History
- *
  *
  *=============================< end file header >============================*/
 

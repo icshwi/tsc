@@ -2,18 +2,17 @@
  *  References
  *  
  *    filename : pev791xlib.c
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
- *    creation : 
- *    version  : 0.0.1
+ *    creation : october 21,2016
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *     That library contains a set of function to access the IDT PCI Express
- *     switch
+ *    That library contains a set of function to access device.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -24,6 +23,7 @@
  *    IOxOS Technologies SA                                                        
  *
  *=============================< end file header >============================*/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <pty.h>

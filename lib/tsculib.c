@@ -2,18 +2,17 @@
  *  References
  *  
  *    filename : tsculib.c
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
- *    creation : 
- *    version  : 0.0.1
+ *    creation : october 18,2015
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *     That library contains a set of function to access the IDT PCI Express
- *     switch
+ *    That library contains a set of function to access the TSC driver.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -22,10 +21,6 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
- *
- *----------------------------------------------------------------------------
- *  Change History
- *
  *
  *=============================< end file header >============================*/
 
