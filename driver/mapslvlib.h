@@ -58,4 +58,3 @@ int tsc_map_slv_free( struct tsc_device *ifc, int sg_id, uint offset);
 
 #endif /*  _H_MAPSLVLIB */
 
-/*================================< end file >================================*/

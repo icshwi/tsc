@@ -59,4 +59,3 @@ int tsc_map_mas_get( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
 
 #endif /*  _H_MAPMASLIB */
 
-/*================================< end file >================================*/

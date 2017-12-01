@@ -105,4 +105,3 @@ int  tsc_dma_clear(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
 
 #endif /*  _H_DMALIB */
 
-/*================================< end file >================================*/

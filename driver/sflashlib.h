@@ -116,5 +116,4 @@ int tsc_sflash_wrprot( struct tsc_device *ifc);
 
 #endif /*  _H_SFLASHLIB */
 
-/*================================< end file >================================*/
 

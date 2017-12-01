@@ -62,5 +62,3 @@ int tsc_i2c_read( struct tsc_device *ifc, struct tsc_ioctl_i2c *i);
 int tsc_i2c_write( struct tsc_device *ifc, struct tsc_ioctl_i2c *i);
 
 #endif /*  _H_I2CLIB */
-
-/*================================< end file >================================*/

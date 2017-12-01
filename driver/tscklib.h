@@ -87,5 +87,3 @@ int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaph
 #include "semaphorelib.h"
 
 #endif /*  _H_TSCKLIB */
-
-/*================================< end file >================================*/

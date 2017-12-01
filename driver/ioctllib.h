@@ -61,5 +61,3 @@ int  ioctl_i2c(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
 int  ioctl_semaphore(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
 
 #endif /*  _H_IOCTLLIB */
-
-/*================================< end file >================================*/

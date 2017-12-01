@@ -57,4 +57,3 @@ int tsc_timer_read( struct tsc_device *ifc, struct tsc_time *tm);
 
 #endif /*  _H_TIMERLIB */
 
-/*================================< end file >================================*/

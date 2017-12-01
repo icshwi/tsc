@@ -56,4 +56,3 @@ int tsc_irq_mask( struct tsc_device *ifc, int op, int src);
 
 #endif /*  _H_IRQLIB */
 
-/*================================< end file >================================*/

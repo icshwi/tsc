@@ -61,4 +61,4 @@ int tsc_rem_write( struct tsc_device *ifc, struct tsc_ioctl_rdwr *rw);
 
 #endif /*  _H_RDWRLIB */
 
-/*================================< end file >================================*/
+

@@ -59,4 +59,3 @@ int tsc_fifo_write(struct tsc_device *ifc, int idx, int *data, int cnt, int *sts
 
 #endif /*  _H_FIFOLIB */
 
-/*================================< end file >================================*/
