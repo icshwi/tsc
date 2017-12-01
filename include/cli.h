@@ -9,7 +9,7 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain sthe declarations and definitions used by XprsMon
+ *    This file contain sthe declarations and definitions used by TscMon
  *    to interpret user's commands.
  *
  *----------------------------------------------------------------------------
@@ -66,7 +66,7 @@ struct cli_cmd_para
   char cmdline[256];
 };
 
-// General structure for XprsMon environment configuration
+// General structure for TscMon environment configuration
 // Global structure to all program
 struct cli_xconf
 {
