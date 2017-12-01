@@ -2050,5 +2050,4 @@ tsc_acq1430( struct cli_cmd_para *c)
     return(-1);
   }
   return(0);
-
 }
