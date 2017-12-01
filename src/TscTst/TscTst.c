@@ -2,15 +2,17 @@
  *  References
  *
  *    filename : TscTst.c
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : june 30,2009
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
+ *	  Main test program.
+ *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *
  *    Copyright and all other rights in this document are reserved by
@@ -19,11 +21,6 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of
  *    IOxOS Technologies SA
- *
- *----------------------------------------------------------------------------
- *  Change History
- *
- * $Log: $
  *
  *=============================< end file header >============================*/
 

@@ -5,13 +5,14 @@
  *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : May 12,2016
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *	  Transfers test with local board
+ *	  Memory tests.
+ *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *
  *    Copyright and all other rights in this document are reserved by
@@ -20,9 +21,6 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of
  *    IOxOS Technologies SA
- *
- *----------------------------------------------------------------------------
- *  Change History
  *
  *=============================< end file header >============================*/
 
