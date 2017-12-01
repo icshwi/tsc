@@ -2,31 +2,26 @@
  *  References
  *  
  *    filename : conf.c
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : Sept 14,2015
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *     That file contains a set of function called by XprsMon to configure
+ *     That file contains a set of function called by TscMon to configure
  *     the TSC interface.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
- *  
- *    Copyright and all other rights in this document are reserved by 
- *    IOxOS Technologies SA. This documents contains proprietary information    
- *    and is supplied on express condition that it may not be disclosed, 
+ *
+ *    Copyright and all other rights in this document are reserved by
+ *    IOxOS Technologies SA. This documents contains proprietary information
+ *    and is supplied on express condition that it may not be disclosed,
  *    reproduced in whole or in part, or used for any other purpose other
- *    than that for which it is supplies, without the written consent of  
- *    IOxOS Technologies SA                                                        
- *
- *----------------------------------------------------------------------------
- *  Change History
- *  
- *
+ *    than that for which it is supplies, without the written consent of
+ *    IOxOS Technologies SA
  *
  *=============================< end file header >============================*/
 

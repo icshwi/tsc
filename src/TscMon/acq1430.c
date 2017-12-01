@@ -5,79 +5,23 @@
  *    author   : JFG
  *    company  : IOxOS
  *    creation : november 14,2011
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *     That file contains a set of function called by XprsMon to perform read
- *     or write cycles through the I"C interface.
+ *     That file contains a set of function called by Tscmon to perform
+ *     the control of the ACQ1430.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
- *  
- *    Copyright and all other rights in this document are reserved by 
- *    IOxOS Technologies SA. This documents contains proprietary information    
- *    and is supplied on express condition that it may not be disclosed, 
+ *
+ *    Copyright and all other rights in this document are reserved by
+ *    IOxOS Technologies SA. This documents contains proprietary information
+ *    and is supplied on express condition that it may not be disclosed,
  *    reproduced in whole or in part, or used for any other purpose other
- *    than that for which it is supplies, without the written consent of  
- *    IOxOS Technologies SA                                                        
- *
- *----------------------------------------------------------------------------
- *  Change History
- *  
- * $Log: acq1430.c,v $
- * Revision 1.10  2014/12/19 09:36:19  ioxos
- * add data check [JFG]
- *
- * Revision 1.9  2014/08/27 07:11:26  ioxos
- * add acq1430 check operation [JFG]
- *
- * Revision 1.8  2014/07/11 14:08:57  ioxos
- * correct size of sign [JFG]
- *
- * Revision 1.7  2014/07/04 11:46:57  ioxos
- * cosmetics [JFG]
- *
- * Revision 1.6  2014/05/07 14:06:00  ioxos
- * i2c macros [JFG]
- *
- * Revision 1.5  2014/03/17 10:18:52  ioxos
- * acq command for acq1430/11 [JFG]
- *
- * Revision 1.4  2014/01/20 14:47:24  ioxos
- * cosmetics [JFG]
- *
- * Revision 1.3  2013/08/27 12:22:31  ioxos
- * swap two bytes registers [JFG]
- *
- * Revision 1.2  2013/05/14 06:29:17  ioxos
- * new register mapping + signature + acq fifo + temperature control [JFG]
- *
- * Revision 1.1  2013/04/15 13:55:14  ioxos
- * first checkin [JFG]
- *
- * Revision 1.7  2012/09/03 13:19:05  ioxos
- * adapt pec_acq1430_xx(), pev_pex_xx() and pev_bmr_xx() to new FPGA and library [JFG]
- *
- * Revision 1.6  2012/08/28 13:40:46  ioxos
- * cleanup + update acq1430 status + reset [JFG]
- *
- * Revision 1.5  2012/06/01 13:59:44  ioxos
- * -Wall cleanup [JFG]
- *
- * Revision 1.4  2012/02/14 16:06:43  ioxos
- * add support for FMC [JFG]
- *
- * Revision 1.3  2012/02/03 16:27:37  ioxos
- * dynamic use of elbc for acq1430 [JFG]
- *
- * Revision 1.2  2012/01/27 15:55:44  ioxos
- * prepare release 4.01 supporting x86 & ppc [JFG]
- *
- * Revision 1.1  2012/01/27 13:39:15  ioxos
- * first checkin [JFG]
- *
+ *    than that for which it is supplies, without the written consent of
+ *    IOxOS Technologies SA
  *
  *=============================< end file header >============================*/
 
