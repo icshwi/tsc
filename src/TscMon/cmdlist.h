@@ -37,7 +37,7 @@ int tsc_tdma(struct cli_cmd_para *);
 
 char *alias_msg[]   = 
 {
-  "  Handle aliases for TscMon commands. Command is executed by entering $<alias>",
+  "  Handle aliases for TscMon commands. Command is executed by entering +<alias>",
   "  alias show",
   "  alias clear",
   "  alias set <alias> \"<cmdline>\"",
