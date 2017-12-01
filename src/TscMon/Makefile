@@ -2,10 +2,9 @@
 #  References
 #  
 #    filename : Makefile
-#    author   : JFG
+#    author   : JFG, XP
 #    company  : IOxOS
 #    creation : Sept 14,2015
-#    version  : 0.0.1
 #
 #----------------------------------------------------------------------------
 #  Description
@@ -13,6 +12,7 @@
 #    This Makefile allows to build the TscMon application
 #
 #----------------------------------------------------------------------------
+#
 #  Copyright Notice
 #  
 #    Copyright and all other rights in this document are reserved by 
@@ -22,10 +22,6 @@
 #    than that for which it is supplies, without the written consent of  
 #    IOxOS Technologies SA                                                        
 #
-#----------------------------------------------------------------------------
-#  Change History
-#  $Log : $
-#  
 #=============================< end file header >============================
 
 INCDIR = ../../include 
