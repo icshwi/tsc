@@ -165,9 +165,9 @@ char *tst_06_msg[] = {"Read/Write KBUF", 0};
 //char *tst_1f_msg[] = {"", 0};
 
 char *tst_20_msg[] = {"DMA transfers with all agents, all channels, all directions", 0};
-//char *tst_21_msg[] = {"DMA from KBUF to SMEM2", 0};
-//char *tst_22_msg[] = {"DMA from SMEM1  to KBUF", 0};
-//char *tst_23_msg[] = {"DMA from SMEM2  to KBUF", 0};
+//char *tst_21_msg[] = {"", 0};
+//char *tst_22_msg[] = {"", 0};
+//char *tst_23_msg[] = {"", 0};
 //char *tst_24_msg[] = {"", 0};
 //char *tst_25_msg[] = {"", 0};
 //char *tst_26_msg[] = {"", 0};

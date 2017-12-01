@@ -52,6 +52,3 @@
 #include "tstlib.h"
 
 extern int tst_check_cmd_tstop(void);
-
-struct tsc_ioctl_dma_req req_p;   // dma request structure
-
