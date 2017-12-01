@@ -5,15 +5,15 @@
  *    author   : RH
  *    company  : IOxOS
  *    creation : october 4,2017
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions define in
+ *    This file contains the declarations of all exported functions define in
  *    ponmboxlib.c
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -23,11 +23,7 @@
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
  *
- *----------------------------------------------------------------------------
- *  Change History
- *
- *
- *=============================< end file header >============================*/
+ *=============================< end file header >============================*//
 
 #ifndef _H_PONMBOXLIB
 #define _H_PONMBOXLIB

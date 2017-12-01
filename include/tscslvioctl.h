@@ -2,18 +2,18 @@
  *  References
  *  
  *    filename : tscslvioctl.h
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : Sept 30,2015
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations for the ioctl commands supported
+ *    This file contains the declarations for the ioctl commands supported
  *    by the TSC slave driver.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -22,9 +22,6 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
- *
- *----------------------------------------------------------------------------
- *  Change History
  *  
  *=============================< end file header >============================*/
 
@@ -38,6 +35,4 @@
 
 
 #endif /*  _H_TSCSLVIOCTL */
-
-/*================================< end file >================================*/
 

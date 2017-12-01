@@ -11,9 +11,10 @@
  *  Description
  *
  *    This file contains the definition of all structures and define used
- *    in the TSC environment test
+ *    in the TSC environment test.
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *
  *    Copyright and all other rights in this document are reserved by
@@ -22,10 +23,6 @@
  *    reproduced in whole or in part, or used for any other purpose other
  *    than that for which it is supplies, without the written consent of
  *    IOxOS Technologies SA
- *
- *----------------------------------------------------------------------------
- *  Change History
- *
  *
  *=============================< end file header >============================*/
 

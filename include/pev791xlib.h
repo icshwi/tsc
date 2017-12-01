@@ -2,18 +2,18 @@
  *  References
  *  
  *    filename : pev791xlib.h
- *    author   : JFG
+ *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : june 30,2008
- *    version  : 0.0.1
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions define in
+ *    This file contains the declarations of all exported functions define in
  *    pev791xlib.c
  *
  *----------------------------------------------------------------------------
+ *
  *  Copyright Notice
  *  
  *    Copyright and all other rights in this document are reserved by 
@@ -23,8 +23,8 @@
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
  *
- *
  *=============================< end file header >============================*/
+
 #ifndef _H_PEV791XLIB
 #define _H_PEV791XLIB
 
