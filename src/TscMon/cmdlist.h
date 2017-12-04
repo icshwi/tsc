@@ -140,7 +140,7 @@ char *conf_msg[] =
   "   where <device> = all",
   "                    static",
   "                    device",
-  "                    dynamic",
+  "                    ddr",
   "                    identifiers",
   "                    pcie",
   "                    msi",
