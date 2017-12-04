@@ -23,7 +23,7 @@
  *    than that for which it is supplies, without the written consent of  
  *    IOxOS Technologies SA                                                        
  *
- *=============================< end file header >============================*//
+ *=============================< end file header >============================*/
 
 #ifndef _H_PONMBOXLIB
 #define _H_PONMBOXLIB
