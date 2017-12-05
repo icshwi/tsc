@@ -557,7 +557,6 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-
 	if( tsc_init() < 0){
 		printf("Cannot find interface\n");
 		exit( -1);
@@ -593,17 +592,31 @@ int main(int argc, char *argv[]){
 	// Launch automatically DDR3 calibration
 	tsc_ddr_idel_calib_start(quiet);
 
-	if( argc > 1){
+	if(argc > 2){
 		struct cli_cmd_para script_para;
 
 		/* check for script execution */
-		if( argv[1][0] == '@') {
+		if(argv[2][0] == '@') {
+			cli_cmd_parse( &argv[2][1], &script_para);
+			iex = tsc_script( &argv[2][1], &script_para);
+			if( iex == 2){
+				goto TscMon_exit;
+			}
+		}
+	}
+	else if(argc > 1){
+		struct cli_cmd_para script_para;
+
+		/* check for script execution */
+		if(argv[1][0] == '@') {
 			cli_cmd_parse( &argv[1][1], &script_para);
 			iex = tsc_script( &argv[1][1], &script_para);
 			if( iex == 2){
 				goto TscMon_exit;
 			}
 		}
+	}
+
 		/* if not, interpret argument as command and execute it */
 /*		else {
 			cli_cmd_parse(  argv[1], &cmd_para);
@@ -611,7 +624,7 @@ int main(int argc, char *argv[]){
 			goto TscMon_exit;
 		}
 		*/
-	}
+
 
 if (quiet == 0){
 	printf("          _______       __  __             \n");
