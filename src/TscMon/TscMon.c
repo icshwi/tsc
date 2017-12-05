@@ -592,6 +592,7 @@ int main(int argc, char *argv[]){
 	// Launch automatically DDR3 calibration
 	tsc_ddr_idel_calib_start(quiet);
 
+	// Test how many arguments exist and their position
 	if(argc > 2){
 		struct cli_cmd_para script_para;
 
@@ -616,15 +617,6 @@ int main(int argc, char *argv[]){
 			}
 		}
 	}
-
-		/* if not, interpret argument as command and execute it */
-/*		else {
-			cli_cmd_parse(  argv[1], &cmd_para);
-			tsc_cmd_exec( &cmd_list[0], &cmd_para);
-			goto TscMon_exit;
-		}
-		*/
-
 
 if (quiet == 0){
 	printf("          _______       __  __             \n");
