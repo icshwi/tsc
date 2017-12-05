@@ -42,12 +42,20 @@ typedef struct mbox_sensor_data_value
   int value;
 } mbox_sensor_data_value_t;
 
+typedef struct
+{
+  unsigned char major;
+  unsigned char minor;
+  unsigned char maintenance;
+  unsigned int build_id;
+} mbox_firmware_revision_t;
 
 typedef struct
 {
   unsigned short management_service_requests_offset;
   unsigned short payload_descriptors_offset;
   unsigned short payload_service_requests_offset;
+  mbox_firmware_revision_t firmware_revision;
   unsigned char firmware_revision_major;
   unsigned char firmware_revision_minor;
   unsigned char amc_slot_number;

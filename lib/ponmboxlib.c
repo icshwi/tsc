@@ -35,6 +35,15 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
 #include <unistd.h>
 #include "ponmboxlib.h"
 
+//#define DEBUG
+
+#ifdef DEBUG
+#include <stdio.h>
+#define printd(fmt,arg...) printf(fmt, ## arg)
+#else
+#define printd(fmt,arg...)
+#endif
+
 /*
  * Descriptors definitions
  */
@@ -101,6 +110,7 @@ mbox_info_t *alloc_mbox_info(void);
 int get_mbox_byte(int offset, unsigned char *destination);
 int pop_mbox_byte(int *offset, unsigned char *destination);
 int pop_mbox_short(int *offset, unsigned short *destination);
+int pop_mbox_int(int *offset, unsigned int *destination);
 unsigned char pop_mbox_string(int *offset, unsigned char **destination);
 int push_mbox_byte(int *offset, unsigned char byte);
 void enable_service_request(mbox_info_t *info, int offset);
@@ -132,6 +142,7 @@ mbox_info_t *get_mbox_info(void)
   {
     pop_mbox_byte(&offset, &descriptor_type);
     pop_mbox_byte(&offset, &descriptor_format_version);
+    printd("%s() descriptor type = %d, format = %d\n", __func__, descriptor_type, descriptor_format_version);
 
     switch (descriptor_type)
     {
@@ -143,11 +154,16 @@ mbox_info_t *get_mbox_info(void)
       pop_mbox_short(&offset, &info->management_service_requests_offset);
       pop_mbox_short(&offset, &info->payload_descriptors_offset);
       pop_mbox_short(&offset, &info->payload_service_requests_offset);
+      printd("%s() management service requests at 0x%04x\n", __func__, info->management_service_requests_offset);
+      printd("%s() payload descriptors at 0x%04x\n", __func__, info->payload_descriptors_offset);
+      printd("%s() payload service requests at 0x%04x\n", __func__, info->payload_service_requests_offset);
       break;
 
     case DESCRIPTOR_TYPE_FIRMWARE_INFO:
-      pop_mbox_byte(&offset, &info->firmware_revision_major);
-      pop_mbox_byte(&offset, &info->firmware_revision_minor);
+      pop_mbox_byte(&offset, &info->firmware_revision.major);
+      pop_mbox_byte(&offset, &info->firmware_revision.minor);
+      pop_mbox_byte(&offset, &info->firmware_revision.maintenance);
+      pop_mbox_int(&offset, &info->firmware_revision.build_id);
       break;
 
     case DESCRIPTOR_TYPE_BOARD_INFO:
@@ -345,23 +361,47 @@ int get_mbox_byte(int offset, unsigned char *destination)
 
 int pop_mbox_byte(int *offset, unsigned char *destination)
 {
-  return get_mbox_byte((*offset)++, destination);
+  int retval = get_mbox_byte(*offset, destination);
+  printd("%s() offset = %d, data = 0x%02x\n", __func__, *offset, *destination);
+  (*offset)++;
+  return retval;
 }
 
 
 int pop_mbox_short(int *offset, unsigned short *destination)
 {
   int retval;
-  unsigned char msb;
-  unsigned char lsb;
+  unsigned char byte;
+  unsigned char loop;
 
-  retval = pop_mbox_byte(offset, &msb);
-  if (retval) return retval;
+  (*destination) = 0;
+  for (loop = 0 ; loop < 2 ; loop++)
+  {
+    retval = pop_mbox_byte(offset, &byte);
+    printd("byte = 0x%02x\n", byte);
+    if (retval) return retval;
+    (*destination) = ((*destination) << 8) | byte;
+  }
+  printd("%s() data = 0x%04x\n", __func__, *destination);
 
-  retval = pop_mbox_byte(offset, &lsb);
-  if (retval) return retval;
+  return 0;
+}
 
-  (*destination) = (msb << 8) | lsb;
+
+int pop_mbox_int(int *offset, unsigned int *destination)
+{
+  int retval;
+  unsigned char byte;
+  unsigned char loop;
+
+  (*destination) = 0;
+  for (loop = 0 ; loop < 4 ; loop++)
+  {
+    retval = pop_mbox_byte(offset, &byte);
+    if (retval) return retval;
+    (*destination) = ((*destination) << 8) | byte;
+  }
+
   return 0;
 }
 

@@ -199,7 +199,11 @@ mbox_info( struct cli_cmd_para *c)
     return( CLI_ERR);
   }
 
-  printf("Firmware revision:     %d.%d\n", info->firmware_revision_major, info->firmware_revision_minor);
+  printf("Firmware revision:     %d.%d.%d (%08x)\n",
+         info->firmware_revision.major,
+         info->firmware_revision.minor,
+         info->firmware_revision.maintenance,
+         info->firmware_revision.build_id);
   printf("AMC slot number:       %d\n", info->amc_slot_number);
   printf("Board name:            %s\n", info->board_name);
   printf("Board revision:        %s\n", info->board_revision);
