@@ -58,6 +58,14 @@ tsc_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_swap_64
+ * Prototype     : long long
+ * Parameters    : long long data
+ * Return        : data swapped
+ *----------------------------------------------------------------------------
+ * Description   : return data swapped for 64 bits
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 long long
 tsc_swap_64( long long data)
 {
@@ -77,6 +85,14 @@ tsc_swap_64( long long data)
   return( *(long long *)co);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_swap_32
+ * Prototype     : int
+ * Parameters    : int data
+ * Return        : data swapped
+ *----------------------------------------------------------------------------
+ * Description   : return data swapped for 32 bits
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_swap_32( int data)
 {
@@ -92,6 +108,14 @@ tsc_swap_32( int data)
   return( *(int *)co);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_swap_16
+ * Prototype     : short
+ * Parameters    : short data
+ * Return        : data swapped
+ *----------------------------------------------------------------------------
+ * Description   : return data swapped for 16 bits
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 short
 tsc_swap_16( short data)
 {
@@ -546,14 +570,14 @@ tsc_read_blk( ulong rem_addr,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_loop
  * Prototype     : int
- * Parameters    : remote adrress
+ * Parameters    : remote address
  *                 data buffer pointer
  *                 transfer size (in bytes)
  *                 transfer mode (am,ds,..)
  * Return        : status of read operation
  *----------------------------------------------------------------------------
  * Description   : copy <len> bytes from buffer <buf> to remote space 
- *                 the adressing mode and data size are specified in <mode>
+ *                 the addressing mode and data size are specified in <mode>
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_write_loop( ulong rem_addr,
@@ -578,7 +602,7 @@ tsc_write_loop( ulong rem_addr,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_loop
  * Prototype     : int
- * Parameters    : remote adrress
+ * Parameters    : remote address
  *                 data buffer pointer
  *                 transfer size (in bytes)
  *                 transfer mode (am,ds,..)
@@ -750,13 +774,13 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
  *----------------------------------------------------------------------------
  * Description   : copy <len> bytes from buffer <buf> to USR address space
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int tsc_usr_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
+int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
 	if(len < 0) return(-EINVAL);
 	if(tsc_fd < 0) return(-EBADF);
-	rdwr.rem_addr = (ulong)shm_addr;
+	rdwr.rem_addr = (ulong)usr_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
 	if (mem == 1) {
@@ -787,13 +811,13 @@ int tsc_usr_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
  * Description   : Read a block of data from USR address space
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_usr_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
+int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
 	if(len < 0) return(-EINVAL);
 	if(tsc_fd < 0) return(-EBADF);
-	rdwr.rem_addr = (ulong)shm_addr;
+	rdwr.rem_addr = (ulong)usr_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
 	if (mem == 1) {
@@ -888,7 +912,6 @@ tsc_map_free( struct tsc_ioctl_map_win *w)
   }
   return( 0);
 }
-
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_modify
@@ -1589,17 +1612,12 @@ tsc_fifo_write( uint idx,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_i2c
+ * Function name : i2c_set_dev
  * Prototype     : int
  * Parameters    : I2C device
- *                 register index
- *                 data
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read register <reg> of I2C device <dev> and returns the
- *                 result in <data>
- *                 by <data>.
- *                 
+ * Description   : Set i2c device
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 static int
 i2c_set_dev( int dev)
@@ -1646,6 +1664,19 @@ i2c_set_dev( int dev)
   return(fd);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_i2c_read
+ * Prototype     : int
+ * Parameters    : I2C device
+ *                 register index
+ *                 data
+ * Return        : status of read operation
+ *----------------------------------------------------------------------------
+ * Description   : read register <reg> of I2C device <dev> and returns the
+ *                 result in <data>
+ *                 by <data>.
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int
 tsc_i2c_read( uint dev,
 	      uint reg,
