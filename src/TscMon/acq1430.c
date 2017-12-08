@@ -859,7 +859,7 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
 	  }
           if( n > max)
           {
-	    if( max_found != 2)
+	    if( (max_found != 2) && ( start_found == 2))
 	    {
 	      max = n;
 	      max_found = 1;
@@ -1994,4 +1994,5 @@ tsc_acq1430( struct cli_cmd_para *c)
     return(-1);
   }
   return(0);
+
 }
