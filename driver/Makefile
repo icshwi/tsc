@@ -45,7 +45,7 @@
 #=============================< end file header >============================
 
 obj-m := tsc.o pon.o 
-tsc-objs := tscdrvr.o ioctllib.o tscklib.o maplib.o irqlib.o mapmaslib.o mapslvlib.o rdwrlib.o sflashlib.o \
+tsc-objs := tscdrvr.o ioctllib.o tscklib.o maplib.o irqlib.o mapmaslib.o  rdwrlib.o sflashlib.o \
 	dmalib.o timerlib.o fifolib.o i2clib.o semaphorelib.o
 pon-objs := pondrvr.o
 

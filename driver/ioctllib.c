@@ -181,37 +181,6 @@ ioctl_map( struct tsc_device *ifc,
       }
       break;
     }
-    case TSC_IOCTL_MAP_SLV:
-    {
-      struct tsc_ioctl_map_win w;
-
-      if( copy_from_user( (void *)&w, (void *)arg, sizeof( w)))
-      {
-        retval = -EFAULT;
-        break;
-      }
-      if( cmd == TSC_IOCTL_MAP_SLV_ALLOC)
-      {
-	if( tsc_map_slv_alloc( ifc, &w) >= 0)
-	{
-          if( copy_to_user( (void *)arg, (void *)&w, sizeof( w)))
-          {
-            retval = -EFAULT;
-            break;
-          }
-	}
-	else 
-	{
-          retval = -EINVAL;
-          break;
-	}
-      }
-      if( cmd == TSC_IOCTL_MAP_SLV_FREE)
-      {
-	retval = tsc_map_slv_free( ifc, w.req.mode.sg_id, w.pg_idx);
-      }
-      break;
-    }
     default:
     {
       retval = -EINVAL;

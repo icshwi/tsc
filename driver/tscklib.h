@@ -77,7 +77,6 @@ int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaph
 #include "irqlib.h"
 #include "maplib.h"
 #include "mapmaslib.h"
-#include "mapslvlib.h"
 #include "rdwrlib.h"
 #include "sflashlib.h"
 #include "dmalib.h"
