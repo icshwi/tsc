@@ -1444,9 +1444,12 @@ tsc_fifo_status( uint idx,
   {
     *sts = fifo.sts;
   }
-  if(! retval)
+  else
   {
-    retval = fifo.sts;
+    if (! retval)
+	{
+	  retval = fifo.sts;
+	}
   }
   return(retval);
 }
