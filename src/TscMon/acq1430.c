@@ -886,8 +886,8 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
       printf("chan %d : ", 2*i+1);
       for( n = start/8; n < end/8; n++)
       {
-        printf("%d", res[i][0][n]);
-        if( res[i][0][n])
+        printf("%d", res[i][1][n]);
+        if( res[i][1][n])
         {
           if( n < min)
 	  {
