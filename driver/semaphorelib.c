@@ -51,6 +51,8 @@
 #define DBG
 #include "debug.h"
 
+#define PPC 1
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_status
  * Prototype     : int
