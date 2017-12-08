@@ -158,9 +158,9 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 	data = 0xc0000000;
 	tsc_pon_read(0xc, &data);
 
-	// Check if the board is a IFC1410 -------------------------------------------------------
+	// Check if the board is a IFC14xx -------------------------------------------------------
 	tsc_pon_read(0x0, &data);
-	if (data != 0x73571410) {
+	if (((data & 0xffffff00) >> 8) != 0x735714) {
 		TST_LOG( tc, (logline, "-> The board is not a IFC14xx abort test ! \n"));
 		retval = TST_STS_ERR;
 		tm = time(0);
@@ -668,4 +668,481 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 
 int tst_50(struct tst_ctl *tc){
 	return(tst_fmc(tc, "Tst:50"));
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_semaphore
+ * Prototype     : int
+ * Parameters    : test control structure, test ID
+ * Return        : Done or Error
+ *
+ *----------------------------------------------------------------------------
+ * Description   : Semaphore test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int tst_semaphore(struct tst_ctl *tc, char *tst_id){
+	int retval = 0;
+	time_t tm;
+	char *ct;
+	uint i    = 0;
+	uint sts  = 0;
+	uint tag  = 0;
+
+	tm    = time(0);
+	ct    = ctime(&tm);
+
+	TST_LOG( tc, (logline, "%s->Entering:%s", tst_id, ct));
+
+	// Check status
+	tsc_semaphore_status(&sts);
+	if (sts != 0){
+		TST_LOG( tc, (logline, "SEMAPHORE global status = 0x%08x\n", sts));
+		TST_LOG( tc, (logline, "SEMAPHORE location      = 0x%04x\n", (sts & 0xffff0000) >> 15));
+		TST_LOG( tc, (logline, "SEMAPHORE#0             : %01x\n", (sts & 0x00000001)));
+		TST_LOG( tc, (logline, "SEMAPHORE#1             : %01x\n", (sts & 0x00000002) >> 1));
+		TST_LOG( tc, (logline, "SEMAPHORE#2             : %01x\n", (sts & 0x00000004) >> 2));
+		TST_LOG( tc, (logline, "SEMAPHORE#3             : %01x\n", (sts & 0x00000008) >> 3));
+		TST_LOG( tc, (logline, "SEMAPHORE#4             : %01x\n", (sts & 0x00000010) >> 4));
+		TST_LOG( tc, (logline, "SEMAPHORE#5             : %01x\n", (sts & 0x00000020) >> 5));
+		TST_LOG( tc, (logline, "SEMAPHORE#6             : %01x\n", (sts & 0x00000040) >> 6));
+		TST_LOG( tc, (logline, "SEMAPHORE#7             : %01x\n", (sts & 0x00000080) >> 7));
+		TST_LOG( tc, (logline, "SEMAPHORE#8             : %01x\n", (sts & 0x00000100) >> 8));
+		TST_LOG( tc, (logline, "SEMAPHORE#9             : %01x\n", (sts & 0x00000200) >> 9));
+		TST_LOG( tc, (logline, "SEMAPHORE#A             : %01x\n", (sts & 0x00000400) >> 10));
+		TST_LOG( tc, (logline, "SEMAPHORE#B             : %01x\n", (sts & 0x00000800) >> 11));
+		TST_LOG( tc, (logline, "SEMAPHORE#C             : %01x\n", (sts & 0x00001000) >> 12));
+		TST_LOG( tc, (logline, "SEMAPHORE#D             : %01x\n", (sts & 0x00002000) >> 13));
+		TST_LOG( tc, (logline, "SEMAPHORE#E             : %01x\n", (sts & 0x00004000) >> 14));
+		TST_LOG( tc, (logline, "SEMAPHORE#F             : %01x\n", (sts & 0x00008000) >> 15));
+
+		TST_LOG( tc, (logline, "Error One semaphore is already taken \n"));
+		retval = TST_STS_ERR;
+		goto semaphore_fail;
+	}
+
+	// Test all (16) SEMAPHOREs
+	for (i = 0; i < 16; i++){
+		TST_LOG( tc, (logline, "        SEMAPHORE#%02d in progresse ", i));
+		// Get semaphore
+		tag = 0x3;
+		if (tsc_semaphore_get(i, &tag) == 3){
+			TST_LOG( tc, (logline, "Error SEMAPHORE#%d is locked \n", i));
+			retval = TST_STS_ERR;
+			goto semaphore_fail;
+		}
+
+		// Check status of current tested semaphore
+		tsc_semaphore_status(&sts);
+		if (sts != (1 << i)){
+			TST_LOG( tc, (logline, "SEMAPHORE global status = 0x%08x\n", sts));
+			TST_LOG( tc, (logline, "SEMAPHORE location      = 0x%04x\n", (sts & 0xffff0000) >> 15));
+			TST_LOG( tc, (logline, "SEMAPHORE#%d             : %01x\n", i, (sts & (1 << i) >> i)));
+			retval = TST_STS_ERR;
+			goto semaphore_fail;
+		}
+
+		// Try to re-get semaphore and check is not possible
+		tag = 0x6;
+		if (tsc_semaphore_get(i, &tag) != 3){
+			TST_LOG( tc, (logline, "Error SEMAPHORE#%d is get again ! \n", i));
+			retval = TST_STS_ERR;
+			goto semaphore_fail;
+		}
+
+		// Release semaphores
+		tsc_semaphore_release(i);
+
+		TST_LOG( tc, (logline, "                  -> OK \n"));
+	}
+
+	// Check status
+	tsc_semaphore_status(&sts);
+	if (sts != 0){
+		TST_LOG( tc, (logline, "SEMAPHORE global status = 0x%08x\n", sts));
+		TST_LOG( tc, (logline, "SEMAPHORE location      = 0x%04x\n", (sts & 0xffff0000) >> 15));
+		TST_LOG( tc, (logline, "SEMAPHORE#0             : %01x\n", (sts & 0x00000001)));
+		TST_LOG( tc, (logline, "SEMAPHORE#1             : %01x\n", (sts & 0x00000002) >> 1));
+		TST_LOG( tc, (logline, "SEMAPHORE#2             : %01x\n", (sts & 0x00000004) >> 2));
+		TST_LOG( tc, (logline, "SEMAPHORE#3             : %01x\n", (sts & 0x00000008) >> 3));
+		TST_LOG( tc, (logline, "SEMAPHORE#4             : %01x\n", (sts & 0x00000010) >> 4));
+		TST_LOG( tc, (logline, "SEMAPHORE#5             : %01x\n", (sts & 0x00000020) >> 5));
+		TST_LOG( tc, (logline, "SEMAPHORE#6             : %01x\n", (sts & 0x00000040) >> 6));
+		TST_LOG( tc, (logline, "SEMAPHORE#7             : %01x\n", (sts & 0x00000080) >> 7));
+		TST_LOG( tc, (logline, "SEMAPHORE#8             : %01x\n", (sts & 0x00000100) >> 8));
+		TST_LOG( tc, (logline, "SEMAPHORE#9             : %01x\n", (sts & 0x00000200) >> 9));
+		TST_LOG( tc, (logline, "SEMAPHORE#A             : %01x\n", (sts & 0x00000400) >> 10));
+		TST_LOG( tc, (logline, "SEMAPHORE#B             : %01x\n", (sts & 0x00000800) >> 11));
+		TST_LOG( tc, (logline, "SEMAPHORE#C             : %01x\n", (sts & 0x00001000) >> 12));
+		TST_LOG( tc, (logline, "SEMAPHORE#D             : %01x\n", (sts & 0x00002000) >> 13));
+		TST_LOG( tc, (logline, "SEMAPHORE#E             : %01x\n", (sts & 0x00004000) >> 14));
+		TST_LOG( tc, (logline, "SEMAPHORE#F             : %01x\n", (sts & 0x00008000) >> 15));
+
+		TST_LOG( tc, (logline, "Error One semaphore is always taken \n"));
+		retval = TST_STS_ERR;
+		goto semaphore_fail;
+	}
+
+	TST_LOG( tc, (logline, "%s->Executing Semaphores \n", tst_id));
+semaphore_fail:
+	tm = time(0);
+	ct = ctime(&tm);
+
+	TST_LOG(tc, (logline, "\n%s->Exiting:%s", tst_id, ct));
+	return(retval | TST_STS_DONE);
+}
+
+int tst_51(struct tst_ctl *tc){
+	return(tst_semaphore(tc, "Tst:51"));
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_fifo
+ * Prototype     : int
+ * Parameters    : test control structure, test ID
+ * Return        : Done or Error
+ *
+ *----------------------------------------------------------------------------
+ * Description   : FIFOs test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int tst_fifo(struct tst_ctl *tc, char *tst_id){
+	int retval = 0;
+	time_t tm;
+	char *ct;
+	unsigned int i    = 0;
+	unsigned int j    = 0;
+	unsigned int sts  = 0;
+	unsigned int data = 0;
+	int temp = 0;
+
+	tm    = time(0);
+	ct    = ctime(&tm);
+
+	TST_LOG( tc, (logline, "%s->Entering:%s", tst_id, ct));
+
+
+	TST_LOG( tc, (logline, "%s->Executing FIFOs test in FIFO mode \n", tst_id));
+
+	// Test all (8) FIFOs
+	for (i = 0; i < 8; i++){
+
+		TST_LOG( tc, (logline, "        FIFO#%x \n", i));
+
+		// Init Fifo
+		retval = tsc_fifo_init(i, 0);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d init error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Check inital status
+		retval = tsc_fifo_status(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d get status error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Word counter
+		if((sts & 0x000000ff) != 0){
+			TST_LOG( tc, (logline, "FIFO word counter error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// SRAM write pointer
+		if(((sts & 0x0000ff00) >> 8) != 0){
+			TST_LOG( tc, (logline, "FIFO SRAM write pointer error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// SRAM read pointer
+		if(((sts & 0x00ff0000) >> 16) != 0){
+			TST_LOG( tc, (logline, "FIFO SRAM read pointer error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Not empty
+		if(((sts & 0x01000000) >> 24) != 0){
+			TST_LOG( tc, (logline, "FIFO not empty error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Full
+		if(((sts & 0x02000000) >> 25) != 0){
+			TST_LOG( tc, (logline, "FIFO full error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Used as MailBox
+		if(((sts & 0x04000000) >> 26) != 0){
+			TST_LOG( tc, (logline, "FIFO mode error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Error
+		if(((sts & 0x08000000) >> 27) != 0){
+			TST_LOG( tc, (logline, "FIFO error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Check IRQ mechanism
+//pevx_csr_wr(crate, reg_remap->msg_fifo_port[i], i);
+		temp = i;
+		tsc_csr_write(TSC_CSR_FIFO_PORT[i], &temp);
+		retval = tsc_fifo_wait_ef(i, &sts, 0);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d wait error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		TST_LOG( tc, (logline, "        FIFO#%x IRQ \n", i));
+
+		// Fill FIFO to maximum
+		for(j = 0; j < 254; j++){
+//pevx_csr_wr(crate, reg_remap->msg_fifo_port[i], j + i + 1);
+			temp = j + i + 1;
+			tsc_csr_write(TSC_CSR_FIFO_PORT[i], &temp);
+		}
+
+		// Check flag full and flag not empty and word counter
+		retval = tsc_fifo_status(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d status error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Not empty
+		if(((sts & 0x01000000) >> 24) == 0){
+			TST_LOG( tc, (logline, "FIFO not empty error after write \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Full
+		if(((sts & 0x02000000) >> 25) != 1){
+			TST_LOG( tc, (logline, "FIFO full error after write \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Word counter
+		if((sts & 0x000000ff) != 0xff){
+			TST_LOG( tc, (logline, "FIFO word counter error after write \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Read and check data from FIFO
+		for(j = 0; j < 255; j++){
+			retval = tsc_fifo_read(i, &data, 1, &sts);
+			if(retval < 0){
+				TST_LOG(tc, (logline, "->FIFO#%d read error\n", i));
+				retval = TST_STS_ERR;
+				goto fifo_fail;
+			}
+			if(data != (j + i)){
+				TST_LOG( tc, (logline, "FIFO read data error : word count %x, data %x, ref %x \n", j, data, j + i));
+				retval = TST_STS_ERR;
+				goto fifo_fail;
+			}
+		}
+
+		// Check flag full, flag not empty, word counter and global error
+		retval = tsc_fifo_status(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d status error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Word counter
+		if((sts & 0x000000ff) != 0){
+			TST_LOG( tc, (logline, "FIFO word counter error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Not empty
+		if(((sts & 0x01000000) >> 24) != 0){
+			TST_LOG( tc, (logline, "FIFO not empty error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Full
+		if(((sts & 0x02000000) >> 25) != 0){
+			TST_LOG( tc, (logline, "FIFO full error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Error
+		if(((sts & 0x08000000) >> 27) != 0){
+			TST_LOG( tc, (logline, "FIFO error after read\n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Clear FIFO
+		retval = tsc_fifo_clear(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d clear error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		TST_LOG( tc, (logline, "                  -> OK \n"));
+	}
+
+	TST_LOG( tc, (logline, "Executing FIFOs test in MAILBOX mode \n"));
+
+	// Test all (8) MAILBOX
+	for (i = 0; i < 8; i++){
+
+		TST_LOG( tc, (logline, "        MAILBOX#%x ", i));
+
+		// Init Mailbox
+		retval = tsc_fifo_init(i, 1);
+
+		// Check inital status
+		retval = tsc_fifo_status(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d status error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Word counter
+		if((sts & 0x000000ff) != 0){
+			TST_LOG( tc, (logline, "MAILBOX word counter error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// SRAM write pointer
+		if(((sts & 0x0000ff00) >> 8) != 0){
+			TST_LOG( tc, (logline, "MAILBOX SRAM write pointer error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// SRAM read pointer
+		if(((sts & 0x00ff0000) >> 16) != 0){
+			TST_LOG( tc, (logline, "MAILBOX SRAM read pointer error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Not empty
+		if(((sts & 0x01000000) >> 24) != 0){
+			TST_LOG( tc, (logline, "MAILBOX not empty error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Full
+		if(((sts & 0x02000000) >> 25) != 0){
+			TST_LOG( tc, (logline, "MAILBOX full error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Used as MailBox
+		if(((sts & 0x04000000) >> 26) != 1){
+			TST_LOG( tc, (logline, "MAILBOX mode error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Error
+		if(((sts & 0x08000000) >> 27) != 0){
+			TST_LOG( tc, (logline, "MAILBOX error at initialization \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Fill MAILBOX with one word
+		temp = 0x12345678 + i;
+		tsc_csr_write(TSC_CSR_FIFO_PORT[i], &temp);
+
+		// Check flag full and flag not empty and word counter
+		retval = tsc_fifo_status(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d status error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Not empty
+		if(((sts & 0x01000000) >> 24) == 0){
+			TST_LOG( tc, (logline, "MAILBOX not empty error after write \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Full
+		if(((sts & 0x02000000) >> 25) != 1){
+			TST_LOG( tc, (logline, "MAILBOX full error after write \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Word counter
+		if((sts & 0x000000ff) != 0x1){
+			TST_LOG( tc, (logline, "MAILBOX word counter error after write \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Read and check data from FIFO
+		retval = tsc_fifo_read(i, &data, 1, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d read error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		if(data != (0x12345678 + i)){
+			TST_LOG( tc, (logline, "MAILBOX read data error : word count 0, data %x, ref %x \n", data, 0x12345678 + i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Check flag full, flag not empty, word counter and global error
+		retval = tsc_fifo_status(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d satus error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Word counter
+		if((sts & 0x000000ff) != 0){
+			TST_LOG( tc, (logline, "MAILBOX word counter error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Not empty
+		if(((sts & 0x01000000) >> 24) != 0){
+			TST_LOG( tc, (logline, "MAILBOX not empty error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Full
+		if(((sts & 0x02000000) >> 25) != 0){
+			TST_LOG( tc, (logline, "MAILBOX full error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		// Error
+		if(((sts & 0x08000000) >> 27) != 0){
+			TST_LOG( tc, (logline, "MAILBOX error after read \n"));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+
+		// Clear FIFO and turn of FIFO
+		retval = tsc_fifo_clear(i, &sts);
+		if(retval < 0){
+			TST_LOG(tc, (logline, "->FIFO#%d clear error\n", i));
+			retval = TST_STS_ERR;
+			goto fifo_fail;
+		}
+		TST_LOG( tc, (logline, "-> OK \n"));
+	}
+
+fifo_fail:
+
+	tm = time(0);
+	ct = ctime(&tm);
+
+	TST_LOG(tc, (logline, "\n%s->Exiting:%s", tst_id, ct));
+	return(retval | TST_STS_DONE);
+}
+
+// FIFOs test
+int tst_52(struct tst_ctl *tc){
+	return(tst_fifo(tc, "Tst:52"));
 }
