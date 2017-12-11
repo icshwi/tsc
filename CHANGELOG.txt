@@ -1,0 +1,18 @@
+******************************************
+* Project TSC (driver & application)     *
+* IOxOS Technologies SA <ioxos@ioxos.ch> *
+* Changelog file                         *
+******************************************
+
+*** Release 1.4.3 | 11.12.2017 ***
+
+- Add automatic DDR3 SMEM1, SMEM2 calibration when TscMon start
+- Add Fifos support (TscMon command, API, test)
+- Add Semaphore support (TscMon command, API, test)
+- Add tests suite (memory, DMA, FMC, FIFO, Semaphore, DDR calibration)
+- Add TscMon quiet mode
+- Add Linux command interpreter in TscMon
+- Add mapping example
+- Update API and TscMon documentation
+- Minor bugs correction
+- Syntax and cosmetic adaptation
