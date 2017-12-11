@@ -688,20 +688,19 @@ int ioctl_fifo( struct tsc_device *ifc, unsigned int cmd, unsigned long arg){
     			return(-ENOMEM);
     		}
     		if(cmd == TSC_IOCTL_FIFO_READ){
-    			if( copy_from_user( data, fifo.data, sizeof( int) * fifo.cnt)){
-    				retval = -EFAULT;
-    			}
-    			else {
-    				retval = tsc_fifo_read( ifc, fifo.idx, data, fifo.cnt, &fifo.sts);
+    			retval = tsc_fifo_read( ifc, fifo.idx, data, fifo.cnt, &fifo.sts);
+    			if(retval > 0){
+    				if( copy_to_user( fifo.data, data, sizeof( int) * retval)){
+    					retval = -EFAULT;
+    				}
     			}
     		}
     		if(cmd == TSC_IOCTL_FIFO_WRITE){
-    			retval = tsc_fifo_write( ifc, fifo.idx, data, fifo.cnt, &fifo.sts);
-    			if(retval > 0){
-    				/* fifo_write OK -> retval holds actual word count */
-    				if(copy_to_user( fifo.data, data, sizeof( int) * retval)){
-    					retval = -EFAULT;
-    				}
+    			if(copy_from_user(data, fifo.data, sizeof( int) * fifo.cnt)){
+    				retval = -EFAULT;
+    			}
+    			else {
+    				retval = tsc_fifo_write( ifc, fifo.idx, data, fifo.cnt, &fifo.sts);
     			}
     		}
     		if(data){
@@ -727,6 +726,9 @@ int ioctl_fifo( struct tsc_device *ifc, unsigned int cmd, unsigned long arg){
     	case TSC_IOCTL_FIFO_STATUS:
     	{
     		tsc_fifo_status(ifc, fifo.idx, &fifo.sts);
+    		if(copy_to_user((void *)arg, &fifo, sizeof(fifo))){
+    			return -EFAULT;
+    		}
     		break;
     	}
     	default:

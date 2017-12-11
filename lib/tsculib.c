@@ -1439,6 +1439,7 @@ tsc_fifo_status( uint idx,
   
   fifo.idx = idx;
   fifo.sts = 0;
+
   retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_STATUS, &fifo);
   if(sts)
   {

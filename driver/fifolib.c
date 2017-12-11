@@ -47,7 +47,7 @@
 
 #include "tscos.h"
 #include "tscdrvr.h"
-#define DBG
+#define DBGno
 #include "debug.h"
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -79,7 +79,7 @@ int tsc_fifo_init(struct tsc_device *ifc, int idx, int mode){
 			| TSC_FIFO_CTL_REA;
 	}
 	iowrite32(ctl, ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
-	return 0;
+	return 1;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -106,7 +106,7 @@ int tsc_fifo_clear( struct tsc_device *ifc, int idx){
 	// Reset all to 0
 	ctl = 0;
 	iowrite32(ctl, ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
-	return(0);
+	return(1);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -122,8 +122,7 @@ int tsc_fifo_clear( struct tsc_device *ifc, int idx){
 
 int tsc_fifo_status(struct tsc_device *ifc, int idx, int *sts){
 	*sts = ioread32( ifc->csr_ptr + TSC_CSR_FIFO_CTL[idx]);
-	  debugk(("status%x\n", *sts));
-	return 0;
+	return 1;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -138,7 +137,7 @@ int tsc_fifo_status(struct tsc_device *ifc, int idx, int *sts){
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_fifo_wait_ef(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
-	return 0;
+	return 1;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -153,7 +152,7 @@ int tsc_fifo_wait_ef(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_fifo_wait_ff(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
-	return 0;
+	return 1;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
