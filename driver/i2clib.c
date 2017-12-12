@@ -53,11 +53,11 @@
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_irq
- * Prototype     : int
- * Parameters    : pointer to tsc device control structure
- * Return        : error/success
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure, source, argument
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : interupt handler for i2c
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -74,10 +74,9 @@ tsc_i2c_irq( struct tsc_device *ifc,
  * Function name : tsc_i2c_reset
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- *                 pointer to I2C device control structure
- * Return        : number of word actually written in I2C
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : reset I2C controller
+ * Description   : reset i2c controller
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -90,11 +89,10 @@ tsc_i2c_reset( struct tsc_device *ifc)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_wait
  * Prototype     : int
- * Parameters    : pointer to tsc device control structure
- *                 pointer to I2C device control structure
- * Return        : number of word actually written in I2C
+ * Parameters    : pointer to tsc device control structure, interrupt
+ * Return        : mutex status
  *----------------------------------------------------------------------------
- * Description   : wait I2C controller interrupt
+ * Description   : wait i2c controller interrupt
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -115,10 +113,10 @@ tsc_i2c_wait( struct tsc_device *ifc,
  * Function name : tsc_i2c_cmd
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- *                 pointer to I2C device control structure
- * Return        : number of word actually written in I2C
+ *                 pointer to i2c device control structure
+ * Return        : return of wait function
  *----------------------------------------------------------------------------
- * Description   : read <cnt> data from I2C
+ * Description   : execute i2c command
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -155,10 +153,10 @@ tsc_i2c_cmd( struct tsc_device *ifc,
  * Function name : tsc_i2c_read
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- *                 pointer to I2C device control structure
- * Return        : I2C read status
+ *                 pointer to i2c device control structure
+ * Return        : i2c read status
  *----------------------------------------------------------------------------
- * Description   : read <cnt> data from I2C
+ * Description   : read i2c
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -207,10 +205,10 @@ tsc_i2c_read( struct tsc_device *ifc,
  * Function name : tsc_i2c_write
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- *                 pointer to I2C device control structure
- * Return        : number of word actually written in I2C
+ *                 pointer to i2c device control structure
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : write <cnt> data in I2C
+ * Description   : write <cnt> data in i2c
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

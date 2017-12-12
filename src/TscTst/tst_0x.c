@@ -59,13 +59,14 @@ char *ident="        ";
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_config
  * Prototype     : int
- * Parameters    : test control structure, test ID
- * Return        : Done or Error
+ * Parameters    : test control structure, test id
+ * Return        : error/success
  *
  *----------------------------------------------------------------------------
- * Description   : Get driver information
+ * Description   : get driver information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_config(struct tst_ctl *tc, char *tst_id){
 	time_t tm;
 	char *ct;
@@ -107,13 +108,13 @@ int tst_01(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_shm_calibration
  * Prototype     : int
- * Parameters    : test control structure, test ID
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Calibrate DDR SMEM1 & SMEM2 and test it
+ * Description   : calibrate ddr smem1 and smem2 and test it
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 	time_t tm;
 	char *ct            = NULL;
@@ -596,13 +597,13 @@ int tst_02(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_shm_addr
  * Prototype     : int
- * Parameters    : test control structure, test ID
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Test all SHM address bits : Read write SHM
+ * Description   : test all shm address bits : read write shm
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_shm_addr(struct tst_ctl *tc, char *tst_id){
 	time_t tm;
 	char *ct           = NULL;
@@ -729,13 +730,13 @@ int tst_03(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_sram_shm_mem_pmem
  * Prototype     : int
- * Parameters    : test control structure, test ID, mode
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id, mode
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Read write sram1, sram2, shm1, shm2 from CPU with MEM | PMEM
+ * Description   : read write sram1, sram2, shm1, shm2 from cpu with mem | pmem
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_sram_shm_mem_pmem(struct tst_ctl *tc, char *tst_id){
 	struct tsc_ioctl_map_win map_loc_win;
 	time_t tm;
@@ -937,13 +938,13 @@ int tst_04(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_usr
  * Prototype     : int
- * Parameters    : test control structure, test ID, mode
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id, mode
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Read write USR1 and USR2 over MEM and PMEM
+ * Description   : read write usr1 and usr2 over mem and pmem
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_usr(struct tst_ctl *tc, char *tst_id){
 	struct tsc_ioctl_map_win map_loc_win;
 	time_t tm;
@@ -1126,13 +1127,14 @@ int tst_05(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_kbuf
  * Prototype     : int
- * Parameters    : test control structure, test ID
- * Return        : Done or Error
+ * Parameters    : test control structure, test id
+ * Return        : error/success
  *
  *----------------------------------------------------------------------------
- * Description   : Read write KBUF0 from CPU
+ * Description   : read write kbuf0 from cpu
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_kbuf(struct tst_ctl *tc, char *tst_id){
 	struct tsc_ioctl_kbuf_req buf_p;
 	time_t tm;

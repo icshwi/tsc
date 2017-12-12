@@ -36,6 +36,16 @@
 #include "../../include/tscioctl.h"
 #include "../../include/tsculib.h"
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : main
+ * Prototype     : void
+ * Parameters    : arc, argv
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : test usr mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 main( int argc, char *argv[]){
 	int *mybuffer    = calloc(1024*1024, 1);
 	int status        = 0;

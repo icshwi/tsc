@@ -53,11 +53,10 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_init
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 FIFO index
- * Return        : 0
+ * Parameters    : pointer to tsc device control structure, fifo index, mode
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Init fifo
+ * Description   : initialization of fifo
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -85,11 +84,10 @@ int tsc_fifo_init(struct tsc_device *ifc, int idx, int mode){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_clear
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 FIFO index
- * Return        : 0
+ * Parameters    : pointer to tsc device control structure, fifo index
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Clear fifo
+ * Description   : clear fifo
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -112,11 +110,10 @@ int tsc_fifo_clear( struct tsc_device *ifc, int idx){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_status
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 FIFO index
- * Return        : 0
+ * Parameters    : pointer to tsc device control structure, fifo index, status
+ * Return        : 1
  *----------------------------------------------------------------------------
- * Description   : Get fifo status
+ * Description   : get fifo status
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -128,11 +125,10 @@ int tsc_fifo_status(struct tsc_device *ifc, int idx, int *sts){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_wait_ef
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 FIFO index
- * Return        : 0
+ * Parameters    : pointer to tsc device control structure, fifo structure
+ * Return        : 1
  *----------------------------------------------------------------------------
- * Description   : Wait empty fifo
+ * Description   : wait empty fifo
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -143,11 +139,11 @@ int tsc_fifo_wait_ef(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_wait_ff
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure, fifo structure
  *                 FIFO index
- * Return        : 0
+ * Return        : 1
  *----------------------------------------------------------------------------
- * Description   : Wait fifo full
+ * Description   : wait fifo full
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -158,14 +154,12 @@ int tsc_fifo_wait_ff(struct tsc_device *ifc, struct tsc_ioctl_fifo *fifo){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_read
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 FIFO index
- *                 data pointer
- *                 data count
+ * Parameters    : pointer to tsc device control structure
+ *                 fifo index, data pointer, data count
  *                 pointer to hold FIFO status after last readout
  * Return        : number of word actually written in FIFO
  *----------------------------------------------------------------------------
- * Description   : read <cnt> data from FIFO
+ * Description   : read <cnt> data from fifo
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -197,14 +191,12 @@ int tsc_fifo_read(struct tsc_device *ifc, int idx, int *data, int cnt, int *sts)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_write
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 FIFO index
- *                 data pointer
- *                 data count
- *                 pointer to FIFO status after last write
- * Return        : number of word actually written in FIFO
+ * Parameters    : pointer to tsc device control structure
+ *                 fifo index, data pointer, data count
+ *                 pointer to fifo status after last write
+ * Return        : number of word actually written in fifo
  *----------------------------------------------------------------------------
- * Description   : write <cnt> data in FIFO
+ * Description   : write <cnt> data in fifo
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

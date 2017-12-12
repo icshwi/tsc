@@ -77,12 +77,12 @@ const char * destination_txt[] = {"SRAM1", "SRAM2", "DDR1", "DDR2", "USR1", "USR
  * Function name : dma_configure
  * Prototype     : void
  * Parameters    : dma channel, source, destination, size, space src, space dest
- * Return        : Done or Error
- *
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Dma configure [channel, src, des, size, space_src, space_des]
+ * Description   : dma configure [channel, src, des, size, space_src, space_des]
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void dma_configure(int channel, int src, int des, int size, int space_src, int space_des){
 	req_p.des_addr   = des;
 	req_p.des_space  = space_des;
@@ -114,14 +114,14 @@ void dma_configure(int channel, int src, int des, int size, int space_src, int s
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_dma_
  * Prototype     : int
- * Parameters    : test control structure, test ID, direction of transfer
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id, direction of transfer
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : DMA test between all agents (SRAM1, SRAM2, SHM1, SHM2, USR1,
- *                 USR2, KBUF) on all channels (0, 1, 2, 3) in both direction
+ * Description   : dma test between all agents (sram1, sram2, shm1, shm2, usr1,
+ *                 usr2, kbuf) on all channels (0, 1, 2, 3) in both direction
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_dma(struct tst_ctl *tc, char *tst_id){
 	struct tsc_ioctl_kbuf_req buf_p;
 	time_t tm;
@@ -519,7 +519,6 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 	return( retval | TST_STS_DONE);
 }
 
-// DMA test
 int tst_20(struct tst_ctl *tc){
 	return(tst_dma(tc, "Tst:20"));
 }

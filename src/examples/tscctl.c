@@ -35,6 +35,16 @@
 #include <sys/mman.h>
 #include "../../include/tscioctl.h"
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : main
+ * Prototype     : int
+ * Parameters    : arc, argv
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : test controller
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 main( int argc, char *argv[])
 {
   int fd;

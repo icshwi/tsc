@@ -118,12 +118,12 @@ FMC_HB=[  1,  0,  3,  2,  5,  4,  7,  6,  9,  8, 11,
  * Function name : tst_fmc
  * Prototype     : int
  * Parameters    : test id and control structure
- * Return        : Done or Error
- *
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : test FMC#1 and FMC#2 on IFC14xx boards
+ * Description   : test fmc#1 and fmc#2 on ifc14xx boards
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_fmc(struct tst_ctl *tc, char *tst_id){
 	time_t tm;
 	char *ct     = NULL;
@@ -673,13 +673,13 @@ int tst_50(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_semaphore
  * Prototype     : int
- * Parameters    : test control structure, test ID
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id
+ * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : Semaphore test
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_semaphore(struct tst_ctl *tc, char *tst_id){
 	int retval = 0;
 	time_t tm;
@@ -798,13 +798,13 @@ int tst_51(struct tst_ctl *tc){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_fifo
  * Prototype     : int
- * Parameters    : test control structure, test ID
- * Return        : Done or Error
- *
+ * Parameters    : test control structure, test id
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : FIFOs test
+ * Description   : fifos test
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tst_fifo(struct tst_ctl *tc, char *tst_id){
 	int retval = 0;
 	time_t tm;
@@ -886,7 +886,6 @@ int tst_fifo(struct tst_ctl *tc, char *tst_id){
 		}
 
 		// Check IRQ mechanism
-//pevx_csr_wr(crate, reg_remap->msg_fifo_port[i], i);
 		temp = i;
 		tsc_csr_write(TSC_CSR_FIFO_PORT[i], &temp);
 		retval = tsc_fifo_wait_ef(i, &sts, 0);
@@ -899,7 +898,6 @@ int tst_fifo(struct tst_ctl *tc, char *tst_id){
 
 		// Fill FIFO to maximum
 		for(j = 0; j < 254; j++){
-//pevx_csr_wr(crate, reg_remap->msg_fifo_port[i], j + i + 1);
 			temp = j + i + 1;
 			tsc_csr_write(TSC_CSR_FIFO_PORT[i], &temp);
 		}
@@ -1142,7 +1140,6 @@ fifo_fail:
 	return(retval | TST_STS_DONE);
 }
 
-// FIFOs test
 int tst_52(struct tst_ctl *tc){
 	return(tst_fifo(tc, "Tst:52"));
 }

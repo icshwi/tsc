@@ -52,17 +52,16 @@
 #define DBGno
 #include "debug.h"
 
-
 #define DMA_NO_PIPE  0
 #define DMA_PIPE     1
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_irq
- * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- * Return        : error/success
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure, source, argument
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : DMA interrupt handler
+ * Description   : dma interrupt handler
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -90,6 +89,16 @@ tsc_dma_irq( struct  tsc_device *ifc,
   up( &dma_ctl_p->sem);
   return;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma2_irq
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure, source, argument
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : dma interrupt handler
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 tsc_dma2_irq( struct  tsc_device *ifc,
@@ -119,10 +128,10 @@ tsc_dma2_irq( struct  tsc_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_init
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- * Return        : error/success
+ * Parameters    : pointer to dma control structure
+ * Return        : success
  *----------------------------------------------------------------------------
- * Description   : DMA channel initialization
+ * Description   : dma channel initialization
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -187,10 +196,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_alloc
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to dma control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Allocate DMA channel
+ * Description   : allocate DMA channel
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -217,6 +226,16 @@ dma_alloc_exit:
   return( retval);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_alloc
+ * Prototype     : int
+ * Parameters    : pointer to dma control structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : allocate DMA channel
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_alloc( struct tsc_device *ifc,
                struct tsc_ioctl_dma *dma_p)
@@ -238,10 +257,10 @@ tsc_dma_alloc( struct tsc_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_free
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure, dma structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Free DMA channel
+ * Description   : free DMA channel
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -278,10 +297,10 @@ dma_free_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_clear
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure, dma structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Free DMA channel
+ * Description   : clear dma channel
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -342,10 +361,10 @@ dma_clear_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_wait
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc dma control structure, mode
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Wait for DMA transfer to complete
+ * Description   : wait for dma transfer to complete
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -405,6 +424,16 @@ dma_wait( struct dma_ctl *dma_ctl_p,
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_wait
+ * Prototype     : int
+ * Parameters    : pointer to dma control structure, dma request
+ * Return        : success
+ *----------------------------------------------------------------------------
+ * Description   : wait for dma transfer to complete
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_wait( struct tsc_device *ifc,
 	      struct tsc_ioctl_dma_req *dr_p)
@@ -425,12 +454,12 @@ tsc_dma_wait( struct tsc_device *ifc,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_dma_move
+ * Function name : dma_set_pipe
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- * Return        : error/success
+ * Parameters    : pointer to dma control structure, pipe
+ * Return        : success
  *----------------------------------------------------------------------------
- * Description   : Allocate DMA channel
+ * Description   : set pipe for dma
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -470,6 +499,16 @@ dma_set_pipe( struct dma_ctl *dma_ctl_p,
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_cpy_desc
+ * Prototype     : void
+ * Parameters    : pointer to dma control structure, offset, dma descriptor
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : copy dma descriptor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 dma_cpy_desc( struct dma_ctl *dma_ctl_p,
 	       int offset,
@@ -485,6 +524,16 @@ dma_cpy_desc( struct dma_ctl *dma_ctl_p,
   }
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_get_desc
+ * Prototype     : void
+ * Parameters    : pointer to dma control structure, offset, dma descriptor
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : acquire dma descriptor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 dma_get_desc( struct dma_ctl *dma_ctl_p,
 	       int offset,
@@ -499,6 +548,16 @@ dma_get_desc( struct dma_ctl *dma_ctl_p,
     *p++ = ioread32( dma_ctl_p->desc_ptr + offset + i);
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_set_ctl
+ * Prototype     : uint
+ * Parameters    : space, trig, intr, mode
+ * Return        : dma controller value
+ *----------------------------------------------------------------------------
+ * Description   : set dma controller value
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static uint 
 dma_set_ctl( uint space,
@@ -530,6 +589,17 @@ dma_set_ctl( uint space,
   debugk(("%x\n", ctl));
   return( ctl);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_set_rd_desc
+ * Prototype     : int
+ * Parameters    : dma controller structure, shm addr,
+ *                 dest. addr. , size, space, mode
+ * Return        : dma descriptor offset
+ *----------------------------------------------------------------------------
+ * Description   : set read dma descriptor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
@@ -569,6 +639,17 @@ dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
   return( dc->desc_offset);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_set_wr_desc
+ * Prototype     : int
+ * Parameters    : dma controller structure, shm addr,
+ *                 src. addr. , size, space, mode
+ * Return        : dma descriptor offset
+ *----------------------------------------------------------------------------
+ * Description   : set write dma descriptor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 dma_set_wr_desc( struct dma_ctl *dma_ctl_p,
 		 uint  shm_addr, 
@@ -607,6 +688,15 @@ dma_set_wr_desc( struct dma_ctl *dma_ctl_p,
   return(dc->desc_offset + sizeof( struct dma_desc));
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_move
+ * Prototype     : int
+ * Parameters    : ifc structure, dma request structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : execute dma move
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 tsc_dma_move( struct tsc_device *ifc,
@@ -761,12 +851,12 @@ tsc_dma_move( struct tsc_device *ifc,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_dma_status
+ * Function name : dma_status
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to dma control structure, dma status
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : Get DMA channel status
+ * Description   : get dma channel status
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -829,6 +919,16 @@ dma_status_exit:
   return( retval);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_status
+ * Prototype     : int
+ * Parameters    : pointer to dma control structure, dma status
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : get dma channel status
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_status( struct tsc_device *ifc,
 	        struct tsc_ioctl_dma_sts *ds_p)
@@ -844,6 +944,16 @@ tsc_dma_status( struct tsc_device *ifc,
   retval = dma_status( dma_ctl_p, ds_p);
   return( retval);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_mode
+ * Prototype     : int
+ * Parameters    : pointer to ifc control structure and dma mode structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : get dma channel status
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 tsc_dma_mode( struct tsc_device *ifc,
@@ -866,4 +976,3 @@ tsc_dma_mode( struct tsc_device *ifc,
 
   return( 0);
 }
-

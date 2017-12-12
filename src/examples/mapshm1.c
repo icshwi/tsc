@@ -36,6 +36,16 @@
 #include "../../include/tscioctl.h"
 #include "../../include/tsculib.h"
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : main
+ * Prototype     : void
+ * Parameters    : arc, argv
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : test shm mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 main(int argc, char *argv[]){
 	struct tsc_ioctl_map_win map_win;
 	int             retval          = 0;
