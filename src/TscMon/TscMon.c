@@ -52,7 +52,7 @@ static char rcsid[] = "$Id: TscMon.c,v 1.3 2016/01/26 13:00:40 ioxos Exp $";
 #include <sys/mman.h>
 
 char TscMon_version[] = "1.40";
-char TscMon_official_release[] = "1.4.3";
+char TscMon_official_release[] = "1.4.4";
 
 int tsc_cmd_exec( struct cli_cmd_list *, struct cli_cmd_para *);
 
