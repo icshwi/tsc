@@ -903,6 +903,12 @@ int tst_sram_shm_mem_pmem(struct tst_ctl *tc, char *tst_id){
 				// Slide size
 				sub_size   = sub_size_ref + ((i & 0xf00) >> 5);
 				sub_offset = sub_offset_ref + ((i & 0xf0)  >> 1);
+
+			    if(tc->exec_mode & TST_EXEC_FAST){
+			    	if(i > 0x80){
+			    		break;
+			    	}
+			    }
 			}
 			TST_LOG( tc, (logline, "\n"));
 
@@ -1087,6 +1093,12 @@ int tst_usr(struct tst_ctl *tc, char *tst_id){
 			// Slide size
 			sub_size   = sub_size_ref + ((i & 0xf00) >> 5);
 			sub_offset = sub_offset_ref + ((i & 0xf0)  >> 1);
+
+		    if(tc->exec_mode & TST_EXEC_FAST){
+		    	if(i > 0x80){
+		    		break;
+		    	}
+		    }
 		}
 		TST_LOG( tc, (logline, "\n"));
 
@@ -1229,6 +1241,12 @@ int tst_kbuf(struct tst_ctl *tc, char *tst_id){
 		// Slide size
 	    sub_size   = sub_size_ref + ((i & 0xf00) >> 5);
 	    sub_offset = sub_offset_ref + ((i & 0xf0)  >> 1);
+
+	    if(tc->exec_mode & TST_EXEC_FAST){
+	       	if(i > 0x80){
+	       		break;
+	       	}
+	    }
 	}
 
 	tm = time(0);

@@ -63,21 +63,18 @@ char TscTst_version[] = "1.00";
 
 // -------------------------------------------------------------------
 
-void tst_signal( int signum)
-{
-  int n;
+void tst_signal( int signum){
+	int n;
 
-  n = read( fd_in, cmdline, 0x100);
-  if( n <= 0)
-  {
-      printf("TscTst->Exiting:Connexion lost with TscTst");
-      strcpy( cmdline, "exit");
-  }
-  else
-  {
-    cmdline[n] = 0;
-    cmd_pending = 1;
-  }
+	n = read( fd_in, cmdline, 0x100);
+	if(n <= 0){
+		printf("TscTst->Exiting:Connexion lost with TscTst");
+		strcpy( cmdline, "exit");
+	}
+	else{
+		cmdline[n] = 0;
+		cmd_pending = 1;
+	}
 }
 
 // -------------------------------------------------------------------
@@ -99,276 +96,223 @@ int tst_init(){
 
 // -------------------------------------------------------------------
 
-int tst_status( struct cli_cmd_para *c)
-{
-  write( fd_out, &tst_ctl, sizeof( tst_ctl));
-  return(0);
+int tst_status( struct cli_cmd_para *c){
+	write( fd_out, &tst_ctl, sizeof( tst_ctl));
+	return(0);
 }
 
 // -------------------------------------------------------------------
 
-int tst_set( struct cli_cmd_para *c)
-{
-  int i, cnt;
-  struct tst_ctl *tc;
+int tst_set( struct cli_cmd_para *c){
+	int i, cnt;
+	struct tst_ctl *tc;
 
-  tc = &tst_ctl;
+	tc = &tst_ctl;
 
-  cnt = c->cnt;
-  i = 0;
-  while( cnt--)
-  {
-    int tmp;
-    printf("%s\n", c->para[i]);
-    if( sscanf( c->para[i], "loop=%d", &tmp) == 1)
-    {
-      tc->loop_mode = tmp;
-    }
-    if( !strncmp( c->para[i], "log=off", 7) == 1)
-    {
-      if( tc->log_mode != TST_LOG_OFF)
-      {
-        TST_LOG( tc, (logline, "TscTst->LoggingOff:%s\n", tc->log_filename));
-	fclose( tc->log_file);
-      }
-      tc->log_mode = TST_LOG_OFF;
-    }
-    if( !strncmp( c->para[i], "log=new", 7) == 1)
-    {
-      if( tc->log_mode != TST_LOG_OFF)
-      {
-	fclose( tc->log_file);
-      }
-      tc->log_file = fopen( tc->log_filename, "w");
-      if( !tc->log_file)
-      {
-	tc->log_mode = TST_LOG_OFF;
-      }
-      else
-      {
-        TST_LOG( tc, (logline, "TscTst->LoggingNew:%s\n", tc->log_filename));
-      }
-      tc->log_mode = TST_LOG_NEW;
-    }
-    if( !strncmp( c->para[i], "log=add", 7) == 1)
-    {
-      if( tc->log_mode == TST_LOG_OFF)
-      {
-         tc->log_file = fopen( tc->log_filename, "a");
-         if( !tc->log_file)
-         {
-	   tc->log_mode = TST_LOG_OFF;
-         }
-         else
-         {
-            TST_LOG( tc, (logline, "TscTst->LoggingAdd:%s\n", tc->log_filename));
-         }
-      }
-      tc->log_mode = TST_LOG_ADD;
-    }
-    if( sscanf( c->para[i], "logfile=%s", log_filename) == 1)
-    {
-      strcpy( log_filename, &c->para[i][8]);
-      printf("log_filename=%s\n", log_filename);
-    }
-    if( !strncmp( c->para[i], "err=cont", 6) == 1)
-    {
-      tc->err_mode = TST_ERR_CONT;
-    }
-    if( !strncmp( c->para[i], "err=halt", 6) == 1)
-    {
-      tc->err_mode = TST_ERR_HALT;
-    }
-    if( !strncmp( c->para[i], "exec=fast", 8) == 1)
-    {
-      tc->exec_mode = TST_EXEC_FAST;
-    }
-    if( !strncmp( c->para[i], "exec=val", 8) == 1)
-    {
-      tc->exec_mode = 0;
-    }
-    i++;
-  }
-  return(0);
+	cnt = c->cnt;
+	i = 0;
+	while( cnt--){
+		int tmp;
+		printf("%s\n", c->para[i]);
+		if( sscanf( c->para[i], "loop=%d", &tmp) == 1){
+			tc->loop_mode = tmp;
+		}
+		if( !strncmp( c->para[i], "log=off", 7) == 1){
+			if( tc->log_mode != TST_LOG_OFF){
+				TST_LOG( tc, (logline, "TscTst->LoggingOff:%s\n", tc->log_filename));
+				fclose( tc->log_file);
+			}
+			tc->log_mode = TST_LOG_OFF;
+		}
+		if( !strncmp( c->para[i], "log=new", 7) == 1){
+			if( tc->log_mode != TST_LOG_OFF){
+				fclose( tc->log_file);
+			}
+			tc->log_file = fopen( tc->log_filename, "w");
+			if( !tc->log_file){
+				tc->log_mode = TST_LOG_OFF;
+			}
+			else{
+				TST_LOG( tc, (logline, "TscTst->LoggingNew:%s\n", tc->log_filename));
+			}
+			tc->log_mode = TST_LOG_NEW;
+		}
+		if( !strncmp( c->para[i], "log=add", 7) == 1){
+			if( tc->log_mode == TST_LOG_OFF){
+				tc->log_file = fopen( tc->log_filename, "a");
+				if( !tc->log_file){
+					tc->log_mode = TST_LOG_OFF;
+				}
+				else{
+					TST_LOG( tc, (logline, "TscTst->LoggingAdd:%s\n", tc->log_filename));
+				}
+			}
+			tc->log_mode = TST_LOG_ADD;
+		}
+		if( sscanf( c->para[i], "logfile=%s", log_filename) == 1){
+			strcpy( log_filename, &c->para[i][8]);
+			printf("log_filename=%s\n", log_filename);
+		}
+		if( !strncmp( c->para[i], "err=cont", 6) == 1){
+			tc->err_mode = TST_ERR_CONT;
+		}
+		if( !strncmp( c->para[i], "err=halt", 6) == 1){
+			tc->err_mode = TST_ERR_HALT;
+		}
+		if( !strncmp( c->para[i], "exec=fast", 8) == 1){
+			tc->exec_mode = TST_EXEC_FAST;
+		}
+		if( !strncmp( c->para[i], "exec=val", 8) == 1){
+			tc->exec_mode = TST_EXEC_VAL;
+		}
+		i++;
+	}
+	return(0);
 }
 
 // -------------------------------------------------------------------
 
-static int tst_get_range( char *para,
-	       int *first,
-	       int *last)
-{
-  char *p;
+static int tst_get_range( char *para, int *first, int *last){
+	char *p;
 
-  *first = strtoul( para, &p, 16);
-  *last = *first;
-  p = strpbrk( para,".");
-  if( p)
-  {
-    para = p + strspn(p,".");
-    *last =  strtoul( para, &p, 16);
-  }
-  return( *first);
+	*first = strtoul( para, &p, 16);
+	*last = *first;
+	p = strpbrk( para,".");
+	if(p){
+		para = p + strspn(p,".");
+		*last =  strtoul( para, &p, 16);
+	}
+	return( *first);
 }
 
 // -------------------------------------------------------------------
 
-int tst_start( struct cli_cmd_para *c)
-{
-  struct tst_list *t;
-  int first, last;
-  int i, cnt, loop;
-  int iex;
+int tst_start( struct cli_cmd_para *c){
+	struct tst_list *t;
+	int first, last;
+	int i, cnt, loop;
+	int iex;
 
-  cnt = c->cnt;
-  i = 0;
-  if( cnt > 0)
-  {
-    tst_get_range( c->para[0], &first, &last);
-    i++;
-    cnt--;
-  }
-  else
-  {
-    first = 1;
-    last = 0xff;
-  }
-  tst_ctl.para_cnt = cnt;
-  tst_ctl.para_p = &c->para[i];
+	cnt = c->cnt;
+	i = 0;
+	if( cnt > 0){
+		tst_get_range( c->para[0], &first, &last);
+		i++;
+		cnt--;
+	}
+	else{
+		first = 1;
+		last = 0xff;
+	}
+	tst_ctl.para_cnt = cnt;
+	tst_ctl.para_p = &c->para[i];
 
-  printf("TscTst->Starting test %x..%x\n", first, last);
-  iex = 0;
-  loop = tst_ctl.loop_mode;
-  do
-  {
-    t = &tst_list[0];
-    while( t->idx)
-    {
-      if( ( t->idx >= first) && ( t->idx <= last))
-      {
-	tst_ctl.test_idx = t->idx;
-	tst_ctl.status = TST_STS_STARTED;
-        tst_ctl.status = t->func( &tst_ctl);
-	t->status = tst_ctl.status;
-	if( ( tst_ctl.status & TST_STS_ERR) &&
-	    ( tst_ctl.err_mode & TST_ERR_HALT))
-	{
-	  iex = 1;
-	  break;
+	printf("TscTst->Starting test %x..%x\n", first, last);
+	iex = 0;
+	loop = tst_ctl.loop_mode;
+	do{
+		t = &tst_list[0];
+		while( t->idx){
+			if( ( t->idx >= first) && ( t->idx <= last)){
+				tst_ctl.test_idx = t->idx;
+				tst_ctl.status = TST_STS_STARTED;
+				tst_ctl.status = t->func( &tst_ctl);
+				t->status = tst_ctl.status;
+				if( ( tst_ctl.status & TST_STS_ERR) && ( tst_ctl.err_mode & TST_ERR_HALT)){
+					iex = 1;
+					break;
+				}
+			}
+			if( cmd_pending){
+				if( !strncmp( cmdline, "tstop", 5)){
+					printf("TscTst->Stopping test %x\n", t->idx);
+					iex = 1;
+					break;
+				}
+			}
+			t++;
+		}
+	} while( --loop && !iex);
+	return(0);
+}
+
+// -------------------------------------------------------------------
+
+int tst_tlist( struct cli_cmd_para *c){
+	struct tst_list *t;
+	int first, last;
+	int i, cnt;
+
+	cnt = c->cnt;
+	i = 0;
+	if( cnt > 0){
+		tst_get_range( c->para[0], &first, &last);
+		i++;
+		cnt--;
+	}
+	else{
+		first = 1;
+    	last = 0xff;
 	}
 
-      }
-      if( cmd_pending)
-      {
-        if( !strncmp( cmdline, "tstop", 5))
-        {
-	  printf("TscTst->Stopping test %x\n", t->idx);
-	  iex = 1;
-	  break;
+	i = 0;
+	t = &tst_list[0];
+	while( t->idx){
+		if( ( t->idx >= first) && ( t->idx <= last)){
+			printf( "Tst:%02x ", t->idx);
+			if( t->status){
+				if( t->status & TST_STS_STOPPED){
+					printf( "[STP]");
+				}
+				else if( t->status & TST_STS_ERR){
+					printf( "[NOK]");
+				}
+				else{
+					printf( "[ OK]");
+				}
+			}
+			else{
+				printf( "[NEX]");
+			}
+			printf( " -> %s\n", t->msg[0]);
+		}
+		t++;
 	}
-      }
-      t++;
-    }
-  } while( --loop && !iex);
-  return(0);
+	return(0);
 }
 
 // -------------------------------------------------------------------
 
-int tst_tlist( struct cli_cmd_para *c)
-{
-  struct tst_list *t;
-  int first, last;
-  int i, cnt;
+void tst_exit(){
+	tsc_exit();
+}
 
-  cnt = c->cnt;
-  i = 0;
-  if( cnt > 0)
-  {
-    tst_get_range( c->para[0], &first, &last);
-    i++;
-    cnt--;
-  }
-  else
-  {
-    first = 1;
-    last = 0xff;
-  }
+// -------------------------------------------------------------------
 
-  i = 0;
-  t = &tst_list[0];
-  while( t->idx)
-  {
-    if( ( t->idx >= first) && ( t->idx <= last))
-    {
-      printf( "Tst:%02x ", t->idx);
-      if( t->status)
-      {
-	if( t->status & TST_STS_STOPPED)
-	{
-	  printf( "[STP]");
+int tst_get_cmd_pending(){
+	return( cmd_pending);
+}
+
+// -------------------------------------------------------------------
+
+char * tst_get_cmdline(){
+	return( cmdline);
+}
+
+// -------------------------------------------------------------------
+
+int tst_check_cmd_tstop(){
+	if( cmd_pending){
+		if( !strncmp( cmdline, "tstop", 5)){
+			return( 1);
+		}
+		if( !strncmp( cmdline, "tstatus", 7) || !strncmp( cmdline, "twait", 5)){
+			tst_status( 0);
+			cmd_pending = 0;
+			return( 0);
+		}
 	}
-	else if( t->status & TST_STS_ERR)
-	{
-  	  printf( "[NOK]");
-	}
-	else
-	{
-  	  printf( "[ OK]");
-	}
-      }
-      else
-      {
-	printf( "[NEX]");
-      }
-      printf( " -> %s\n", t->msg[0]);
-
-    }
-    t++;
-  }
-  return(0);
-}
-
-// -------------------------------------------------------------------
-
-void tst_exit()
-{
-  tsc_exit();
-}
-
-// -------------------------------------------------------------------
-
-int tst_get_cmd_pending()
-{
-  return( cmd_pending);
-}
-
-// -------------------------------------------------------------------
-
-char * tst_get_cmdline()
-{
-  return( cmdline);
-}
-
-// -------------------------------------------------------------------
-
-int tst_check_cmd_tstop()
-{
-  if( cmd_pending)
-  {
-    if( !strncmp( cmdline, "tstop", 5))
-    {
-      return( 1);
-    }
-    if( !strncmp( cmdline, "tstatus", 7) ||
-        !strncmp( cmdline, "twait", 5)      )
-    {
-      tst_status( 0);
-      cmd_pending = 0;
-      return( 0);
-    }
-  }
-  return( 0);
+	return( 0);
 }
 
 // -------------------------------------------------------------------
@@ -479,7 +423,7 @@ int main( int argc, char *argv[]){
     tst_ctl.err_mode = TST_ERR_CONT;
     strcpy(log_filename, "TscTst.log");
     tc->log_filename = log_filename;
-    tst_ctl.exec_mode = TST_EXEC_FAST;
+    tst_ctl.exec_mode = TST_EXEC_VAL;
 
     // Parse configuration file
     tst_get_config(at);

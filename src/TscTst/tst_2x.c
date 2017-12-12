@@ -490,6 +490,13 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 						sub_size = sub_size_ref + ((i & 0xf00) >> 5);
 						// Slide offset
 						sub_offset = sub_offset_ref + ((i & 0xf0)  >> 1);
+
+// Reduce the test is FAST --------------------------------------------------------------------------------
+					    if(tc->exec_mode & TST_EXEC_FAST){
+					    	if(i > 0x40){
+					    		break;
+					    	}
+					    }
 					}
 				}
 			}

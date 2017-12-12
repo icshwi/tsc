@@ -82,6 +82,7 @@ struct tst_ctl{
 #define TST_ERR_HALT        0x00000001
 
 #define TST_EXEC_FAST       0x00000001
+#define TST_EXEC_VAL        0x00000000
 
 char logline[0x101];
 #define TST_LOG( x, y) \
