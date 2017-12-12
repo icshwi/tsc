@@ -156,10 +156,10 @@
 #define TSC_CSR_RMW_ADD             0x42c
 #define TSC_CSR_RMW_DATCMP          0x430
 #define TSC_CSR_RMW_DATUPT          0x434
-#define TSC_CSR_GLTIM_CSR           0x440
-#define TSC_CSR_GLTIM_DBG           0x444
-#define TSC_CSR_GLTIM_CNT2          0x448
-#define TSC_CSR_GLTIM_CNT1          0x44c
+#define TSC_CSR_GLTIM_CSR           0x1070
+#define TSC_CSR_GLTIM_CNT2          0x1078
+#define TSC_CSR_GLTIM_CNT1          0x107c
+
 #define TSC_CSR_SLVCSR_A24          0x450
 #define TSC_CSR_SLVCSR_A16          0x454
 #define TSC_CSR_SLVCSR_2eBRC        0x458
