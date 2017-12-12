@@ -288,7 +288,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 
 			init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 			temp_cnt_value_store[j] = init_cnt_value_store[j];
-
+/*
 			if(j < 8){
 				if (quiet == 0) {
 					printf(" DQ[%02d] ->", j + 8);
@@ -299,7 +299,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 					printf(" DQ[%02d] ->", j - 8);
 				}
 			}
-
+*/
 			// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
 			avg_x = 0;
 			start = 0;
@@ -389,6 +389,7 @@ else {
 			final_cnt_value_store[j] = marker;
 
 			// Trace new delay
+/*
 			if (quiet == 0) {
 				printf(" Delay 0x%x, %i steps", marker, ok);
 			}
@@ -398,6 +399,7 @@ else {
 			if (quiet == 0) {
 				printf("\n");
 			}
+*/
 
 if (PPC == 1){
 			if(j < 8){
@@ -514,9 +516,11 @@ else{
 		free(buf_rx);
 
 		mem++;
+/*
 		if (quiet == 0) {
 			printf("\n");
 		}
+*/
     }
     return 0;
 }
