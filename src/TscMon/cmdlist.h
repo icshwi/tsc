@@ -594,10 +594,11 @@ char *tdma_msg[] =
 char *timer_msg[] = 
 {
   "Perform operation on TSC global timer ",
-  "timer start",
-  "timer restart",
-  "timer stop",
-  "timer read",
+  "timer start   -> Start timer",
+  "timer restart -> Restart the timer",
+  "timer stop    -> Stop the timer",
+  "timer read    -> Acquire the timer value",
+  "timer date    -> Acquire the timer value in a date format",
 0};
 
 char *tinit_msg[] = 
