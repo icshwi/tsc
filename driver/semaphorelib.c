@@ -56,13 +56,14 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_status
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to semaphore structure
- * Return        : error/success
+ * Return        : 0
  *----------------------------------------------------------------------------
  * Description   : get semaphore status
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int semaphore_status(struct tsc_device *ifc, struct tsc_ioctl_semaphore  *semaphore){
 	semaphore->sts = ioread32(ifc->csr_ptr + TSC_CSR_SEMAPHORE);
 	return 0;
@@ -71,13 +72,14 @@ int semaphore_status(struct tsc_device *ifc, struct tsc_ioctl_semaphore  *semaph
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_release
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to semaphore structure
- * Return        : error/success
+ * Return        : 0
  *----------------------------------------------------------------------------
  * Description   : release semaphore function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int semaphore_release(uint idx, void *base_shm_ptr){
 	base_shm_ptr = (int*)base_shm_ptr + 32 + (idx * 2); // Go to SHM offset 0x80 for SEMAPHORE region
 												  	    // + offset of specific semaphore (64b step)
@@ -88,13 +90,14 @@ int semaphore_release(uint idx, void *base_shm_ptr){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_get
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to semaphore structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : get semaphore function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int semaphore_get(uint idx, void *base_shm_ptr, uint *tag){
 	uint temp_wr = 0;
 	uint temp_rd = 0;

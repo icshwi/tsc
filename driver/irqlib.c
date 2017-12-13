@@ -52,17 +52,18 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_register
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 interrupt source identifier
  *                 interrupt handler
  *                 argument to by passed to interrupt handler
- * Return        : void
+ * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : register interrupt handler <func> associated to interrupt
  *                 source identifier <src>. Pointer <arg> is passed as argument
  *                 when <func> is executed on occurence of interrupt <src>
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_irq_register( struct tsc_device *ifc,
 		  int src,
@@ -84,13 +85,13 @@ EXPORT_SYMBOL( tsc_irq_register);
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_spurious
- * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure
  *                 interrupt source identifier
  *                 argument associated ti interrupt handler
- * Return        : error/success
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : TSC default interrupt handle, does nothing...
+ * Description   : tsc default interrupt handle, does nothing...
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -113,6 +114,7 @@ tsc_irq_spurious( struct tsc_device *p,
  * Description   : check if interrupt source is attached to an handler
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_irq_check_busy( struct tsc_device *ifc,
 		    int src)
@@ -124,7 +126,7 @@ EXPORT_SYMBOL( tsc_irq_check_busy);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_unregister
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 interrupt source identifier
  * Return        : void
  *----------------------------------------------------------------------------
@@ -132,6 +134,7 @@ EXPORT_SYMBOL( tsc_irq_check_busy);
  *                 source identifier <src>. 
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 tsc_irq_unregister( struct tsc_device *ifc,
 		    int src)
@@ -146,12 +149,12 @@ EXPORT_SYMBOL( tsc_irq_unregister);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_irq_mask
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 operation to be performed (set/clear)
  *                 source identifier
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize TSC address mapping data structures for PCI
+ * Description   : initialize tsc address mapping data structures for pci
  *                 master access.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/

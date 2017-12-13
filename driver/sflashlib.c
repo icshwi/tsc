@@ -60,19 +60,19 @@ struct sflash_para flash_para_S25FL128P =
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : sflash_load_cmd
- * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 pointer to SFLASH slave configuraton parameters
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure
+ *                 pointer to sflash slave configuration parameters
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read TSC SFLASH
+ * Description   : load sflash command
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 sflash_load_cmd( struct tsc_device *ifc,
                  uint cmd,
-		 uint para)
+		         uint para)
 {
   int ds;
   uint data;
@@ -122,17 +122,47 @@ sflash_load_cmd( struct tsc_device *ifc,
   return;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_start_cmd
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : start sflash command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 sflash_start_cmd( struct tsc_device *ifc)
 {
   iowrite32( TSC_ILOC_SPI_CS, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_end_cmd
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : end sflash command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 sflash_end_cmd( struct tsc_device *ifc)
 {
   iowrite32( TSC_ILOC_SPI_END, ifc->csr_ptr + TSC_CSR_ILOC_SPI);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_write_byte
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure, character to write
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : write byte
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 sflash_write_byte( struct tsc_device *ifc,
@@ -151,6 +181,16 @@ sflash_write_byte( struct tsc_device *ifc,
 
   return;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_write_byte
+ * Prototype     : char
+ * Parameters    : pointer to tsc device control structure
+ * Return        : byte read
+ *----------------------------------------------------------------------------
+ * Description   : read byte
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char
 sflash_read_byte( struct tsc_device *ifc)
@@ -173,6 +213,16 @@ sflash_read_byte( struct tsc_device *ifc)
   return( b);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_wait_busy
+ * Prototype     : char
+ * Parameters    : pointer to tsc device control structure, timeout
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : wait
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 unsigned char
 sflash_wait_busy( struct tsc_device *ifc,
                   uint tmo)
@@ -194,6 +244,16 @@ sflash_wait_busy( struct tsc_device *ifc,
   sflash_end_cmd( ifc);
   return( status);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_write_enable
+ * Prototype     : char
+ * Parameters    : pointer to tsc device control structure, timeout
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : write enable
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char
 sflash_write_enable( struct tsc_device *ifc,
@@ -220,6 +280,16 @@ sflash_write_enable( struct tsc_device *ifc,
   return( status);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_sector_erase
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure, offset
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : sector erase
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 sflash_sector_erase( struct tsc_device *ifc,
                      uint offset)
@@ -231,6 +301,16 @@ sflash_sector_erase( struct tsc_device *ifc,
   if( sflash_wait_busy(  ifc, 1000000) & SFLASH_SR_BUSY) return( -1);
   return( 0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_page_program
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure, offset, p, size
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : program page
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 sflash_page_program( struct tsc_device *ifc,
@@ -256,13 +336,12 @@ sflash_page_program( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_read_ID
- * Prototype     : void
- * Parameters    : pointer to TSC device control structure
- *                 pointer to 
- * Return        : none
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
+ *                 pointer to data
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : load the 3 byte SFLASH identifier in the string pointed
- *                 by data_p 
+ * Description   : read sflash id
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -281,12 +360,12 @@ tsc_sflash_read_ID( struct tsc_device *ifc,
 EXPORT_SYMBOL( tsc_sflash_read_ID);
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_sflash_read_status
- * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- * Return        : 2 bytes status
+ * Function name : tsc_sflash_read_sr
+ * Prototype     : short
+ * Parameters    : pointer to tsc device control structure
+ * Return        : sr
  *----------------------------------------------------------------------------
- * Description   : read TSC SFLASH status (2 bytes)
+ * Description   : read sr
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -308,12 +387,12 @@ tsc_sflash_read_sr( struct tsc_device *ifc)
 EXPORT_SYMBOL( tsc_sflash_read_sr);
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_sflash_write_status
+ * Function name : tsc_sflash_write_sr
  * Prototype     : void
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : write TSC SFLASH status (2 bytes)
+ * Description   : write sr
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -332,17 +411,13 @@ tsc_sflash_write_sr( struct tsc_device *ifc,
 }
 EXPORT_SYMBOL( tsc_sflash_write_sr);
 
-
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_conf
- * Prototype     : void
- * Parameters    : pointer to TSC device control structure
- *                 pointer to 
- * Return        : none
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : load the 3 byte SFLASH identifier in the string pointed
- *                 by data_p 
+ * Description   : configure sflash
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -367,11 +442,10 @@ EXPORT_SYMBOL( tsc_sflash_conf);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_read
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 pointer to SFLASH slave configuraton parameters
+ * Parameters    : pointer to tsc device control structure, offset, kbuf, size
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read TSC SFLASH
+ * Description   : read sflash
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -408,13 +482,12 @@ tsc_sflash_read( struct tsc_device *ifc,
 EXPORT_SYMBOL( tsc_sflash_read);
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_sflash_write
+ * Function name : tsc_sflash_wrprot
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 pointer to SFLASH slave configuraton parameters
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : write TSC SFLASH
+ * Description   : write protect
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -431,6 +504,16 @@ tsc_sflash_wrprot( struct tsc_device *ifc)
   return( -ENODEV);
 }
 EXPORT_SYMBOL( tsc_sflash_wrprot);
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : sflash_sector_write
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure, offset, buffer
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : sector write
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 sflash_sector_write( struct tsc_device *ifc,
@@ -481,11 +564,21 @@ sflash_sector_write_exit:
 
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_sflash_write
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure, offset, buffer
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : sflash write
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_sflash_write( struct tsc_device *ifc,
                   uint offset,
-	          char *k_buf,
-	          uint size)
+	              char *k_buf,
+	              uint size)
 {
   uint s_start;         /* start of first sector                    */
   uint s_end;           /* end of last sector                       */

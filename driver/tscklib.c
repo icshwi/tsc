@@ -130,6 +130,7 @@ tsc_dev_init( struct tsc_device *ifc)
  * Description   : return allocated resources to OS
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 tsc_dev_exit( struct tsc_device *ifc)
 {
@@ -165,8 +166,7 @@ tsc_dev_exit( struct tsc_device *ifc)
  * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : initialize tsc address mapping data structures for PCI
- *                 master access.
+ * Description   : initialize tsc irq
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -207,10 +207,9 @@ tsc_irq_init( struct tsc_device *ifc)
  * Function name : tsc_irq_exit
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- * Return        : error/success
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : initialize tsc address mapping data structures for PCI
- *                 master access.
+ * Description   : irq clearing and exit
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -308,12 +307,11 @@ tsc_map_mas_init( struct tsc_device *ifc)
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_exit
- * Prototype     : int
+ * Prototype     : void
  * Parameters    : pointer to TSC device control structure
- * Return        : error/success
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : initialize TSC address mapping data structures for PCI
- *                 master access.
+ * Description   : master mapping exit
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -341,14 +339,13 @@ tsc_map_mas_exit( struct tsc_device *ifc)
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_map_read
- * Prototype     : int
+ * Function name : tsc_map_id
+ * Prototype     : struct map_ctl *
  * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
  * Return        : none
- *                 < 0  in case of error
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
+ * Description   : set id for mapping
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -372,6 +369,16 @@ tsc_map_id( struct tsc_device *ifc,
   }
   return(  map_ctl_p);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_map_read
+ * Prototype     : int
+ * Parameters    : device structure and mapping structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : read mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_map_read( struct tsc_device *ifc,
@@ -411,10 +418,9 @@ tsc_map_read( struct tsc_device *ifc,
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
- * Return        : none
- *                 < 0  in case of error
+ * Return        : < 0  in case of error
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
+ * Description   : clear mapping
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -463,7 +469,7 @@ tsc_map_clear( struct tsc_device *ifc,
  * Function name : tsc_timer_init
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- * Return        : error/success
+ * Return        : 0
  *----------------------------------------------------------------------------
  * Description   : initialize timer
  *
@@ -492,7 +498,7 @@ tsc_timer_init( struct tsc_device *ifc)
  * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : prepare access to SFLASH
+ * Description   : prepare access to sflash
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -529,12 +535,11 @@ tsc_sflash_init( struct tsc_device *ifc)
   return( 0);
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_shm_init
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- *                 SHM index
+ *                 shm index
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : prepare translation windows to access SHM
@@ -612,7 +617,7 @@ tsc_shm_init( struct tsc_device *ifc,
  * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : release resources allocated for SHM control
+ * Description   : release resources allocated for shm control
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -654,7 +659,7 @@ tsc_shm_exit( struct tsc_device *ifc,
  * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : prepare access to DMA
+ * Description   : prepare access to dma
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -683,11 +688,11 @@ tsc_dma_init( struct tsc_device *ifc)
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_exit
- * Prototype     : int
+ * Prototype     : void
  * Parameters    : pointer to tsc device control structure
- * Return        : error/success
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : prepare access to DMA
+ * Description   : release dma
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -713,7 +718,7 @@ tsc_dma_exit( struct tsc_device *ifc)
  * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : prepare access to I2C
+ * Description   : prepare access to i2c
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -736,11 +741,11 @@ tsc_i2c_init( struct tsc_device *ifc)
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_exit
- * Prototype     : int
+ * Prototype     : void
  * Parameters    : pointer to tsc device control structure
- * Return        : error/success
+ * Return        : void
  *----------------------------------------------------------------------------
- * Description   : prepare access to I2C
+ * Description   : release i2c
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -757,11 +762,12 @@ tsc_i2c_exit( struct tsc_device *ifc)
 
   return;
 }
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_csr_op
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- *                 pointer to CSR operation control structure
+ *                 pointer to csr operation control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : perform one of the following operations on tsc registers
@@ -943,22 +949,13 @@ tsc_csr_op( struct tsc_device *ifc,
  * Description   : allocate kerne buffer suitable for DMA
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_kbuf_alloc( struct tsc_device *ifc,
 		struct tsc_ioctl_kbuf_req *r)
 {
-//<<<<<<< HEAD
-
-//  dma_addr_t temp;
-
-//  r->k_base = (void *)pci_alloc_consistent( ifc->pdev,  r->size, &temp);
-//  r->b_base = temp;
-//  debugk(( KERN_ALERT "alloc kernel buffer : %p - %llx - %llx [%x] %lx\n", r->k_base, temp, r->b_base, r->size, virt_to_phys(r->k_base)));
-//  debugk((KERN_ALERT "sizeof = %x",sizeof(dma_addr_t)));
-//=======
   r->k_base = (void *)pci_alloc_consistent( ifc->pdev,  r->size, &r->b_base);
   debugk(( KERN_ALERT "alloc kernel buffer : %p - %llx [%x] %lx\n", r->k_base, (long long)r->b_base, r->size, virt_to_phys(r->k_base)));
-//>>>>>>> 5042c01d1d3599737cf51040056ce6585d536cbb
   if( !r->k_base)
   {
     return( -EFAULT);
@@ -972,11 +969,12 @@ EXPORT_SYMBOL( tsc_kbuf_alloc);
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
  *                 pointer to kernel buffer control structure
- * Return        : error/success
+ * Return        : 0
  *----------------------------------------------------------------------------
  * Description   : free previously allocated kernel buffer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_kbuf_free( struct tsc_device *ifc,
 	       struct tsc_ioctl_kbuf_req *r)
@@ -998,6 +996,7 @@ EXPORT_SYMBOL(tsc_kbuf_free);
  * Description   : release semaphore function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore){
 	semaphore_release(semaphore->idx, ifc->shm_ctl[0]->sram_ptr);
 	return(0);
@@ -1013,6 +1012,7 @@ int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *se
  * Description   : get semaphore function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore){
 	uint *tag;
 	int retval = 0;

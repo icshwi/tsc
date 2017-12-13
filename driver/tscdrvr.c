@@ -93,13 +93,12 @@ static void tsc_remove(struct pci_dev *);
 
 /*----------------------------------------------------------------------------
  * Function name : tsc_irq
- * Prototype     : int
- * Parameters    : inode -> pointer to device node data structure
- *                 filp  -> pointer to the file data structure
+ * Prototype     : irqreturn_t
+ * Parameters    : irq and argument
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description   tsc_irq() is the low level interrupt handler for the
- *               tsc interface.
+ * Description   : tsc_irq() is the low level interrupt handler for the
+ *                 tsc interface.
  *
  *----------------------------------------------------------------------------*/
 
@@ -143,8 +142,8 @@ irqreturn_t tsc_irq( int irq, void *arg){
  *                 filp  -> pointer to the file data structure
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description   tsc_open() opens the tsc control device giving
- *               access to the device internal registers (through PCI BAR3).
+ * Description   : tsc_open() opens the tsc control device giving
+ *                 access to the device internal registers
  *
  *----------------------------------------------------------------------------*/
 
@@ -181,14 +180,13 @@ static int tsc_open( struct inode *inode, struct file *filp){
 
 /*----------------------------------------------------------------------------
  * Function name : tsc_ioctl
- * Prototype     : int
- * Parameters    : inode -> pointer to device node data structure
- *                 filp  -> pointer to the file data structure
+ * Prototype     : long
+ * Parameters    : filp  -> pointer to the file data structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description   tsc_release() releasess the tsc control device
+ * Description   : tsc_release() releasess the tsc control device
  *
  *----------------------------------------------------------------------------*/
 
@@ -292,7 +290,7 @@ static long tsc_ioctl( struct file *filp, unsigned int cmd, unsigned long arg){
  *                 vma  -> pointer to 
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description   tsc__mmap() maps a memory window in user space
+ * Description   : tsc__mmap() maps a memory window in user space
  *
  *----------------------------------------------------------------------------*/
 
@@ -327,9 +325,9 @@ static int tsc_mmap( struct file *filp, struct vm_area_struct *vma){
  * Prototype     : int
  * Parameters    : inode -> pointer to device node data structure
  *                 filp  -> pointer to the file data structure
- * Return        : 0 if OK
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   tsc_release() releasess the tsc control device
+ * Description   : tsc_release() releases the tsc control device
  *
  *----------------------------------------------------------------------------*/
 
@@ -347,9 +345,6 @@ static int tsc_release( struct inode *inode, struct file *filp){
 	return( 0);
 }
 
-/*----------------------------------------------------------------------------
- * File operations for tsc device
- *----------------------------------------------------------------------------*/
 struct file_operations tsc_fops = {
 										.owner          = THIS_MODULE,
 										.mmap           = tsc_mmap,
@@ -370,9 +365,9 @@ struct file_operations tsc_fops = {
  *                 id   -> pointer to pci identifier
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description   tsc_probe() is called for each PCI device found in the
- *               pci device table whose id/did matched the list declared in
- *               tsc_ids structure.
+ * Description   : tsc_probe() is called for each pci device found in the
+ *                 pci device table whose id/did matched the list declared in
+ *                 tsc_ids structure.
  *
  *----------------------------------------------------------------------------*/
 
@@ -383,10 +378,6 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 
 	retval = 0;
 	debugk(( KERN_ALERT "tsc: entering tsc_probe( %p, %p)\n", pdev, id));
-
-	/*--------------------------------------------------------------------------
-	 * allocate device control structure
-	 *--------------------------------------------------------------------------*/
 
 	if (id->device == PCI_DEVICE_ID_IOXOS_TSC_IO){
 		tsc.ifc_io = (struct tsc_device *)kzalloc(sizeof(struct tsc_device), GFP_KERNEL);
@@ -569,11 +560,9 @@ static void tsc_remove( struct pci_dev *pdev){
  * Parameters    : none
  * Return        : 0 if OK
  *----------------------------------------------------------------------------
- * Description
- *
- * Function executed  when the driver is installed
- * Allocate major device number
- * Register driver operation
+ * Description   : function executed when the driver is installed
+ *                 allocate major device number
+ *                 register driver operation
  * 
  *----------------------------------------------------------------------------*/
 
@@ -714,8 +703,8 @@ tsc_init_err_alloc_chrdev:
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : Function called when ifcmas driver is removed
- *                 Free all allocated resources
+ * Description   : function called when ifc mas driver is removed
+ *                 free all allocated resources
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

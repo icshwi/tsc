@@ -53,13 +53,13 @@
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_csr
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform access on TSC registers
+ * Description   : perform access on tsc registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -92,13 +92,13 @@ ioctl_csr( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_map
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC address mapping operations
+ * Description   : perform tsc address mapping operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -191,13 +191,13 @@ ioctl_map( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_rdwr
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC read/write operations operations
+ * Description   : perform tsc read/write operations operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -249,13 +249,13 @@ ioctl_rdwr( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_dma
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC DMA operations
+ * Description   : perform dma operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -379,13 +379,13 @@ ioctl_dma( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_kbuf
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC DMA operations
+ * Description   : perform kernel buffer operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -471,13 +471,13 @@ ioctl_kbuf( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_sflash
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC DMA operations
+ * Description   : perform sflash operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -579,13 +579,13 @@ ioctl_sflash( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_timer
- * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC DMA operations
+ * Description   : perform timer operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -655,13 +655,13 @@ ioctl_timer( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_fifo
- * Prototype     : unsigned int
+ * Prototype     : int
  * Parameters    : pointer to TSC device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC DMA operations
+ * Description   : perform fifo operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -741,12 +741,12 @@ int ioctl_fifo( struct tsc_device *ifc, unsigned int cmd, unsigned long arg){
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_i2c
  * Prototype     : unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC I2C operations
+ * Description   : perform i2c operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -799,13 +799,13 @@ ioctl_i2c( struct tsc_device *ifc,
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : ioctl_semaphore
- * Prototype     :  unsigned int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
  *                 cmd   -> command code
  *                 arg   -> command argument
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : perform TSC SEMAPHORE operations
+ * Description   : perform semaphore operations
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

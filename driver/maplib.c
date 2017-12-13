@@ -51,15 +51,16 @@
 #define DBGno
 #include "debug.h"
 #define task_tgid_nr(current) 0
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : map_init
  * Prototype     : struct map_ctl *
  * Parameters    : sg_id   -> map identifier
- *                 pg_num  -> numbr of pages in the map
+ *                 pg_num  -> number of pages in the map
  *                 pg_size -> size of each page
  *                 
  * Return        : pointer to map control structure
- *                 NULL pointer if failure
+ *                 null pointer if failure
  *----------------------------------------------------------------------------
  * Description   : allocate and initialize map control structure
  *
@@ -101,7 +102,6 @@ map_init( int sg_id,
  * Function name : map_clear
  * Prototype     : void
  * Parameters    : map_ctl_p -> pointer to map control structure
- *                 
  * Return        : none
  *----------------------------------------------------------------------------
  * Description   : clear map control structure
@@ -124,8 +124,7 @@ map_clear( struct map_ctl *map_ctl_p)
  * Prototype     : struct map_ctl *
  * Parameters    : map_ctl_p -> pointer to map control structure
  *                 map_req_p -> pointer to map request structure
- *                 
- * Return        : page offset if mapping successfull
+ * Return        : page offset if mapping successful
  *                 -1 if failure - bad address alignment
  *                               - bad requested size
  *                               - requested local address range busy
@@ -226,8 +225,7 @@ map_blk_force( struct map_ctl *map_ctl_p,
  * Prototype     : int
  * Parameters    : map_ctl_p -> pointer to map control structure
  *                 map_req_p -> pointer to map request structure
- *                 
- * Return        : page offset if mapping successfull
+ * Return        : page offset if mapping successful
  *                 -1 if failure - not enough space
  *----------------------------------------------------------------------------
  * Description   : try to allocated local address and map it to the requested
@@ -313,6 +311,18 @@ map_blk_alloc( struct map_ctl *map_ctl_p,
   return( off);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_blk_find
+ * Prototype     : int
+ * Parameters    : map_ctl_p -> pointer to map control structure
+ *                 map_req_p -> pointer to map request structure
+ * Return        : page offset if mapping successful
+ *                 -1 if failure - not enough space
+ *----------------------------------------------------------------------------
+ * Description   : find map block
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 map_blk_find( struct map_ctl *map_ctl_p,
               struct map_req *map_req_p)
@@ -356,6 +366,18 @@ map_blk_find( struct map_ctl *map_ctl_p,
   return( off);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_blk_modify
+ * Prototype     : int
+ * Parameters    : map_ctl_p -> pointer to map control structure
+ *                 map_req_p -> pointer to map request structure
+ *                 remote address
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : modify map block
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 map_blk_modify( struct map_ctl *map_ctl_p,
                 struct map_req *map_req_p,
@@ -385,6 +407,16 @@ map_blk_modify( struct map_ctl *map_ctl_p,
   return( 0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_blk_free
+ * Prototype     : int
+ * Parameters    : map_ctl_p -> pointer to map control structure
+ *                 offset
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : free map block
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 map_blk_free( struct map_ctl *map_ctl_p,
@@ -458,6 +490,16 @@ map_blk_free( struct map_ctl *map_ctl_p,
    return(npg);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_release
+ * Prototype     : int
+ * Parameters    : map_ctl_p -> pointer to map control structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : release map
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 map_release( struct map_ctl *map_ctl_p)
 {
@@ -495,6 +537,16 @@ map_release( struct map_ctl *map_ctl_p)
   }
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_exit
+ * Prototype     : void
+ * Parameters    : map_ctl_p -> pointer to map control structure
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : exit mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 map_exit( struct map_ctl *map_ctl_p)

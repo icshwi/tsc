@@ -54,13 +54,13 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_set sg
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
-                   mapping offset
+ *                 mapping offset
  * Return        : none
  *                 < 0  in case of error
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
+ * Description   : set sg mapping
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -121,15 +121,13 @@ tsc_map_mas_set_sg( struct tsc_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_clear_sg
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to map control data structure
-                   mapping offset
-                   number of pages to clear
- * Return        : none
- *                 < 0  in case of error
+ *                 mapping offset
+ *                 number of pages to clear
+ * Return        : < 0  in case of error
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
- *
+ * Description   : clear sg for mapping
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
@@ -176,12 +174,12 @@ tsc_map_mas_clear_sg( struct tsc_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_set_mode
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to mapping mode control data structure
  * Return        : encoded hw mode field
  *                 0  in case of error
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
+ * Description   : set mode
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -221,12 +219,8 @@ tsc_map_mas_set_mode( struct tsc_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_alloc
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 mapper identifier
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to mapping request data structure
- *                  - remote address
- *                  - size of requested window
- *                  - remote access mode
  * Return        : mapping offset
  *                 < 0  in case of error
  *----------------------------------------------------------------------------
@@ -298,16 +292,12 @@ EXPORT_SYMBOL( tsc_map_mas_alloc);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_modify
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 mapper identifier
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to mapping request data structure
- *                  - remote address
- *                  - size of requested window
- *                  - remote access mode
- * Return        : mapping offset
- *                 < 0  in case of error
+ *                 remote address
+ * Return        : < 0  in case of error
  *----------------------------------------------------------------------------
- * Description   : modifyate translation window in PCI master map
+ * Description   : modify translation window in pci master map
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -362,12 +352,11 @@ EXPORT_SYMBOL( tsc_map_mas_modify);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_get
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 mapper identifier
- *                 offset returne by allocation function
+ * Parameters    : pointer to tsc device control structure
+ *                 mapping window structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
+ * Description   : acquire master mapping
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -411,12 +400,12 @@ EXPORT_SYMBOL( tsc_map_mas_get);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_mas_free
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 mapper identifier
- *                 offset returne by allocation function
+ *                 offset returned by allocation function
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : allocate translation window in PCI master map
+ * Description   : free master mapping
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

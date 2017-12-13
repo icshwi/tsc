@@ -54,11 +54,12 @@
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
  *                 interrupt source identifier
- * Return        : 1 if source attached to handler
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : irq handler for timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_timer_irq( struct tsc_device *ifc,
 	       int src,
@@ -72,11 +73,12 @@ EXPORT_SYMBOL( tsc_timer_irq);
  * Function name : timer_init
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
- * Return        : 1 if source attached to handler
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : init the timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 timer_init( struct tsc_device *ifc)
 {
@@ -90,11 +92,12 @@ timer_init( struct tsc_device *ifc)
  * Prototype     : int
  * Parameters    : pointer to tsc device control structure
  *                 pointer to timer control structure
- * Return        : 1 if source attached to handler
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : start the timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_timer_start( struct tsc_device *ifc,
 		 struct tsc_ioctl_timer *tmr)
@@ -115,14 +118,14 @@ EXPORT_SYMBOL( tsc_timer_start);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_restart
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer tin time data structure
- * Return        : 1 if source attached to handler
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : if pointer to time data structure not NULL, set time
- *                 if timer is stopped, restart it
+ * Description   : restart the timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_timer_restart( struct tsc_device *ifc,
 		   struct tsc_time *tm)
@@ -147,12 +150,13 @@ EXPORT_SYMBOL( tsc_timer_restart);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_stop
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- * Return        : 1 if source attached to handler
+ * Parameters    : pointer to tsc device control structure
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : stop the timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_timer_stop( struct tsc_device *ifc)
 {
@@ -168,13 +172,14 @@ EXPORT_SYMBOL( tsc_timer_stop);
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_timer_read
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 pointr st structure to hold time information
- * Return        : 1 if source attached to handler
+ * Parameters    : pointer to tsc device control structure
+ *                 pointer to the structure to hold time information
+ * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : read the timer value
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_timer_read( struct tsc_device *ifc,
 		struct tsc_time *tm)

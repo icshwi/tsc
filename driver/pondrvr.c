@@ -79,9 +79,6 @@ struct pontsc1
 static const char device_name[] = "TSC_PON";
 static struct class *pon_sysfs_class;	/* Sysfs class */
 
-/*----------------------------------------------------------------------------
- * File operations for pontsc device
- *----------------------------------------------------------------------------*/
 struct file_operations pontsc_fops =
 {
   .owner =    THIS_MODULE,
@@ -96,19 +93,17 @@ struct file_operations pontsc_fops =
 #endif
 };
 
-/*----------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : pontsc_init
  * Prototype     : int
- * Parameters    : none
- * Return        : 0 if OK
+ * Parameters    : void
+ * Return        : error/success
  *----------------------------------------------------------------------------
- * Description
+ * Description   : function executed when the driver is installed
+ *                 allocate major device number
+ *                 register driver operations
  *
- * Function executed  when the driver is installed
- * Allocate major device number
- * Register driver operations
- * 
- *----------------------------------------------------------------------------*/
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static int pontsc_init( void)
 {
@@ -118,9 +113,7 @@ static int pontsc_init( void)
 
   debugk(( KERN_ALERT "pontsc: entering pontsc_init( void)\n"));
 
-  /*--------------------------------------------------------------------------
-   * device number dynamic allocation 
-   *--------------------------------------------------------------------------*/
+  // device number dynamic allocation
   retval = alloc_chrdev_region( &pontsc_dev_id, 0, PONTSC_COUNT, PONTSC_NAME);
   if( retval < 0) {
     debugk(( KERN_WARNING "pontsc: Error %d cannot allocate device number\n", retval));
@@ -131,9 +124,7 @@ static int pontsc_init( void)
   }
   pontsc.dev_id = pontsc_dev_id;
 
-  /*--------------------------------------------------------------------------
-   * register driver
-   *--------------------------------------------------------------------------*/
+  // register driver
   cdev_init( &pontsc.cdev, &pontsc_fops);
   pontsc.cdev.owner = THIS_MODULE;
   pontsc.cdev.ops = &pontsc_fops;
@@ -146,9 +137,7 @@ static int pontsc_init( void)
   pontsc.pon = (struct pontsc_device *)kzalloc(sizeof(struct pontsc_device), GFP_KERNEL);
   pon = pontsc.pon;
 
-  /*--------------------------------------------------------------------------
-   * Create sysfs entries - on udev systems this creates the dev files
-   *--------------------------------------------------------------------------*/
+  // Create sysfs entries - on udev systems this creates the dev files
   pon_sysfs_class = class_create( THIS_MODULE, device_name);
   if (IS_ERR( pon_sysfs_class))
   {
@@ -156,16 +145,15 @@ static int pontsc_init( void)
     retval = PTR_ERR( pon_sysfs_class);
     goto pontsc_err_class;
   }
-  /*--------------------------------------------------------------------------
-   * Create IFCTSC control device in file system
-   *--------------------------------------------------------------------------*/
+
+  // Create IFCTSC control device in file system
   pon->dev_ctl = device_create( pon_sysfs_class, NULL, pontsc_dev_id, NULL, "tsc/pon");
 
   return( 0);
 
-  /*--------------------------------------------------------------------------
-   * Cleanup after an error has been detected
-   *--------------------------------------------------------------------------*/
+
+  // Cleanup after an error has been detected
+
 pontsc_err_class:
   cdev_del( &pontsc.cdev);
 pontsc_init_err_cdev_add:
@@ -174,6 +162,16 @@ pontsc_init_err_alloc_chrdev:
 
   return( retval);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pontsc_exit
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : function executed when the driver is uninstalled
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static void pontsc_exit(void)
 {

@@ -53,10 +53,10 @@
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rdwr_init
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : prepare translation windows to access RDWR
+ * Description   : prepare translation windows to access rdwr
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -100,11 +100,11 @@ tsc_rdwr_init( struct tsc_device *ifc)
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rdwr_exit
- * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Prototype     : void
+ * Parameters    : pointer to tsc device control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : release resources allocated for RDWR control
+ * Description   : release resources allocated for rdwr control
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -126,12 +126,12 @@ tsc_rdwr_exit( struct tsc_device *ifc)
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_blk
- * Prototype     : int
+ * Prototype     : void
  * Parameters    : pointer to TSC device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read a block of data from a remote IO address to a user
+ * Description   : read data from a remote io address to a user
  *                 buffer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -187,6 +187,17 @@ static void data_read( void *d, void __iomem *s, int len, int ds){
     }
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_read_blk
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
+ *                 pointer to read/write control structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : execute read block operation
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_read_blk( struct tsc_device *ifc,
@@ -302,14 +313,15 @@ tsc_read_blk_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_sgl
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read single data from a remote IO address to a user
+ * Description   : read single data from a remote io address to a user
  *                 buffer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_read_sgl( struct tsc_device *ifc,
 	      struct tsc_ioctl_rdwr *rw,
@@ -419,9 +431,10 @@ tsc_read_sgl_exit:
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read from a remote IO address and copy to a user buffer
+ * Description   : read from a remote io address and copy to a user buffer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rem_read( struct tsc_device *ifc,
 	      struct tsc_ioctl_rdwr *rw)
@@ -443,13 +456,12 @@ tsc_rem_read( struct tsc_device *ifc,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_write_blk
- * Prototype     : int
- * Parameters    : pointer to TSC device control structure
- *                 pointer to read/write control structure
+ * Function name : data_write
+ * Prototype     : void
+ * Parameters    : data, length, data size, write pointer
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : write a block of data from a user buffer to a remote IO
+ * Description   : write data from a user buffer to a remote IO
  *                 address
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -518,6 +530,16 @@ data_write( void *d, void *s, int len, int ds, int *wpr)
     }
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_write_blk
+ * Prototype     : int
+ * Parameters    : device ifc structure, rdwr structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : write block
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_write_blk( struct tsc_device *ifc,
@@ -633,14 +655,15 @@ tsc_write_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_sgl
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : write single data from a remote IO address to a user
+ * Description   : write single data from a remote io address to a user
  *                 buffer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_write_sgl( struct tsc_device *ifc,
 	       struct tsc_ioctl_rdwr *rw,
@@ -747,13 +770,14 @@ tsc_write_sgl_exit:
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rem_write
  * Prototype     : int
- * Parameters    : pointer to TSC device control structure
+ * Parameters    : pointer to tsc device control structure
  *                 pointer to read/write control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : read user buffer and copy data to remote IO address
+ * Description   : remote write
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rem_write( struct tsc_device *ifc,
 	       struct tsc_ioctl_rdwr *rw)
