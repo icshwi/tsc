@@ -46,6 +46,16 @@ cli_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_history_init
+ * Prototype     : struct cli_cmd_history *
+ * Parameters    : struct cli_cmd_history *h
+ * Return        : structure with hisotry updated
+ *----------------------------------------------------------------------------
+ * Description   : set and manage cli command history
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 struct cli_cmd_history *
 cli_history_init( struct cli_cmd_history *h)
 {
@@ -56,10 +66,18 @@ cli_history_init( struct cli_cmd_history *h)
   h->size = CLI_HISTORY_SIZE;
   h->end_idx = 0;
   h->insert_idx = 0;
-
   return(h);
-
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_insert_char
+ * Prototype     : long
+ * Parameters    : c, cmdline, insert_idx
+ * Return        : identifier of insertion
+ *----------------------------------------------------------------------------
+ * Description   : insert character
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 long
 cli_insert_char( char c,
@@ -88,6 +106,16 @@ cli_insert_char( char c,
   return( insert_idx + 1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_remove_char
+ * Prototype     : long
+ * Parameters    : cmdline structure and position of removing character
+ * Return        : position of cursor
+ *----------------------------------------------------------------------------
+ * Description   : remove character from command line
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 long
 cli_remove_char( char *cmdline,
 		 long insert_idx)
@@ -112,11 +140,31 @@ cli_remove_char( char *cmdline,
   return( insert_idx - 1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_erase_line
+ * Prototype     : void
+ * Parameters    : prompt
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : erase a complete line on the command line
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 cli_erase_line( char *prompt)
 {
   printf("%c%c%d%c%c%c%c", 0x1b, '[',  (int)strlen( prompt) + 1,'G',0x1b,'[','K');
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_erase_end
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : end character of line
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 cli_erase_end()
@@ -125,6 +173,16 @@ cli_erase_end()
   putchar('[');
   putchar('K');
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_print_line
+ * Prototype     : long
+ * Parameters    : cmdline, position of insertion
+ * Return        : return the position where print line must be done
+ *----------------------------------------------------------------------------
+ * Description   : print a line
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 long
 cli_print_line( char *cmdline,
@@ -148,6 +206,16 @@ cli_print_line( char *cmdline,
   }
   return( insert_idx);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_get_cmd
+ * Prototype     : char *
+ * Parameters    : cli command hisotry, prompt
+ * Return        : cmdline
+ *----------------------------------------------------------------------------
+ * Description   : get command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 char *
 cli_get_cmd( struct cli_cmd_history *h,
@@ -327,7 +395,15 @@ cli_get_cmd( struct cli_cmd_history *h,
 
 }
 
-// Parse the cli command
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_cmd_parse
+ * Prototype     : struct cli_cmd_para*
+ * Parameters    : cmdline, parameter of cmdline
+ * Return        :
+ *----------------------------------------------------------------------------
+ * Description   : parse command line
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 struct cli_cmd_para    
 *cli_cmd_parse( char *cmdline, 
@@ -386,6 +462,16 @@ struct cli_cmd_para
   return( c);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_get_para_str
+ * Prototype     : int
+ * Parameters    : command line parameter, identifier, string, length
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : get string parameter
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 cli_get_para_str( struct cli_cmd_para *c,
 	          int idx,
@@ -417,6 +503,16 @@ cli_get_para_str( struct cli_cmd_para *c,
   return( CLI_ERR);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_get_para_hex
+ * Prototype     : int
+ * Parameters    : command line parameter, identifier, value
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : get hexadecimal parameter
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 cli_get_para_hex( struct cli_cmd_para *c,
 	          int idx,
@@ -436,6 +532,16 @@ cli_get_para_hex( struct cli_cmd_para *c,
   }
   return( CLI_ERR);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_get_para_dec
+ * Prototype     : int
+ * Parameters    : command line parameter, identifier, value
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : get decimal parameter
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 cli_get_para_dec( struct cli_cmd_para *c,
@@ -457,12 +563,32 @@ cli_get_para_dec( struct cli_cmd_para *c,
   return( CLI_ERR);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_error_print
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : print error
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 cli_error_print( void)
 {
   printf("%s", cli_error_line);
   return;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_history_print
+ * Prototype     : void
+ * Parameters    : structure of history command line
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : print history of commands
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 cli_history_print( struct cli_cmd_history *h)
@@ -492,6 +618,16 @@ cli_history_print( struct cli_cmd_history *h)
   }
   return;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_history_find_idx
+ * Prototype     : char *
+ * Parameters    : command line history structure, position
+ * Return        : position of history element to find
+ *----------------------------------------------------------------------------
+ * Description   : find a history element (position)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 char *
 cli_history_find_idx( struct cli_cmd_history *h,
@@ -534,6 +670,16 @@ cli_history_find_idx( struct cli_cmd_history *h,
   }
   return(NULL);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : cli_history_find_str
+ * Prototype     : char *
+ * Parameters    : command line history structure, command
+ * Return        : element of history element to find
+ *----------------------------------------------------------------------------
+ * Description   : find a history element (string)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 char *
 cli_history_find_str( struct cli_cmd_history *h,

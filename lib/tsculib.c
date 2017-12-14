@@ -65,7 +65,9 @@ tsc_rcsid()
  * Return        : data swapped
  *----------------------------------------------------------------------------
  * Description   : return data swapped for 64 bits
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 long long
 tsc_swap_64( long long data)
 {
@@ -92,7 +94,9 @@ tsc_swap_64( long long data)
  * Return        : data swapped
  *----------------------------------------------------------------------------
  * Description   : return data swapped for 32 bits
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_swap_32( int data)
 {
@@ -115,7 +119,9 @@ tsc_swap_32( int data)
  * Return        : data swapped
  *----------------------------------------------------------------------------
  * Description   : return data swapped for 16 bits
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 short
 tsc_swap_16( short data)
 {
@@ -131,13 +137,14 @@ tsc_swap_16( short data)
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_get_device
- * Prototype     : void
- * Parameters    : none
- * Return        : device ID : central = 0, io = 1
+ * Prototype     : int
+ * Parameters    : void
+ * Return        : device id : central = 0, io = 1
  *----------------------------------------------------------------------------
  * Description   : return device id
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_get_device(void){
 	int device = -1;
 
@@ -153,13 +160,14 @@ int tsc_get_device(void){
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_get_lib_version
- * Prototype     : void
- * Parameters    : none
+ * Prototype     : char
+ * Parameters    : void
  * Return        : pointer to library version string
  *----------------------------------------------------------------------------
  * Description   : return the library version string 
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 char *
 tsc_get_lib_version()
 {
@@ -173,7 +181,9 @@ tsc_get_lib_version()
  * Return        : driver name identifier
  *----------------------------------------------------------------------------
  * Description   : return a pointer to the driver name identifier string
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 char *
 tsc_get_drv_name()
 {
@@ -186,8 +196,10 @@ tsc_get_drv_name()
  * Parameters    : none
  * Return        : driver version identifier
  *----------------------------------------------------------------------------
- * Description   : return a pointer to the driver versionidentifier string
+ * Description   : return a pointer to the driver version identifier string
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 char *
 tsc_get_drv_version()
 {
@@ -196,12 +208,14 @@ tsc_get_drv_version()
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_get_vendor_id
- * Prototype     : char *
+ * Prototype     : unsigned short
  * Parameters    : none
- * Return        : TSC vendor id
+ * Return        : tsc vendor id
  *----------------------------------------------------------------------------
- * Description   : return a pointer to the driver versionidentifier string
+ * Description   : return vendor id
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 unsigned short
 tsc_get_vendor_id()
 {
@@ -210,12 +224,14 @@ tsc_get_vendor_id()
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_get_device_id
- * Prototype     : char *
+ * Prototype     : unsigned short
  * Parameters    : none
- * Return        : TSC device id
+ * Return        : tsc device id
  *----------------------------------------------------------------------------
- * Description   : return a pointer to the driver versionidentifier string
+ * Description   : return device id
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 unsigned short
 tsc_get_device_id()
 {
@@ -224,13 +240,14 @@ tsc_get_device_id()
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_init
- * Prototype     : void
- * Parameters    : device name
- * Return        : file descritor for tsc control device
+ * Prototype     : int
+ * Parameters    : none
+ * Return        : file descriptor for tsc control device
  *----------------------------------------------------------------------------
- * Description   : return allocated resources to OS
+ * Description   : file descriptor
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_init()
 {
@@ -262,9 +279,10 @@ tsc_init()
  * Return        : 0 on success
  *                 < 0 on error
  *----------------------------------------------------------------------------
- * Description   : return allocated resources to OS
+ * Description   : return allocated resources to os
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_exit()
 {
@@ -290,9 +308,11 @@ tsc_exit()
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the TSC CSR pointed by idx with the content of
+ * Description   : write the tsc csr pointed by idx with the content of
  *                 data_p. The status of the write operation is returned.
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_csr_write( int idx,
 	       int *data_p)
@@ -312,10 +332,12 @@ tsc_csr_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the TSC CSR pointed by idx and return
+ * Description   : read the content of the tsc csr pointed by idx and return
  *                 its current value in data_p. The status of the read is
  *                 returned
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_csr_read( int idx,
 	      int *data_p)
@@ -339,9 +361,11 @@ tsc_csr_read( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : set bit in the TSC CSR pointed by idx with the content of
+ * Description   : set bit in the tsc csr pointed by idx with the content of
  *                 data_p. The status of the write operation is returned.
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_csr_set( int idx,
 	     int *data_p)
@@ -362,9 +386,11 @@ tsc_csr_set( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the TSC SMON register pointed by idx with the content
+ * Description   : write the tsc smon register pointed by idx with the content
  *                 of data_p. The status of the write operation is returned.
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_smon_write( int idx,
 	       int *data_p)
@@ -385,10 +411,12 @@ tsc_smon_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the TSC SMON register pointed by idx
+ * Description   : read the content of the tsc smon register pointed by idx
  *                 and return its current value in data_p. The status of the
  *                 operation is returned
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_smon_read( int idx,
 	      int *data_p)
@@ -412,9 +440,11 @@ tsc_smon_read( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the TSC PON register pointed by idx with the content
+ * Description   : write the tsc pon register pointed by idx with the content
  *                 of data_p. The status of the write operation is returned.
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_pon_write( int idx,
 	       int *data_p)
@@ -435,10 +465,12 @@ tsc_pon_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the TSC PON register pointed by idx
+ * Description   : read the content of the tsc pon register pointed by idx
  *                 and return its current value in data_p. The status of the
  *                 operation is returned
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_pon_read( int idx,
 	      int *data_p)
@@ -462,9 +494,11 @@ tsc_pon_read( int idx,
  *                 data pointer
  * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write the TSC PCIEP register pointed by idx with the content
+ * Description   : write the tsc pcie register pointed by idx with the content
  *                 of data_p. The status of the write operation is returned.
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_pciep_write( int idx,
 	         int *data_p)
@@ -484,10 +518,12 @@ tsc_pciep_write( int idx,
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read the content of the TSC PCIEP register pointed by idx
+ * Description   : read the content of the tsc pcie register pointed by idx
  *                 and return its current value in data_p. The status of the
  *                 operation is returned
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_pciep_read( int idx,
 	      int *data_p)
@@ -504,19 +540,20 @@ tsc_pciep_read( int idx,
   return( retval);
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_blk
  * Prototype     : int
- * Parameters    : remote adrress
+ * Parameters    : remote address
  *                 data buffer pointer
  *                 transfer size (in bytes)
  *                 transfer mode (am,ds,..)
- * Return        : status of read operation
+ * Return        : status of write operation
  *----------------------------------------------------------------------------
  * Description   : copy <len> bytes from buffer <buf> to remote space 
- *                 the adressing mode and data size are specified in <mode>
+ *                 the addressing mode and data size are specified in <mode>
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_write_blk( ulong rem_addr,
 	       char *buf,
@@ -540,14 +577,16 @@ tsc_write_blk( ulong rem_addr,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_blk
  * Prototype     : int
- * Parameters    : remote adrress
+ * Parameters    : remote address
  *                 data buffer pointer
  *                 transfer size (in bytes)
  *                 transfer mode (am,ds,..)
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : read data block
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_read_blk( ulong rem_addr,
 	      char *buf,
@@ -574,11 +613,13 @@ tsc_read_blk( ulong rem_addr,
  *                 data buffer pointer
  *                 transfer size (in bytes)
  *                 transfer mode (am,ds,..)
- * Return        : status of read operation
+ * Return        : status of write operation
  *----------------------------------------------------------------------------
  * Description   : copy <len> bytes from buffer <buf> to remote space 
  *                 the addressing mode and data size are specified in <mode>
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_write_loop( ulong rem_addr,
 	        char *buf,
@@ -608,8 +649,10 @@ tsc_write_loop( ulong rem_addr,
  *                 transfer mode (am,ds,..)
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   : read loop
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_read_loop( ulong rem_addr,
 	      char *buf,
@@ -633,13 +676,15 @@ tsc_read_loop( ulong rem_addr,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_sgl
  * Prototype     : int
- * Parameters    : remote adrress
+ * Parameters    : remote address
  *                 data  pointer
  *                 transfer mode (am,ds,..)
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : perform a single write in a remote space (SHM)
+ * Description   : perform a single write in a remote space (shm)
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_write_sgl( ulong rem_addr,
 	       char *data_p,
@@ -661,15 +706,17 @@ tsc_write_sgl( ulong rem_addr,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_read_sgl
  * Prototype     : int
- * Parameters    : remote adrress
+ * Parameters    : remote address
  *                 data pointer
  *                 transfer mode (am,ds,..)
  * Parameters    : register index
  *                 data pointer
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : perform a single read in a remote space (SHM)
+ * Description   : perform a single read in a remote space (shm)
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_read_sgl( ulong rem_addr,
 	      char *data_p,
@@ -697,10 +744,12 @@ tsc_read_sgl( ulong rem_addr,
  *                 data size
  *                 hardware swapping mode
  *                 Select smem1 or smem2
- * Return        : status of read operation
+ * Return        : status of write operation
  *----------------------------------------------------------------------------
  * Description   : copy <len> bytes from buffer <buf> to SHM address space
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
@@ -735,7 +784,8 @@ int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
  *                 Select smem1 or smem2
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : Read a block of data from SHM address space
+ * Description   : Read a block of data from shm address space
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
@@ -769,11 +819,13 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
  *                 transfer size (0 for single data)
  *                 data size
  *                 hardware swapping mode
- *                 Select smem1 or smem2
- * Return        : status of read operation
+ *                 Select usr1 or usr2
+ * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : copy <len> bytes from buffer <buf> to USR address space
+ * Description   : copy <len> bytes from buffer <buf> to usr address space
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
@@ -805,10 +857,11 @@ int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
  *                 transfer size (0 for single data)
  *                 data size
  *                 hardware swapping mode
- *                 Select smem1 or smem2
+ *                 Select usr1 or usr2
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : Read a block of data from USR address space
+ * Description   : Read a block of data from usr address space
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
@@ -838,10 +891,12 @@ int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
  * Function name : tsc_map_alloc
  * Prototype     : int
  * Parameters    : pointer to mapping control structure
- * Return        : status of read operation
+ * Return        : status of map operation
  *----------------------------------------------------------------------------
- * Description   : read the content 
+ * Description   : allocate mapping
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_map_alloc( struct tsc_ioctl_map_win *w)
 {
@@ -866,8 +921,10 @@ tsc_map_alloc( struct tsc_ioctl_map_win *w)
  * Parameters    : pointer to mapping control structure
  * Return        : status of get operation
  *----------------------------------------------------------------------------
- * Description   : read the content 
+ * Description   : get the map
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_map_get( struct tsc_ioctl_map_win *w)
 {
@@ -890,10 +947,12 @@ tsc_map_get( struct tsc_ioctl_map_win *w)
  * Function name : tsc_map_free
  * Prototype     : int
  * Parameters    : pointer to mapping control structure
- * Return        : status of read operation
+ * Return        : status of free operation
  *----------------------------------------------------------------------------
- * Description   : read the content 
+ * Description   : free the map
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_map_free( struct tsc_ioctl_map_win *w)
 {
@@ -917,10 +976,12 @@ tsc_map_free( struct tsc_ioctl_map_win *w)
  * Function name : tsc_map_modify
  * Prototype     : int
  * Parameters    : pointer to mapping control structure
- * Return        : status of read operation
+ * Return        : status of modify operation
  *----------------------------------------------------------------------------
- * Description   : read the content 
+ * Description   : map modify
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_map_modify( struct tsc_ioctl_map_win *w)
 {
@@ -940,15 +1001,16 @@ tsc_map_modify( struct tsc_ioctl_map_win *w)
   return( 0);
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_map_read
  * Prototype     : int
  * Parameters    : pointer to mapping control structure
- * Return        : status of read operation
+ * Return        : status of read map operation
  *----------------------------------------------------------------------------
- * Description   : read the content 
+ * Description   : map read
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_map_read( struct tsc_ioctl_map_ctl *m)
 {
@@ -962,8 +1024,10 @@ tsc_map_read( struct tsc_ioctl_map_ctl *m)
  * Parameters    : pointer to mapping control structure
  * Return        : status of clear operation
  *----------------------------------------------------------------------------
- * Description   : read the content 
+ * Description   : clear the mapping
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_map_clear( struct tsc_ioctl_map_ctl *m)
 {
@@ -975,10 +1039,12 @@ tsc_map_clear( struct tsc_ioctl_map_ctl *m)
  * Function name : tsc_pci_mmap
  * Prototype     : int
  * Parameters    : pci address and mapping size
- * Return        : status of set operation
+ * Return        : status of mmap operation
  *----------------------------------------------------------------------------
- * Description   : map kernel buffer in user's space
+ * Description   : pci map
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void *
 tsc_pci_mmap( off_t pci_addr,
 	      size_t size)
@@ -991,10 +1057,11 @@ tsc_pci_mmap( off_t pci_addr,
  * Function name : tsc_pci_munmap
  * Prototype     : int
  * Parameters    : pci address and mapping size
- * Return        : status of set operation
+ * Return        : status of munmap operation
  *----------------------------------------------------------------------------
- * Description   : unmap kernel buffer
+ * Description   : pci unmap
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_pci_munmap( void *addr,
 	        size_t size)
@@ -1007,10 +1074,12 @@ tsc_pci_munmap( void *addr,
  * Function name : tsc_kbuf_alloc
  * Prototype     : int
  * Parameters    : pointer to kernel buffer request data structure
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
  * Description   : allocate a kernel buffer suitable for DMA operation
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_kbuf_alloc( struct tsc_ioctl_kbuf_req *kr_p)
 {
@@ -1022,10 +1091,12 @@ tsc_kbuf_alloc( struct tsc_ioctl_kbuf_req *kr_p)
  * Function name : tsc_kbuf_free
  * Prototype     : int
  * Parameters    : pointer to kernel buffer request data structure
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : allocate a kernel buffer suitable for DMA operation
+ * Description   : desallocate a kernel buffer suitable for DMA operation
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_kbuf_free( struct tsc_ioctl_kbuf_req *kr_p)
 {
@@ -1037,10 +1108,12 @@ tsc_kbuf_free( struct tsc_ioctl_kbuf_req *kr_p)
  * Function name : tsc_kbuf_mmap
  * Prototype     : int
  * Parameters    : pointer to kernel buffer request data structure
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
  * Description   : map kernel buffer in user's space
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void *
 tsc_kbuf_mmap( struct tsc_ioctl_kbuf_req *kr_p)
 {
@@ -1053,10 +1126,12 @@ tsc_kbuf_mmap( struct tsc_ioctl_kbuf_req *kr_p)
  * Function name : tsc_kbuf_munmap
  * Prototype     : int
  * Parameters    : pointer to kernel buffer request data structure
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
  * Description   : unmap kernel buffer
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_kbuf_munmap( struct tsc_ioctl_kbuf_req *kr_p)
 {
@@ -1073,7 +1148,9 @@ tsc_kbuf_munmap( struct tsc_ioctl_kbuf_req *kr_p)
  * Return        : status of the read operation
  *----------------------------------------------------------------------------
  * Description   : read data from a kernel buffer
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_kbuf_read( void *k_addr,
 	       char *buf,
@@ -1094,10 +1171,12 @@ tsc_kbuf_read( void *k_addr,
  * Parameters    : pointer to user buffer
  *                 kernel address
  *                 transfer size
- * Return        : status of the read operation
+ * Return        : status of the write operation
  *----------------------------------------------------------------------------
  * Description   : copy data to a kernel buffer
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_kbuf_write( void *k_addr,
 	        char *buf,
@@ -1119,7 +1198,9 @@ tsc_kbuf_write( void *k_addr,
  * Return        : status of DMA operation
  *----------------------------------------------------------------------------
  * Description   : perform a DMA transfer
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_move( struct tsc_ioctl_dma_req *dr_p)
 {
@@ -1130,11 +1211,13 @@ tsc_dma_move( struct tsc_ioctl_dma_req *dr_p)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_wait
  * Prototype     : int
- * Parameters    : 
+ * Parameters    : pointer to dma  request data structure
  * Return        : status of DMA operation
  *----------------------------------------------------------------------------
  * Description   : wait for DMA transfer to complete
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p)
 {
@@ -1149,7 +1232,9 @@ tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p)
  * Return        : status of status operation
  *----------------------------------------------------------------------------
  * Description   : update dma status control structure with current status
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
 {
@@ -1164,7 +1249,9 @@ tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
  * Return        : current DMA  mode of operation
  *----------------------------------------------------------------------------
  * Description   : allow to set/get dma mode of operation
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_mode( struct tsc_ioctl_dma_sts *dm_p)
 {
@@ -1176,10 +1263,12 @@ tsc_dma_mode( struct tsc_ioctl_dma_sts *dm_p)
  * Function name : tsc_dma_alloc
  * Prototype     : int
  * Parameters    : channel index
- * Return        : status of set operation
+ * Return        : status of alloc operation
  *----------------------------------------------------------------------------
- * Description   : request DMA chhannel allocation
+ * Description   : request DMA channel allocation
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_alloc( int chan)
 {
@@ -1193,11 +1282,13 @@ tsc_dma_alloc( int chan)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_free
  * Prototype     : int
- * Parameters    : pointer to mapping control structure
- * Return        : status of set operation
+ * Parameters    : dma channel
+ * Return        : status of free operation
  *----------------------------------------------------------------------------
  * Description   : free allocated DMA channel
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_free( int chan)
 {
@@ -1211,11 +1302,13 @@ tsc_dma_free( int chan)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_clear
  * Prototype     : int
- * Parameters    : pointer to mapping control structure
- * Return        : status of set operation
+ * Parameters    : dma channel
+ * Return        : status of clear operation
  *----------------------------------------------------------------------------
- * Description   : reset the IRQ mechanism
+ * Description   : dma clear operation
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_dma_clear( int chan)
 {
@@ -1229,13 +1322,15 @@ tsc_dma_clear( int chan)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_rdid
  * Prototype     : int
- * Parameters    : pointer to 4 byte string to hold SFLASH ID
- * Return        : status of set operation
+ * Parameters    : pointer to 4 byte string to hold sflash id
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : read SFLASH identifiers (3 bytes)
+ * Description   : read sflash identifiers (3 bytes)
  *                 id[0]   -> manufacturer ID
  *                 id[1,2] -> devices ID (15 bits)] 
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_sflash_rdid( char *id)
 {
@@ -1246,13 +1341,13 @@ tsc_sflash_rdid( char *id)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_rdsr
  * Prototype     : int
- * Parameters    : pointer to cha to hold current value of SR register
- * Return        : status of set operation
+ * Parameters    : pointer to  hold current value of SR register
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : read SFLASH identifiers (3 bytes)
- *                 id[0]   -> manufacturer ID
- *                 id[1,2] -> devices ID (15 bits)] 
+ * Description   : read sr
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_sflash_rdsr( char *sr)
 {
@@ -1264,11 +1359,12 @@ tsc_sflash_rdsr( char *sr)
  * Function name : tsc_sflash_wrsr
  * Prototype     : int
  * Parameters    : pointer to char to hold value of SR to be written
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : write SFLASH status register
+ * Description   : write sflash status register
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_sflash_wrsr( char *sr)
 {
@@ -1282,12 +1378,12 @@ tsc_sflash_wrsr( char *sr)
  * Parameters    : offset in SFLASH from where to read
  *                 pointer to destination buffer
  *                 number of byte to read
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : read SFLASH identifiers (3 bytes)
- *                 id[0]   -> manufacturer ID
- *                 id[1,2] -> devices ID (15 bits)] 
+ * Description   : read sflash
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_sflash_read( int offset, char *buf, int len)
 {
@@ -1303,15 +1399,15 @@ tsc_sflash_read( int offset, char *buf, int len)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_write
  * Prototype     : int
- * Parameters    : offset in SFLASH from where to read
+ * Parameters    : offset in sflash from where to write
  *                 pointer to destination buffer
  *                 number of byte to read
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : read SFLASH identifiers (3 bytes)
- *                 id[0]   -> manufacturer ID
- *                 id[1,2] -> devices ID (15 bits)] 
+ * Description   : write sflash
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_sflash_write( int offset, char *buf, int len)
 {
@@ -1329,11 +1425,12 @@ tsc_sflash_write( int offset, char *buf, int len)
  * Prototype     : int
  * Parameters    : timer operation mode
  *                 start time (msec)
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : start the TSC global timer
+ * Description   : start the global timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_timer_start( int mode,
 		 int msec)
@@ -1352,11 +1449,12 @@ tsc_timer_start( int mode,
  * Function name : tsc_timer_restart
  * Prototype     : int
  * Parameters    : none
- * Return        : status of set operation
+ * Return        : status of  operation
  *----------------------------------------------------------------------------
- * Description   : restart the TSC global timer
+ * Description   : restart the tsc global timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_timer_restart( void)
 {
@@ -1368,11 +1466,12 @@ tsc_timer_restart( void)
  * Function name : tsc_timer_stop
  * Prototype     : int
  * Parameters    : none
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : stop the TSC global timer
+ * Description   : stop the tsc global timer
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_timer_stop( )
 {
@@ -1384,11 +1483,13 @@ tsc_timer_stop( )
  * Function name : tsc_timer_read
  * Prototype     : int
  * Parameters    : pointer to tsc_time data structure
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : return the current value og the TSC global timer
+ * Description   : return the current value og the tsc global timer
  *                 in the tsc_time data structure
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_timer_read( struct tsc_time *tm)
 {
@@ -1399,13 +1500,14 @@ tsc_timer_read( struct tsc_time *tm)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_init
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 operating mode
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : initialize FIFO according to mode parameter
+ * Description   : initialize fifo according to mode parameter
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_fifo_init( int idx,
                int mode)
@@ -1421,15 +1523,16 @@ tsc_fifo_init( int idx,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_fifo_
+ * Function name : tsc_fifo_status
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 pointer to hold current status (uint *)
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : returns the current status of FIFO idx
+ * Description   : returns the current status of fifo idx
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_fifo_status( uint idx,
 		 uint *sts)
@@ -1458,13 +1561,14 @@ tsc_fifo_status( uint idx,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_clear
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 pointer to hold current status (uint *)
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : clear FIFO idx
+ * Description   : clear fifo idx
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_fifo_clear( uint idx,
 		uint *sts)
@@ -1485,14 +1589,15 @@ tsc_fifo_clear( uint idx,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_wait_ef
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 pointer to hold status (uint *)
  *                 timeout
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : wait for FIFO emplty -> not empty
+ * Description   : wait for fifo empty -> not empty
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_fifo_wait_ef( uint idx,
 		  uint *sts,
@@ -1515,14 +1620,15 @@ tsc_fifo_wait_ef( uint idx,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_wait_ff
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 pointer to hold status (uint *)
  *                 timeout
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : wait for FIFO full -> not full
+ * Description   : wait for fifo full -> not full
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_fifo_wait_ff( uint idx,
 		  uint *sts,
@@ -1542,22 +1648,22 @@ tsc_fifo_wait_ff( uint idx,
   return( retval);
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_read
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 point to buffer to hold data (uint *)
  *                 word count
  *                 pointer to hold status (uint *)
  *                 timeout
- * Return        : status of set operation
+ * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : read up to <wcnt> data from FIFO <idx> and store in buffer
+ * Description   : read up to <wcnt> data from fifo <idx> and store in buffer
  *                 pointed by <data>.
  *                 return current status in <sts>
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_fifo_read( uint idx,
 	       uint *data,
@@ -1582,18 +1688,19 @@ tsc_fifo_read( uint idx,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo_write
  * Prototype     : int
- * Parameters    : FIFO index ( 0 -> 7)
+ * Parameters    : fifo index ( 0 -> 7)
  *                 point to buffer to hold data (uint *)
  *                 word count
  *                 pointer to hold status (uint *)
  *                 timeout
- * Return        : status of set operation
+ * Return        : status of  operation
  *----------------------------------------------------------------------------
- * Description   : write up to <wcnt> data to FIFO <idx> from  buffer pointed
+ * Description   : write up to <wcnt> data to fifo <idx> from  buffer pointed
  *                 by <data>.
  *                 return current status in <sts>
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_fifo_write( uint idx,
 	        uint *data,
@@ -1618,11 +1725,13 @@ tsc_fifo_write( uint idx,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : i2c_set_dev
  * Prototype     : int
- * Parameters    : I2C device
- * Return        : status of read operation
+ * Parameters    : i2c device
+ * Return        : status of operation
  *----------------------------------------------------------------------------
  * Description   : Set i2c device
+ *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int
 i2c_set_dev( int dev)
 {
@@ -1671,16 +1780,17 @@ i2c_set_dev( int dev)
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_read
  * Prototype     : int
- * Parameters    : I2C device
+ * Parameters    : i2c device
  *                 register index
  *                 data
  * Return        : status of read operation
  *----------------------------------------------------------------------------
- * Description   : read register <reg> of I2C device <dev> and returns the
+ * Description   : read register <reg> of i2c device <dev> and returns the
  *                 result in <data>
  *                 by <data>.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_i2c_read( uint dev,
 	      uint reg,
@@ -1714,7 +1824,7 @@ tsc_i2c_read( uint dev,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_cmd
  * Prototype     : int
- * Parameters    : I2C device
+ * Parameters    : i2c device
  *                 command
  * Return        : status of command operation
  *----------------------------------------------------------------------------
@@ -1722,6 +1832,7 @@ tsc_i2c_read( uint dev,
  *                 return current status in <sts>
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_i2c_cmd( uint dev,
 	     uint cmd)
@@ -1743,15 +1854,16 @@ tsc_i2c_cmd( uint dev,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_write
  * Prototype     : int
- * Parameters    : I2C device
+ * Parameters    : i2c device
  *                 register index
  *                 data
- * Return        : status of read operation
+ * Return        : status of write operation
  *----------------------------------------------------------------------------
- * Description   : write  <data> to register <reg> of I2C device <dev>
+ * Description   : write  <data> to register <reg> of i2c device <dev>
  *                 return current status in <sts>
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_i2c_write( uint dev,
 	       uint reg,
@@ -1784,13 +1896,14 @@ tsc_i2c_write( uint dev,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c_reset
  * Prototype     : int
- * Parameters    : I2C device
- * Return        : status of read operation
+ * Parameters    : i2c device
+ * Return        : status of reset operation
  *----------------------------------------------------------------------------
- * Description   : reset I2C controller
+ * Description   : reset i2c controller
  *                 return current status in <sts>
  *                 
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_i2c_reset( uint dev)
 {
@@ -1805,8 +1918,8 @@ tsc_i2c_reset( uint dev)
  *----------------------------------------------------------------------------
  * Description   : acquire status of semaphore
  *
- *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_semaphore_status(uint *sts){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
@@ -1832,8 +1945,8 @@ int tsc_semaphore_status(uint *sts){
  *----------------------------------------------------------------------------
  * Description   : release semaphore
  *
- *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_semaphore_release(uint idx){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
@@ -1853,8 +1966,8 @@ int tsc_semaphore_release(uint idx){
  *----------------------------------------------------------------------------
  * Description   : get semaphore
  *
- *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_semaphore_get(uint idx, uint *tag){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
@@ -1873,10 +1986,10 @@ int tsc_semaphore_get(uint idx, uint *tag){
  * Parameters    : device number
  * Return        : status of operation
  *----------------------------------------------------------------------------
- * Description   : change between CENTRAL and IO device if available
- *
+ * Description   : change between central and io device if available
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int set_device(int device){
 	int retval = 0;
 

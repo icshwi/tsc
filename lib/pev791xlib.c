@@ -40,6 +40,16 @@ typedef long dma_addr_t;
 #include "../include/tsculib.h"
 #include "../include/pev791xlib.h"
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev791x_bmr_conv_11bit_u
+ * Prototype     : float
+ * Parameters    : value
+ * Return        : value converted
+ *----------------------------------------------------------------------------
+ * Description   : convert value on 11 bits unsigned
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 float
 pev791x_bmr_conv_11bit_u( unsigned short val)
 {
@@ -53,6 +63,16 @@ pev791x_bmr_conv_11bit_u( unsigned short val)
   h++;
   return(((float)l/(float)(1 << h)));
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev791x_bmr_conv_11bit_s
+ * Prototype     : float
+ * Parameters    : value
+ * Return        : value converted
+ *----------------------------------------------------------------------------
+ * Description   : convert value on 11 bits signed
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 float
 pev791x_bmr_conv_11bit_s( unsigned short val)
@@ -68,11 +88,31 @@ pev791x_bmr_conv_11bit_s( unsigned short val)
   return(((float)l/(float)(1 << h)));
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev791x_bmr_conv_16bit_u
+ * Prototype     : float
+ * Parameters    : value to convert
+ * Return        : value converted
+ *----------------------------------------------------------------------------
+ * Description   : convert a 16 bits value unsigned
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 float
 pev791x_bmr_conv_16bit_u( unsigned short val)
 {
   return(((float)val/(float)(1 << 13)));
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev791x_bmr_read
+ * Prototype     : int
+ * Parameters    : bmr, register, data read, count
+ * Return        : status of operation
+ *----------------------------------------------------------------------------
+ * Description   : read from bmr
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 pev791x_bmr_read( uint bmr,
@@ -111,6 +151,16 @@ pev791x_bmr_read( uint bmr,
   return( tsc_i2c_read( device, reg, data));
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev791x_bmr_write
+ * Prototype     : int
+ * Parameters    : bmr, register, data, count
+ * Return        : status of operation
+ *----------------------------------------------------------------------------
+ * Description   : write into bmr
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 pev791x_bmr_write( uint bmr,
 	       uint reg,
@@ -148,6 +198,16 @@ pev791x_bmr_write( uint bmr,
   return( tsc_i2c_write( device, reg, data));
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev_csr_rd
+ * Prototype     : int
+ * Parameters    : register
+ * Return        : data read
+ *----------------------------------------------------------------------------
+ * Description   : read a data in csr
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 pev_csr_rd( int reg)
 {
@@ -156,12 +216,19 @@ pev_csr_rd( int reg)
   return( data);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pev_csr_wr
+ * Prototype     : void
+ * Parameters    : register and data
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : write in csr space
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 pev_csr_wr( int reg,
 	    int data)
 {
   tsc_csr_write( reg, &data);
 }
-
-
-

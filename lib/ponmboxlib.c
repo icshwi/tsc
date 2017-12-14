@@ -117,9 +117,15 @@ void enable_service_request(mbox_info_t *info, int offset);
 void wait_for_service_request_completion(mbox_info_t *info, int offset);
 
 
-/*
- * Public functions
- */
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : get_mbox_info
+ * Prototype     : mbox_info_t*
+ * Parameters    : void
+ * Return        : info
+ *----------------------------------------------------------------------------
+ * Description   : get mailbox information
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 mbox_info_t *get_mbox_info(void)
 {
@@ -202,6 +208,15 @@ mbox_info_t *get_mbox_info(void)
   return info;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : free_mbox_info
+ * Prototype     : void
+ * Parameters    : info
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : free mailbox info
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void free_mbox_info(mbox_info_t *info)
 {
@@ -226,6 +241,15 @@ void free_mbox_info(mbox_info_t *info)
   free(info);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : get_mbox_sensor_value
+ * Prototype     : int
+ * Parameters    : info, name, value, timestamp
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : get mailbox sensor value
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, int *timestamp)
 {
@@ -284,6 +308,15 @@ int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, in
   return ENXIO;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : send_mbox_service_request
+ * Prototype     : unsigned char
+ * Parameters    : info, command, argc
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : send mailbox service request
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char send_mbox_service_request(mbox_info_t *info, unsigned char command, unsigned char argc, ...)
 {
@@ -312,10 +345,15 @@ unsigned char send_mbox_service_request(mbox_info_t *info, unsigned char command
   return 0;
 }
 
-
-/*
- * Private functions
- */
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alloc_mbox_info
+ * Prototype     : mbox_info_t *
+ * Parameters    : void
+ * Return        : info
+ *----------------------------------------------------------------------------
+ * Description   : allocate mailbox information
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 mbox_info_t *alloc_mbox_info(void)
 {
@@ -332,6 +370,15 @@ mbox_info_t *alloc_mbox_info(void)
   return info;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : get_mbox_byte
+ * Prototype     : int
+ * Parameters    : offset, destination
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : get mailbox byte
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int get_mbox_byte(int offset, unsigned char *destination)
 {
@@ -358,6 +405,15 @@ int get_mbox_byte(int offset, unsigned char *destination)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pop_mbox_byte
+ * Prototype     : int
+ * Parameters    : offset, destination
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : pop mailbox byte
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int pop_mbox_byte(int *offset, unsigned char *destination)
 {
@@ -367,6 +423,15 @@ int pop_mbox_byte(int *offset, unsigned char *destination)
   return retval;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pop_mbox_short
+ * Prototype     : int
+ * Parameters    : offset, destination
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : pop mailbox short
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int pop_mbox_short(int *offset, unsigned short *destination)
 {
@@ -387,6 +452,15 @@ int pop_mbox_short(int *offset, unsigned short *destination)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pop_mbox_int
+ * Prototype     : int
+ * Parameters    : offset, destination
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : pop mailbox (integer)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int pop_mbox_int(int *offset, unsigned int *destination)
 {
@@ -405,6 +479,15 @@ int pop_mbox_int(int *offset, unsigned int *destination)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pop_mbox_string
+ * Prototype     : unsigned char
+ * Parameters    : offset, destination
+ * Return        : size
+ *----------------------------------------------------------------------------
+ * Description   : pop mailbox (string)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char pop_mbox_string(int *offset, unsigned char **destination)
 {
@@ -425,6 +508,15 @@ unsigned char pop_mbox_string(int *offset, unsigned char **destination)
   return size;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : push_mbox_byte
+ * Prototype     : int
+ * Parameters    : offset, byte
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : push mailbox (byte)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int push_mbox_byte(int *offset, unsigned char byte)
 {
@@ -459,6 +551,15 @@ int push_mbox_byte(int *offset, unsigned char byte)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : enable_service_request
+ * Prototype     : void
+ * Parameters    : info, offset
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : enable service request
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void enable_service_request(mbox_info_t *info, int offset)
 {
@@ -466,6 +567,15 @@ void enable_service_request(mbox_info_t *info, int offset)
   push_mbox_byte(&offset, SERVICE_REQUEST_STATUS_PENDING);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : wait_for_service_request_completion
+ * Prototype     : void
+ * Parameters    : info, offset
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : wait for service request completion
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void wait_for_service_request_completion(mbox_info_t *info, int offset)
 {

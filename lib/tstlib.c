@@ -40,7 +40,15 @@ typedef unsigned int u32;
 #include <tscioctl.h>
 #include <tsculib.h>
 
-// -------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_get_range
+ * Prototype     : int
+ * Parameters    : parameter, start of range, stop of range
+ * Return        : first
+ *----------------------------------------------------------------------------
+ * Description   : get range of test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tst_get_range( char *para, int *first, int *last){
   	  char *p;
@@ -55,6 +63,15 @@ int tst_get_range( char *para, int *first, int *last){
   	  return( *first);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_cpu_fill
+ * Prototype     : int
+ * Parameters    : a, size, mode, base, increment
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : fill data with a specific increment
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tst_cpu_fill( void *a, int size, int mode, int p1, int p2){
 	int i;
@@ -73,7 +90,15 @@ int tst_cpu_fill( void *a, int size, int mode, int p1, int p2){
 	return( 0);
 }
 
-// -------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_cpu_check
+ * Prototype     : void
+ * Parameters    : data, size, mode, base, increment
+ * Return        : null or offset error
+ *----------------------------------------------------------------------------
+ * Description   : compare data with specific increment value
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void * tst_cpu_check( void *a, int size, int mode, int p1, int p2){
 	int i;
@@ -96,7 +121,15 @@ void * tst_cpu_check( void *a, int size, int mode, int p1, int p2){
 	return(NULL);
 }
 
-// -------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_cpu_copy
+ * Prototype     : int
+ * Parameters    : source, destination, size, data size
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : copy data
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tst_cpu_copy( void *a1, void *a2, int size, int ds){
 	int i;
@@ -137,7 +170,15 @@ static int cmp_err_di2;
 static long cmp_err_dl1;
 static long cmp_err_dl2;
 
-// -------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_cpu_cmp
+ * Prototype     : int
+ * Parameters    : a1, a2, size, ds
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : compare 2 values
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tst_cpu_cmp( void *a1, void *a2, int size, int ds){
 	int i;
@@ -185,7 +226,15 @@ int tst_cpu_cmp( void *a1, void *a2, int size, int ds){
 	return( -1);
 }
 
-// -------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_get_cmp_err
+ * Prototype     : int
+ * Parameters    : a1, a2, ds
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : compare 2 values
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tst_get_cmp_err( void *a1, void *a2, int ds){
 	if( ds == 1){

@@ -33,9 +33,16 @@
 #define CMD_SET_RTM_LED_STATE                     0x01
 #define CMD_GET_RTM_LED_STATE                     0x02
 
-/*
- * Public functions
- */
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : set_mtca4_rtm_led_state
+ * Prototype     : unsigned char
+ * Parameters    : id, function, on_duration
+ * Return        : status of operation
+ *----------------------------------------------------------------------------
+ * Description   : set led state function
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 unsigned char set_mtca4_rtm_led_state(
   mtca4_rtm_led_id_t id,
   mtca4_rtm_led_function_t function,
