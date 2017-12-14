@@ -352,7 +352,7 @@ acq1430_acq( struct cli_cmd_para *c,
   acq_name_h = NULL;
   acq_name_d = NULL;
   csr_base = 0x11e0;
-  if( fmc == 2) csr_base = 0x11f0;
+  if( idx == 4) csr_base = 0x11f0;
   file_his = 0;
   file_dat = 0;
   printf("parameter count: %ld\n", c->cnt);
