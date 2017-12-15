@@ -68,9 +68,10 @@ char *mbox_sensor_status[] =
  * Return        : int
  *
  *----------------------------------------------------------------------------
- * Description   : Perform mbox read operation
+ * Description   : perform mbox read operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 mbox_read( struct cli_cmd_para *c)
 {
@@ -126,9 +127,10 @@ mbox_read( struct cli_cmd_para *c)
  * Return        : int
  *
  *----------------------------------------------------------------------------
- * Description   : Perform mbox write operation
+ * Description   : perform mbox write operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 mbox_write( struct cli_cmd_para *c)
 {
@@ -171,7 +173,6 @@ mbox_write( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : mbox_info
  * Prototype     : int
@@ -179,9 +180,10 @@ mbox_write( struct cli_cmd_para *c)
  * Return        : int
  *
  *----------------------------------------------------------------------------
- * Description   : Perform mbox info operation
+ * Description   : perform mbox info operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 mbox_info( struct cli_cmd_para *c)
 {
@@ -235,7 +237,6 @@ mbox_info( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_mbox
  * Prototype     : int
@@ -243,9 +244,10 @@ mbox_info( struct cli_cmd_para *c)
  * Return        : int
  *
  *----------------------------------------------------------------------------
- * Description   : Perform mbox operation
+ * Description   : perform mbox operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_mbox( struct cli_cmd_para *c)
 {

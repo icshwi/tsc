@@ -42,8 +42,16 @@
 #include <time.h>
 #include "TscMon.h"
 
-// Main function for TSC command
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_semaphore
+ * Prototype     : int
+ * Parameters    : cli_cmd_para structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : main command to drive semaphore
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_semaphore(struct cli_cmd_para *c){
 	int cnt  = 0;
 	int idx  = 0;

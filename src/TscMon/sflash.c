@@ -56,12 +56,13 @@ sflash_rcsid()
  * Function name : tsc_sflash_dump
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : perform SFLASH operation
+ * Description   : perform sflash operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_sflash_dump( struct cli_cmd_para *c){
   char *p, *buf_des;
   int i, j;
@@ -124,12 +125,13 @@ tsc_sflash_dump_usage:
  * Function name : tsc_sflash_read
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : perform SFLASH operation
+ * Description   : perform sflash operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int sflash_read( int start, char *buf, int size, int blk){
   int n, last;
   int retval;
@@ -181,12 +183,13 @@ static int sflash_read( int start, char *buf, int size, int blk){
  * Function name : tsc_sflash_write
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : perform SFLASH write operation
+ * Description   : perform sflash write operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int sflash_write(uint offset, char *buf_src, uint size){
   char *p, *buf_des;
   int i, n, nblk, blk_size;
@@ -285,12 +288,13 @@ static int sflash_write(uint offset, char *buf_src, uint size){
  * Function name : tsc_sflash_load
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : perform SFLASH load operation
+ * Description   : perform sflash load operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_sflash_load( struct cli_cmd_para *c){
   char *buf_src;
   int size, offset;
@@ -390,12 +394,13 @@ struct cli_cmd_history sflash_history;
  * Function name : sflash_set_para_hex
  * Prototype     : int
  * Parameters    : command prompt and data
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
  * Description   : set hexadecimal parameter
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int sflash_set_para_hex( char *prompt, uint *data){
   char *para, *p;
 
@@ -418,12 +423,13 @@ static int sflash_set_para_hex( char *prompt, uint *data){
  * Function name : sflash_set_para_yn
  * Prototype     : int
  * Parameters    : command prompt and data
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
  * Description   : set character parameter
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int sflash_set_para_yn(char *prompt, char *data){
   char *para;
 
@@ -448,12 +454,13 @@ static int sflash_set_para_yn(char *prompt, char *data){
  * Function name : sflash_bit_cnt
  * Prototype     : int
  * Parameters    : buffer and size to count bit
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
  * Description   : bit count function
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int sflash_bit_cnt( char *buf, int size){
   int i, j;
   int bcnt;
@@ -473,12 +480,13 @@ static int sflash_bit_cnt( char *buf, int size){
  * Function name : tsc_sflash_dynopt
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : perform SFLASH operation
+ * Description   : perform sflash dynamic option operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_sflash_dynopt(struct cli_cmd_para *c){
   struct sflash_dynopt dynopt;
   char prompt[80];   
@@ -654,12 +662,13 @@ int tsc_sflash_dynopt(struct cli_cmd_para *c){
  * Function name : tsc_sflash
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : perform SFLASH operation
+ * Description   : perform sflash operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_sflash( struct cli_cmd_para *c){
   if(!strcmp( "rdid", c->para[0])){
     char id[4];

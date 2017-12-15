@@ -56,12 +56,13 @@ timer_rcsid()
  * Function name : tsc_timer
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : ok  if command executed
+ *                 nok if error
  *----------------------------------------------------------------------------
- * Description   : perform TIMER operation
+ * Description   : perform timer operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_timer( struct cli_cmd_para *c){
 	// Start timer
 	if( !strcmp( "start", c->para[0])) {

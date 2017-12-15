@@ -58,12 +58,13 @@
  * Function name : tsc_lmk
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : ok  if command executed
+ *                 nok if error
  *----------------------------------------------------------------------------
- * Description   : Compare TSC CSR registers with expected content
+ * Description   : manage lmk command execution
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_lmk( struct cli_cmd_para *c)
 {

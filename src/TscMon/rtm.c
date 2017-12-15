@@ -60,9 +60,10 @@ rtm_rcsid()
  * Return        : int
  *
  *----------------------------------------------------------------------------
- * Description   : Rtm led
+ * Description   : rtm led
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 rtm_led( struct cli_cmd_para *c)
 {
@@ -120,7 +121,6 @@ rtm_led( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rtm
  * Prototype     : int
@@ -128,9 +128,10 @@ rtm_led( struct cli_cmd_para *c)
  * Return        : int
  *
  *----------------------------------------------------------------------------
- * Description   : Rtm operation
+ * Description   : rtm operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rtm( struct cli_cmd_para *c)
 {

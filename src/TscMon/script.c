@@ -55,6 +55,16 @@ script_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_script
+ * Prototype     : int
+ * Parameters    : filename of script, command line parameter structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : manage script execution
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_script( char *filename,
 	     struct cli_cmd_para *s)
 

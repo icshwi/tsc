@@ -78,15 +78,16 @@ TscMon_rcsid()
 
 extern int tsc_fd;
 
-// tsc ddr align
-// Align the DDR memory delay
-// When adjust delay, R/W is needed to apply delay
-// There are 32 delays taps 0..31
-// Delay register is wrap-around
-// MAthing DQ <-> DATA
-// DQ[15..8] -> DATA[7..0]
-// DQ[07..0] -> DATA[15..8]
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_idel_calib_start
+ * Prototype     : int
+ * Parameters    : memory (shm1 or shm2)
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : calibration of the ddr memory
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_ddr_idel_calib_start(int quiet){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
@@ -529,12 +530,13 @@ else{
  * Function name : main
  * Prototype     : int
  * Parameters    : argument count
- *                 pointer tor argument list
+ *                 pointer to argument list
  * Return        : 0
  *----------------------------------------------------------------------------
- * Description   : main entry for TscMon application
+ * Description   : main entry for tscmon application
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int main(int argc, char *argv[]){
 	struct cli_cmd_history *h;
 	struct winsize winsize;
@@ -622,36 +624,36 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-if (quiet == 0){
-	printf("          _______       __  __             \n");
-	printf("         |__   __|     |  \\/  |            \n");
-	printf("            | |___  ___| \\  / | ___  _ __  \n");
-	printf("            | / __|/ __| |\\/| |/ _ \\| '_ \\ \n");
-	printf("            | \\__ \\ (__| |  | | (_) | | | |\n");
-	printf("            |_|___/\\___|_|  |_|\\___/|_| |_|\n");
-	printf("\n");
-	printf("     +------------------------------------------+\n");
-	printf("     |  IOxOS Technologies Copyright 2015-2017  |\n");
-	if(tsc_get_device_id() == 0x1000){
-		printf("     |  TscMon - %s %04x diagnostic tool         |\n", "IO", tsc_get_device_id());
-	}
-	else if(tsc_get_device_id() == 0x1001){
-		printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
-	}
-	printf("     |  Version %s - %s %s     |\n", TscMon_version, __DATE__, __TIME__);
-	printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
-	printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
+	if (quiet == 0){
+		printf("          _______       __  __             \n");
+		printf("         |__   __|     |  \\/  |            \n");
+		printf("            | |___  ___| \\  / | ___  _ __  \n");
+		printf("            | / __|/ __| |\\/| |/ _ \\| '_ \\ \n");
+		printf("            | \\__ \\ (__| |  | | (_) | | | |\n");
+		printf("            |_|___/\\___|_|  |_|\\___/|_| |_|\n");
+		printf("\n");
+		printf("     +------------------------------------------+\n");
+		printf("     |  IOxOS Technologies Copyright 2015-2017  |\n");
+		if(tsc_get_device_id() == 0x1000){
+			printf("     |  TscMon - %s %04x diagnostic tool         |\n", "IO", tsc_get_device_id());
+		}
+		else if(tsc_get_device_id() == 0x1001){
+			printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
+		}
+		printf("     |  Version %s - %s %s     |\n", TscMon_version, __DATE__, __TIME__);
+		printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
+		printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
 
-	tsc_pon_read(0x0, &data);
-	if (data == 0x73571211) {
-		printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
+		tsc_pon_read(0x0, &data);
+		if (data == 0x73571211) {
+			printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
+		}
+		else if (data == 0x73571410){
+			printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
+		}
+		printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
+		printf("     +------------------------------------------+\n");
 	}
-	else if (data == 0x73571410){
-		printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
-	}
-	printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
-	printf("     +------------------------------------------+\n");
-}
 	printf("\n");
 
 	cmd_cnt = 0;
@@ -776,6 +778,16 @@ TscMon_exit:
   	exit(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_cmd_exec
+ * Prototype     : int
+ * Parameters    : command parameter, command list
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : execute command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_cmd_exec( struct cli_cmd_list *l, struct cli_cmd_para *c){
 	long i;
 
@@ -798,6 +810,16 @@ int tsc_cmd_exec( struct cli_cmd_list *l, struct cli_cmd_para *c){
 	return(-1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_print_usage
+ * Prototype     : int
+ * Parameters    : command parameter
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : print usage
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_print_usage( struct cli_cmd_para *c){
 	long i;
 
@@ -808,6 +830,16 @@ int tsc_print_usage( struct cli_cmd_para *c){
 	}
 	return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_func_help
+ * Prototype     : int
+ * Parameters    : command paramaeter structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : help
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_func_help( struct cli_cmd_para *c){
 	char *cmd;
@@ -860,10 +892,30 @@ int tsc_func_help( struct cli_cmd_para *c){
 	return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_func_history
+ * Prototype     : int
+ * Parameters    : command parameter structure
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : history function
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_func_history( struct cli_cmd_para *c){
 	cli_history_print( &cmd_history);
 	return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_wait
+ * Prototype     : int
+ * Parameters    : command parameter
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : wait command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_wait(struct cli_cmd_para *c){
 	int retval, ret;

@@ -80,12 +80,13 @@ struct tsc_i2c_devices i2c_devices_ifc[] =
  * Function name : tsc_i2c
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : ok  if command executed
+ *                 nok if error
  *----------------------------------------------------------------------------
- * Description   : Compare TSC CSR registers with expected content
+ * Description   : execute i2c commands
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_i2c( struct cli_cmd_para *c)
 {

@@ -154,6 +154,16 @@ adc3110_rcsid()
 char filename[0x100];
 struct cli_cmd_history adc3110_history;
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3110_init
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : adc3110 init
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 adc3110_init()
 {
@@ -165,6 +175,15 @@ adc3110_init()
   return;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3110_acq_res
+ * Prototype     : int
+ * Parameters    : adc3110 structure
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : adc3110 acquisition
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 adc3110_acq_res( struct adc3110_acq_res *r,
@@ -195,6 +214,16 @@ adc3110_acq_res( struct adc3110_acq_res *r,
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3110_acq
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, identifier, fmc, size, check
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3110 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 adc3110_acq( struct cli_cmd_para *c,
@@ -505,6 +534,16 @@ adc3110_acq( struct cli_cmd_para *c,
   return( nerr);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3110_calib_res
+ * Prototype     : int
+ * Parameters    : adc3110 calibration structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3110 calibration
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 adc3110_calib_res( struct adc3110_calib_res *r)
 {
@@ -549,6 +588,17 @@ adc3110_calib_res( struct adc3110_calib_res *r)
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc_write
+ * Prototype     : void
+ * Parameters    : register, data, channel, fmc
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : write to adc
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 adc_write( int reg,
 	   int data,
@@ -570,6 +620,16 @@ adc_write( int reg,
     pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3110_calib_idelay
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, channel, fmc
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : calibrate idelay of adc3110
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 adc3110_calib_idelay( struct cli_cmd_para *c,
@@ -856,6 +916,16 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_adc3110
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3110 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_adc3110( struct cli_cmd_para *c)

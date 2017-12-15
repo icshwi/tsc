@@ -54,6 +54,16 @@ alias_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alias_init
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : initialize alias
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 alias_init( void)
 {
@@ -65,6 +75,17 @@ alias_init( void)
     alias_ctl.cmd[i][0] = 0;
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alias_show
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : show alias
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 alias_show( void)
 {
@@ -80,6 +101,16 @@ alias_show( void)
   }
   return;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alias_save
+ * Prototype     : int
+ * Parameters    : filename
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : save an alias
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 alias_save( char *filename)
@@ -107,6 +138,15 @@ alias_save( char *filename)
   return( TSC_OK);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alias_load
+ * Prototype     : int
+ * Parameters    : filename
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : load alias
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 alias_load( char *filename)
@@ -172,6 +212,16 @@ alias_load( char *filename)
   return( TSC_OK);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alias_find
+ * Prototype     : char *
+ * Parameters    : alias
+ * Return        : null
+ *----------------------------------------------------------------------------
+ * Description   : find an alias
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 char *
 alias_find( char *alias)
 {
@@ -190,6 +240,16 @@ alias_find( char *alias)
   }
   return(NULL);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : alias_set
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : set an alias
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 alias_set( struct cli_cmd_para *c)
@@ -254,12 +314,13 @@ alias_set( struct cli_cmd_para *c)
  * Function name : tsc_alias
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : ok  if command executed
+ *                 error if error
  *----------------------------------------------------------------------------
- * Description   : perform ALIAS operation
+ * Description   : perform alias operation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_alias( struct cli_cmd_para *c) 
 {

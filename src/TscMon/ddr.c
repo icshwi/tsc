@@ -60,8 +60,16 @@ extern int tsc_fd;
 #define PPC 1 // ARCHITECTURE is PPC
 ////////////////////////////////////////
 
-// Print hex to bin
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : bin
+ * Prototype     : void
+ * Parameters    : n, bit_size
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : trancode binary
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void bin(unsigned n, unsigned int bit_size){
 	unsigned int i;
 	unsigned int j = 1;
@@ -75,9 +83,16 @@ void bin(unsigned n, unsigned int bit_size){
     }
 }
 
-// tsc ddr reset
-// Reset to default DDR3 memory delay
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_idel_reset
+ * Prototype     : int
+ * Parameters    : memory
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : reset idelay value
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_ddr_idel_reset(int mem){
 	unsigned int data = 0;
 	unsigned int init = 0;
@@ -105,11 +120,16 @@ int tsc_ddr_idel_reset(int mem){
 	return 0;
 }
 
-// tsc ddr set IDELAY
-// Set the IDELAY +/- for selected lane
-// |----- x -----|
-// Step is 1 to 16
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_idel_set
+ * Prototype     : int
+ * Parameters    : memory, dq, step, plus/minus increment
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : set idelay for each dq
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_ddr_idel_set(int mem, unsigned int dq, unsigned int step, char* pm){
 	unsigned int data = 0;
 
@@ -137,8 +157,16 @@ int tsc_ddr_idel_set(int mem, unsigned int dq, unsigned int step, char* pm){
 	return 0;
 }
 
-// Show the current status of DDR DQ line
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_idel_status
+ * Prototype     : int
+ * Parameters    : mem
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : status of calibration registers
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_ddr_idel_status(int mem){
 	unsigned int d0   = 0;
 	unsigned int temp = 0;
@@ -165,15 +193,16 @@ int tsc_ddr_idel_status(int mem){
     return 0;
 }
 
-// tsc ddr align
-// Align the DDR memory delay
-// When adjust delay, R/W is needed to apply delay
-// There are 32 delays taps 0..31
-// Delay register is wrap-around
-// MAthing DQ <-> DATA
-// DQ[15..8] -> DATA[7..0]
-// DQ[07..0] -> DATA[15..8]
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_idel_calib
+ * Prototype     : int
+ * Parameters    : memory (shm1 or shm2)
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : calibration of the ddr memory
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
@@ -727,19 +756,18 @@ int tsc_ddr_idel_calib(int mem){
     return 0;
 }
 
-// ----------------------------------------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_idel_calib
+ * Prototype     : int
+ * Parameters    : memory (shm1 or shm2)
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : calibration of the ddr memory
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 /*
-// tsc ddr align
-// Align the DDR memory delay
-// When adjust delay, R/W is needed to apply delay
-// There are 32 delays taps 0..31
-// Delay register is wrap-around
-// MAthing DQ <-> DATA
-// DQ[15..8] -> DATA[7..0]
-// DQ[07..0] -> DATA[15..8]
-// ----------------------------------------------------------------------------------
-int ORIGINAL_tsc_ddr_idel_calib(int mem){
+int tsc_ddr_idel_calib(int mem){
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
 	int  DQ_NOK[16];
@@ -1209,8 +1237,16 @@ int ORIGINAL_tsc_ddr_idel_calib(int mem){
 }
 */
 
-// Main function for tsc command
-// ----------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : main command to drive ddr calibration
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int tsc_ddr(struct cli_cmd_para *c){
 	int cnt = 0;
 	int idx = 0;

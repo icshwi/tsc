@@ -80,12 +80,13 @@ kbuf_init( void)
  * Function name : kbuf_cmp
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
  * Description   : buffer compare
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 kbuf_cmp( struct cli_cmd_para *c) 
 {
@@ -173,15 +174,16 @@ kbuf_cmp( struct cli_cmd_para *c)
   return( TSC_OK);
 }
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : buf_show
+ * Function name : kbuf_show
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
  * Description   : free a previously allocated
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 kbuf_show( struct cli_cmd_para *c) 
 {
@@ -225,13 +227,13 @@ kbuf_show( struct cli_cmd_para *c)
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : kbuf_alloc
+ * Function name : alloc_kbuf
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : allocate buffer suitable for DMA
+ * Description   : allocate buffer suitable for dma
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -254,6 +256,16 @@ int alloc_kbuf( int idx,
   }
   return( TSC_OK);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : kbuf_alloc
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : allocate kernel buffer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 kbuf_alloc( struct cli_cmd_para *c) 
@@ -309,12 +321,13 @@ kbuf_alloc_exit:
  * Function name : kbuf_free
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
- * Description   : free a previously allocated
+ * Description   : free a previously kernel buffer allocated
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 kbuf_free( struct cli_cmd_para *c) 
 {
@@ -370,13 +383,12 @@ kbuf_free( struct cli_cmd_para *c)
   return( TSC_OK);
 }
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : kbuf_map
+ * Function name : map_kbuf
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TSC_OK  if command executed
- *                 TSC_ERR if error
+ * Return        : tsc_ok  if command executed
+ *                 tsc_err if error
  *----------------------------------------------------------------------------
  * Description   : map an allocated buffer in the slave address space
  *
@@ -421,6 +433,16 @@ map_kbuf( int idx,
   }
   return( TSC_OK);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : kbuf_map
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : map a kernel buffer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 kbuf_map( struct cli_cmd_para *c) 
@@ -481,6 +503,16 @@ kbuf_map_exit:
   return( TSC_ERR);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : kbuf_unmap
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : unmap kernel buffer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 kbuf_unmap( struct cli_cmd_para *c) 
 {
@@ -530,12 +562,13 @@ kbuf_unmap( struct cli_cmd_para *c)
  * Function name : tsc_buf
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : manage buffer dynamiv allocation
+ * Description   : manage buffer dynamic allocation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_kbuf( struct cli_cmd_para *c)
 {

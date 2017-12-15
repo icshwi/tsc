@@ -41,8 +41,15 @@
 #include <time.h>
 #include "TscMon.h"
 
-// ----------------------------------------------------------------------------------
-// Manipulation of FIFOs
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_fifo
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : manipulation of fifos
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_fifo(struct cli_cmd_para *c) {
 	int retval = 0;

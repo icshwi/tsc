@@ -90,15 +90,21 @@ struct tsctst *at;
 extern char *cmdline;
 extern struct aiocb aiocb;
 
-// --------------------------------------------------------------------------------------------
-
 char *
 Xtst_rcsid()
 {
   return( rcsid);
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_init
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : init test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
 tst_init( void) 
@@ -109,7 +115,15 @@ tst_init( void)
   return;
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tst_exit
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : exit test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
 tst_exit( void) 
@@ -122,7 +136,15 @@ tst_exit( void)
   return;
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : launch_test
+ * Prototype     : int
+ * Parameters    : test file and tty
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : launch test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 launch_test( char *tst_file, char *tty) 
@@ -213,7 +235,15 @@ launch_test( char *tst_file, char *tty)
   return( TST_OK);
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tinit
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : init test environment
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_tinit( struct cli_cmd_para *c)
 {
@@ -259,7 +289,15 @@ int tsc_tinit( struct cli_cmd_para *c)
   return( retval);
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tkill
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : kill test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_tkill( struct cli_cmd_para *c)
 {
@@ -288,7 +326,15 @@ int tsc_tkill( struct cli_cmd_para *c)
   return( TST_OK);
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tcmd
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : test command environment
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_tcmd( struct cli_cmd_para *c)
@@ -307,7 +353,15 @@ tsc_tcmd( struct cli_cmd_para *c)
   return( TST_OK);
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tlist
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : list tests
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_tlist( struct cli_cmd_para *c)
@@ -315,7 +369,15 @@ tsc_tlist( struct cli_cmd_para *c)
   return( tsc_tcmd( c));
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tset
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : set specific variable for test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_tset( struct cli_cmd_para *c)
@@ -323,13 +385,29 @@ tsc_tset( struct cli_cmd_para *c)
   return( tsc_tcmd( c));
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tstart
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : start test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_tstart( struct cli_cmd_para *c) {
   return( tsc_tcmd( c));
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tstop
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : stop test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_tstop( struct cli_cmd_para *c)
@@ -337,7 +415,15 @@ tsc_tstop( struct cli_cmd_para *c)
   return( tsc_tcmd( c));
 }
 
-// --------------------------------------------------------------------------------------------
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tstatus
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : get status of test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_tstatus( struct cli_cmd_para *c)
@@ -392,8 +478,8 @@ tsc_tstatus( struct cli_cmd_para *c)
  * Function name : tsc_twait
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : TST_OK  if command executed
- *                 TST_ERR if error
+ * Return        : tst_ok  if command executed
+ *                 tst_err if error
  *----------------------------------------------------------------------------
  * Description   : wait for a test to complete
  *

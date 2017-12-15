@@ -150,6 +150,16 @@ acq1430_rcsid()
 char filename[0x100];
 struct cli_cmd_history acq1430_history;
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : lmk_write
+ * Prototype     : void
+ * Parameters    : register, data, fmc
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : void
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 lmk_write( int reg,
 	   int data,
@@ -170,6 +180,17 @@ lmk_write( int reg,
     pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : lmk_init_intref
+ * Prototype     : void
+ * Parameters    : fmc
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : lmx init reference
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 lmk_init_intref( int fmc)
 {
@@ -232,6 +253,16 @@ lmk_init_intref( int fmc)
   usleep(10000);                      /* wait for 10 ms */
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : acq1430_init
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : acq1430 init
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 acq1430_init()
 {
@@ -243,6 +274,15 @@ acq1430_init()
   return;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : acq1430_acq_res
+ * Prototype     : int
+ * Parameters    : acq1430 structure
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : acq1430 acquisition
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 acq1430_acq_res( struct acq1430_acq_res *r,
@@ -273,6 +313,16 @@ acq1430_acq_res( struct acq1430_acq_res *r,
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : acq1430_acq
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, identifier, fmc, size, check
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : acq1430 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 acq1430_acq( struct cli_cmd_para *c,
@@ -579,6 +629,16 @@ acq1430_acq( struct cli_cmd_para *c,
   return( nerr);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : acq1430_calib_res
+ * Prototype     : int
+ * Parameters    : acq1430 calibration structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : acq1430 calibration
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 acq1430_calib_res( struct acq1430_calib_res *r)
 {
@@ -624,6 +684,16 @@ acq1430_calib_res( struct acq1430_calib_res *r)
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc_write
+ * Prototype     : void
+ * Parameters    : register, data, channel, fmc
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : write to adc
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 adc_write( int reg,
 	   int data,
@@ -645,6 +715,16 @@ adc_write( int reg,
     pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : acq1430_calib_idelay
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, channel, fmc
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : calibrate idelay of acq1430
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 acq1430_calib_idelay( struct cli_cmd_para *c, 
@@ -931,6 +1011,16 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_acq1430
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : acq1430 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_acq1430( struct cli_cmd_para *c)

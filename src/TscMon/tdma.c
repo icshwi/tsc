@@ -58,6 +58,16 @@ tdma_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tdma_init
+ * Prototype     : int
+ * Parameters    : quiet mode
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : dma init buffer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tdma_init(int quiet)
 {
@@ -75,6 +85,16 @@ tdma_init(int quiet)
   }
   return( 0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tdma_move
+ * Prototype     : int
+ * Parameters    : channel, source, destination, size, mode
+ * Return        : ok or nok
+ *----------------------------------------------------------------------------
+ * Description   : execute dma move
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 tsc_tdma_move( int chan,
@@ -140,6 +160,16 @@ tsc_tdma_move( int chan,
   return( TSC_OK);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tdma_status
+ * Prototype     : int
+ * Parameters    : channel
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : acquire dma status
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_tdma_status( int chan)
 {
@@ -177,6 +207,16 @@ tsc_tdma_status( int chan)
   return( sts);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tdma_clear
+ * Prototype     : int
+ * Parameters    : channel
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : clear dma
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_tdma_clear( int chan)
 {
@@ -209,6 +249,16 @@ tsc_tdma_clear( int chan)
   close( fd);
   return( sts);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_tdma
+ * Prototype     : int
+ * Parameters    : command line parameter structure
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : main command dma
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_tdma( struct cli_cmd_para *c)

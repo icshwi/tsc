@@ -58,6 +58,7 @@ conf_rcsid()
  * Description   : display static switch configuration
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_static( void)
 {
@@ -121,9 +122,10 @@ conf_show_static( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display TSC DDR information
+ * Description   : display ddr information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_ddr( void)
 {
@@ -165,9 +167,10 @@ conf_show_ddr( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display TSC DDR information
+ * Description   : display ipcie information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_ipcie( void)
 {
@@ -237,9 +240,10 @@ conf_show_ipcie( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display TSC identifiers
+ * Description   : display tsc identifiers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_identifiers( void)
 {
@@ -269,9 +273,10 @@ conf_show_identifiers( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display TSC PCIe MSI counters
+ * Description   : display pcie msi counters
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_msi( void)
 {
@@ -300,9 +305,10 @@ conf_show_msi( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display ARTIX7 System Monitoring Parameters
+ * Description   : display artix7 system monitoring parameters
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_smon( void)
 {
@@ -345,9 +351,10 @@ conf_show_smon( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display ARTIX7 System Monitoring Parameters
+ * Description   : display lm95235 information
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_lm95235( void)
 {
@@ -399,9 +406,10 @@ conf_show_lm95235( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display BMR463 System Monitoring Parameters
+ * Description   : display bmr463 system monitoring parameters
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 conf_show_bmr463( void)
 {
@@ -460,7 +468,7 @@ conf_show_bmr463( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display MAX5970 System Monitoring Parameters
+ * Description   : display max5970 system monitoring parameters
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -563,9 +571,10 @@ conf_show_max5970( void)
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display FPGA device
+ * Description   : display fpga device
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void conf_show_device(void){
 	int device = -1;
 
@@ -591,9 +600,10 @@ void conf_show_device(void){
  * Parameters    : none
  * Return        : none
  *----------------------------------------------------------------------------
- * Description   : display TSC configuration
+ * Description   : display tsc configuration
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_conf_show(struct cli_cmd_para *c)
 {

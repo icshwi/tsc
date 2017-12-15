@@ -168,6 +168,16 @@ adc3117_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_init
+ * Prototype     : void
+ * Parameters    : fmc
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : adc3117 init
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void 
 adc3117_init( int fmc)
 {
@@ -206,6 +216,16 @@ adc3117_init( int fmc)
   return;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_map_usr
+ * Prototype     : char *
+ * Parameters    : map win structure, remote address, size, user
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : map user space
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 char *
 adc3117_map_usr( struct tsc_ioctl_map_win *map,
                  ulong rem_addr,
@@ -228,6 +248,16 @@ adc3117_map_usr( struct tsc_ioctl_map_win *map,
   return( (char *)tsc_pci_mmap( map->sts.loc_base, map->sts.size));
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_unmap_usr
+ * Prototype     : int
+ * Parameters    : map win structure, buffer pointer
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : unmap user space
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 adc3117_unmap_usr( struct tsc_ioctl_map_win *map,
 		   char *buf_ptr)
@@ -235,6 +265,16 @@ adc3117_unmap_usr( struct tsc_ioctl_map_win *map,
   tsc_pci_munmap( buf_ptr, map->sts.size);
   return( tsc_map_free( map));
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_trig_acq
+ * Prototype     : int
+ * Parameters    : register base, trigger
+ * Return        : 1
+ *----------------------------------------------------------------------------
+ * Description   : trig an acquisition
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 adc3117_trig_acq( int reg_base,
@@ -269,6 +309,15 @@ adc3117_trig_acq( int reg_base,
   return( 1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_acq_res
+ * Prototype     : int
+ * Parameters    : adc3117 structure
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : adc3117 acquisition
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 adc3117_acq_res( struct adc3117_acq_res *r,
@@ -310,6 +359,16 @@ adc3117_acq_res( struct adc3117_acq_res *r,
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_acq
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, identifier, fmc, size, check
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3117 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 adc3117_acq( struct cli_cmd_para *c,
 	     int idx,
@@ -339,6 +398,16 @@ adc3117_acq( struct cli_cmd_para *c,
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_save
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, identifier, fmc
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : save an acquisition
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 adc3117_save( struct cli_cmd_para *c,
@@ -458,6 +527,16 @@ adc3117_save( struct cli_cmd_para *c,
   adc3117_unmap_usr( &adc3117_mas_map_win, adc_buf);
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_eeprom_sign
+ * Prototype     : int
+ * Parameters    : cli command parameter structure, device, fmc
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : signature of eeprom
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 adc3117_eeprom_sign( struct cli_cmd_para *c,
@@ -627,6 +706,16 @@ adc3117_eeprom_sign( struct cli_cmd_para *c,
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_eeprom_dump
+ * Prototype     : int
+ * Parameters    : cli command parameter, device, fmc
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : dump eeprom
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 adc3117_eeprom_dump( struct cli_cmd_para *c,
 		     int device,
@@ -684,6 +773,16 @@ adc3117_eeprom_dump( struct cli_cmd_para *c,
   }
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_eeprom_vref
+ * Prototype     : int
+ * Parameters    : cli command parameter, device, fmc
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : vref management
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 adc3117_eeprom_vref( struct cli_cmd_para *c,
@@ -802,6 +901,17 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
     }
   }
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_adc3117
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3117 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_adc3117( struct cli_cmd_para *c)
 {

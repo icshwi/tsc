@@ -181,7 +181,6 @@ rdwr_init( void)
   last_pci2_cycle.m.am = 0x00;
   last_pci2_cycle.loop = 1;
 
-
   for( i = 0; i <  TSC_NUM_KBUF; i++)
   {
     bzero( &last_kbuf_cycle[i], sizeof(struct rdwr_cycle_para));
@@ -221,6 +220,7 @@ rdwr_init( void)
  * Description   : return resources allocated by rdwr_init()to OS
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 rdwr_exit( void)
 {
@@ -301,6 +301,16 @@ rdwr_get_cycle_space( char *cmd_p)
   return( NULL);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_get_cycle_addr
+ * Prototype     : int
+ * Parameters    : address, rdwr cycle parameter
+ * Return        : error/length
+ *----------------------------------------------------------------------------
+ * Description   : get cycle address
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static int
 rdwr_get_cycle_addr( char *addr_p,
 		     struct rdwr_cycle_para *cp)
@@ -323,6 +333,16 @@ rdwr_get_cycle_addr( char *addr_p,
   }
   return( len);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_get_cycle_data
+ * Prototype     : int
+ * Parameters    : data, rdwr structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : get cycle data
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static int
 rdwr_get_cycle_data( char *data_p,
@@ -366,6 +386,16 @@ rdwr_get_cycle_data( char *data_p,
   return(-1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_get_cycle_ds
+ * Prototype     : void
+ * Parameters    : ext parameter, rdwr structure
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : get cycle data size
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 rdwr_get_cycle_ds( char *ext_p,
 		   struct rdwr_cycle_para *cp)
@@ -406,6 +436,16 @@ rdwr_get_cycle_ds( char *ext_p,
   }
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_get_cycle_swap
+ * Prototype     : void
+ * Parameters    : name, rdwr structure
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : get cycle swap
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 rdwr_get_cycle_swap( char *name,
 		     struct rdwr_cycle_para *cp)
@@ -441,6 +481,16 @@ rdwr_get_cycle_swap( char *name,
 #endif
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_get_cycle_loop
+ * Prototype     : void
+ * Parameters    : para, rdwr structure
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : get cycle loop
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 rdwr_get_cycle_loop( char *para,
 		     struct rdwr_cycle_para *cp)
@@ -458,14 +508,14 @@ rdwr_get_cycle_loop( char *para,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : rdwr_set_prompt
  * Parameters    : pointer to prompt string
- *                 address to be diplayed
+ *                 address to be displayed
  *                 display mode
  * Return        : void
  *----------------------------------------------------------------------------
- * Description   : 
- *                 and store in cycle parameters data structure
+ * Description   : and store in cycle parameters data structure
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static char
 *rdwr_set_prompt( char *prompt,
 		  ulong addr,
@@ -505,6 +555,16 @@ static char
   return( prompt);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_sprintf_bin
+ * Prototype     : void
+ * Parameters    : s, n, bit size
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : sprintf binary
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void rdwr_sprintf_bin( char *s, 
 		       unsigned n,
 		       unsigned int bit_size)
@@ -523,6 +583,16 @@ void rdwr_sprintf_bin( char *s,
   }
   *(--s) = 0;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_patch_addr
+ * Prototype     : char *
+ * Parameters    : addr, data, mode, swap
+ * Return        : cmdline
+ *----------------------------------------------------------------------------
+ * Description   : patch address
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static char * 
 rdwr_patch_addr( ulong addr, 
@@ -589,12 +659,13 @@ rdwr_patch_addr( ulong addr,
  * Function name : tsc_rdwr_pr
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acces to TSC CSR registers
+ * Description   : perform read/write access to csr registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_pr( struct cli_cmd_para *c)
 {
@@ -755,12 +826,13 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
  * Function name : tsc_rdwr_dr
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : Display TSC CSR registers
+ * Description   : display csr registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_dr( struct cli_cmd_para *c)
 {
@@ -849,12 +921,13 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
  * Function name : tsc_show_addr
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : Display address range from TSC remote resource SHM)
+ * Description   : display address range from tsc remote resource (shm)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 static void
 rdwr_show_addr( ulong addr,
 		int mode)
@@ -892,6 +965,16 @@ rdwr_show_addr( ulong addr,
   }
   return;
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_show_buf
+ * Prototype     : int
+ * Parameters    : addr, buf, len, mode
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : show buffer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static int 
 rdwr_show_buf( ulong addr, 
@@ -968,6 +1051,16 @@ rdwr_show_buf( ulong addr,
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_rdwr_dx
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : perform display data
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_dx( struct cli_cmd_para *c)
 {
@@ -1021,20 +1114,19 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
 tsc_rdwr_dx_error:
   tsc_print_usage( c);
   return( RDWR_ERR);
-
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_rdwr_fx
+ * Function name : rdwr_fill_buf
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : fill TSC remote resource address range SHM
- *                 with data
+ * Description   : fill tsc buffer with data
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 rdwr_fill_buf( void *buf,
 	       int len,
@@ -1131,6 +1223,18 @@ rdwr_fill_buf( void *buf,
   return(retval);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_rdwr_fx
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
+ *----------------------------------------------------------------------------
+ * Description   : fill tsc remote resource address range shm
+ *                 with data
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_fx( struct cli_cmd_para *c)
 {
@@ -1225,11 +1329,11 @@ tsc_rdwr_fx_error:
  * Function name : rdwr_cmp_buf
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : test TSC remote resource address range SHM
- *                 with data
+ * Description   : test tsc remote resource address range SHM
+ *                 with data (compare)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -1258,6 +1362,16 @@ rdwr_cmp_buf( void *buf1,
   }
   return( i);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_tx_error
+ * Prototype     : int
+ * Parameters    : buffer in, buffer out, idt, ds, base
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : error management
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 rdwr_tx_error( void *buf_in,
@@ -1321,6 +1435,16 @@ rdwr_tx_error( void *buf_in,
   return( 0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rdwr_test
+ * Prototype     : int
+ * Parameters    : addr, len, rdwr structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : read write test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 rdwr_test( ulong addr,
 	   int len,
@@ -1346,6 +1470,16 @@ rdwr_test( ulong addr,
   free(buf_out);
   return( retval);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_rdwr_tx
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : read write memory test
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_rdwr_tx( struct cli_cmd_para *c)
@@ -1467,12 +1601,13 @@ tsc_rdwr_tx_error:
  * Function name : tsc_rdwr_px
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acce0s to TSC remote resources
+ * Description   : perform read/write access to tsc remote resources
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_px( struct cli_cmd_para *c)
 {
@@ -1731,12 +1866,13 @@ tsc_rdwr_px_error:
  * Function name : tsc_rdwr_cr
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : Compare TSC CSR registers with expected content
+ * Description   : compare tsc csr registers with expected content
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_cr( struct cli_cmd_para *c)
 {
@@ -1796,12 +1932,13 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
  * Function name : tsc_rdwr_cx
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_Err if error
  *----------------------------------------------------------------------------
- * Description   : Compare TSC CSR registers with expected content
+ * Description   : compare tsc csr registers with expected content
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_cx( struct cli_cmd_para *c)
 {
@@ -1883,12 +2020,13 @@ tsc_rdwr_cx( struct cli_cmd_para *c)
  * Function name : tsc_rdwr_cmp
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
- * Description   : Compare compare two data buffers
+ * Description   : compare compare two data buffers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 tsc_rdwr_cmp( struct cli_cmd_para *c)
 {
@@ -2025,16 +2163,18 @@ tsc_rdwr_cmp_err:
   if( buf2) free(buf2);
   return( retval);
 }
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rdwr_lx
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : rdwr_ok  if command executed
+ *                 rdwr_err if error
  *----------------------------------------------------------------------------
  * Description   : loop read/write on remote resource
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_rdwr_lx( struct cli_cmd_para *c)
 {

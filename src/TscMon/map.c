@@ -51,6 +51,16 @@ map_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_get_id
+ * Prototype     : int
+ * Parameters    : name of map to get, map control structure
+ * Return        : map id
+ *----------------------------------------------------------------------------
+ * Description   : get map id
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 map_get_id( char *name,
 	    struct tsc_ioctl_map_ctl *map)
@@ -66,6 +76,16 @@ map_get_id( char *name,
   }
    return( map->sg_id);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_show
+ * Prototype     : int
+ * Parameters    : name of map to show
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : show mapping information
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 map_show( char *name)
@@ -171,6 +191,16 @@ map_show( char *name)
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_clear
+ * Prototype     : int
+ * Parameters    : name of map to clear
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : clear a mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 map_clear( char *name)
 {
@@ -189,6 +219,17 @@ map_clear( char *name)
 
   return(0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_alloc
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : alloc a mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 map_alloc( struct cli_cmd_para *c)
 {
@@ -308,6 +349,16 @@ map_alloc_usage:
   return(-1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : map_free
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : free a mapping
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 map_free( struct cli_cmd_para *c)
 {
@@ -353,12 +404,13 @@ map_free_usage:
  * Function name : tsc_map
  * Prototype     : int
  * Parameters    : pointer to command parameter list
- * Return        : RDWR_OK  if command executed
- *                 RDWR_ERR if error
+ * Return        : ok
+ *                 error
  *----------------------------------------------------------------------------
- * Description   : perform read/write acces to TSC CSR registers
+ * Description   : perform read/write acces to tsc csr registers
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int 
 tsc_map( struct cli_cmd_para *c)
 {

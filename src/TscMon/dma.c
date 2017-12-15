@@ -57,12 +57,32 @@ dma_rcsid()
   return( rcsid);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_init
+ * Prototype     : int
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : init dma
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 int
 dma_init( void)
 {
   cli_history_init( &dma_history);
   return( 0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : set_para_char
+ * Prototype     : int
+ * Parameters    : prompt, data
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : set character parameter
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static int
 set_para_char( char *prompt,
@@ -79,6 +99,16 @@ set_para_char( char *prompt,
   }
   return( -1);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : set_para_dec
+ * Prototype     : int
+ * Parameters    : prompt, data
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : set decimal parameter
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static int
 set_para_dec( char *prompt,
@@ -99,7 +129,15 @@ set_para_dec( char *prompt,
   return( 0);
 }
 
-
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_mode
+ * Prototype     : int
+ * Parameters    : channel
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : set dma mode
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
 dma_mode( int chan)
@@ -287,6 +325,16 @@ dma_mode( int chan)
   tsc_dma_mode( &mode);
   return( 0);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : command for dma
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_dma( struct cli_cmd_para *c)
