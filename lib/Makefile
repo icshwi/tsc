@@ -37,12 +37,12 @@ mtca4rtmlib.o:mtca4rtmlib.c
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c mtca4rtmlib.c
 ponmboxlib.o:ponmboxlib.c 
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c ponmboxlib.c
-pev791xlib.o:pev791xlib.c 
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c pev791xlib.c
+tscextlib.o:tscextlib.c 
+	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tscextlib.c
 tstlib.o:tstlib.c	
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tstlib.c
-libtsc.a:tsculib.o clilib.o pev791xlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
-	$(AR) r libtsc.a tsculib.o clilib.o pev791xlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
+libtsc.a:tsculib.o clilib.o tscextlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
+	$(AR) r libtsc.a tsculib.o clilib.o tscextlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
 	$(RANLIB) libtsc.a
 
 tsculib.c: ../include/tsculib.h

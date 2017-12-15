@@ -41,7 +41,7 @@ static char *rcsid = "$Id: conf.c,v 1.6 2015/12/03 15:14:50 ioxos Exp $";
 #include <cli.h>
 #include <tscioctl.h>
 #include <tsculib.h>
-#include <pev791xlib.h>
+#include "../../include/tscextlib.h"
 
 char *
 conf_rcsid()
@@ -427,7 +427,7 @@ conf_show_bmr463( void)
   printf("   DC-DC Voltage Regulators\n");
   for( i = 0; i < 3; i++)
   {
-    sts = pev791x_bmr_read( i, 0x88, &data, 2);/*0x88*/
+    sts = tscext_bmr_read( i, 0x88, &data, 2);/*0x88*/
     if( (sts < 0))
     {
       printf("      BMR#%d -> readout error [%08x]\n", i,sts);
@@ -435,19 +435,19 @@ conf_show_bmr463( void)
     else
     {
       d0 = (unsigned short)data;
-      f0 = pev791x_bmr_conv_11bit_u( d0);
+      f0 = tscext_bmr_conv_11bit_u( d0);
       usleep( 10000);
-      sts = pev791x_bmr_read( i, 0x8b, &data, 2);
+      sts = tscext_bmr_read( i, 0x8b, &data, 2);
       d1 = (unsigned short)data;
-      f1 = pev791x_bmr_conv_16bit_u( d1);
+      f1 = tscext_bmr_conv_16bit_u( d1);
       usleep( 10000);
-      sts = pev791x_bmr_read( i, 0x8c, &data, 2);
+      sts = tscext_bmr_read( i, 0x8c, &data, 2);
       d2 = (unsigned short)data;
-      f2 = pev791x_bmr_conv_11bit_u( d2);
+      f2 = tscext_bmr_conv_11bit_u( d2);
       usleep( 10000);
-      sts = pev791x_bmr_read( i, 0x8d, &data, 2);/*0x8d*/
+      sts = tscext_bmr_read( i, 0x8d, &data, 2);/*0x8d*/
       d3 = (unsigned short)data;
-      f3 = pev791x_bmr_conv_11bit_s( d3);
+      f3 = tscext_bmr_conv_11bit_s( d3);
       usleep( 10000);
       if( i == 0) printf("      BMR#%d T2081 core\n", i);
       if( i == 1) printf("      BMR#%d Central FPGA\n", i);

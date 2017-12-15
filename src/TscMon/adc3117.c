@@ -41,7 +41,7 @@ static char *rcsid = "$Id: adc3117.c,v 1.10 2016/01/15 10:21:19 ioxos Exp $";
 #include <time.h>
 #include <cli.h>
 #include <unistd.h>
-#include <pev791xlib.h>
+#include "../../include/tscextlib.h"
 #include <tscioctl.h>
 #include <tsculib.h>
 
@@ -75,7 +75,7 @@ struct adc3117_reg
 }
 adc3117_reg[NUM_FMC];
 
-struct pev_adc3117_devices
+struct tsc_adc3117_devices
 {
   char *name;
   uint cmd;
@@ -195,24 +195,23 @@ adc3117_init( int fmc)
       adc3117_reg[fmc_idx].sign   = ADC_REG_SIGN_B;
       adc3117_reg[fmc_idx].csr    = ADC_REG_CSR_B;
       adc3117_reg[fmc_idx].serial = ADC_REG_SERIAL_B;
-      pev_csr_wr( 0x1320,1);
-      pev_csr_wr( 0x1324,0xfffff000);
-      pev_csr_wr( 0x1328,5);
+      tscext_csr_wr( 0x1320,1);
+      tscext_csr_wr( 0x1324,0xfffff000);
+      tscext_csr_wr( 0x1328,5);
     }
     else
     {
       adc3117_reg[fmc_idx].sign   = ADC_REG_SIGN_A;
       adc3117_reg[fmc_idx].csr    = ADC_REG_CSR_A;
       adc3117_reg[fmc_idx].serial = ADC_REG_SERIAL_A;
-      pev_csr_wr( 0x1220,1);
-      pev_csr_wr( 0x1224,0xfffff000);
-      pev_csr_wr( 0x1228,5);
+      tscext_csr_wr( 0x1220,1);
+      tscext_csr_wr( 0x1224,0xfffff000);
+      tscext_csr_wr( 0x1228,5);
    }
   }
-    /* start ADC scanning for all channels */
-  //printf("start ADC scanning for all channels\n", fmc);
-   pev_csr_wr( ACQ_REG_ADC_CTL, 0x3ff000);
-  pev_csr_wr( ACQ_REG_ADC_CTL+4, 2);
+  /* start ADC scanning for all channels */
+  tscext_csr_wr( ACQ_REG_ADC_CTL, 0x3ff000);
+  tscext_csr_wr( ACQ_REG_ADC_CTL+4, 2);
   return;
 }
 
@@ -281,11 +280,11 @@ adc3117_trig_acq( int reg_base,
 		  int trig)
 {
   //printf("Trig data acquisition...\n");
-  pev_csr_wr( reg_base + 0x0, 0x80040001);/* FASTSCOPE Abort/Stop previous acquisition SRAM1 (in case of..) */
-  pev_csr_wr( reg_base + 0x4, trig);      /* FASTSCOPE Define trigger mode */
-  pev_csr_wr( reg_base + 0x0, 0x40040001);/* Arm data acquisition SRAM1 */
+  tscext_csr_wr( reg_base + 0x0, 0x80040001);/* FASTSCOPE Abort/Stop previous acquisition SRAM1 (in case of..) */
+  tscext_csr_wr( reg_base + 0x4, trig);      /* FASTSCOPE Define trigger mode */
+  tscext_csr_wr( reg_base + 0x0, 0x40040001);/* Arm data acquisition SRAM1 */
   usleep( 2000);
-  pev_csr_wr( reg_base + 0x8, 0x40000000);/* FASTSCOPE Manual trigger command */
+  tscext_csr_wr( reg_base + 0x8, 0x40000000);/* FASTSCOPE Manual trigger command */
   usleep( 2000);
 
 #ifdef JFG
@@ -380,12 +379,12 @@ adc3117_acq( struct cli_cmd_para *c,
   short *data_p;
 
   printf("Channel %d trig acquisition\n", idx);
-  pev_csr_wr( ACQ_REG_BUF_CTL, idx/2);
-  pev_csr_wr( ACQ_REG_BUF_CTL+4, 2);
+  tscext_csr_wr( ACQ_REG_BUF_CTL, idx/2);
+  tscext_csr_wr( ACQ_REG_BUF_CTL+4, 2);
   tmo = 100000;
   while( --tmo)
   {
-    if( !(pev_csr_rd( ACQ_REG_BUF_CTL+4) & 0x10)) break;
+    if( !(tscext_csr_rd( ACQ_REG_BUF_CTL+4) & 0x10)) break;
   }
   adc_buf = adc3117_map_usr( &adc3117_mas_map_win, 0x100000, 0x100000, fmc);
   printf("Processing data channel %d...\n", idx);
@@ -915,7 +914,7 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
 int 
 tsc_adc3117( struct cli_cmd_para *c)
 {
-  struct pev_adc3117_devices *add;
+  struct tsc_adc3117_devices *add;
   uint fmc;
   char *p;
   uint id;
@@ -951,7 +950,7 @@ tsc_adc3117( struct cli_cmd_para *c)
   }
   if( fmc == 1)
   {
-    id = pev_csr_rd( ADC_REG_SIGN_A);
+    id = tscext_csr_rd( ADC_REG_SIGN_A);
     if( ( id & 0xffff0000) != 0x31170000)
     {
       printf("no ADC3117 installed on FMC#1 [%08x] !!\n", id);
@@ -961,7 +960,7 @@ tsc_adc3117( struct cli_cmd_para *c)
   }
   if( fmc == 2)
   {
-    id = pev_csr_rd( ADC_REG_SIGN_B);
+    id = tscext_csr_rd( ADC_REG_SIGN_B);
     if( ( id & 0xffff0000) != 0x31170000)
     {
       printf("no ADC3117 installed on FMC#2 [%08x] !!\n", id);

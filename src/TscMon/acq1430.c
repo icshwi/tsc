@@ -43,7 +43,7 @@ static char *rcsid = "$Id: acq1430.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #include <time.h>
 #include <cli.h>
 #include <unistd.h>
-#include <pev791xlib.h>
+#include "../../include/tscextlib.h"
 #include <tscioctl.h>
 #include <tsculib.h>
 
@@ -78,7 +78,7 @@ static char *rcsid = "$Id: acq1430.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #define ADC_BASE_IDELAY_A  (ADC_BASE_A +0x038)
 #define ADC_BASE_IDELAY_B  (ADC_BASE_B +0x038)
 
-struct pev_acq1430_devices
+struct tsc_acq1430_devices
 {
   char *name;
   uint cmd;
@@ -171,13 +171,13 @@ lmk_write( int reg,
   printf("cmd = %08x - data = %08x\n", cmd, data);
   if( fmc == 2)
   {
-    pev_csr_wr( ADC_BASE_SERIAL_B + 4, data);
-    pev_csr_wr( ADC_BASE_SERIAL_B, cmd);
+	tscext_csr_wr( ADC_BASE_SERIAL_B + 4, data);
+	tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
   }
   else 
   {
-    pev_csr_wr( ADC_BASE_SERIAL_A + 4, data);
-    pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
+	tscext_csr_wr( ADC_BASE_SERIAL_A + 4, data);
+	tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
   }
 }
 
@@ -233,22 +233,22 @@ lmk_init_intref( int fmc)
   /*---------------------------------------------*/
   if( fmc == 2)
   {
-    pev_csr_wr( ADC_BASE_LED_B, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
+	tscext_csr_wr( ADC_BASE_LED_B, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
   }
   else 
   {
-    pev_csr_wr( ADC_BASE_LED_A, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
+	tscext_csr_wr( ADC_BASE_LED_A, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
   }
   usleep(2000);                      /* wait for 2 ms */
   lmk_write( 0x1e, 0x02000320, fmc); /* LMK04806__R30 PLL2 P/N Recallibration  */
   usleep(10000);                      /* wait for 10 ms */
   if( fmc == 2)
   {
-    pev_csr_wr( ADC_BASE_CSR_B, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
+	tscext_csr_wr( ADC_BASE_CSR_B, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
   }
   else 
   {
-    pev_csr_wr( ADC_BASE_CSR_A, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
+	tscext_csr_wr( ADC_BASE_CSR_A, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
   }
   usleep(10000);                      /* wait for 10 ms */
 }
@@ -331,7 +331,6 @@ acq1430_acq( struct cli_cmd_para *c,
 	     int size,
 	     int check)
 {
-  //struct pev_ioctl_map_pg adc_mas_map;
   struct tsc_ioctl_map_win adc_mas_map_win;
   int trig, smem, csr, last_addr;
   int i, tmo, cnt, nerr;
@@ -453,23 +452,23 @@ acq1430_acq( struct cli_cmd_para *c,
   tsc_map_alloc( &adc_mas_map_win);
   adc_buf = (char *)tsc_pci_mmap( adc_mas_map_win.sts.loc_base, adc_mas_map_win.sts.size);
 
-  pev_csr_wr( csr_base+0xc, smem);
-  pev_csr_wr( csr_base+0x4, trig);
+  tscext_csr_wr( csr_base+0xc, smem);
+  tscext_csr_wr( csr_base+0x4, trig);
   csr &= 0xfff00fff;
   if( idx == 0) csr |= 0x10000;
   if( idx == 1) csr |= 0x32000;
   if( idx == 2) csr |= 0x54000;
   if( idx == 3) csr |= 0x76000;
   if( idx == 4) csr |= 0x89000;
-  pev_csr_wr( csr_base+0x0, 0x80000000 | csr);
-  pev_csr_wr( csr_base+0x0, 0x40000000 | csr);
+  tscext_csr_wr( csr_base+0x0, 0x80000000 | csr);
+  tscext_csr_wr( csr_base+0x0, 0x40000000 | csr);
   usleep( 200000);
-  pev_csr_wr( csr_base+0x8, 0x40000000 | last_addr);
+  tscext_csr_wr( csr_base+0x8, 0x40000000 | last_addr);
 
   tmo = 800;
   while( --tmo)
   {
-    csr = pev_csr_rd( csr_base+0x0);
+    csr = tscext_csr_rd( csr_base+0x0);
     if( ( csr & 0x30000000) == 0x30000000) break;
     usleep( 1000);
   }
@@ -623,8 +622,8 @@ acq1430_acq( struct cli_cmd_para *c,
   tsc_pci_munmap( adc_buf, adc_mas_map_win.sts.size);
   tsc_map_free( &adc_mas_map_win);
 #else
-  pev_munmap( &adc_mas_map);
-  pev_map_free( &adc_mas_map);
+  tscext_munmap( &adc_mas_map);
+  tscext_map_free( &adc_mas_map);
 #endif
   return( nerr);
 }
@@ -706,13 +705,13 @@ adc_write( int reg,
   //printf("cmd = %08x - data = %08x\n", cmd, data);
   if( fmc == 2)
   {
-    pev_csr_wr( ADC_BASE_SERIAL_B + 4, data);
-    pev_csr_wr( ADC_BASE_SERIAL_B, cmd);
+	tscext_csr_wr( ADC_BASE_SERIAL_B + 4, data);
+	tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
   }
   else 
   {
-    pev_csr_wr( ADC_BASE_SERIAL_A + 4, data);
-    pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
+	tscext_csr_wr( ADC_BASE_SERIAL_A + 4, data);
+	tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
   }
 }
 
@@ -822,8 +821,8 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
   }
   usleep( 5000);
 
-  pev_csr_wr( idelay_base, 0x8000ffff); /*  RESET IDELAYE3 + ISERDES3 */
-  pev_csr_wr( idelay_base, 0x00000000); /*                            */
+  tscext_csr_wr( idelay_base, 0x8000ffff); /*  RESET IDELAYE3 + ISERDES3 */
+  tscext_csr_wr( idelay_base, 0x00000000); /*                            */
   usleep( 1000);
  
   /* scan IDELAY     */
@@ -847,8 +846,8 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
         //printf("%3d : set adc_buf: %08x\n", idelay, *(unsigned long *)&adc_buf1[i][0]);
 
         /* set IDELAY value */
-        pev_csr_wr( idelay_base, 0x00000FFF | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
-        pev_csr_wr( idelay_base, 0x10000FFF | (idelay << 16) | (i << 12)); /*                              */
+        tscext_csr_wr( idelay_base, 0x00000FFF | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+        tscext_csr_wr( idelay_base, 0x10000FFF | (idelay << 16) | (i << 12)); /*                              */
       }
     }
 
@@ -856,20 +855,20 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
     if(( chan == -1) || ( chan < 4))
     {
       //printf("trig acquisition for channel %d\n", chan);
-      pev_csr_wr( csr_base[0] + 4, 0x00000000); /*  SCOPE_ACQ1430 SRAM1 Trigger mode    */
-      pev_csr_wr( csr_base[0] + 0, 0x80000021); /*  SCOPE_ACQ1430 SRAM1 Trigger mode    */
-      pev_csr_wr( csr_base[0] + 0, 0x40000021); /*  SCOPE_ACQ1430 SRAM1 Mode            */
+      tscext_csr_wr( csr_base[0] + 4, 0x00000000); /*  SCOPE_ACQ1430 SRAM1 Trigger mode    */
+      tscext_csr_wr( csr_base[0] + 0, 0x80000021); /*  SCOPE_ACQ1430 SRAM1 Trigger mode    */
+      tscext_csr_wr( csr_base[0] + 0, 0x40000021); /*  SCOPE_ACQ1430 SRAM1 Mode            */
       usleep( 1000);
-      pev_csr_wr( csr_base[0] + 8, 0x40000000); /*  Force Trigger          */
+      tscext_csr_wr( csr_base[0] + 8, 0x40000000); /*  Force Trigger          */
     }
     if(( chan == -1) || ( chan == 4))
     {
       //printf("trig acquisition for channel %d\n", chan);
-      pev_csr_wr( csr_base[4] + 4, 0x00000000); /*  SCOPE_ACQ1430 SRAM2 Trigger mode    */
-      pev_csr_wr( csr_base[4] + 0, 0x80000021); /*  SCOPE_ACQ1430 SRAM2 Trigger mode    */
-      pev_csr_wr( csr_base[4] + 0, 0x40000021); /*  SCOPE_ACQ1430 SRAM2 Mode            */
+      tscext_csr_wr( csr_base[4] + 4, 0x00000000); /*  SCOPE_ACQ1430 SRAM2 Trigger mode    */
+      tscext_csr_wr( csr_base[4] + 0, 0x80000021); /*  SCOPE_ACQ1430 SRAM2 Trigger mode    */
+      tscext_csr_wr( csr_base[4] + 0, 0x40000021); /*  SCOPE_ACQ1430 SRAM2 Mode            */
       usleep( 1000);
-      pev_csr_wr( csr_base[4] + 8, 0x40000000); /*  Force Trigger          */
+      tscext_csr_wr( csr_base[4] + 8, 0x40000000); /*  Force Trigger          */
     }
     usleep( 2000);                       /*  wait for acquisition to complete          */
 
@@ -955,8 +954,8 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
       idelay = (min+max)*4;
       printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
       /* set IDELAY value */
-      pev_csr_wr( idelay_base, 0x0000003F | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
-      pev_csr_wr( idelay_base, 0x1000003F | (idelay << 16) | (i << 12)); /*                              */
+      tscext_csr_wr( idelay_base, 0x0000003F | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+      tscext_csr_wr( idelay_base, 0x1000003F | (idelay << 16) | (i << 12)); /*                              */
       printf("Loading IDELAY %03x in channel %d\n", idelay, i*2);
 
       max_found = 0;
@@ -995,8 +994,8 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
       idelay = (min+max)*4;
       printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
       /* set IDELAY value */
-      pev_csr_wr( idelay_base, 0x00000FC0 | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
-      pev_csr_wr( idelay_base, 0x10000FC0 | (idelay << 16) | (i << 12)); /*                              */
+      tscext_csr_wr( idelay_base, 0x00000FC0 | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+      tscext_csr_wr( idelay_base, 0x10000FC0 | (idelay << 16) | (i << 12)); /*                              */
       printf("Loading IDELAY %03x in channel %d\n", idelay, i*2 + 1);
 
     }
@@ -1025,7 +1024,7 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
 int 
 tsc_acq1430( struct cli_cmd_para *c)
 {
-  struct pev_acq1430_devices *add;
+  struct tsc_acq1430_devices *add;
   uint cmd, data, reg, fmc, tmo;
   char *p;
 
@@ -1214,21 +1213,21 @@ tsc_acq1430( struct cli_cmd_para *c)
       tmo = 1000;
       if( fmc == 2)
       {
-        pev_csr_wr( ADC_BASE_SERIAL_B, cmd);
+        tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
         while( --tmo)
         {
-	  if( !(pev_csr_rd( ADC_BASE_SERIAL_B) & 0x80000000)) break;
+	  if( !(tscext_csr_rd( ADC_BASE_SERIAL_B) & 0x80000000)) break;
         }
-      data = pev_csr_rd( ADC_BASE_SERIAL_B + 4);
+      data = tscext_csr_rd( ADC_BASE_SERIAL_B + 4);
       }
       else
       {
-        pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
+        tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
         while( --tmo)
         {
-	  if( !(pev_csr_rd( ADC_BASE_SERIAL_A) & 0x80000000)) break;
+	  if( !(tscext_csr_rd( ADC_BASE_SERIAL_A) & 0x80000000)) break;
         }
-        data = pev_csr_rd( ADC_BASE_SERIAL_A + 4);
+        data = tscext_csr_rd( ADC_BASE_SERIAL_A + 4);
       }
       //if( cmd & 0x02) data = data >> 5; /* LMK */
       printf("cmd = %08x - data = %08x\n", cmd, data);
@@ -1285,13 +1284,13 @@ tsc_acq1430( struct cli_cmd_para *c)
       printf("cmd = %08x - data = %08x\n", cmd, data);
       if( fmc == 2)
       {
-        pev_csr_wr( ADC_BASE_SERIAL_B + 4, data);
-        pev_csr_wr( ADC_BASE_SERIAL_B, cmd);
+        tscext_csr_wr( ADC_BASE_SERIAL_B + 4, data);
+        tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
       }
       else 
       {
-        pev_csr_wr( ADC_BASE_SERIAL_A + 4, data);
-        pev_csr_wr( ADC_BASE_SERIAL_A, cmd);
+        tscext_csr_wr( ADC_BASE_SERIAL_A + 4, data);
+        tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
       }
     }
     if( add->bus == BUS_I2C)
@@ -1351,88 +1350,87 @@ tsc_acq1430( struct cli_cmd_para *c)
     {
       int cmd_sav;
 
-      cmd_sav = pev_csr_rd( 0x1188);
+      cmd_sav = tscext_csr_rd( 0x1188);
       cmd_sav &= ~( 0xff << (8*add->idx));
 
       cmd = cmd_sav | (1 << (8*add->idx));
-      pev_csr_wr( 0x1188, cmd);
-      pev_csr_rd( 0x1188);
+      tscext_csr_wr( 0x1188, cmd);
+      tscext_csr_rd( 0x1188);
 
       cmd = cmd_sav;
-      pev_csr_wr( 0x1188, cmd);
-      pev_csr_rd( 0x1188);
+      tscext_csr_wr( 0x1188, cmd);
+      tscext_csr_rd( 0x1188);
 
-      pev_csr_wr( ADC_BASE_BMOV_B, offset);
+      tscext_csr_wr( ADC_BASE_BMOV_B, offset);
       //cmd = 0x80000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0xa0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       cmd = 0xb0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
-      pev_csr_wr( ADC_BASE_BMOV_B + 4, cmd);
-      pev_csr_rd( ADC_BASE_BMOV_B + 4);
+      tscext_csr_wr( ADC_BASE_BMOV_B + 4, cmd);
+      tscext_csr_rd( ADC_BASE_BMOV_B + 4);
 
       cmd = cmd_sav | (2 << (8*add->idx));
-      pev_csr_wr( 0x1188, cmd);
-      pev_csr_rd( 0x1188);
+      tscext_csr_wr( 0x1188, cmd);
+      tscext_csr_rd( 0x1188);
 
       if( c->para[1][0] == 'c') /* if check operation */
       {
         /* select test pattern generation mode */
-        pev_csr_wr( ADC_BASE_SERIAL_B + 4, 0x44);
-        pev_csr_wr( ADC_BASE_SERIAL_B,  0xc000000f | add->cmd);
+        tscext_csr_wr( ADC_BASE_SERIAL_B + 4, 0x44);
+        tscext_csr_wr( ADC_BASE_SERIAL_B,  0xc000000f | add->cmd);
       }
       tmo = 100;
       while( --tmo)
       {
         usleep(2000);
-        if( pev_csr_rd( ADC_BASE_BMOV_B + 4) & 0x80000000) break;
+        if( tscext_csr_rd( ADC_BASE_BMOV_B + 4) & 0x80000000) break;
       }
-      printf("acquisition status : %08x - %08x\n", pev_csr_rd( ADC_BASE_BMOV_B),  pev_csr_rd( ADC_BASE_BMOV_B + 4));
+      printf("acquisition status : %08x - %08x\n", tscext_csr_rd( ADC_BASE_BMOV_B),  tscext_csr_rd( ADC_BASE_BMOV_B + 4));
     }
     else
     {
       int cmd_sav;
 
-      cmd_sav = pev_csr_rd( 0x1184);
+      cmd_sav = tscext_csr_rd( 0x1184);
       cmd_sav &= ~( 0xff << (8*add->idx));
 
       cmd = cmd_sav | (1 << (8*add->idx));
-      pev_csr_wr( 0x1184, cmd);
-      pev_csr_rd( 0x1184);
+      tscext_csr_wr( 0x1184, cmd);
+      tscext_csr_rd( 0x1184);
 
       cmd = cmd_sav;;
-      pev_csr_wr( 0x1184, cmd);
-      pev_csr_rd( 0x1184);
+      tscext_csr_wr( 0x1184, cmd);
+      tscext_csr_rd( 0x1184);
 
-      pev_csr_wr( ADC_BASE_BMOV_A, offset);
+      tscext_csr_wr( ADC_BASE_BMOV_A, offset);
       //cmd = 0x80000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0xa0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       cmd = 0xb0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
-      pev_csr_wr( ADC_BASE_BMOV_A + 4, cmd);
-      pev_csr_rd( ADC_BASE_BMOV_A+4);
+      tscext_csr_wr( ADC_BASE_BMOV_A + 4, cmd);
+      tscext_csr_rd( ADC_BASE_BMOV_A+4);
 
       cmd = cmd_sav | (2 << (8*add->idx));
-      pev_csr_wr( 0x1184, cmd);
-      pev_csr_rd( 0x1184);
+      tscext_csr_wr( 0x1184, cmd);
+      tscext_csr_rd( 0x1184);
 
       if( c->para[1][0] == 'c') /* if check operation */
       {
         /* select test pattern generation mode */
-        pev_csr_wr( ADC_BASE_SERIAL_A + 4, 0x44);
-        pev_csr_wr( ADC_BASE_SERIAL_A,  0xc000000f | add->cmd);
+        tscext_csr_wr( ADC_BASE_SERIAL_A + 4, 0x44);
+        tscext_csr_wr( ADC_BASE_SERIAL_A,  0xc000000f | add->cmd);
       }
 
       tmo = 100;
       while( --tmo)
       {
         usleep(2000);
-        if( pev_csr_rd( ADC_BASE_BMOV_A + 4) & 0x80000000) break;
+        if( tscext_csr_rd( ADC_BASE_BMOV_A + 4) & 0x80000000) break;
       }
-      printf("acquisition status : %08x - %08x\n", pev_csr_rd( ADC_BASE_BMOV_A),  pev_csr_rd( ADC_BASE_BMOV_A + 4));
+      printf("acquisition status : %08x - %08x\n", tscext_csr_rd( ADC_BASE_BMOV_A),  tscext_csr_rd( ADC_BASE_BMOV_A + 4));
     }
     if( c->para[1][0] == 'c')
     {
-      //struct pev_ioctl_map_pg shm_mas_map;
       struct tsc_ioctl_map_win shm_mas_map_win;
       char *acq_buf;
       int i;
@@ -1466,8 +1464,8 @@ tsc_acq1430( struct cli_cmd_para *c)
         shm_mas_map.flag = 0x0;
         shm_mas_map.sg_id = MAP_MASTER_32;
         shm_mas_map.size = size;
-        pev_map_alloc( &shm_mas_map);
-        acq_buf = pev_mmap( &shm_mas_map);
+        tscext_map_alloc( &shm_mas_map);
+        acq_buf = tscext_mmap( &shm_mas_map);
 #endif
       }
       if( !acq_buf || ( size <= 0))
@@ -1588,8 +1586,8 @@ tsc_acq1430( struct cli_cmd_para *c)
       tsc_pci_munmap( acq_buf, shm_mas_map_win.sts.size);
       tsc_map_free( &shm_mas_map_win);
 #else
-      pev_munmap( &shm_mas_map);
-      pev_map_free( &shm_mas_map);
+      tscext_munmap( &shm_mas_map);
+      tscext_map_free( &shm_mas_map);
 #endif
     }
     return(0);
