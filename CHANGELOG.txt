@@ -4,6 +4,13 @@
 * Changelog file                         *
 ******************************************
 
+*** Release 1.4.4 | 05.12.2018 ***
+
+- Add timer command
+- Add fast execution for test
+- Minor bugs correction
+- Syntax and cosmetic adaptation
+
 *** Release 1.4.3 | 11.12.2017 ***
 
 - Add automatic DDR3 SMEM1, SMEM2 calibration when TscMon start
