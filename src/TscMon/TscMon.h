@@ -49,6 +49,7 @@
 #include "lmk.h"
 #include "i2c.h"
 #include "adc3110.h"  
+#include "adc3112.h"  
 #include "adc3117.h"  
 #include "acq1430.h"  
 #include "alias.h"

@@ -93,6 +93,29 @@ char *adc3110_msg[] =
   "         <file_dat> = raw data filename",
 0};
 
+char *adc3112_msg[] = 
+{
+  "ADC3112 read/write operations",
+  "adc3112.<x> <dev> read <reg>",
+  "adc3112.<x> <dev> write <reg> <data>",
+  "adc3112.<x> <dev> acq h:<file_his> d:<file_dat> t:<trig> s:<sram>",
+  "adc3112.<x> <dev> save<chan> h:<file_his> d:<file_dat> t:<trig> s:<sram>",
+  "adc3112.<x> <dev> calib [reset] [verbose] [d:<data>]",
+  "adc3112.<x> <dev> itl calib",
+  "adc3112.<x> <dev> itl buf h:<file_his> d:<file_dat>",
+  "adc3112.<x> <dev> itl save/restore",
+  "adc3112.<x> <dev> itl enable/disable",
+  "adc3112.<x> <dev> temp",
+  "adc3112.<x> eeprom sign set",
+  "adc3112.<x> eeprom sign def b:<board> s:<serial> v:<ver> r:<rev>",
+  "adc3112.<x> eeprom dump",
+  "adc3112.<x> fpfbuf save <filename>",
+  "   where <x>    = index",
+  "         <dev>  = ads01, ads23, ads1, ads2, dac, xra01, xra23, xratrig, lmk, sy",
+  "         <reg>  = register",
+  "         <data> = data",
+0};
+
 char *adc3117_msg[] = 
 {
   "ADC3117 operations",
@@ -703,6 +726,7 @@ struct cli_cmd_list cmd_list[] =
 {
   { "acq1430"   , tsc_acq1430,      acq1430_msg	, 0},
   { "adc3110"   , tsc_adc3110,      adc3110_msg	, 0},
+  { "adc3112"   , tsc_adc3112,      adc3112_msg	, 0},
   { "adc3117"   , tsc_adc3117,      adc3117_msg	, 0},
   { "alias"     , tsc_alias,        alias_msg     , 0},
   { "ci"     	, tsc_rdwr_cr,      ci_msg     	  , 0},
