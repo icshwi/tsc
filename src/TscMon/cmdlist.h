@@ -264,7 +264,6 @@ char *dma_msg[] =
 
 char *dp_msg[] = 
 { "Display content in PCI tree",
-  "dp.<ds><sw> <start>[..<end>]",
   "dp1.<ds><sw> <start>[..<end>]",
   "dp2.<ds><sw> <start>[..<end>]",
   "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
@@ -319,7 +318,7 @@ char *fifo_msg[] =
 0};
 
 char *fk_msg[] =
-{ "Fll kernel buffer in System Memory",
+{ "Fill kernel buffer in System Memory",
   "fk<idx>.<ds> <start>..<end> <data>",
   "   where <idx>   = buffer index [0 -> 7]",
   "         <ds>    = b,s,w,l -> data size: 1,2,4,8",
@@ -513,7 +512,6 @@ char *pm_msg[] =
 
 char *pp_msg[] = 
 { "Read/write data from/to PCI tree address",
-  "  pp.<ds> <offset> [<data>]",
   "  pp1.<ds> <offset> [<data>]",
   "  pp2.<ds> <offset> [<data>]",
   "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
@@ -719,7 +717,7 @@ struct cli_cmd_list cmd_list[] =
   { "cu"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
   { "dc"     	, tsc_rdwr_dr,      dc_msg     	  , 0},
   { "di"     	, tsc_rdwr_dr,      di_msg     	  , 0},
-  { "dk"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
+  { "dk"     	, tsc_rdwr_dx,      dk_msg     	  , 0},
   { "dma"     	, tsc_dma    ,      dma_msg       , 0},
   { "dm"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
   { "dp1"     	, tsc_rdwr_dx,      dp_msg     	  , 0},
