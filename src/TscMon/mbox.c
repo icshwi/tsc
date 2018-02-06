@@ -46,6 +46,8 @@ static char *rcsid = "$Id: mbox.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #include "mbox.h"
 #include "ponmboxlib.h"
 
+void print_out_rtm_info(mbox_info_t *info);
+
 char *
 mbox_rcsid()
 {
@@ -201,18 +203,42 @@ mbox_info( struct cli_cmd_para *c)
     return( CLI_ERR);
   }
 
-  printf("Firmware revision:     %d.%d.%d (%08x)\n",
+  printf("Firmware revision:               %d.%d.%d (%08x)\n",
          info->firmware_revision.major,
          info->firmware_revision.minor,
          info->firmware_revision.maintenance,
          info->firmware_revision.build_id);
-  printf("AMC slot number:       %d\n", info->amc_slot_number);
-  printf("Board name:            %s\n", info->board_name);
-  printf("Board revision:        %s\n", info->board_revision);
-  printf("Board serial number:   %s\n", info->board_serial_number);
-  printf("Product name:          %s\n", info->product_name);
-  printf("Product revision:      %s\n", info->product_revision);
-  printf("Product serial number: %s\n", info->product_serial_number);
+  printf("AMC slot number:                 %d\n", info->amc_slot_number);
+  printf("Board name:                      %s\n", info->board_name);
+  printf("Board revision:                  %s\n", info->board_revision);
+  printf("Board serial number:             %s\n", info->board_serial_number);
+  printf("Product name:                    %s\n", info->product_name);
+  printf("Product revision:                %s\n", info->product_revision);
+  printf("Product serial number:           %s\n", info->product_serial_number);
+  switch (info->rtm_status)
+  {
+  case RTM_STATUS_ABSENT:
+    puts("No RTM board");
+    break;
+
+  case RTM_STATUS_INCOMPATIBLE:
+    puts("RTM present but not compatible");
+    print_out_rtm_info(info);
+    break;
+
+  case RTM_STATUS_COMPATIBLE_NO_PAYLOAD_POWER:
+    print_out_rtm_info(info);
+    puts("RTM has no payload power");
+    break;
+
+  case RTM_STATUS_COMPATIBLE_HAS_PAYLOAD_POWER:
+    print_out_rtm_info(info);
+    puts("RTM has payload power");
+    break;
+
+  default:
+    printf("Unknown RTM status: %d\n", info->rtm_status);
+  }
 
   mbox_sensor_data_value_t *sensor = info->sensors_values;
   int value = 0;
@@ -236,6 +262,15 @@ mbox_info( struct cli_cmd_para *c)
 
   return CLI_OK;
 }
+
+
+void
+print_out_rtm_info(mbox_info_t *info)
+{
+  printf("RTM manufacturer id:             %06x\n", info->rtm_manufacturer_id);
+  printf("RTM zone 3 interface designator: %08x\n", info->rtm_zone3_interface_designator);
+}
+
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_mbox

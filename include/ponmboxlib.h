@@ -29,6 +29,11 @@
 #define _H_PONMBOXLIB
 
 
+#define RTM_STATUS_ABSENT                              0
+#define RTM_STATUS_INCOMPATIBLE                        1
+#define RTM_STATUS_COMPATIBLE_NO_PAYLOAD_POWER         2
+#define RTM_STATUS_COMPATIBLE_HAS_PAYLOAD_POWER        3
+
 typedef struct mbox_sensor_data_value
 {
   struct mbox_sensor_data_value *next;
@@ -65,14 +70,25 @@ typedef struct
   unsigned char *product_name;
   unsigned char *product_revision;
   unsigned char *product_serial_number;
+  unsigned char rtm_status;
+  unsigned int rtm_manufacturer_id;
+  unsigned int rtm_zone3_interface_designator;
   mbox_sensor_data_value_t *sensors_values;
 } mbox_info_t;
 
 
 mbox_info_t *get_mbox_info(void);
 void free_mbox_info(mbox_info_t *info);
-int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, int *timestamp);
-unsigned char send_mbox_service_request(mbox_info_t *info, unsigned char command, unsigned char argc, ...);
+int get_mbox_sensor_value(
+  mbox_info_t *info,
+  unsigned char *name,
+  int *value,
+  int *timestamp);
+unsigned char send_mbox_service_request(
+  mbox_info_t *info,
+  unsigned char command,
+  unsigned char argc,
+  ...);
 
 
 #endif
