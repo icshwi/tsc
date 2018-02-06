@@ -120,7 +120,7 @@ FMC_HB=[  1,  0,  3,  2,  5,  4,  7,  6,  9,  8, 11,
  * Parameters    : test id and control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : test fmc#1 and fmc#2 on ifc14xx boards
+ * Description   : test fmc#1 and fmc#2
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -152,21 +152,23 @@ int tst_fmc(struct tst_ctl *tc, char *tst_id){
 	ct = ctime(&tm);
 
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
-	TST_LOG( tc, (logline, "%s->Executing test FMC#1 & FMC#2 on IFC14xx boards\n", tst_id));
+	TST_LOG( tc, (logline, "%s->Executing test FMC#1 & FMC#2\n", tst_id));
 
 	// Enable FMC in PON
 	data = 0xc0000000;
-	tsc_pon_read(0xc, &data);
+	tsc_pon_write(0xc, &data);
 
 	// Check if the board is a IFC14xx -------------------------------------------------------
 	tsc_pon_read(0x0, &data);
-	if (((data & 0xffffff00) >> 8) != 0x735714) {
-		TST_LOG( tc, (logline, "-> The board is not a IFC14xx abort test ! \n"));
+	if ((((data & 0xffffff00) >> 8) == 0x735714) | (data == 0x73571211)) {
+		TST_LOG( tc, (logline, "-> The board is compatible...\n"));
+	}
+	else {
+		TST_LOG( tc, (logline, "-> The board is not a IFC14xx or a IFC1211 : abort test ! \n"));
 		retval = TST_STS_ERR;
 		tm = time(0);
 		ct = ctime(&tm);
 		TST_LOG( tc, (logline, "\n%s->Exiting :%s", tst_id, ct));
-
 		return( retval | TST_STS_DONE);
 	}
 
