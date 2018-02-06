@@ -238,67 +238,53 @@ rdwr_exit( void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-struct rdwr_cycle_para *
-rdwr_get_cycle_space( char *cmd_p)
-{
-  int device = -1;
+struct rdwr_cycle_para * rdwr_get_cycle_space( char *cmd_p){
+	int device = -1;
 
-  // Get current device used to match correct command history
-  device = tsc_get_device();
-  printf("device: %d\n", device);
+	// Get current device used to match correct command history
+	device = tsc_get_device();
+	printf("device: %d\n", device);
 
-  if( cmd_p[1] == 'p')
-  {
-    if( strlen( cmd_p) > 2 )
-    {
-      if( cmd_p[2] == '1')
-      {
-        return( &last_pci2_cycle);
-      }
-    }
-    return( &last_pci1_cycle);
-  }
-  if( cmd_p[1] == 's')
-  {
-    if( strlen( cmd_p) > 2 )
-    {
-      if( cmd_p[2] == '2')
-      {
-        return( &last_shm2_cycle[device]);
-      }
-    }
-    return( &last_shm_cycle[device]);
-  }
-  if( cmd_p[1] == 'u')
-  {
-    if( strlen( cmd_p) > 2 )
-    {
-      if( cmd_p[2] == '2')
-      {
-        return( &last_usr2_cycle[device]);
-      }
-      return( &last_usr_cycle[device]);
-    }
-  }
-  if( cmd_p[1] == 'm') 
-  {
-    last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
-    return( &last_kbuf_cycle[0]);
-  }
-  if( cmd_p[1] == 'k')
-  {
-    struct rdwr_cycle_para *cp;
-    int idx;
-    idx = (int)(cmd_p[2] - '0');
-    if((idx < 0) || (idx > TSC_NUM_KBUF))
-    {
-      return( NULL);
-    }
-    cp = &last_kbuf_cycle[idx];
-    cp->kb_p = tsc_kbuf_ctl[idx].kbuf_p;
-    return(cp);
-  }
-  return( NULL);
+	if( cmd_p[1] == 'p'){
+		if( strlen( cmd_p) > 2 ){
+			if( cmd_p[2] == '2'){
+				return( &last_pci2_cycle);
+			}
+		}
+		return( &last_pci1_cycle);
+	}
+	if( cmd_p[1] == 's'){
+		if( strlen( cmd_p) > 2 ){
+			if( cmd_p[2] == '2'){
+				return( &last_shm2_cycle[device]);
+			}
+		}
+		return( &last_shm_cycle[device]);
+	}
+	if( cmd_p[1] == 'u'){
+		if( strlen( cmd_p) > 2 ){
+			if( cmd_p[2] == '2'){
+				return( &last_usr2_cycle[device]);
+			}
+		}
+		return( &last_usr_cycle[device]);
+	}
+	if( cmd_p[1] == 'm') {
+		last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
+		return( &last_kbuf_cycle[0]);
+	}
+	if( cmd_p[1] == 'k'){
+		struct rdwr_cycle_para *cp;
+		int idx;
+		idx = (int)(cmd_p[2] - '0');
+		if((idx < 0) || (idx > TSC_NUM_KBUF)){
+			return( NULL);
+		}
+		cp = &last_kbuf_cycle[idx];
+		cp->kb_p = tsc_kbuf_ctl[idx].kbuf_p;
+		return(cp);
+	}
+	return( NULL);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
