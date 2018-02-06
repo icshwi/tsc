@@ -211,7 +211,7 @@ char *tst_20_msg[] = {"DMA transfers with all agents, all channels, all directio
 //char *tst_4e_msg[] = {"", 0};
 //char *tst_4f_msg[] = {"", 0};
 
-char *tst_50_msg[] = {"Test FMC1 & FMC2 on IFC14xx boards", 0};
+char *tst_50_msg[] = {"Test FMC1 & FMC2", 0};
 char *tst_51_msg[] = {"Test semaphores", 0};
 char *tst_52_msg[] = {"Test FIFOs", 0};
 //char *tst_53_msg[] = {"", 0};
