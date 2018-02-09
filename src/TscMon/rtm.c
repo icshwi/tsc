@@ -142,7 +142,7 @@ tsc_rtm( struct cli_cmd_para *c)
   // Check if the board is a IFC1410
   tsc_pon_read(0x0, &data);
   if (data != 0x73571410) {
-	printf("Command available only on IFC14xx board");
+	printf("Command available only on IFC14xx board\n");
 	return (CLI_ERR);
   }
 

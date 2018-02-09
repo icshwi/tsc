@@ -64,50 +64,59 @@ timer_rcsid()
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_timer( struct cli_cmd_para *c){
-	// Start timer
-	if( !strcmp( "start", c->para[0])) {
-		tsc_timer_start( TIMER_BASE_1000 | TIMER_100MHZ, 0);
-		return( TSC_OK);
-	}
-	// Restart timer
-	else if( !strcmp( "restart", c->para[0])) {
-		tsc_timer_restart();
-		return( TSC_OK);
-	}
-	// Stop timer
-	else if( !strcmp( "stop", c->para[0])) {
-		tsc_timer_stop();
-		return( TSC_OK);
-	}
-	// Read timer
-	else if( !strcmp( "read", c->para[0])) {
-		struct tsc_time tm;
+	int cnt = c->cnt;
 
-		tsc_timer_read( &tm);
-		printf("current timer value : %d.%06d msec\n", tm.msec, (tm.usec&TIMER_UTIME_MASK)*10);
-		return( TSC_OK);
-	}
-	// Read timer in date format
-	else if( !strcmp( "date", c->para[0])) {
-		struct tsc_time tm;
-		int hh,mm,ss, ms;
-		int sec;
+	if(cnt--) {
+		// Start timer
+		if( !strcmp( "start", c->para[0])) {
+			tsc_timer_start( TIMER_BASE_1000 | TIMER_100MHZ, 0);
+			return( TSC_OK);
+		}
+		// Restart timer
+		else if( !strcmp( "restart", c->para[0])) {
+			tsc_timer_restart();
+			return( TSC_OK);
+		}
+		// Stop timer
+		else if( !strcmp( "stop", c->para[0])) {
+			tsc_timer_stop();
+			return( TSC_OK);
+		}
+		// Read timer
+		else if( !strcmp( "read", c->para[0])) {
+			struct tsc_time tm;
 
-		tsc_timer_read( &tm);
+			tsc_timer_read( &tm);
+			printf("current timer value : %d.%06d msec\n", tm.msec, (tm.usec&TIMER_UTIME_MASK)*10);
+			return( TSC_OK);
+		}
+		// Read timer in date format
+		else if( !strcmp( "date", c->para[0])) {
+			struct tsc_time tm;
+			int hh,mm,ss, ms;
+			int sec;
 
-		hh  = tm.msec/3600;
-		mm  = tm.msec/60;
-		ss  = tm.msec/1000;
-		ms  = tm.msec%1000;
-		sec = tm.msec/1000;
-		hh  = sec/3600;
-		sec = sec - (hh*3600);
-		mm  = sec/60;
-		ss  = sec - (mm*60);
-		printf("current timer value : %02dh:%02dm:%02ds:%03dms\n", hh, mm, ss, ms);
-		return( TSC_OK);
+			tsc_timer_read( &tm);
+
+			hh  = tm.msec/3600;
+			mm  = tm.msec/60;
+			ss  = tm.msec/1000;
+			ms  = tm.msec%1000;
+			sec = tm.msec/1000;
+			hh  = sec/3600;
+			sec = sec - (hh*3600);
+			mm  = sec/60;
+			ss  = sec - (mm*60);
+			printf("current timer value : %02dh:%02dm:%02ds:%03dms\n", hh, mm, ss, ms);
+			return( TSC_OK);
+		}
+		else{
+			printf("Not enough arguments -> usage:\n");
+			tsc_print_usage(c);
+			return( TSC_ERR);
+		}
 	}
-	else{
-		return( TSC_ERR);
-	}
+    printf("Not enough arguments -> usage:\n");
+    tsc_print_usage(c);
+	return( TSC_ERR);
 }

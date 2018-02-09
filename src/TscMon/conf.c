@@ -740,11 +740,13 @@ int tsc_set_device(struct cli_cmd_para *c){
 				}
 			}
 			else {
-				printf("Bad parameter! Type \"? set\" for help \n");
+			    printf("Not enough arguments -> usage:\n");
+			    tsc_print_usage(c);
 			}
 		}
 		else {
-			printf("Bad parameter! Type \"? set\" for help \n");
+		    printf("Not enough arguments -> usage:\n");
+		    tsc_print_usage(c);
 		}
 	}
 	return(retval);

@@ -1221,94 +1221,85 @@ rdwr_fill_buf( void *buf,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-tsc_rdwr_fx( struct cli_cmd_para *c)
-{
-  struct rdwr_cycle_para *cp;
-  char *buf;
-  int i, nblk, last, blk, len;
-  ulong addr;
+int tsc_rdwr_fx( struct cli_cmd_para *c){
+	struct rdwr_cycle_para *cp;
+	char *buf;
+	int i, nblk, last, blk, len;
+	ulong addr;
+	int cnt = c->cnt;
 
-  cp = rdwr_get_cycle_space( c->cmd);
-  if( !cp)
-  {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
-    goto tsc_rdwr_fx_error;
-  }
-  len = cp->len;
-  if( c->cnt)
-  {
-    len = rdwr_get_cycle_addr(  c->para[0], cp);
-    if( len < 0)
-    {
-      printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
-      goto tsc_rdwr_fx_error;
-    }
-    if( c->cnt > 1)
-    {
-      if( rdwr_get_cycle_data(  c->para[1], cp) < 0)
-      {
-         printf("Bad data argument [%s] -> usage:\n", c->para[0]);
-	 goto tsc_rdwr_fx_error;
-      }
-    }
-  }
-  if( c->ext)
-  {
-    rdwr_get_cycle_ds( c->ext, cp);
-    rdwr_get_cycle_swap( c->ext, cp);
-  }
-  blk = 0x100000;
-  nblk = len/blk;
-  last = len%blk;
+	if(cnt--){
+		cp = rdwr_get_cycle_space( c->cmd);
+		if( !cp){
+			printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+			tsc_print_usage( c);
+			return( RDWR_ERR);
+		}
+		len = cp->len;
+		if( c->cnt){
+			len = rdwr_get_cycle_addr(  c->para[0], cp);
+			if( len < 0){
+				printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+				tsc_print_usage( c);
+				return( RDWR_ERR);
+			}
+			if( c->cnt > 1){
+				if( rdwr_get_cycle_data(  c->para[1], cp) < 0){
+					printf("Bad data argument [%s] -> usage:\n", c->para[0]);
+					tsc_print_usage( c);
+					return( RDWR_ERR);
+				}
+			}
+		}
+		if( c->ext){
+			rdwr_get_cycle_ds( c->ext, cp);
+			rdwr_get_cycle_swap( c->ext, cp);
+		}
+		blk = 0x100000;
+		nblk = len/blk;
+		last = len%blk;
 
-  addr = cp->addr;
-  for( i = 0; i < nblk; i++)
-  {
-    buf = (char *)malloc( (size_t)blk);
-    cp->data = (ulong)rdwr_fill_buf( buf, blk, cp);
-    if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
-    {
-      if( !cp->kb_p)
-      {
-        printf("kernel buffer not available\n");
-        return( RDWR_ERR);
-      }
-      tsc_kbuf_write( cp->kb_p->k_base + addr, buf, (uint)blk);
-    }
-    else 
-    {
-      tsc_write_blk( addr, buf, blk, cp->mode);
-    }
-    addr += blk;
+		addr = cp->addr;
+		for( i = 0; i < nblk; i++){
+			buf = (char *)malloc( (size_t)blk);
+			cp->data = (ulong)rdwr_fill_buf( buf, blk, cp);
+			if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
+				if( !cp->kb_p){
+					printf("kernel buffer not available\n");
+					return( RDWR_ERR);
+				}
+				tsc_kbuf_write( cp->kb_p->k_base + addr, buf, (uint)blk);
+			}
+			else {
+				tsc_write_blk( addr, buf, blk, cp->mode);
+			}
+			addr += blk;
 
-    free(buf);
-  }
-  if( last)
-  {
-    buf = (char *)malloc( (size_t)last);
-    cp->data = (ulong)rdwr_fill_buf( buf, last, cp);
-    if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
-    {
-      if( !cp->kb_p)
-      {
-        printf("kernel buffer not available\n");
-        return( RDWR_ERR);
-      }
-      tsc_kbuf_write( cp->kb_p->k_base + addr, buf, (uint)last);
-    }
-    else 
-    {
-      tsc_write_blk( addr, buf, last, cp->mode);
-    }
-    free(buf);
-  }
+			free(buf);
+		}
+		if( last){
+			buf = (char *)malloc( (size_t)last);
+			cp->data = (ulong)rdwr_fill_buf( buf, last, cp);
+			if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
+				if( !cp->kb_p){
+					printf("kernel buffer not available\n");
+					return( RDWR_ERR);
+				}
+				tsc_kbuf_write( cp->kb_p->k_base + addr, buf, (uint)last);
+			}
+			else {
+				tsc_write_blk( addr, buf, last, cp->mode);
+			}
+			free(buf);
+		}
 
-  return(RDWR_OK);
-
-tsc_rdwr_fx_error:
-  tsc_print_usage( c);
-  return( RDWR_ERR);
+		return(RDWR_OK);
+	}
+	else {
+	    printf("Not enough arguments -> usage:\n");
+	    tsc_print_usage(c);
+		return( RDWR_ERR);
+	}
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2161,124 +2152,102 @@ tsc_rdwr_cmp_err:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-tsc_rdwr_lx( struct cli_cmd_para *c)
-{
-  ulong offset;
-  ulong data;
-  char buf[8];
-  int retval;
-  int ds;
-  struct rdwr_cycle_para *cp;
-  int rdwr;
+int tsc_rdwr_lx( struct cli_cmd_para *c){
+	ulong offset;
+	ulong data;
+	char buf[8];
+	int retval;
+	int ds;
+	struct rdwr_cycle_para *cp;
+	int rdwr;
+	int cnt = c->cnt;
 
-  cp = rdwr_get_cycle_space( c->cmd);
-  if( !cp)
-  {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
-    goto tsc_rdwr_lx_error;
-  }
-  if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
-  {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
-    goto tsc_rdwr_lx_error;
-  }
-  if( !c->cnt)
-  {
-    offset = cp->addr;
-  }
-  else 
-  {
-    if( sscanf( c->para[0], "%lx", &offset) != 1)
-    {
-      printf("Bad address argument [%s] -> usage:\n", c->para[0]);
-      goto tsc_rdwr_lx_error;
-    }
-    cp->addr = (ulong)offset;
-  }
-  rdwr = 0;
-  if( c->cnt > 1)
-  {
-    if( sscanf( c->para[1], "%lx", &data) != 1)
-    {
-       printf("Bad data argument [%s] -> usage:\n", c->para[1]);
-       goto tsc_rdwr_lx_error;
-    }
-    rdwr = 1;
-    printf("data = %lx\n", data);
-  }
-  if( c->ext)
-  {
-    rdwr_get_cycle_ds( c->ext, cp);
-    rdwr_get_cycle_swap( c->ext, cp);
-  }
-  ds = RDWR_MODE_GET_DS(cp->m.ads);
-  if( aio_error( &aiocb) != EINPROGRESS)
-  {
-    if( aio_read( &aiocb) < 0)
-    {
-      perror("aio_read");
-      goto xprs_rdwr_lx_exit;
-    }
-  }
-  while(1)
-  {
-    if( rdwr)
-    {
-      if( ds == RDWR_SIZE_BYTE)  *(char *)buf = (char)data;
-      if( ds == RDWR_SIZE_SHORT)
-      {
-        if( cp->m.swap & 0x80)
-        {
-          *(short *)buf = tsc_swap_16( (short)data);
-        }
-	else 
-	{
-	  *(short *)buf = (short)data;
+	if(cnt--) {
+		cp = rdwr_get_cycle_space( c->cmd);
+		if( !cp){
+			printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+			tsc_print_usage( c);
+			return( RDWR_ERR);
+		}
+		if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
+			printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+			tsc_print_usage( c);
+			return( RDWR_ERR);
+		}
+		if( !c->cnt){
+			offset = cp->addr;
+		}
+		else {
+			if( sscanf( c->para[0], "%lx", &offset) != 1){
+				printf("Bad address argument [%s] -> usage:\n", c->para[0]);
+				tsc_print_usage( c);
+				return( RDWR_ERR);
+			}
+			cp->addr = (ulong)offset;
+		}
+		rdwr = 0;
+		if( c->cnt > 1){
+			if( sscanf( c->para[1], "%lx", &data) != 1){
+				printf("Bad data argument [%s] -> usage:\n", c->para[1]);
+				tsc_print_usage( c);
+				return( RDWR_ERR);
+			}
+			rdwr = 1;
+			printf("data = %lx\n", data);
+		}
+		if( c->ext){
+			rdwr_get_cycle_ds( c->ext, cp);
+			rdwr_get_cycle_swap( c->ext, cp);
+		}
+		ds = RDWR_MODE_GET_DS(cp->m.ads);
+		if( aio_error( &aiocb) != EINPROGRESS){
+			if( aio_read( &aiocb) < 0){
+				perror("aio_read");
+				return(RDWR_OK);
+			}
+		}
+		while(1){
+			if( rdwr){
+				if( ds == RDWR_SIZE_BYTE)  *(char *)buf = (char)data;
+				if( ds == RDWR_SIZE_SHORT){
+					if( cp->m.swap & 0x80){
+						*(short *)buf = tsc_swap_16( (short)data);
+					}
+					else {
+						*(short *)buf = (short)data;
+					}
+				}
+				if( ds == RDWR_SIZE_INT) {
+					if( cp->m.swap & 0x80){
+						*(int *)buf = tsc_swap_32( data);
+					}
+					else {
+						*(int *)buf = data;
+					}
+				}
+				if( ds == RDWR_SIZE_DBL)   {
+					if( cp->m.swap & 0x80){
+						*(long long *)buf = tsc_swap_64( data);
+					}
+					else {
+						*(long long *)buf = data;
+					}
+				}
+				tsc_write_loop( offset, buf, 1000, cp->mode);
+			}
+			else {
+				tsc_read_loop( offset, buf, 1000, cp->mode);
+			}
+			if( aio_error( &aiocb) != EINPROGRESS){
+				aio_return( &aiocb);
+				return(RDWR_OK);
+			}
+		}
+		if( aio_error( &aiocb) == EINPROGRESS){
+			aio_cancel( aiocb.aio_fildes, &aiocb);
+		}
 	}
-      }
-      if( ds == RDWR_SIZE_INT)   
-      {
-	if( cp->m.swap & 0x80)
-	{
-	  *(int *)buf = tsc_swap_32( data);
-	}
-	else 
-        {
-          *(int *)buf = data;
-        }
-      }
-      if( ds == RDWR_SIZE_DBL)   
-      {
-	if( cp->m.swap & 0x80)
-	{
-	  *(long long *)buf = tsc_swap_64( data);
-	}
-	else 
-        {
-          *(long long *)buf = data;
-        }
-      }
-      tsc_write_loop( offset, buf, 1000, cp->mode);
-    }
-    else 
-    {
-      tsc_read_loop( offset, buf, 1000, cp->mode);
-    }
-    if( aio_error( &aiocb) != EINPROGRESS)
-    {
-      aio_return( &aiocb);
-      goto xprs_rdwr_lx_exit;
-    }
-  }
-  if( aio_error( &aiocb) == EINPROGRESS)
-  {
-    aio_cancel( aiocb.aio_fildes, &aiocb);
-  }
-xprs_rdwr_lx_exit:
-  return(RDWR_OK);
-
-tsc_rdwr_lx_error:
-  tsc_print_usage( c);
-  return( RDWR_ERR);
+    printf("Not enough arguments -> usage:\n");
+    tsc_print_usage(c);
+    return( RDWR_ERR);
 }
