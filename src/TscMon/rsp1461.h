@@ -1,16 +1,15 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
- *    filename : TscMon.h
- *    author   : JFG, XP
+ *
+ *    filename : rsp1461.h
+ *    author   : XP
  *    company  : IOxOS
- *    creation : Sept 14,2015
+ *    creation : Mars 08,2018
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions define in
- *    TscMon.c
+ *    That file contains a set of header for the RSP1461 interface.
  *
  *----------------------------------------------------------------------------
  *
@@ -25,36 +24,9 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_TSCMON
-#define _H_TSCMON
+#ifndef _H_RSP1461
+#define _H_RSP1461
 
-#define TSC_OK    0
-#define TSC_ERR  -1
-#define TSC_QUIT -2
+int tsc_rsp1461(struct cli_cmd_para *);
 
-#include "acq1430.h"
-#include "adc3110.h"
-#include "adc3117.h"
-#include "alias.h"
-#include "buf.h"
-#include "conf.h"   
-#include "ddr.h"
-#include "dma.h"
-#include "i2c.h"
-#include "lmk.h"
-#include "map.h"
-#include "mbox.h"
-#include "rdwr.h"
-#include "rsp1461.h"
-#include "rtm.h"
-#include "script.h"   
-#include "semaphore.h"
-#include "sflash.h"
-#include "fifo.h"
-#include "timer.h"
-#include "tst.h"
-
-int tsc_print_usage(struct cli_cmd_para *c);
-int tsc_ddr_idel_calib_start(int quiet);
-
-#endif /* _H_TSCMON */
+#endif /* _H_RSP1461 */

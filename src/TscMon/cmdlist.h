@@ -546,6 +546,38 @@ char *pu_msg[] =
   "           <data>   = data in hexadecimal [write cycle]",
 0};
 
+char *rsp1461_msg[] =
+{ "rsp1461 control command",
+  "   rsp1461 init",
+  "",
+  "   rsp1461 extension present",
+  "",
+  "   rsp1461 extension <control> <pin>",
+  "      where control = 0 -> RSP1461_EXT_PIN_LOW, 1 -> RSP1461_EXT_PIN_HIGH, 2 -> RSP1461_EXT_PIN_Z",
+  "      where pin     = 0, 1, 2, 3, 4, 5, 6",
+  "",
+  "   rsp1461 extension get <pin>",
+  "      where pin = 0, 1, 2, 3, 4, 5, 6",
+  "",
+  "   rsp1461 led on <id>",
+  "      where id = 0 -> LED123_GREEN, 1 -> LED123_RED, 2 -> LED124_GREEN, 3 -> LED124_RED",
+  "                 4 -> LED125_GREEN, 5 -> LED125_RED, 6 -> LED126_GREEN, 7 -> LED127_RED",
+  "",
+  "   rsp1461 led off <id>",
+  "      where id = 0 -> LED123_GREEN, 1 -> LED123_RED, 2 -> LED124_GREEN, 3 -> LED124_RED",
+  "                 4 -> LED125_GREEN, 5 -> LED125_RED, 6 -> LED126_GREEN, 7 -> LED127_RED",
+  "",
+  "   rsp1461 sfp status <id>",
+  "      where id = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
+  "                 3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
+  "",
+  "   rsp1461 sfp <control> <id>",
+  "      where control = 1 -> SFP_TX_DISABLE, 2 -> SFP_RX_HIGH_RATE, 4 -> SFP_TX_HIGH_RATE",
+  "      where id      = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
+  "                      3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
+  "                      6 -> SFP_CPU_XFI_LANE_1",
+0};
+
 char *rtm_msg[] = 
 {
   "MTCA.4 RTM operations",
@@ -768,6 +800,7 @@ struct cli_cmd_list cmd_list[] =
   { "pu1"     	, tsc_rdwr_px,      pu_msg     	  , 0},
   { "pu2"     	, tsc_rdwr_px,      pu_msg     	  , 0},
   { "pu"     	, tsc_rdwr_px,      pu_msg     	  , 0},
+  { "rsp1461"  	, tsc_rsp1461,      rsp1461_msg	  , 0},
   { "rtm"       , tsc_rtm,          rtm_msg       , 0},
   { "semaphore" , tsc_semaphore,    semaphore_msg , 0},
   //{ "sflash" 	, tsc_sflash,       sflash_msg 	  , 0},
