@@ -48,26 +48,28 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
  * Descriptors definitions
  */
 
-#define MAGIC_BYTE_VALUE_VALID                           0x1F
-#define MAGIC_BYTE_VALUE_TEMPORARY                       0xAA
+#define MAGIC_BYTE_VALUE_VALID                                          0x1F
+#define MAGIC_BYTE_VALUE_TEMPORARY                                      0xAA
 
-#define DESCRIPTOR_TYPE_NONE                             0x00
-#define DESCRIPTOR_TYPE_MAILBOX_INFO                     0x01
-#define DESCRIPTOR_TYPE_FIRMWARE_INFO                    0x02
-#define DESCRIPTOR_TYPE_BOARD_INFO                       0x03
-#define DESCRIPTOR_TYPE_PRODUCT_INFO                     0x04
-#define DESCRIPTOR_TYPE_SENSOR_DATA_VALUE                0x05
-#define DESCRIPTOR_TYPE_SERVICE_REQUEST                  0x06
+#define DESCRIPTOR_TYPE_NONE                                            0x00
+#define DESCRIPTOR_TYPE_MAILBOX_INFO                                    0x01
+#define DESCRIPTOR_TYPE_FIRMWARE_INFO                                   0x02
+#define DESCRIPTOR_TYPE_BOARD_INFO                                      0x03
+#define DESCRIPTOR_TYPE_PRODUCT_INFO                                    0x04
+#define DESCRIPTOR_TYPE_SENSOR_DATA_VALUE                               0x05
+#define DESCRIPTOR_TYPE_SERVICE_REQUEST                                 0x06
+#define DESCRIPTOR_TYPE_RTM_INFO                                        0x07
 
-#define DESCRIPTOR_FORMAT_VERSION_FIRMWARE_INFO          0x01
-#define DESCRIPTOR_FORMAT_VERSION_BOARD_INFO             0x01
-#define DESCRIPTOR_FORMAT_VERSION_PRODUCT_INFO           0x01
-#define DESCRIPTOR_FORMAT_VERSION_SENSOR_DATA_VALUE      0x01
-#define DESCRIPTOR_FORMAT_VERSION_SERVICE_REQUEST        0x01
+#define DESCRIPTOR_FORMAT_VERSION_FIRMWARE_INFO                         0x01
+#define DESCRIPTOR_FORMAT_VERSION_BOARD_INFO                            0x01
+#define DESCRIPTOR_FORMAT_VERSION_PRODUCT_INFO                          0x01
+#define DESCRIPTOR_FORMAT_VERSION_SENSOR_DATA_VALUE                     0x01
+#define DESCRIPTOR_FORMAT_VERSION_SERVICE_REQUEST                       0x01
+#define DESCRIPTOR_FORMAT_VERSION_RTM_INFO                              0x01
 
-#define SENSOR_DATA_VALUE_SIZE_8BIT                      0x01
-#define SENSOR_DATA_VALUE_SIZE_16BIT                     0x02
-#define SENSOR_DATA_VALUE_SIZE_32BIT                     0x04
+#define SENSOR_DATA_VALUE_SIZE_8BIT                                     0x01
+#define SENSOR_DATA_VALUE_SIZE_16BIT                                    0x02
+#define SENSOR_DATA_VALUE_SIZE_32BIT                                    0x04
 
 #define SENSOR_VALUE_STATUS_NOT_INITIALIZED                             0x01
 #define SENSOR_VALUE_STATUS_UPDATE_IN_PROGRESS                          0x02
@@ -110,6 +112,7 @@ mbox_info_t *alloc_mbox_info(void);
 int get_mbox_byte(int offset, unsigned char *destination);
 int pop_mbox_byte(int *offset, unsigned char *destination);
 int pop_mbox_short(int *offset, unsigned short *destination);
+int pop_mbox_tribyte(int *offset, unsigned int *destination);
 int pop_mbox_int(int *offset, unsigned int *destination);
 unsigned char pop_mbox_string(int *offset, unsigned char **destination);
 int push_mbox_byte(int *offset, unsigned char byte);
@@ -183,6 +186,12 @@ mbox_info_t *get_mbox_info(void)
       pop_mbox_string(&offset, &info->product_name);
       pop_mbox_string(&offset, &info->product_revision);
       pop_mbox_string(&offset, &info->product_serial_number);
+      break;
+
+    case DESCRIPTOR_TYPE_RTM_INFO:
+      pop_mbox_byte(&offset, &info->rtm_status);
+      pop_mbox_tribyte(&offset, &info->rtm_manufacturer_id);
+      pop_mbox_int(&offset, &info->rtm_zone3_interface_designator);
       break;
 
     case DESCRIPTOR_TYPE_SENSOR_DATA_VALUE:
@@ -366,6 +375,9 @@ mbox_info_t *alloc_mbox_info(void)
   info->product_name = NULL;
   info->product_revision = NULL;
   info->product_serial_number = NULL;
+  info->rtm_status = RTM_STATUS_ABSENT;
+  info->rtm_manufacturer_id = 0;
+  info->rtm_zone3_interface_designator = 0;
   info->sensors_values = NULL;
   return info;
 }
@@ -448,6 +460,35 @@ int pop_mbox_short(int *offset, unsigned short *destination)
     (*destination) = ((*destination) << 8) | byte;
   }
   printd("%s() data = 0x%04x\n", __func__, *destination);
+
+  return 0;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pop_mbox_tribyte
+ * Prototype     : int
+ * Parameters    : offset, destination
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : pop mailbox 24-bit word
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int pop_mbox_tribyte(int *offset, unsigned int *destination)
+{
+  int retval;
+  unsigned char byte;
+  unsigned char loop;
+
+  (*destination) = 0;
+  for (loop = 0 ; loop < 3 ; loop++)
+  {
+    retval = pop_mbox_byte(offset, &byte);
+    printd("byte = 0x%02x\n", byte);
+    if (retval) return retval;
+    (*destination) = ((*destination) << 8) | byte;
+  }
+  printd("%s() data = 0x%06x\n", __func__, *destination);
 
   return 0;
 }
