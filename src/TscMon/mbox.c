@@ -290,9 +290,9 @@ tsc_mbox( struct cli_cmd_para *c)
   int i    = 0;;
   int data = 0;
 
-  // Check if the board is a IFC1410
+  // Check if the board is a IFC14xx
   tsc_pon_read(0x0, &data);
-  if (data != 0x73571410) {
+  if (((data & 0xffffff00) >> 8) != 0x735714) {
 	printf("Command available only on IFC14xx board\n");
 	return (CLI_ERR);
   }
