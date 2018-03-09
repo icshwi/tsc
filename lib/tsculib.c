@@ -39,6 +39,7 @@ typedef long dma_addr_t;
 #include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include "../include/mtca4rtmlib.h"
 
 #include "../include/tscioctl.h"
 #include "../include/i2c-dev.h"
@@ -2023,6 +2024,8 @@ int rsp1461_init(void){
 	printf("Welcome in rsp1461_init \n");
 	//check on-board devices presence
 	//set I/O expanders pins direction and default state
+	// Blink MMC LED
+	//set_mtca4_rtm_led_state(......);
 	return retval;
 }
 
@@ -2063,17 +2066,21 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 
 	printf("Welcome in rsp1461_extension_set_pin_state \n");
 	printf("State is %x - Index is %x \n", state, index);
-	// index in [0, 6]
-	// state in rsp1461_ext_pin_state_t
+
+	if((state == RSP1461_EXT_PIN_LOW) || (state == RSP1461_EXT_PIN_HIGH)) {
+		// when state is RSP1461_EXT_PIN_LOW or RSP1461_EXT_PIN_HIGH
+		//  -> configure pin as an output
+		//  -> configure pin state
+	}
+	else if (state == RSP1461_EXT_PIN_Z){
+		// when state is RSP1461_EXT_PIN_Z
+		// -> configure pin as an input
+	}
+
 	// result == 0 : ok
 	//          EIO : failed to access I/O expander
 	//       ENODEV : no RSP1461 or extension board
 	//       EINVAL : invalid index or state
-	// when state is RSP1461_EXT_PIN_LOW or RSP1461_EXT_PIN_HIGH
-	//  -> configure pin as an output
-	//  -> configure pin state
-	// when state is RSP1461_EXT_PIN_Z
-	// -> configure pin as an input
 	return retval;
 }
 
@@ -2092,13 +2099,15 @@ int rsp1461_extension_get_pin_state(int index, int *state) {
 
 	printf("Welcome in rsp1461_extension_get_pin_state \n");
 	printf("Index is %x \n", index);
-	//index in [0, 6]
+
+	//-> configure pin as an input
+	rsp1461_extension_set_pin_state(index, RSP1461_EXT_PIN_Z);
+	//  -> read pin state
+
 	//result == 0 : ok
 	//          EIO : failed to access I/O expander
 	//       ENODEV : no RSP1461 or extension board
 	//       EINVAL : invalid index, or null pointer
-	//-> configure pin as an input
-	//  -> read pin state
 	return retval;
 }
 
@@ -2117,6 +2126,7 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 
 	printf("Welcome in rsp1461_led_turn_on \n");
 	printf("LED ID is %x \n", led_id);
+
 	//result == 0 : ok
 	//          EIO : failed to access I/O expander
 	//       ENODEV : no RSP1461 or extension board
@@ -2139,6 +2149,7 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 
 	printf("Welcome in rsp1461_led_turn_off \n");
 	printf("LED ID is %x \n", led_id);
+
 	//result == 0 : ok
 	//          EIO : failed to access I/O expander
 	//       ENODEV : no RSP1461 or extension board
@@ -2161,11 +2172,11 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, rsp1461_sfp_status_t *status){
 
 	printf("Welcome in rsp1461_sfp_status \n");
 	printf("SFP ID is %x \n", id);
+
 	//result == 0 : ok
 	//          EIO : failed to access I/O expander
 	//       ENODEV : no RSP1461 board
 	//       EINVAL : invalid SFP identifier, or null pointer
-
 	return retval;
 }
 
@@ -2184,6 +2195,7 @@ int rsp1461_sfp_control(rsp1461_sfp_id_t id, rsp1461_sfp_status_t control){
 
 	printf("Welcome in rsp1461_sfp_control \n");
 	printf("SFP control %x - SFP ID is %x\n", control, id);
+
 	//result == 0 : ok
 	//          EIO : failed to access I/O expander
 	//       ENODEV : no RSP1461 board
