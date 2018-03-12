@@ -1,6 +1,0 @@
-#  example of TscMon sub-script
-#
-$echo ==>
-$echo ==> entering mysubscrit.tsc
-$echo ==>
-help ds
