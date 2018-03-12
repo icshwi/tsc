@@ -515,4 +515,43 @@ struct tsc_ioctl_semaphore
   uint *location;
 };
 
+typedef enum {
+	RSP1461_EXT_PIN_LOW,
+	RSP1461_EXT_PIN_HIGH,
+	RSP1461_EXT_PIN_Z
+	} rsp1461_ext_pin_state_t;
+
+typedef enum {
+	RSP1461_LED123_GREEN,
+	RSP1461_LED123_RED,
+	RSP1461_LED124_GREEN,
+	RSP1461_LED124_RED,
+	RSP1461_LED125_GREEN,
+	RSP1461_LED125_RED,
+	RSP1461_LED126_GREEN,
+	RSP1461_LED127_RED,
+	} rsp1461_led_t;
+
+typedef enum {
+	RSP1461_SFP_FPGA_LANE_0,
+	RSP1461_SFP_FPGA_LANE_1,
+	RSP1461_SFP_FPGA_LANE_2,
+	RSP1461_SFP_FPGA_LANE_3,
+	RSP1461_SFP_CPU_SGMII,
+	RSP1461_SFP_CPU_XFI_LANE_0,
+	RSP1461_SFP_CPU_XFI_LANE_1
+	} rsp1461_sfp_id_t;
+
+typedef enum {
+	SFP_PRESENT        = 0x08,
+	SFP_TX_FAULT       = 0x10,
+	SFP_LOSS_OF_SIGNAL = 0x20
+	} rsp1461_sfp_status_t;
+
+typedef enum {
+	SFP_TX_DISABLE     = 0x01,
+	SFP_RX_HIGH_RATE   = 0x02,
+	SFP_TX_HIGH_RATE   = 0x04
+	} rsp1461_sfp_control_t;
+
 #endif /*  _H_TSCIOCTL */

@@ -85,7 +85,8 @@ int tsc_semaphore(struct cli_cmd_para *c){
 		}
 		else if((!strcmp("release", c->para[0])) && (c->cnt == 2)){
 			if(!cnt){
-				printf("Bad parameter! Type \"? semaphore\" for help \n");
+			    printf("Not enough arguments -> usage:\n");
+			    tsc_print_usage(c);
 				return(-1);
 			}
 			idx = strtoul( c->para[1], &p, 16);
@@ -102,7 +103,8 @@ int tsc_semaphore(struct cli_cmd_para *c){
 		}
 		else if((!strcmp("get", c->para[0])) && (c->cnt == 3)){
 			if(!cnt){
-				printf("Bad parameter! Type \"? semaphore\" for help \n");
+			    printf("Not enough arguments -> usage:\n");
+			    tsc_print_usage(c);
 				return(-1);
 			}
 			idx = strtoul(c->para[1], &p, 16);
@@ -123,9 +125,12 @@ int tsc_semaphore(struct cli_cmd_para *c){
 			}
 		}
 		else {
-			printf("Bad parameter! Type \"? semaphore\" for help \n");
+		    printf("Not enough arguments -> usage:\n");
+		    tsc_print_usage(c);
 			return(-1);
 		}
 	}
+    printf("Not enough arguments -> usage:\n");
+    tsc_print_usage(c);
 	return 0;
 }

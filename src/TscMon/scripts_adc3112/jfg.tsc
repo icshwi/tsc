@@ -1,0 +1,57 @@
+#*****************************************************************#
+#                    XprsMon Script file                          #
+#                XUSER FASTSCOPE (2x ADC_3112)                    #
+#   Title : xuser_fscope_adc3112_2_all_1000M_VCXO10.xpm           #
+#   Description  : ADS5409 data acquisition 1000Msps              #
+#   Author       : J. Bovier / J-L Bolli                          #
+#*****************************************************************#
+# Version 0.1 16-01-2015 : Initial version ifC_1410/1211          #
+#*****************************************************************#
+# Check if FMC2 ADC_3112 is present + Signature OK
+cr.ws 1200 31120201 FFFFFFFF                     # Check ADC_3112 SIGN_CSR (Type, Version, Revision)                                  
+cr.ws 1204 20000000 FF000000                     # Check ADC_3112 MAIN_CSR (options instantiated)
+#
+pr.ws 1200 31120000                             # Enable FMC physical interface (out of tri-state)
+# ------------------------------------------------------
+# Board RESET pulse
+# ------------------------------------------------------
+pr.ws 1204 00000100
+$usleep 2000
+pr.ws 1204 00000000
+adc3112.1 ads01 write 0 8000                     # ADS5409_R00 4 Wire SPI + no filter
+adc3112.1 ads23 write 0 8000                     # ADS5409_R00 4 Wire SPI + no filter
+# ------------------------------------------------------
+# Initialize the LMK4803 clock synthetizer
+# ------------------------------------------------------
+@xuser_fscope_adc3112_1_lmkinit_ext10M_1000M_vcxo.xpm               
+$usleep 2000
+# ------------------------------------------------------
+# Initialize the ADC5409 devices
+# ------------------------------------------------------
+@xuser_fscope_adc3112_1_ads5409_init.xpm
+$usleep 2000
+# 
+# ------------------------------------------------------
+# Initialize the on-board ADS5409 ISERDES
+# ------------------------------------------------------
+adc3112.1 xratrig write 2 60                 # XRA1404 OCR ITL_ENABLE = 1 -> ADC Enabled  
+$usleep 2000
+pr.ws 1204 00004000
+cr.ws 1204 00000000 00008000                 # Check MMCM is un-locked (MCMM RESET)    
+pr.ws 1204 00000000
+$usleep 2000 
+cr.ws 1204 00008000 00008000                 # Check MMCM is locked on ADS5409 channel_0
+pr.ws 1204 000040c0                          # RESET ISERDES ADS5409
+pr.ws 1204 00000000                          # RESET ISERDES ADS5409
+$usleep 2000
+pr.ws 1220 00004000                          # Set default HW digital correction Channel_0
+pr.ws 1224 00004000                          #                                   Channel_1
+pr.ws 1228 00004000                          #                                   Channel_2
+pr.ws 122c 00004000                          #                                   Channel_3
+#                             
+# ------------------------------------------------------
+# Calibration ADS5409 ISERDES
+# ------------------------------------------------------
+#adc3112.1 ads0123 calib                      # ADS5409 Calibration Mode with calculated value (Adjust to calculated mean)
+
+

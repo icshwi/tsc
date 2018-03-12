@@ -375,7 +375,8 @@ tsc_dma( struct cli_cmd_para *c)
 
     if( c->cnt < 4)
     {
-      printf("Not enough parameters for dma %s command! Type \"? dma\" for help \n", c->para[0]);
+      printf("Not enough arguments -> usage:\n");
+      tsc_print_usage( c);
       return( TSC_ERR);
     }
     sw = 0;

@@ -1,0 +1,137 @@
+#*****************************************************************#
+#                    XprsMon Script file                          #
+#                XUSER FASTSCOPE (2x ADC_3112)                    #
+#   Title        : xuser_fscope_adc3112_1_lmkinit_intref.xpm      #
+#   Description  : Init LMK04803 for Internal CLKREF 100MHz       #
+#                  -> ADS5409 CCLK : 500 MHz                      #
+#   Author       : J. Bovier  / J-L Bolli                         #
+#*****************************************************************#
+# Version 0.1 16-01-2015 : Initial version ifC_1410/1211          #
+#*****************************************************************#
+#
+# Check if FMC1 ADC_3112 is present + Signature OK
+cr.ws 1200 31120201 FFFFFFFF                     # Check ADC_3112 SIGN_CSR (Type, Version, Revision)
+cr.ws 1204 20000000 FF000000                     # Check ADC_3112 MAIN_CSR (options instantiated)
+#
+pr.ws 1200 31120000                             # Enable FMC physical interface (out of tri-state)
+#
+pi.ws 000C C0000000                             # Turn ON FMC Slots !
+$usleep 50000
+#
+#@xuser_fscope_adc3112_1_xra1404_init.xpm
+#
+#@xuser_fscope_adc3112_1_ads5409_init.xpm
+#
+pr.ws 1208 00000000                              # LED_MGT FP Led @off + oscillator 100 power-off
+pr.ws 1204 00000000                              #  
+adc3112.1 lmk write 0 00020000                   # LMK04803B_R00 Generate a programmable RESET to the LMK04803B 
+$usleep 2000                                     # wait for 2 ms
+#
+# ADC clock 1000 MHz
+#adc3112.1 lmk write 0 30000800                   # LMK04803B_R00 Enable  ClkOut_01   + ClkOUT01_DIV = 64  ADS5409 23 SYNC  / TRIG_Calibration     31.250 MHz
+#adc3112.1 lmk write 1 00000040                   # LMK04803B_R01 Enable  ClkOut_23   + ClkOUT23_DIV = 2   FMC_CLK0_M2C     / ADS5409 01 CLKIN_DEL 1000 MHz
+#adc3112.1 lmk write 2 00000040                   # LMK04803B_R02 Enable  ClkOut_45   + ClkOUT45_DIV = 2   FMC_LA_32        / ADS5409 23 CLKIN_DEL 1000 MHz 
+#adc3112.1 lmk write 3 30000800                   # LMK04803B_R03 Enable  ClkOut_67   + ClkOUT67_DIV = 64  ADS5409 01 SYNC  / Not used             31.250 MHz
+#adc3112.1 lmk write 4 00000040                   # LMK04803B_R04 Enable  ClkOut_89   + ClkOUT89_DIV = 2   ADS5409 01 CLKIN / Not used             1000 MHz
+#adc3112.1 lmk write 5 00000040                   # LMK04803B_R05 Enable  ClkOut_1011 + ClkOUT1011_DIV = 2 Not used         / ADS5409 23 CLKIN     1000 MHz
+#
+# ADC clock 500 MHz
+adc3112.1 lmk write 0 001c1000                   # LMK04803B_R00 Enable  ClkOut_01   + ClkOUT01_DIV = 128 ADS5409 23 SYNC  / TRIG_Calibration    15.625 MHz
+adc3112.1 lmk write 1 00140080                   # LMK04803B_R01 Enable  ClkOut_23   + ClkOUT23_DIV = 4   FMC_CLK0_M2C     / ADS5409 01 CLKIN_DEL 500 MHz
+adc3112.1 lmk write 2 00140080                   # LMK04803B_R02 Enable  ClkOut_45   + ClkOUT45_DIV = 4   FMC_LA_32        / ADS5409 23 CLKIN_DEL 500 MHz 
+adc3112.1 lmk write 3 00141000                   # LMK04803B_R03 Enable  ClkOut_67   + ClkOUT67_DIV = 128 ADS5409 01 SYNC  / Not used             15.625 MHz
+adc3112.1 lmk write 4 00180080                   # LMK04803B_R04 Enable  ClkOut_89   + ClkOUT89_DIV = 4   ADS5409 01 CLKIN / Not used             500 MHz
+adc3112.1 lmk write 5 00200080                   # LMK04803B_R05 Enable  ClkOut_1011 + ClkOUT1011_DIV = 4 Not used         / ADS5409 23 CLKIN     500 MHz
+#
+#adc3112.1 lmk write 0 00201000                   # LMK04803B_R00 Enable  ClkOut_01   + ClkOUT01_DIV = 128  ADS5409 23 SYNC  / TRIG_Calibration    15.625 MHz CLKoutX_Y_DDLY = 8
+#adc3112.1 lmk write 1 00140080                   # LMK04803B_R01 Enable  ClkOut_23   + ClkOUT23_DIV = 4   FMC_CLK0_M2C     / ADS5409 01 CLKIN_DEL 500 MHz
+#adc3112.1 lmk write 2 00140080                   # LMK04803B_R02 Enable  ClkOut_45   + ClkOUT45_DIV = 4   FMC_LA_32        / ADS5409 23 CLKIN_DEL 500 MHz 
+#adc3112.1 lmk write 3 00141000                   # LMK04803B_R03 Enable  ClkOut_67   + ClkOUT67_DIV = 128 ADS5409 01 SYNC  / Not used             15.625 MHz CLKoutX_Y_DDLY = 5
+#adc3112.1 lmk write 4 00180080                   # LMK04803B_R04 Enable  ClkOut_89   + ClkOUT89_DIV = 4   ADS5409 01 CLKIN / Not used             500 MHz    CLKoutX_Y_DDLY = 6
+#adc3112.1 lmk write 5 001c0080                   # LMK04803B_R05 Enable  ClkOut_1011 + ClkOUT1011_DIV = 4 Not used         / ADS5409 23 CLKIN     500 MHz    CLKoutX_Y_DDLY = 7
+#
+# ADC clock 250 MHz
+#adc3112.1 lmk write 0 30002000                   # LMK04803B_R00 Enable  ClkOut_01   + ClkOUT01_DIV = 256  ADS5409 23 SYNC  / TRIG_Calibration     8.312 MHz
+#adc3112.1 lmk write 1 00000100                   # LMK04803B_R01 Enable  ClkOut_23   + ClkOUT23_DIV = 8   FMC_CLK0_M2C     / ADS5409 01 CLKIN_DEL 250 MHz
+#adc3112.1 lmk write 2 00000100                   # LMK04803B_R02 Enable  ClkOut_45   + ClkOUT45_DIV = 8   FMC_LA_32        / ADS5409 23 CLKIN_DEL 250 MHz 
+#adc3112.1 lmk write 3 30002000                   # LMK04803B_R03 Enable  ClkOut_67   + ClkOUT67_DIV = 256  ADS5409 01 SYNC  / Not used             15.625 MHz
+#adc3112.1 lmk write 4 00000100                   # LMK04803B_R04 Enable  ClkOut_89   + ClkOUT89_DIV = 8   ADS5409 01 CLKIN / Not used             250 MHz
+#adc3112.1 lmk write 5 00000100                   # LMK04803B_R05 Enable  ClkOut_1011 + ClkOUT1011_DIV = 8 Not used         / ADS5409 23 CLKIN     250 MHz
+#
+# ADC clock 667 MHz
+#adc3112.1 lmk write 0 30000c00                   # LMK04803B_R00 Enable  ClkOut_01   + ClkOUT01_DIV = 92  ADS5409 23 SYNC  / TRIG_Calibration     20.84 MHz
+#adc3112.1 lmk write 1 00000060                   # LMK04803B_R01 Enable  ClkOut_23   + ClkOUT23_DIV = 3   FMC_CLK0_M2C     / ADS5409 01 CLKIN_DEL 1000 MHz
+#adc3112.1 lmk write 2 00000060                   # LMK04803B_R02 Enable  ClkOut_45   + ClkOUT45_DIV = 3   FMC_LA_32        / ADS5409 23 CLKIN_DEL 1000 MHz 
+#adc3112.1 lmk write 3 08000c00                   # LMK04803B_R03 Enable  ClkOut_67   + ClkOUT67_DIV = 92  ADS5409 01 SYNC  / Not used             31.250 MHz
+#adc3112.1 lmk write 4 00000060                   # LMK04803B_R04 Enable  ClkOut_89   + ClkOUT89_DIV = 3   ADS5409 01 CLKIN / Not used             1000 MHz
+#adc3112.1 lmk write 5 00000060                   # LMK04803B_R05 Enable  ClkOut_1011 + ClkOUT1011_DIV = 3 Not used         / ADS5409 23 CLKIN     1000 MHz
+#                                                      
+adc3112.1 lmk write 6 01110000                   # LMK04803B_R06 ClkOUT3_Type=0 /ClkOUT2_Type=1 / ClkOUT1_Type=1/ ClkOUT0_Type=1 (0=Power down; 1=LVDS) for direct ADC CLK
+adc3112.1 lmk write 7 01010000                   # LMK04803B_R07 ClkOUT7_Type=0 /ClkOUT6_Type=1 / ClkOUT5_Type=0/ ClkOUT4_Type=1 (0=Power down; 1=LVDS) for direct ADC CLK
+adc3112.1 lmk write 8 10010000                   # LMK04803B_R08 ClkOUT11_Type=1/ClkOUT10_Type=0/ ClkOUT9_Type=0/ ClkOUT8_Type=1 (0=Power down; 1=LVDS) for direct ADC CLK
+#                                                      
+adc3112.1 lmk write 9 55555540                   # LMK04803B_R09 TI/NS write MUST
+#                                                      
+adc3112.1 lmk write A 11004200                   # LMK04803B_R10 OscOUT_Type = 1 (LVDS)  Power down + OscIn enabled
+#adc3112.1 lmk write B 34020000                   # LMK04803B_R11 Device MODE=0x6 + SYNC Enable  + NO_SYNC_CLKoutX_Y = 000000  SYNC_EN_AUTO = 1  
+#adc3112.1 lmk write B 37620000                   # LMK04803B_R11 Device MODE=0x6 + SYNC Enable  + NO_SYNC_CLKoutX_Y = 110110   SYNC_EN_AUTO = 1    Essai 20151019
+adc3112.1 lmk write C 13000000                   # LMK04803B_R12 LD pin programmable = PLL2 DLD
+adc3112.1 lmk write D 3B7002c8                   # LMK04803B_R13 HOLDOVER pin uWIRE SDATOUT  Enable CLKin1
+adc3112.1 lmk write E 00000000                   # LMK04803B_R14 Bipolar Mode CLKin1 INPUT 
+adc3112.1 lmk write F 00000000                   # LMK04803B_R15 DAC unused
+#                                                       
+adc3112.1 lmk write 10 01550400                  # LMK04803B_R16 OSC IN level 
+adc3112.1 lmk write 18 00000000                  # LMK04803B_R24 PLL1 not used  / PPL2
+adc3112.1 lmk write 19 00000000                  # LMK04803B_R25 DAC config not used
+# Pgm VCO/PLL2 = 2000 MHz                                                      
+adc3112.1 lmk write 1a 8fa00000                  # LMK04803B_R26 PLL2 used  / ICP = 3200 uA
+adc3112.1 lmk write 1b 00000000                  # LMK04803B_R27 PLL1 not used
+adc3112.1 lmk write 1c 00100000                  # LMK04803B_R28 PLL2_R = 1 (freq PFD=100 MHz) / PLL1 N divider = 00
+adc3112.1 lmk write 1d 01000080                  # LMK04803B_R29 OSCIN_FREQ <= 100 MHz / PLL2_NCAL = 4)
+adc3112.1 lmk write 1e 05000080                  # LMK04803B_R30 /PLL2_P = 5 PLL2_N = 4 + activate SYNC
+# Synchronisation forced
+adc3112.1 lmk write b 37610000                   # LMK04803B_R11 Device MODE=0x6 + SYNC Enable  + NO_SYNC_CLKoutX_Y = 110110  SYNC_EN_AUTO = 0   clk_OUT0/clk_OUT6 forced '0'   Essai 20151019
+adc3112.1 lmk write b 37600000                   # LMK04803B_R11 Device MODE=0x6 + SYNC Enable  + NO_SYNC_CLKoutX_Y = 110110  SYNC_EN_AUTO = 0   clk_OUT0/clk_OUT6 running      Essai 20151019
+adc3112.1 lmk write 1f 00000000                  # LMK04803B_R31 uWIRE Not LOCK
+#
+# -------------------------------------------
+# Enable On-board 100 MHz clock from  +OSC575
+# -------------------------------------------
+#pr.ws 1214 00000070                             # OFCT -> LMK04803B CLKout5
+#pr.ws 1214 00000000                             # OFCT -> 0 MHz
+pr.ws 1208 80000003                              # FP Led flashing + CCHD575-100MHz  Power-on
+$usleep 2000                                     # wait for 2 ms
+adc3112.1 lmk write 1e 05000080                  # LMK04803B_R30 PLL2 P/N Recallibration
+adc3112.1 lmk write C  13800000                  # LMK04803B_R12 LD pin programmable 
+#
+# ------------------------------------------------------
+# Initialize SY29287
+# ------------------------------------------------------
+#$echo     ***************************** SY29287A verification
+#adc3112.1 lmk write 6 11110000               # LMK04803B_R06 ClkOUT3_Type=1/ ClkOUT2_Type=1/ ClkOUT1_Type=1/ ClkOUT0_Type=1 (0=Power down; 1=LVDS) 
+#adc3112.1 lmk write 7 01110000               # LMK04803B_R07 ClkOUT7_Type=0/ ClkOUT6_Type=1/ ClkOUT5_Type=1/ ClkOUT4_Type=1 (0=Power down; 1=LVDS) 
+#adc3112.1 lmk write 8 00000000               # LMK04803B_R08 ClkOUT11_Type=0/ClkOUT10_Type=0/ClkOUT9_Type=0/ ClkOUT8_Type=0 (0=Power down; 1=LVDS) 
+#
+#adc3112.1 sy write 0 02000210                # Write delay ADC23 200 taps /  ADC01 210 taps /
+#pr.ws 1204 00000030                          # Enable SY29287 path
+#$usleep 2000 
+# --------------------------------------------
+# Verification Clock has started
+# WARNING : ads5409 01 shall be initialized
+# --------------------------------------------
+adc3112.1 xratrig write 2 60                     # XRA1404 OCR    ADC_ENABLE = 1  -> ADS5409 ENABLE = '1'
+$usleep 8000 
+cr.ws 1204 00008000 00008000                     # Check MMCM is locked  
+$echo *****************************************************************
+$echo      ADS5409 temperature                                     
+$echo *****************************************************************
+adc3112.1 ads01 temp
+adc3112.1 ads23 temp
+#
+adc3112.1 xratrig write 2 60                     # XRA1404 OCR    ADC_ENABLE = 1  -> ADS5409 ENABLE = '1'
+#
+$echo *****************************************************************
+$echo  LMK04803B init with Internal CLKREF        
+$echo  CLKout[11:0] = CLKREF MHz                                           
+$echo *****************************************************************
+# <EOF>

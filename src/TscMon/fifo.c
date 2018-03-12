@@ -76,7 +76,7 @@ int tsc_fifo(struct cli_cmd_para *c) {
 	if(cnt--) {
 
 		// Init ----------
-		if((!strcmp( "init", c->para[i]))){
+		if(((!strcmp( "init", c->para[i]))) && (c->cnt == 2)){
 			mode = strtoul( c->para[i+1], &p, 16);
 			if (mode == 0) {
 				printf("FIFO#%x is initialized in FIFO mode ...\n", idx);
@@ -87,7 +87,8 @@ int tsc_fifo(struct cli_cmd_para *c) {
 				tsc_fifo_init(idx, mode);
 			}
 			else {
-				printf("Bad parameter! Type \"? fifo\" for help \n");
+			    printf("Not enough arguments -> usage:\n");
+			    tsc_print_usage(c);
 			}
 			return(0);
 		}
@@ -165,14 +166,17 @@ int tsc_fifo(struct cli_cmd_para *c) {
 			return 0;
 		}
 		else {
-			printf("Bad parameter! Type \"? fifo\" for help \n");
+		    printf("Not enough arguments -> usage:\n");
+		    tsc_print_usage(c);
 			return( -1);
 		}
 	}
 	else {
-		printf("Bad parameter! Type \"? fifo\" for help \n");
+	    printf("Not enough arguments -> usage:\n");
+	    tsc_print_usage(c);
 		return( -1);
 	}
-	printf("Bad parameter! Type \"? fifo\" for help \n");
+    printf("Not enough arguments -> usage:\n");
+    tsc_print_usage(c);
 	return( -1);
 }

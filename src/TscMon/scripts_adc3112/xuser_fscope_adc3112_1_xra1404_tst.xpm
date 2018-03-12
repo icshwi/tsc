@@ -1,0 +1,138 @@
+#*****************************************************************#
+#                    XprsMon Script file                          #
+#                XUSER FASTSCOPE (2x ADC_3112)                    #
+#   Title        : xuser_fscope_adc3112_1_xra1404_tst.xpm         #
+#   Description  : Basic verification 3x XRA1404                  #
+#   Author       : J. Bovier                                      #
+#*****************************************************************#
+# Version 0.1 16-01-2015 : Initial version ifC_1410/1211          #     
+#*****************************************************************#
+
+# Check if FMC1 ADC_3112 is present + Signature OK
+cr.ws 1200 31120201 FFFFFFFF                 # Check ADC_3112 SIGN_CSR (Type, Version, Revision)
+cr.ws 1204 20000000 FF000000                 # Check ADC_3112 MAIN_CSR (options instantiated)
+#
+pr.ws 1200 31120000                          # Enable FMC physical interface (out of tri-state)
+#
+# -- WARNING XRA1404 SPI Bus are write only (3.3V SPI interface, Voh to high for MISO)
+#
+$echo *****************************************************************
+$echo XRA1404 device 01 U708 (Control Input Channel 0/1)                                      
+$echo *****************************************************************
+adc3112.1 xra01 write 6 00                   # XRA1404 GSR Initialisation -> All outputs
+adc3112.1 xra01 write 8 FF                   # XRA1404 PUR Initialisation -> Pull-up 3.3V
+adc3112.1 xra01 write c 00                   # XRA1404 TCSR Initialisation -> All totem-pole
+#
+adc3112.1 xra01 write 2 00                   # XRA1404 OCR    
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xra01 write 2 01                   # XRA1404 OCR    InMode_CH0_A   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 02                   # XRA1404 OCR    InMode_CH0_B   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 04                   # XRA1404 OCR    InMode_CH0_C   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 08                   # XRA1404 OCR    InMode_CH0_D   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 10                   # XRA1404 OCR    InMode_CH1_A   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 20                   # XRA1404 OCR    InMode_CH1_B   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 40                   # XRA1404 OCR    InMode_CH1_C   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra01 write 2 80                   # XRA1404 OCR    InMode_CH1_D   
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xra01 write 2 00                   # XRA1404 OCR
+$usleep 2000                                 # wait for 2 ms
+
+$echo *****************************************************************
+$echo XRA1404 device 02 U713 (Control Input Channel 2/3)                                      
+$echo *****************************************************************
+adc3112.1 xra23 write 6 00                   # XRA1404 GSR Initialisation -> All outputs
+adc3112.1 xra23 write 8 FF                   # XRA1404 PUR Initialisation -> Pull-up 3.3V
+adc3112.1 xra23 write c 00                   # XRA1404 TCSR Initialisation -> All totem-pole
+#
+adc3112.1 xra23 write 2 00                   # XRA1404 OCR
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xra23 write 2 01                   # XRA1404 OCR    InMode_CH2_A   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 02                   # XRA1404 OCR    InMode_CH2_B   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 04                   # XRA1404 OCR    InMode_CH2_C   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 08                   # XRA1404 OCR    InMode_CH2_D   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 10                   # XRA1404 OCR    InMode_CH3_A   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 20                   # XRA1404 OCR    InMode_CH3_B   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 40                   # XRA1404 OCR    InMode_CH3_C   
+$usleep 2000                                 # wait for 2 ms                 
+#                                                                            
+adc3112.1 xra23 write 2 80                   # XRA1404 OCR    InMode_CH3_D   
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xra23 write 2 00                   # XRA1404 OCR
+$usleep 2000                                 # wait for 2 ms
+#
+
+$echo *****************************************************************
+$echo XRA1404 device 03 U755 (Control Trigger)                                      
+$echo *****************************************************************
+adc3112.1 xratrig write 6 00                 # XRA1404 GSR Initialisation -> All outputs
+adc3112.1 xratrig write 8 FF                 # XRA1404 PUR Initialisation -> Pull-up 3.3V
+adc3112.1 xratrig write c 87                 # XRA1404 TCSR Initialisation -> All totem-pole
+#
+adc3112.1 xratrig write 2 87                 # XRA1404 OCR
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xratrig write c 86                 # XRA1404 TCSR    TRIG_SEL_0 WARNING : shall be controlled with '1' / high impedence
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xratrig write c 85                 # XRA1404 TCSR    TRIG_SEL_1  WARNING : shall be controlled with '1' / high impedence
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xratrig write c 83                 # XRA1404 TCSR    TRIG_SEL_2  WARNING : shall be controlled with '1' / high impedence
+$usleep 2000                                 # wait for 2 ms
+adc3112.1 xratrig write c 87                 # XRA1404 TCSR     
+#
+adc3112.1 xratrig write 2 8f                 # XRA1404 OCR     TRIG_SEL_3
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xratrig write 2 97                 # XRA1404 OCR     TRIG_SEL_4
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xratrig write 2 a7                 # XRA1404 OCR     TRIG_SEL_5
+$usleep 2000                                 # wait for 2 ms
+#
+adc3112.1 xratrig write 2 c7                 # XRA1404 OCR     Reserved/Not used       
+$usleep 2000                                 # wait for 2 ms                           
+#                                                                                      
+adc3112.1 xratrig write c 07                 # XRA1404 TCSR    XSERA1404_ITL   WARNING : shall be controlled with '1' / high impedence         
+$usleep 2000                                 # wait for 2 ms                           
+adc3112.1 xratrig write c 87                 # XRA1404 TCSR     
+#
+adc3112.1 xratrig write 2 00                 # XRA1404 OCR     
+$usleep 2000                                 # wait for 2 ms
+#
+@xuser_fscope_adc3112_1_xra1404_init.xpm
+#
+$echo *****************************************************************
+$echo End XRA1404 Basic Test without errors     
+$echo *****************************************************************
+# <EOF>

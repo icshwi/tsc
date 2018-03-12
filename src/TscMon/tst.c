@@ -251,7 +251,7 @@ int tsc_tinit( struct cli_cmd_para *c)
 
   if(T_pid)
   {
-    printf("Test program already running... (see tkill command)\n");
+    printf("Test program already running.\n");
     return( TST_ERR);
   }
   strcpy( cfg_filename, cfg_default);
@@ -470,7 +470,6 @@ tsc_tstatus( struct cli_cmd_para *c)
 
     return( TST_OK);
   }
-  printf("Bad parameter! Type \"? tstatus\" for help \n"); 
   return( TST_ERR);
 }
 

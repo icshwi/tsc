@@ -411,53 +411,46 @@ map_free_usage:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-tsc_map( struct cli_cmd_para *c)
-{
-  int cnt, i;
+int tsc_map( struct cli_cmd_para *c){
+	int cnt, i;
 
-  cnt = c->cnt;
-  i = 0;
-  if( cnt--)
-  {
-    if( !strcmp( "show", c->para[i]))
-    {
-      i++;
-      if( cnt)
-      {
-	map_show( c->para[i]);
-	printf("\n");
-      }
-      else
-      {
-    	map_show( "mas_mem");
-		map_show( "mas_pmem");
-		printf("\n");
-      }
-      return( 0); 
-    }
-    if( !strcmp( "alloc", c->para[i]))
-    {
-      return( map_alloc( c));
-    }
-    if( !strcmp( "free", c->para[i]))
-    {
-      return( map_free( c));
-    }
-    if( !strcmp( "clear", c->para[i]))
-    {
-      i++;
-      if( cnt)
-      {
-	map_clear( c->para[1]);
-	return( 0);
-      }
-      else 
-      {
-        printf("missing parameter : map clear needs map identifier...\n");
-	return( -1);
-      }
-    }
-  }
-  return(-1);
+	cnt = c->cnt;
+	i = 0;
+
+	if(cnt--){
+		if(!strcmp( "show", c->para[i])){
+			i++;
+			if(cnt){
+				map_show( c->para[i]);
+				printf("\n");
+			}
+			else{
+				map_show( "mas_mem");
+				map_show( "mas_pmem");
+				printf("\n");
+			}
+			return( 0);
+		}
+		if(!strcmp( "alloc", c->para[i])){
+			return( map_alloc( c));
+		}
+		if(!strcmp( "free", c->para[i])){
+			return( map_free( c));
+		}
+		if(!strcmp( "clear", c->para[i])){
+			i++;
+			if(cnt){
+				map_clear( c->para[1]);
+				return( 0);
+			}
+			else {
+				printf("Not enough arguments -> usage:\n");
+				tsc_print_usage(c);
+				return( -1);
+			}
+		}
+	}
+	printf("Not enough arguments -> usage:\n");
+	tsc_print_usage(c);
+	return(-1);
 }

@@ -569,32 +569,33 @@ kbuf_unmap( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-tsc_kbuf( struct cli_cmd_para *c)
-{
-  if( !strcmp( "alloc", c->para[0])) 
-  {
-    return( kbuf_alloc( c));
-  }
-  if( !strcmp( "free", c->para[0])) 
-  {
-    return( kbuf_free( c));
-  }
-  if( !strcmp( "show", c->para[0])) 
-  {
-    return( kbuf_show( c));
-  }
-  if( !strcmp( "cmp", c->para[0])) 
-  {
-    return( kbuf_cmp( c));
-  }
-  if( !strcmp( "map", c->para[0])) 
-  {
-    return( kbuf_map( c));
-  }
-  if( !strcmp( "unmap", c->para[0])) 
-  {
-    return( kbuf_unmap( c));
-  }
-  return( TSC_ERR);
+int tsc_kbuf( struct cli_cmd_para *c){
+	int cnt = c->cnt;
+
+	if(cnt--) {
+		if( !strcmp( "alloc", c->para[0])) {
+			return( kbuf_alloc( c));
+		}
+		if( !strcmp( "free", c->para[0])) {
+			return( kbuf_free( c));
+		}
+		if( !strcmp( "show", c->para[0])) {
+			return( kbuf_show( c));
+		}
+		if( !strcmp( "cmp", c->para[0])) {
+			return( kbuf_cmp( c));
+		}
+		if( !strcmp( "map", c->para[0])) {
+			return( kbuf_map( c));
+		}
+		if( !strcmp( "unmap", c->para[0])) {
+			return( kbuf_unmap( c));
+		}
+	    printf("Not enough arguments -> usage:\n");
+	    tsc_print_usage(c);
+		return( TSC_ERR);
+	}
+    printf("Not enough arguments -> usage:\n");
+    tsc_print_usage(c);
+	return( TSC_ERR);
 }

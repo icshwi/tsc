@@ -271,6 +271,7 @@ tsc_tdma( struct cli_cmd_para *c)
   chan = 0;
   if( c->cnt < 1) 
   {
+	printf("Not enough arguments -> usage:\n");
     tsc_print_usage( c);
     return( TSC_ERR);
   }

@@ -1,0 +1,218 @@
+#*****************************************************************#
+#                    XprsMon Script file                          #
+#                XUSER FASTSCOPE (2x ADC_3112)                    #
+#   Title        : xuser_fscope_adc3112_2_ttim_tst.xpm            #
+#   Description  :                                                #
+#   Author       : J. Bovier                                      #
+#*****************************************************************#
+# Version 0.1 16-01-2015 : Initial version ifC_1410/1211          #
+#*****************************************************************#
+# ------------------------------------------------------
+# Initialize the TTIM control logic
+# ------------------------------------------------------
+@xuser_fscope_adc3112_1_ttim_init.xpm
+#
+# ------------------------------------------------------
+# Manual Control FP GPIO
+# ------------------------------------------------------
+pr.ws 1214 00000000                          # GPIO -> High impedence (pull-up IN) 
+cr.ws 1214 00000000 000000FF                 # GPIO IN is '1' logic  
+pr.ws 1214 00000010                          # GPIO -> 0V
+cr.ws 1214 00000011 000000FF                 # GPIO IN is '1' logic  
+pr.ws 1214 00000020                          # GPIO -> 2V
+cr.ws 1214 00000020 000000FF                 # GPIO IN is '0' logic 
+#---------------------------------------------------------------------------------
+$echo    TRigger on GPIO event Select GPIO as source *********************
+#---------------------------------------------------------------------------------
+$echo    Program DAC 1.25V and TrigSEL[5:3] = 010 -> Select GPIO as source 
+#
+adc3112.1 dac write 18 FFFF                  # Write to DAC-A max threshold (1.25V) for GPIO, min for channels!)
+#
+adc3112.1 xratrig write 2 50                 # XRA1404 OCR ADC_ENABLE = 1 -> ADC Enabled
+                                             # XRA1404 OCR TrigSEL[5:3] = 010 -> Select GPIO as source 
+#---------------------------------------------------------------------------------
+$echo    Trigger on GPIO as source EDGE 0 -> 1  
+#---------------------------------------------------------------------------------
+pr.ws 1214 00000020                          # GPIO -> 0V
+#
+adc3112.1 xratrig write 2 70                 # XRA1404 OCR    TrigSEL[5:3] = 110  -> Select GPIO as source EDGE 0 -> 1
+$usleep 2000
+#
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+cr.ws 1234 000000cc 000000FF                 # Check Trigger armed, wait for GPIO trigger  
+pr.ws 1214 00000010                          # GPIO -> 2V
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for GPIO trigger 
+dr.ws 1234..1340
+pr.ws 1214 00000020                          # GPIO -> 0V
+$usleep 2000
+# 
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+cr.ws 1234 000000cc 000000FF                 # Check Trigger armed, wait for GPIO trigger  
+pr.ws 1214 00000010                          # GPIO -> 2V
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for GPIO trigger 
+dr.ws 1234..1240
+pr.ws 1214 00000020                          # GPIO -> 0V
+$usleep 2000
+#---------------------------------------------------------------------------------
+$echo    Trigger on GPIO as source EDGE 1 -> 0  
+#--------------------------------------------------------------------------------- 
+pr.ws 1214 00000010                          # GPIO -> 2V
+#
+$echo    Trigger on GPIO as source EDGE 1 -> 0  
+adc3112.1 xratrig write 2 50                 # XRA1404 OCR    TrigSEL[5:3] = 110  -> Select GPIO as source EDGE 1 -> 0
+$usleep 2000
+#
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+cr.ws 1234 000000cc 000000FF                 # Check Trigger armed, wait for GPIO trigger  
+pr.ws 1214 00000020                          # GPIO -> 0V
+
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for GPIO trigger 
+dr.ws 1234..1340
+pr.ws 1214 00000020                          # GPIO -> 0V
+$usleep 2000
+#
+#---------------------------------------------------------------------------------
+$echo    Trigger on ANALOG event Select IN_0p as source  
+#---------------------------------------------------------------------------------   
+wait 100
+#
+adc3112.1 dac write 18 7000                  # Write to DAC-A input register and update DAC-A; 1/2 x FS  ANALOG input  = 0.5V (no trig) 
+adc3112.1 xratrig write 2 64                 # XRA1404 OCR   01110100  TrigSEL[5:3] = 110  -> Select ANALOG IN_0 Comparator as source EDGE 1 -> 0
+adc3112.1 xratrig write c 83                 # XRA1404 TCSR  Z11101ZZ  TRIG_SEL_0 WARNING : shall be controlled with '1' / high impedence      
+#
+$usleep 2000                                 # wait for 2 ms
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+$usleep 2000
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for ANALOG trigger 
+dr.ws 1234..1340
+#
+$echo    Trigger on ANALOG INx as source EDGE 1 -> 0 CHECK TTIM_COR ************ 
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340#
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+#
+#---------------------------------------------------------------------------------
+$echo    Trigger on ANALOG event Select IN_1p as source  
+#---------------------------------------------------------------------------------   
+wait 100
+#
+adc3112.1 dac write 18 7000                  # Write to DAC-A input register and update DAC-A; 1/2 x FS  ANALOG input  = 0.5V (no trig) 
+adc3112.1 xratrig write 2 63                 # XRA1404 OCR   01110100  TrigSEL[5:3] = 110  -> Select ANALOG IN_1 Comparator as source EDGE 1 -> 0
+adc3112.1 xratrig write c 84                 # XRA1404 TCSR  Z11101ZZ  TRIG_SEL_0 WARNING : shall be controlled with '1' / high impedence      
+#                                   
+$usleep 2000                                 # wait for 2 ms
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+$usleep 2000
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for ANALOG trigger 
+dr.ws 1234..1340
+#
+$echo    Trigger on ANALOG INx as source EDGE 1 -> 0 CHECK TTIM_COR ************ 
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340#
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+#
+#
+#---------------------------------------------------------------------------------
+$echo    Trigger on ANALOG event Select IN_2p as source  
+#---------------------------------------------------------------------------------   
+wait 100
+#
+adc3112.1 dac write 18 7000                  # Write to DAC-A input register and update DAC-A; 1/2 x FS  ANALOG input  = 0.5V (no trig) 
+adc3112.1 xratrig write 2 62                 # XRA1404 OCR   01110100  TrigSEL[5:3] = 110  -> Select ANALOG IN_2 Comparator as source EDGE 1 -> 0
+adc3112.1 xratrig write c 85                 # XRA1404 TCSR  Z11101ZZ  TRIG_SEL_0 WARNING : shall be controlled with '1' / high impedence      
+#                                   
+$usleep 2000                                 # wait for 2 ms
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+$usleep 2000
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for ANALOG trigger 
+dr.ws 1234..1340
+#
+$echo    Trigger on ANALOG INx as source EDGE 1 -> 0 CHECK TTIM_COR ************ 
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340#
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+#
+#
+#---------------------------------------------------------------------------------
+$echo    Trigger on ANALOG event Select IN_3p as source  
+#---------------------------------------------------------------------------------   
+wait 100
+#
+adc3112.1 dac write 18 7000                  # Write to DAC-A input register and update DAC-A; 1/2 x FS  ANALOG input  = 0.5V (no trig) 
+adc3112.1 xratrig write 2 61                 # XRA1404 OCR   01110100  TrigSEL[5:3] = 110  -> Select ANALOG IN_3 Comparator as source EDGE 1 -> 0
+adc3112.1 xratrig write c 86                 # XRA1404 TCSR  Z11101ZZ  TRIG_SEL_0 WARNING : shall be controlled with '1' / high impedence      
+#                                   
+$usleep 2000                                 # wait for 2 ms
+pr.ws 1234 000000c2                          # Trigger clear
+cr.ws 1234 000000c0 000000FF                 # Check Trigger idle
+pr.ws 1234 000000c1                          # Trigger arm
+$usleep 2000
+cr.ws 1234 000000c8 000000FF                 # Check Trigger detected, wait for ANALOG trigger 
+dr.ws 1234..1340
+#
+$echo    Trigger on ANALOG INx as source EDGE 1 -> 0 CHECK TTIM_COR ************ 
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+pr.ws 1234 000000c1                          # Trigger arm
+dr.ws 1234..1340#
+$usleep 2000
+pr.ws 1234 000000c2                          # Trigger clear
+#
+
+$echo *****************************************************************
+$echo    FASTSCOPE basic TTIM verification terminated  
+$echo *****************************************************************
+# <EOF>

@@ -1,0 +1,37 @@
+#*****************************************************************#
+#                    XprsMon Script file                          #
+#                XUSER FASTSCOPE (2x ADC_3112)                    #
+#   Title        : xuser_fscope_adc3112_1_sy89297_tst.xpm         #
+#   Description  : Basic verification SY89297U                    #
+#   Author       : J. Bovier                                      #
+#*****************************************************************#
+# Version 0.1 16-01-2015 : Initial version ifC_1410/1211          #
+#*****************************************************************#
+
+# Check if FMC1 ADC_3112 is present + Signature OK
+cr.ws 1200 31120201 FFFFFFFF                 # Check ADC_3112 SIGN_CSR (Type, Version, Revision)
+cr.ws 1204 20000000 FF000000                 # Check ADC_3112 MAIN_CSR (options instantiated)
+#
+pr.ws 1200 31120000                          # Enable FMC physical interface (out of tri-state)
+#
+# -- WARNING SY89297 Serial Bus is write only 
+#
+$echo *****************************************************************
+$echo SY89297U device 01 U742                                       
+$echo *****************************************************************
+#
+pr.ws 1204 10                                # Enable Clock delay path for ADC Channel 01
+pr.ws 1204 20                                # Enable Clock delay path for ADC Channel 23
+pr.ws 1204 30                                # Enable Clock delay path for ADC Channel 01 + 23
+#
+adc3112.1 sy write 0 00200010                # Write delay ADC23 20 taps /  ADC01 10 taps /
+$usleep 2000                                 # wait for 2 ms
+adc3112.1 sy write 0 03FF0001                # Write delay ADC23 1023 taps /  ADC01 1 taps /
+$usleep 2000                                 # wait for 2 ms
+#
+pr.ws 1204 00                                # Disable Clock delay path for ADC Channel 01 + 23
+#                                            # -> Use direct clock path (LMK04803B)
+$echo *****************************************************************
+$echo End SY89297 Basic verification    
+$echo *****************************************************************
+# <EOF>

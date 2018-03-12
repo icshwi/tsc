@@ -625,15 +625,20 @@ int main(int argc, char *argv[]){
 	}
 
 	if (quiet == 0){
-		printf("          _______       __  __             \n");
-		printf("         |__   __|     |  \\/  |            \n");
-		printf("            | |___  ___| \\  / | ___  _ __  \n");
-		printf("            | / __|/ __| |\\/| |/ _ \\| '_ \\ \n");
-		printf("            | \\__ \\ (__| |  | | (_) | | | |\n");
-		printf("            |_|___/\\___|_|  |_|\\___/|_| |_|\n");
+
+
+//		printf("          _______       __  __             \n");
+//		printf("         |__   __|     |  \\/  |            \n");
+//		printf("            | |___  ___| \\  / | ___  _ __  \n");
+//		printf("            | / __|/ __| |\\/| |/ _ \\| '_ \\ \n");
+//		printf("            | \\__ \\ (__| |  | | (_) | | | |\n");
+//		printf("            |_|___/\\___|_|  |_|\\___/|_| |_|\n");
+		printf("    _______ _______ _______ _______  _____  __   _ \n");
+		printf("       |    |______ |       |  |  | |     | | \\  | \n");
+		printf("       |    ______| |_____  |  |  | |_____| |  \\_| \n");
 		printf("\n");
 		printf("     +------------------------------------------+\n");
-		printf("     |  IOxOS Technologies Copyright 2015-2017  |\n");
+		printf("     |  IOxOS Technologies Copyright 2015-2018  |\n");
 		if(tsc_get_device_id() == 0x1000){
 			printf("     |  TscMon - %s %04x diagnostic tool         |\n", "IO", tsc_get_device_id());
 		}

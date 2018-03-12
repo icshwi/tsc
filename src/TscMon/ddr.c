@@ -1305,13 +1305,15 @@ int tsc_ddr(struct cli_cmd_para *c){
 			}
 		}
 		else {
-			printf("Bad parameter! Type \"? smem\" for help \n");
+		    printf("Not enough arguments -> usage:\n");
+		    tsc_print_usage(c);
 			return(-1);
 		}
 	}
 	// Bad command
 	else {
-		printf("Bad parameter! Type \"? smem\" for help \n");
+	    printf("Not enough arguments -> usage:\n");
+	    tsc_print_usage(c);
 		return(-1);
 	}
 

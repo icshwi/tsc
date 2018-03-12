@@ -317,7 +317,7 @@ conf_show_smon( void)
 
   d0 = 0x3000;
   tsc_smon_write( 0x41, &d0);
-  printf("   Artix7 System Monitoring\n");
+  printf("   System Monitoring\n");
   tsc_smon_read( 0x00, &d0);
   f0 = (((double)(d0>>6)*503.975)/1024.) - (double)273.15;
   tsc_smon_read( 0x20, &d1);
@@ -740,11 +740,13 @@ int tsc_set_device(struct cli_cmd_para *c){
 				}
 			}
 			else {
-				printf("Bad parameter! Type \"? set\" for help \n");
+			    printf("Not enough arguments -> usage:\n");
+			    tsc_print_usage(c);
 			}
 		}
 		else {
-			printf("Bad parameter! Type \"? set\" for help \n");
+		    printf("Not enough arguments -> usage:\n");
+		    tsc_print_usage(c);
 		}
 	}
 	return(retval);

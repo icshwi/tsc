@@ -1,0 +1,15 @@
+#  example of TscMon script
+#
+$echo ==>
+$echo ==> entering myscrit.tsc
+$echo ==>
+conf show static
+$echo ==>
+$echo ==> execute mysubscrit.tsc
+$echo ==>
+@mysubscript.tsc
+$echo ==>
+$echo ==> mysubscrit.tsc ended
+$echo ==>
+dm.w
+$exit

@@ -287,7 +287,6 @@ char *dma_msg[] =
 
 char *dp_msg[] = 
 { "Display content in PCI tree",
-  "dp.<ds><sw> <start>[..<end>]",
   "dp1.<ds><sw> <start>[..<end>]",
   "dp2.<ds><sw> <start>[..<end>]",
   "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
@@ -342,7 +341,7 @@ char *fifo_msg[] =
 0};
 
 char *fk_msg[] =
-{ "Fll kernel buffer in System Memory",
+{ "Fill kernel buffer in System Memory",
   "fk<idx>.<ds> <start>..<end> <data>",
   "   where <idx>   = buffer index [0 -> 7]",
   "         <ds>    = b,s,w,l -> data size: 1,2,4,8",
@@ -534,7 +533,6 @@ char *pm_msg[] =
 
 char *pp_msg[] = 
 { "Read/write data from/to PCI tree address",
-  "  pp.<ds> <offset> [<data>]",
   "  pp1.<ds> <offset> [<data>]",
   "  pp2.<ds> <offset> [<data>]",
   "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
@@ -567,6 +565,38 @@ char *pu_msg[] =
   "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
   "           <offset> = address offset in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
+0};
+
+char *rsp1461_msg[] =
+{ "rsp1461 control command",
+  "   rsp1461 init",
+  "",
+  "   rsp1461 extension present",
+  "",
+  "   rsp1461 extension <control> <pin>",
+  "      where control = 0 -> RSP1461_EXT_PIN_LOW, 1 -> RSP1461_EXT_PIN_HIGH, 2 -> RSP1461_EXT_PIN_Z",
+  "      where pin     = 0, 1, 2, 3, 4, 5, 6",
+  "",
+  "   rsp1461 extension get <pin>",
+  "      where pin = 0, 1, 2, 3, 4, 5, 6",
+  "",
+  "   rsp1461 led on <id>",
+  "      where id = 0 -> LED123_GREEN, 1 -> LED123_RED, 2 -> LED124_GREEN, 3 -> LED124_RED",
+  "                 4 -> LED125_GREEN, 5 -> LED125_RED, 6 -> LED126_GREEN, 7 -> LED127_RED",
+  "",
+  "   rsp1461 led off <id>",
+  "      where id = 0 -> LED123_GREEN, 1 -> LED123_RED, 2 -> LED124_GREEN, 3 -> LED124_RED",
+  "                 4 -> LED125_GREEN, 5 -> LED125_RED, 6 -> LED126_GREEN, 7 -> LED127_RED",
+  "",
+  "   rsp1461 sfp status <id>",
+  "      where id = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
+  "                 3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
+  "",
+  "   rsp1461 sfp <control> <id>",
+  "      where control = 1 -> SFP_TX_DISABLE, 2 -> SFP_RX_HIGH_RATE, 4 -> SFP_TX_HIGH_RATE",
+  "      where id      = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
+  "                      3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
+  "                      6 -> SFP_CPU_XFI_LANE_1",
 0};
 
 char *rtm_msg[] = 
@@ -741,7 +771,7 @@ struct cli_cmd_list cmd_list[] =
   { "cu"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
   { "dc"     	, tsc_rdwr_dr,      dc_msg     	  , 0},
   { "di"     	, tsc_rdwr_dr,      di_msg     	  , 0},
-  { "dk"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
+  { "dk"     	, tsc_rdwr_dx,      dk_msg     	  , 0},
   { "dma"     	, tsc_dma    ,      dma_msg       , 0},
   { "dm"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
   { "dp1"     	, tsc_rdwr_dx,      dp_msg     	  , 0},
@@ -792,6 +822,7 @@ struct cli_cmd_list cmd_list[] =
   { "pu1"     	, tsc_rdwr_px,      pu_msg     	  , 0},
   { "pu2"     	, tsc_rdwr_px,      pu_msg     	  , 0},
   { "pu"     	, tsc_rdwr_px,      pu_msg     	  , 0},
+  { "rsp1461"  	, tsc_rsp1461,      rsp1461_msg	  , 0},
   { "rtm"       , tsc_rtm,          rtm_msg       , 0},
   { "semaphore" , tsc_semaphore,    semaphore_msg , 0},
   //{ "sflash" 	, tsc_sflash,       sflash_msg 	  , 0},
