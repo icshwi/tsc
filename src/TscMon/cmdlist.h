@@ -410,16 +410,14 @@ char *history_msg[]   =
 char *i2c_msg[]     = 
 {
   "Perform i2c command ",
-  "   i2c <dev>  read  <reg>",
-  "   i2c <dev>  write <reg> <data>",
-  "   where <dev> = lm95255",
-  "                 ds1339",
-  "                 max5970",
-  "                 bmr463_0",
-  "                 bmr463_1",
-  "                 bmr463_2",
-  "                 bmr463_3",
-  "                 pes32nt",
+  "   i2c[.<bus]> <addr>  read[.<ds>]  <reg>[.<rs>]",
+  "   i2c[.<bus]> <addr>  write[.<ds>]  <reg>[.<rs>]",
+  "   where <bus> = bus idx ( 0 -> 7, default 0)",
+  "         <addr> = device address ( 0 -> ff)",
+  "         <ds> = data size ( 1,2,3,4 bytes, default 1)",
+  "         <rs> = register size ( 1,2,3,4 bytes, default 1)",
+  "         <reg> = register idx",
+  "         <data> = data",
 0};
 
 char *kbuf_msg[] = 

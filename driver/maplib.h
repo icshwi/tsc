@@ -49,10 +49,12 @@
 #ifndef _H_MAPLIB
 #define _H_MAPLIB
 
-#define MAP_INVALID             0
-#define MAP_MAS_PCIE_MEM        1
-#define MAP_MAS_PCIE_PMEM       2
-#define MAP_MAS_PCIE_CSR        3
+#define MAP_INVALID                0
+#define MAP_MAS_PCIE_MEM           1
+#define MAP_MAS_PCIE_PMEM          2
+#define MAP_MAS_PCIE_CSR           3
+#define MAP_SLV_PCIE1_MEM          9
+#define MAP_SLV_PCIE1_PMEM       0xa
 
 #define MAP_FLAG_FREE           0
 #define MAP_FLAG_BUSY           1

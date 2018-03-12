@@ -71,12 +71,14 @@ struct tsc_device
   struct tsc_irq_handler *irq_tbl;       /* Pointer to interrupt handler table   */
   struct mutex csr_lock;                     /* Mutex for locking control device     */
   struct map_ctl *map_mas_pci_pmem;          /* master map PCI_PMEM BAR0/1           */
-  struct map_ctl *map_mas_pci_mem;           /* master map PCI_PMEM BAR2             */
+  struct map_ctl *map_mas_pci_mem;           /* master map PCI_MEM BAR2             */
   struct shm_ctl *shm_ctl[TSC_SHM_NUM];  /* control structure for SHM            */
   struct rdwr_ctl *rdwr_ctl;                 /* control structure for RDWR access    */
   struct sflash_ctl *sflash_ctl;             /* control structure for SPI FLASH      */
   struct dma_ctl *dma_ctl[DMA_CHAN_NUM];     /* control structure for DMA controller */
   struct i2c_ctl *i2c_ctl;                   /* control structure for I2C access     */
+  struct map_ctl *map_slv_pci1_pmem;          /* slave map PCI1_PMEM BAR0/1           */
+  struct map_ctl *map_slv_pci1_mem;           /* slave map PCI1_MEM BAR2             */
 };
 
 struct tsc_irq_handler

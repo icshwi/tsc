@@ -363,6 +363,14 @@ tsc_map_id( struct tsc_device *ifc,
   {
     map_ctl_p = ifc->map_mas_pci_mem;
   }
+  else if( m->sg_id == MAP_SLV_PCIE1_PMEM)
+  {
+    map_ctl_p = ifc->map_slv_pci1_pmem;
+  }
+  else if( m->sg_id == MAP_SLV_PCIE1_MEM)
+  {
+    map_ctl_p = ifc->map_slv_pci1_mem;
+  }
   else 
   {
     map_ctl_p = NULL;
@@ -444,6 +452,16 @@ tsc_map_clear( struct tsc_device *ifc,
   else if( m->sg_id == MAP_MAS_PCIE_MEM)
   {
     map_ctl_p = ifc->map_mas_pci_mem;
+    mas = 1;
+  }
+  else if( m->sg_id == MAP_SLV_PCIE1_PMEM)
+  {
+    map_ctl_p = ifc->map_slv_pci1_pmem;
+    mas = 1;
+  }
+  else if( m->sg_id == MAP_SLV_PCIE1_MEM)
+  {
+    map_ctl_p = ifc->map_slv_pci1_mem;
     mas = 1;
   }
   else 
@@ -901,32 +919,49 @@ tsc_csr_op( struct tsc_device *ifc,
       break;
     }
     case TSC_IOCTL_CSR_PCIEP_RD:
-    { 
-      iowrite32( csr_op->offset, ifc->csr_ptr + TSC_CSR_A7_PCIEP_ADDPT);
+    {
+      char *csr_ptr;
+
+      csr_ptr =  ifc->csr_ptr;
+      /* check for PCIEP0 or PCIEP1 */
+      if( csr_op->offset & TSC_A7_PCIEP1_ADDPT_CFG)
+      {
+	csr_ptr += TSC_CSR_A7_PCIE1_BASE;
+        csr_op->offset &= ~TSC_A7_PCIEP1_ADDPT_CFG;
+      }
+      iowrite32( csr_op->offset, csr_ptr + TSC_CSR_A7_PCIEP_ADDPT);
       if( csr_op->offset & TSC_A7_PCIEP_ADDPT_DRP)
       {
 	/* read PCIe EP DRP register */
-        csr_op->data = ioread32( ifc->csr_ptr + TSC_CSR_A7_PCIEP_DRPDAT);
+        csr_op->data = ioread32( csr_ptr + TSC_CSR_A7_PCIEP_DRPDAT);
       }
       else 
       {
 	/* read PCIe EP CFG register */
-        csr_op->data = ioread32( ifc->csr_ptr + TSC_CSR_A7_PCIEP_CFGDAT);
+        csr_op->data = ioread32( csr_ptr + TSC_CSR_A7_PCIEP_CFGDAT);
       }
       break;
     }
     case TSC_IOCTL_CSR_PCIEP_WR:
     { 
-      iowrite32(  csr_op->offset, ifc->csr_ptr + TSC_CSR_A7_PCIEP_ADDPT);
-      if( csr_op->offset & TSC_A7_PCIEP_ADDPT_CFG)
+      char *csr_ptr;
+
+      csr_ptr =  ifc->csr_ptr;
+      /* check for PCIEP0 or PCIEP1 */
+      if( csr_op->offset & TSC_A7_PCIEP1_ADDPT_CFG)
+      {
+	csr_ptr += TSC_CSR_A7_PCIE1_BASE;
+      }
+      iowrite32(  csr_op->offset, csr_ptr + TSC_CSR_A7_PCIEP_ADDPT);
+      if( csr_op->offset & TSC_A7_PCIEP_ADDPT_DRP)
       {
 	/* write PCIe EP CFG register */
-        iowrite32(  csr_op->data, ifc->csr_ptr + TSC_CSR_A7_PCIEP_CFGDAT);
+        iowrite32(  csr_op->data, csr_ptr + TSC_CSR_A7_PCIEP_DRPDAT);
       }
       else 
       {
 	/* write PCIe EP DRP register */
-        iowrite32(  csr_op->data, ifc->csr_ptr + TSC_CSR_A7_PCIEP_DRPDAT);
+        iowrite32(  csr_op->data, csr_ptr + TSC_CSR_A7_PCIEP_CFGDAT);
       }
       break;
     }

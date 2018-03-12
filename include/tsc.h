@@ -112,6 +112,9 @@
 
 #define TSC_CSR_ILOC_TOSCA2_SIGN         0x034
 
+#define TSC_CSR_A7_PCIE_BASE             0x000
+#define TSC_CSR_A7_PCIE1_BASE            0x400
+
 #define TSC_CSR_A7_PCIE_DSN_L            0x038
 #define TSC_CSR_A7_PCIE_DSN_H            0x03c
 #define TSC_CSR_A7_SMON_ADDPT            0x040
@@ -135,10 +138,10 @@
 #define TSC_CSR_ILOC_ITC_IMC             0x088
 #define TSC_CSR_ILOC_ITC_IMS             0x08c
 
-#define TSC_CSR_I2C_CTL                  0x100
-#define TSC_CSR_I2C_CMD                  0x104
-#define TSC_CSR_I2C_DATW                 0x108
-#define TSC_CSR_I2C_DATR                 0x10c
+#define TSC_CSR_I2C_CTL                  0x10a0
+#define TSC_CSR_I2C_CMD                  0x10a4
+#define TSC_CSR_I2C_DATW                 0x10a8
+#define TSC_CSR_I2C_DATR                 0x10ac
 
 #define TSC_CSR_BASE                0x400
 #define TSC_CSR_SLOT1               0x400
@@ -518,6 +521,8 @@ static const int TSC_PCIE_MMUDAT_AM[0x40] = {
  */
 #define TSC_A7_PCIEP_ADDPT_DRP           0x10000
 #define TSC_A7_PCIEP_ADDPT_CFG           0x00000
+#define TSC_A7_PCIEP1_ADDPT_DRP          0x11000
+#define TSC_A7_PCIEP1_ADDPT_CFG          0x01000
 
 
 /*

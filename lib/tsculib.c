@@ -1796,28 +1796,43 @@ tsc_i2c_read( uint dev,
 	      uint reg,
 	      uint *data)
 {
-  int fd;
-  int cmd_size;
-  int data_size;
+  if( dev & 0x80000000)
+  {
+    struct tsc_ioctl_i2c i2c;
 
-  fd = i2c_set_dev( dev);
-  if( fd < 0)
-  {
-    return(-1);
+    i2c.device = dev & ~0x80000000;
+    i2c.cmd = reg;
+    i2c.data = 0;
+    ioctl( tsc_fd, TSC_IOCTL_I2C_READ, &i2c);
+    *data = i2c.data;
+
+    return( i2c.status);
   }
-  cmd_size  = ((dev>>16)&3)+1;
-  data_size = ((dev>>18)&3)+1;
-  if( cmd_size == 2)
+  else 
   {
-    i2c_smbus_write_byte_data(fd, (reg>>8)&0xff, reg&0xff);
-    *data = i2c_smbus_read_byte(fd);
+    int fd;
+    int cmd_size;
+    int data_size;
+
+    fd = i2c_set_dev( dev);
+    if( fd < 0)
+    {
+      return(-1);
+    }
+    cmd_size  = ((dev>>16)&3)+1;
+    data_size = ((dev>>18)&3)+1;
+    if( cmd_size == 2)
+    {
+      i2c_smbus_write_byte_data(fd, (reg>>8)&0xff, reg&0xff);
+      *data = i2c_smbus_read_byte(fd);
+    }
+    if( cmd_size == 1)
+    {
+      if( data_size == 1) *data = i2c_smbus_read_byte_data(fd, reg);
+      if( data_size == 2) *data = i2c_smbus_read_word_data(fd, reg);
+    }
+    close(fd);
   }
-  if( cmd_size == 1)
-  {
-    if( data_size == 1) *data = i2c_smbus_read_byte_data(fd, reg);
-    if( data_size == 2) *data = i2c_smbus_read_word_data(fd, reg);
-  }
-  close(fd);
   return(0);
 }
 
@@ -1839,16 +1854,30 @@ tsc_i2c_cmd( uint dev,
 {
   int fd;
 
-  fd = i2c_set_dev( dev);
-  if( fd < 0)
+  if( dev & 0x80000000)
   {
-    return(-1);
+    struct tsc_ioctl_i2c i2c;
+
+    i2c.device = dev & ~0x80000000;
+    i2c.cmd = cmd;
+    i2c.data = 0;
+    ioctl( tsc_fd, TSC_IOCTL_I2C_CMD, &i2c);
+
+    return( i2c.status);
   }
-  if( i2c_smbus_write_byte(fd, cmd) < 0)
+  else 
   {
-    return(-1);
+    fd = i2c_set_dev( dev);
+    if( fd < 0)
+    {
+      return(-1);
+    }
+    if( i2c_smbus_write_byte(fd, cmd) < 0)
+    {
+      return(-1);
+    }
+    close(fd);
   }
-  close(fd);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1869,27 +1898,41 @@ tsc_i2c_write( uint dev,
 	       uint reg,
 	       uint data)
 {
-  int fd;
-  int cmd_size;
-  int data_size;
+  if( dev & 0xe0000000)
+  {
+    struct tsc_ioctl_i2c i2c;
 
-  fd = i2c_set_dev( dev);
-  if( fd < 0)
-  {
-    return(-1);
+    i2c.device = dev & ~0x80000000;
+    i2c.cmd = reg;
+    i2c.data = data;
+    ioctl( tsc_fd, TSC_IOCTL_I2C_WRITE, &i2c);
+
+    return( i2c.status);
   }
-  cmd_size  = ((dev>>16)&3)+1;
-  data_size = ((dev>>18)&3)+1;
-  if( cmd_size == 2)
+  else 
   {
-    i2c_smbus_write_word_data(fd, (reg>>8)&0xff, (reg&0xff) | ((data&0xff)<<8));
+    int fd;
+    int cmd_size;
+    int data_size;
+
+    fd = i2c_set_dev( dev);
+    if( fd < 0)
+    {
+      return(-1);
+    }
+    cmd_size  = ((dev>>16)&3)+1;
+    data_size = ((dev>>18)&3)+1;
+    if( cmd_size == 2)
+    {
+      i2c_smbus_write_word_data(fd, (reg>>8)&0xff, (reg&0xff) | ((data&0xff)<<8));
+    }
+    if( cmd_size == 1)
+    {
+      if( data_size == 1) i2c_smbus_write_byte_data(fd, reg, data);
+      if( data_size == 2) i2c_smbus_write_word_data(fd, reg, data);
+    }
+    close(fd);
   }
-  if( cmd_size == 1)
-  {
-    if( data_size == 1) i2c_smbus_write_byte_data(fd, reg, data);
-    if( data_size == 2) i2c_smbus_write_word_data(fd, reg, data);
-  }
-  close(fd);
   return(0);
 }
 

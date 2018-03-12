@@ -86,13 +86,13 @@ struct tsc_i2c_devices i2c_devices_ifc[] =
  * Description   : execute i2c commands
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
+#ifdef JFG
 int 
 tsc_i2c( struct cli_cmd_para *c)
 {
   struct tsc_i2c_devices *i2d;
   int idx, reg, data, device;
-  int tmp;
+  int de, rs;
 
 
   idx = 0;
@@ -151,6 +151,71 @@ tsc_i2c( struct cli_cmd_para *c)
       return( I2C_ERR);
     }
     printf("i2c write: %x %x\n", device, reg);
+    return( I2C_OK);
+  }
+  return( I2C_ERR);
+}
+#endif
+
+int 
+tsc_i2c( struct cli_cmd_para *c)
+{
+  int bus, reg, data, addr, device;
+  int rs, ds;
+  int retval;
+
+  bus = 0;
+  if( c->ext)
+  {
+    bus = *(char *)c->ext - '0';
+  }
+  if( c->cnt < 3)
+  {
+    printf("Not enough arguments -> usage:\n");
+    tsc_print_usage( c);
+    return( I2C_ERR);
+  }
+  device = (bus&7)<<29;
+  if( sscanf( c->para[0],"%x", &addr) != 1)
+  {
+    printf("Bad device argument [%s] -> usage:\n", c->para[0]);
+    tsc_print_usage( c);
+    return( I2C_ERR);
+  }
+  device |= addr & 0x7f;
+  rs = 1;
+  retval = sscanf( c->para[2],"%x.%d", &reg, &rs);
+  if( retval < 1)
+  {
+    printf("Bad register argument [%s] -> usage:\n", c->para[2]);
+    tsc_print_usage( c);
+    return( I2C_ERR);
+  }
+  device |= ((rs-1)&3)<<16; 
+  if(!strncmp( "read", c->para[1], 2))
+  {
+    ds = 1;
+    sscanf( c->para[1],"read.%d", &ds);
+    device |= ((ds-1)&3)<<18; 
+    printf("i2c read: %08x %x\n", device, reg);
+    tsc_i2c_read( device, reg, &data);
+    printf("data = %x\n", data);
+    return( I2C_OK);
+  }
+  if(!strncmp( "write", c->para[1], 2))
+  {
+    ds = 1;
+    sscanf( c->para[1],"write.%d", &ds);
+    device |= ((ds-1)&3)<<18; 
+    retval = sscanf( c->para[3],"%x", &data);
+    if( retval < 1)
+    {
+      printf("Bad data argument [%s] -> usage:\n", c->para[3]);
+      tsc_print_usage( c);
+      return( I2C_ERR);
+    }
+    printf("i2c write: %08x %x\n", device, reg, data);
+    tsc_i2c_write( device, reg, data);
     return( I2C_OK);
   }
   return( I2C_ERR);

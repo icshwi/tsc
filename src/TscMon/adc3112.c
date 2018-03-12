@@ -79,9 +79,12 @@ static char *rcsid = "$Id: adc3112.c,v 1.10 2016/01/15 10:21:19 ioxos Exp $";
 #define ADC_SAMPLE_SIZE       sizeof(short)
 
 #define CAL_ALL_BIT  0x8000
-#define CAL_STEP_NUM 40
+//#define CAL_STEP_NUM 40
+#define CAL_STEP_GAP 8
+#define CAL_STEP_NUM 512/CAL_STEP_GAP
 #define CAL_BIT_NUM  16
-#define CAL_STEP_WIDTH  78.125
+//#define CAL_STEP_WIDTH  78.125
+#define CAL_STEP_WIDTH  8.0
 #define NUM_FMC 2
 #define ADC_NUM_CHAN 4
 #define ADC_OFF_CHAN_0  0x00000
@@ -775,8 +778,8 @@ adc3112_acq( struct cli_cmd_para *c,
       if( !acq_file_h2)
       {
         printf("cannot create acquisition file %s\n", acq_name_h2);
-        fclose( acq_file_h1);
-        free( acq_name_h1);
+        if( acq_file_h1) fclose( acq_file_h1);
+        if( acq_name_h1)free( acq_name_h1);
         free( acq_name_h2);
         return( -1);
       }
@@ -790,10 +793,10 @@ adc3112_acq( struct cli_cmd_para *c,
       if( !acq_file_h3)
       {
         printf("cannot create acquisition file %s\n", acq_name_h3);
-        fclose( acq_file_h1);
-        fclose( acq_file_h2);
-        free( acq_name_h1);
-        free( acq_name_h2);
+        if( acq_file_h1) fclose( acq_file_h1);
+        if( acq_file_h3) fclose( acq_file_h2);
+        if( acq_name_h1) free( acq_name_h1);
+        if( acq_name_h2)free( acq_name_h2);
         free( acq_name_h3);
         return( -1);
       }  
@@ -807,12 +810,12 @@ adc3112_acq( struct cli_cmd_para *c,
       if( !acq_file_h4)
       {
         printf("cannot create acquisition file %s\n", acq_name_h4);
-        fclose( acq_file_h1);
-        fclose( acq_file_h2);
-        fclose( acq_file_h3);
-        free( acq_name_h1);
-        free( acq_name_h2);
-        free( acq_name_h3);
+        if( acq_file_h1) fclose( acq_file_h1);
+        if( acq_file_h2) fclose( acq_file_h2);
+        if( acq_file_h3) fclose( acq_file_h3);
+        if( acq_name_h1)free( acq_name_h1);
+        if( acq_name_h2)free( acq_name_h2);
+        if( acq_name_h3)free( acq_name_h3);
         free( acq_name_h4);
         return( -1);
       }
@@ -846,8 +849,8 @@ adc3112_acq( struct cli_cmd_para *c,
       if( !acq_file_d2)
       {
         printf("cannot create acquisition file %s\n", acq_name_d2);
-        fclose( acq_file_d1);
-        free( acq_name_d1);
+        if( acq_file_d1)fclose( acq_file_d1);
+        if( acq_name_d1)free( acq_name_d1);
         free( acq_name_d2);
         return( -1);
       }
@@ -861,10 +864,10 @@ adc3112_acq( struct cli_cmd_para *c,
       if( !acq_file_d3)
       {
         printf("cannot create acquisition file %s\n", acq_name_d3);
-        fclose( acq_file_d1);
-        fclose( acq_file_d2);
-        free( acq_name_d1);
-        free( acq_name_d2);
+        if( acq_file_d1)fclose( acq_file_d1);
+        if( acq_file_d2)fclose( acq_file_d2);
+        if( acq_name_d1)free( acq_name_d1);
+        if( acq_name_d2)free( acq_name_d2);
         free( acq_name_d3);
         return( -1);
       }
@@ -878,12 +881,12 @@ adc3112_acq( struct cli_cmd_para *c,
       if( !acq_file_d4)
       {
         printf("cannot create acquisition file %s\n", acq_name_d4);
-        fclose( acq_file_d1);
-        fclose( acq_file_d2);
-        fclose( acq_file_d3);
-        free( acq_name_d1);
-        free( acq_name_d2);
-        free( acq_name_d3);
+        if( acq_file_d1)fclose( acq_file_d1);
+        if( acq_file_d2)fclose( acq_file_d2);
+        if( acq_file_d3)fclose( acq_file_d3);
+        if( acq_name_d1)free( acq_name_d1);
+        if( acq_name_d2)free( acq_name_d2);
+        if( acq_name_d3)free( acq_name_d3);
         free( acq_name_d4);
         return( -1);
       }
@@ -1409,7 +1412,7 @@ adc3112_calib_set_default( struct adc3112_calib_ctl *cc,
 {
   int data;
 
-  /* load defaault delay */
+  /* load default delay */
   data = 0x40000000 | (chan << 26);
   tscext_csr_wr( cc->reg_ttim_cal, data); 
   tscext_csr_rd( cc->reg_ttim_cal);
@@ -1437,6 +1440,7 @@ adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
 			 int chan)
 {
   int bit, data;
+  int ustep;
 
   if( cc->chan[chan].delay >= (CAL_STEP_NUM/2))
   {
@@ -1450,11 +1454,11 @@ adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
     for( bit = 0; bit < 12; bit++)
     {
       data = 0xa0000000 | (bit<<20) | (chan << 26);
-      tscext_csr_wr( cc->reg_ttim_cal, data);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
       cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
     }
     data = 0xa0c00000 | (chan << 26);
-    tscext_csr_wr( cc->reg_ttim_cal, data);
+    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
     cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
   }
   else
@@ -1466,7 +1470,7 @@ adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
       {
 	//printf("increment bit %d\n", bit);
 	data = 0xa0000000 | (bit<<20) | (chan << 26);
-	tscext_csr_wr( cc->reg_ttim_cal, data);
+	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
 	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
       }
     }
@@ -1474,7 +1478,7 @@ adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
     {
       //printf("decrement bit 12\n");
       data = 0xa0c00000 | (chan << 26);
-      tscext_csr_wr( cc->reg_ttim_cal, data);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
       cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
     }
   }
@@ -1497,6 +1501,7 @@ adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
 			 int chan)
 {
   int bit, data;
+  int ustep;
 
   if( cc->chan[chan].delay <= -(CAL_STEP_NUM/2))
   {
@@ -1510,11 +1515,11 @@ adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
     for( bit = 0; bit < 12; bit++)
     {
       data = 0x80000000 | (bit<<20) | (chan << 26);
-      tscext_csr_wr( cc->reg_ttim_cal, data);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
       cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
     }
     data = 0x80c00000 | (chan << 26);
-    tscext_csr_wr( cc->reg_ttim_cal, data);
+    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
     cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
   }
   else
@@ -1526,7 +1531,7 @@ adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
       {
 	//printf("decrement bit %d\n", bit);
 	data = 0x80000000 | (bit<<20) | (chan << 26);
-	tscext_csr_wr( cc->reg_ttim_cal, data);
+	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
 	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
       }
     }
@@ -1534,7 +1539,7 @@ adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
     {
       //printf("decrement bit 12\n");
       data = 0x80c00000 | (chan << 26);
-      tscext_csr_wr( cc->reg_ttim_cal, data);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
       cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
     }
   }
@@ -1700,7 +1705,7 @@ adc3112_calib_config( int fmc,
   adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3c, data);
   data = ((mode & 0xfff0) >> 2);
   adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3d, data);
-  data = 0x8000 | ((mode & 0xfff00000) >> 18);
+  data = ((mode & 0xfff00000) >> 18);
   adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3e, data);
 
   /* ADS5409_23 DAQ calibration with 0x555/0xAAA */
@@ -1712,7 +1717,7 @@ adc3112_calib_config( int fmc,
   adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3c, data);
   data = ((mode & 0xfff0) >> 2);
   adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3d, data);
-  data = 0x8000 | ((mode & 0xfff00000) >> 18);
+  data = ((mode & 0xfff00000) >> 18);
   adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3e, data);
 
   return(0);
@@ -1796,7 +1801,7 @@ adc3112_calib_trig( struct adc3112_calib_ctl *cc,
     p = cc->chan[chan].data_buf;
     for( i = 0; i < 0x10; i += sizeof(int))
     {
-      if( !(i & 0xf)) printf("\n%03x : ", i);
+      if( !(i & 0xf)) printf("\n%1d -> %03x : ", chan, i);
       printf("%04x %04x ", (unsigned short)tsc_swap_16(*(short *)&p[i+2]), (unsigned short)tsc_swap_16(*(short *)&p[i]));
     }
   }
@@ -1826,17 +1831,38 @@ adc3112_calib_trig( struct adc3112_calib_ctl *cc,
  * Description   : 
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+void
+print_short_to_bin( short data)
+{
+  int i;
 
+  for( i = 15; i >= 4; i--)
+  {
+    if( data & (1<<i)) printf("X");
+    else printf("0");
+  }
+    if( data & 1) printf(" X : ");
+    else printf(" 0 : ");
+
+  return;
+}
 int
 adc3112_calib_show_res( struct adc3112_calib_ctl *cc)
 {
   int step;
 
-  if( adc3112_verbose_flag) printf("delay   CH0  CH1  CH2  CH3\n");
+  if( adc3112_verbose_flag) printf("delay         CH0              CH1              CH2              CH3\n");
   for( step = 0; step < (CAL_STEP_NUM+1); step++)
   {
-    if( adc3112_verbose_flag) printf("%5d : %04x %04x %04x %04x\n", step - (CAL_STEP_NUM/2), 
-	   cc->chan[0].cal_res[step], cc->chan[1].cal_res[step], cc->chan[2].cal_res[step], cc->chan[3].cal_res[step]);
+    if( adc3112_verbose_flag) 
+    {
+      printf("%5d : ", (step - (CAL_STEP_NUM/2))*CAL_STEP_GAP); 
+      print_short_to_bin( cc->chan[0].cal_res[step]);
+      print_short_to_bin( cc->chan[1].cal_res[step]);
+      print_short_to_bin( cc->chan[2].cal_res[step]);
+      print_short_to_bin( cc->chan[3].cal_res[step]);
+      printf("\n");
+    }
   }
   return(0);
 }
@@ -1867,7 +1893,7 @@ adc3112_calib_show_err_cnt( struct adc3112_calib_ctl *cc,
   if( adc3112_verbose_flag) printf("\n Delay   D11  D10  D9   D8   D7   D6   D5   D4   D3   D2   D1   D0  SYNC\n");
   for( step = 0; step < (CAL_STEP_NUM+1); step++)
   {
-   if( adc3112_verbose_flag)  printf("%5d :", step - (CAL_STEP_NUM/2)); 
+    if( adc3112_verbose_flag)  printf("%5d :", (step - (CAL_STEP_NUM/2))*CAL_STEP_GAP); 
     for( bit = 0; bit < 12; bit++)
     {
       if( (cc->chan[chan].err_cnt[15-bit][step] == 0) && (min[15-bit] == -1))
@@ -1919,8 +1945,8 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
 
   for( bit = 0; bit < CAL_BIT_NUM; bit++)
   {
-    min[bit] = -16;
-    max[bit] = 16;
+    min[bit] = -32;
+    max[bit] = 32;
     first[bit] = 0;
   }
 
@@ -1933,23 +1959,28 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
 	first[15-bit] = step;
 	break;
       }
+#ifdef JFG
       if( cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) - step] == 0)
       {
 	first[15-bit] = -step;
 	break;
       }
+#endif
     }
   }
   for( step = 0; step < (CAL_STEP_NUM/2); step++)
   {
+#ifdef JFG
     if( cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] == 0)
     {
-      first[15-bit] = step;
+      first[0] = step;
       break;
     }
+#endif
     if( cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) - step] == 0)
     {
-      first[15-bit] = -step;
+      first[0] = -step;
+      printf("SYNC: first = %d\n", first[0]);
       break;
     }
   }
@@ -1957,7 +1988,7 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
   {
     for( step = first[15-bit]; step < (CAL_STEP_NUM/2); step++)
     {
-      if( (cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] != 0) && (max[15-bit] == 16))
+      if( (cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] != 0) && (max[15-bit] == 32))
       {
 	max[15-bit] = step;
       }
@@ -1965,7 +1996,7 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
   }
   for( step = first[0]; step < (CAL_STEP_NUM/2); step++)
   {
-    if( (cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] != 0) && (max[0] == 16))
+    if( (cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] != 0) && (max[0] == 32))
     {
       max[0] = step;
     }
@@ -1974,7 +2005,7 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
   {
     for( step = first[15-bit]; step > -(CAL_STEP_NUM/2); step--)
     {
-      if( (cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] != 0) && (min[15-bit] == -16))
+      if( (cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] != 0) && (min[15-bit] == -32))
       {
 	min[15-bit] = step;
       }
@@ -1982,7 +2013,7 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
   }
   for( step = first[0]; step > -(CAL_STEP_NUM/2); step--)
   {
-    if( (cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] != 0) && (min[0] == -16))
+    if( (cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] != 0) && (min[0] == -32))
     {
       min[0] = step;
     }
@@ -1993,31 +2024,31 @@ adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
   for( bit = 0; bit < 12; bit++)
   {
     if( max[15-bit] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[15-bit]; 
-    if( adc3112_verbose_flag) printf(" %3d ", max[15-bit]);
+    if( adc3112_verbose_flag) printf(" %3d ", max[15-bit]*CAL_STEP_GAP);
   }
-  if( adc3112_verbose_flag) printf(" %3d\n", max[0]);
+  if( adc3112_verbose_flag) printf(" %3d\n", max[0]*CAL_STEP_GAP);
   if( max[0] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[0]; 
-  cc->chan[chan].hold_time =   (cc->chan[chan].hold_time - 1)*CAL_STEP_WIDTH;
+  cc->chan[chan].hold_time =   (cc->chan[chan].hold_time - 1)*CAL_STEP_WIDTH*CAL_STEP_GAP;
 
   if( adc3112_verbose_flag) printf(" MEAN :");
   for( bit = 0; bit < 12; bit++)
   {
     cc->chan[chan].delta[15-bit] =  (max[15-bit] + min[15-bit])/2;
-    if( adc3112_verbose_flag) printf(" %3d ", cc->chan[chan].delta[15-bit]);
+    if( adc3112_verbose_flag) printf(" %3d ", cc->chan[chan].delta[15-bit]*CAL_STEP_GAP);
   }
   cc->chan[chan].delta[0] = (max[0] + min[0])/2; 
-  if( adc3112_verbose_flag) printf(" %3d\n", cc->chan[chan].delta[0]);
+  if( adc3112_verbose_flag) printf(" %3d\n", cc->chan[chan].delta[0]*CAL_STEP_GAP);
 
   if( adc3112_verbose_flag) printf(" MIN  :");
   cc->chan[chan].set_time =  min[15];
   for( bit = 0; bit < 12; bit++)
   {
     if( min[15-bit] > cc->chan[chan].set_time) cc->chan[chan].set_time = min[15-bit]; 
-    if( adc3112_verbose_flag) printf(" %3d ", min[15-bit]);
+    if( adc3112_verbose_flag) printf(" %3d ", min[15-bit]*CAL_STEP_GAP);
   }
-  if( adc3112_verbose_flag) printf(" %3d\n", min[0]);
+  if( adc3112_verbose_flag) printf(" %3d\n", min[0]*CAL_STEP_GAP);
   if( min[0] > cc->chan[chan].set_time) cc->chan[chan].set_time = min[0];
-  cc->chan[chan].set_time =   (cc->chan[chan].set_time - 1)*CAL_STEP_WIDTH;
+  cc->chan[chan].set_time =   (cc->chan[chan].set_time - 1)*CAL_STEP_WIDTH*CAL_STEP_GAP;
 
   return(0);
 }
@@ -2045,8 +2076,10 @@ adc3112_calib_adjust_delay( struct adc3112_calib_ctl *cc,
   }
   if( adc3112_verbose_flag) printf(" %03x\n",  (cc->chan[chan].ttim[0] >> 8) & 0xfff);
 
+  if( adc3112_verbose_flag) printf("           :");
   for( bit = 0; bit < 12; bit++)
   {
+    if( adc3112_verbose_flag) printf(" %3d",  cc->chan[chan].delta[15-bit]);
     if( cc->chan[chan].delta[bit+4] < 0)
     {
       for( step = 0; step < -cc->chan[chan].delta[bit+4]; step++)
@@ -2062,6 +2095,7 @@ adc3112_calib_adjust_delay( struct adc3112_calib_ctl *cc,
       }
     }
   }
+  if( adc3112_verbose_flag) printf(" %3d\n",  cc->chan[chan].delta[0]);
   if( cc->chan[chan].delta[0] < 0)
   {
     for( step = 0; step < -cc->chan[chan].delta[0]; step++)
@@ -2237,6 +2271,15 @@ adc3112_calib( struct cli_cmd_para *c,
     adc3112_calib_trig( &adc3112_calib_ctl[FMC_IDX(fmc)], mode);
   }
 
+  printf("Calibration results:\n");
+  adc3112_calib_show_res( &adc3112_calib_ctl[FMC_IDX(fmc)]);
+
+  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  {
+    adc3112_calib_show_err_cnt( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
+    adc3112_calib_show_min_max( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
+  }
+
   printf("\nSetting default values for all channels\n");
   for( chan = 0; chan < ADC_NUM_CHAN; chan++)
   {
@@ -2259,14 +2302,6 @@ adc3112_calib( struct cli_cmd_para *c,
   printf("Trig calibration with adjusted delay\n");
   adc3112_calib_trig( &adc3112_calib_ctl[FMC_IDX(fmc)], mode);
 
-  printf("Calibration results:\n");
-  adc3112_calib_show_res( &adc3112_calib_ctl[FMC_IDX(fmc)]);
-
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-  {
-    adc3112_calib_show_err_cnt( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-    adc3112_calib_show_min_max( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-  }
   printf("+----+--------------+--------------+\n");
   printf("| CH | SETUP [psec] |  HOLD [psec] |\n");
   printf("+----+--------------+--------------+\n");

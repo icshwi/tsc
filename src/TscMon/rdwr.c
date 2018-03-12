@@ -697,7 +697,14 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     {
       if( c->cmd[1] == 'c')
       {
-        retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+        if( c->cmd[2] == '1')
+        {
+          retval =  tsc_pciep_read( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+	}
+	else 
+	{
+          retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+	}
       }
       else if( c->cmd[1] == 'i')
       {
@@ -723,7 +730,14 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( c->cmd[1] == 'c')
     {
-      retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+      if( c->cmd[2] == '1')
+      {
+        retval =  tsc_pciep_write( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+      }
+      else 
+      {
+        retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+      }
     }
     else if( c->cmd[1] == 'i')
     {
@@ -749,7 +763,14 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
   {
     if( c->cmd[1] == 'c')
     {
-      retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+      if( c->cmd[2] == '1')
+      {
+        retval =  tsc_pciep_read( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+      }
+      else 
+      {
+        retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+      }
     }
     else if( c->cmd[1] == 'i')
     {
@@ -797,7 +818,14 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
 	{
           if( c->cmd[1] == 'c')
           {
-	    retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+            if( c->cmd[2] == '1')
+            {
+	      retval =  tsc_pciep_write( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+            }
+            else 
+            {
+	      retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+	    }
 	  }
 	  else if( c->cmd[1] == 'i')
           {
