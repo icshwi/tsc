@@ -86,6 +86,8 @@ struct tsc_i2c_devices i2c_devices_ifc[] =
  * Description   : execute i2c commands
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+// Original version
 #ifdef JFG
 int 
 tsc_i2c( struct cli_cmd_para *c)
@@ -157,6 +159,7 @@ tsc_i2c( struct cli_cmd_para *c)
 }
 #endif
 
+// New version
 int 
 tsc_i2c( struct cli_cmd_para *c)
 {
