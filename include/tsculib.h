@@ -102,6 +102,7 @@ int tsc_semaphore_status(uint *sts);
 int tsc_semaphore_release(uint idx);
 int tsc_semaphore_get(uint idx, uint *tag);
 int rsp1461_init(void);
+int rsp1461_presence(void);
 int rsp1461_extension_presence(int *present);
 int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state);
 int rsp1461_extension_get_pin_state(int index, int *state);
