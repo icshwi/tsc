@@ -174,7 +174,7 @@ static void data_read( void *d, void __iomem *s, int len, int ds){
 	  }
 	  case 8:
 	  {
-	    *(long long *)d = *(long long *)s;
+	    *(uint64_t *)d = *(uint64_t *)s;
 	    break;
 	  }
 	}
@@ -406,12 +406,12 @@ tsc_read_sgl( struct tsc_device *ifc,
 	loop = rw->len/8;
 	while(loop--)
 	{
-	  *(long long *)kbuf = *(long long *)kaddr;
+	  *(uint64_t *)kbuf = *(uint64_t *)kaddr;
 	}
       }
       else 
       {
-	*(long long *)kbuf = *(long long *)kaddr;
+	*(uint64_t *)kbuf = *(uint64_t *)kaddr;
       }
       break;
     }
@@ -517,7 +517,7 @@ data_write( void *d, void *s, int len, int ds, int *wpr)
 	  }
 	  case 8:
 	  {
-	    *(long long *)d = *(long long *)s;
+	    *(uint64_t *)d = *(uint64_t *)s;
 	    break;
 	  }
 	}
@@ -753,12 +753,12 @@ tsc_write_sgl( struct tsc_device *ifc,
 	loop = rw->len/8;
 	while(loop--)
 	{
-	  *(long long *)kaddr = *(long long *)kbuf;
+	  *(uint64_t *)kaddr = *(uint64_t *)kbuf;
 	}
       }
       else 
       {
-	*(long long *)kaddr = *(long long *)kbuf;
+	*(uint64_t *)kaddr = *(uint64_t *)kbuf;
       }
       break;
     }

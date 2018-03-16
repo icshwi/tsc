@@ -1039,8 +1039,8 @@ rdwr_show_buf( ulong addr,
 	}
         case 8:
 	{
-	  if(swap) printf("%016llx ", (unsigned long long)tsc_swap_64( *(long long *)&p[j]));
-	  printf("%016llx ", *(unsigned long long *)&p[j]);
+	  if(swap) printf("%016llx ", (uint64_t)tsc_swap_64( *(uint64_t *)&p[j]));
+	  printf("%016llx ", *(uint64_t *)&p[j]);
 	  break;
 	}
       }
@@ -2255,10 +2255,10 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 				}
 				if( ds == RDWR_SIZE_DBL)   {
 					if( cp->m.swap & 0x80){
-						*(long long *)buf = tsc_swap_64( data);
+						*(uint64_t *)buf = tsc_swap_64( data);
 					}
 					else {
-						*(long long *)buf = data;
+						*(uint64_t *)buf = data;
 					}
 				}
 				tsc_write_loop( offset, buf, 1000, cp->mode);

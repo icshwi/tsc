@@ -612,9 +612,9 @@ dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
   struct dma_ctl *dc;
   struct dma_desc *dd;
   uint next, trig, intr;
-  long long tmp;
+  uint64_t tmp;
 
-  debugk(("in dma_set_rd_desc( %d : %x, %llx, %x, %x)...\n", dma_ctl_p->chan, shm_addr, (long long)des_addr, size, space));
+  debugk(("in dma_set_rd_desc( %d : %x, %llx, %x, %x)...\n", dma_ctl_p->chan, shm_addr, des_addr, size, space));
   dc = (struct dma_ctl *)dma_ctl_p;
   dd = (struct dma_desc *)&dc->rd_desc;
 
@@ -628,7 +628,7 @@ dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
   dd->shm_addr = (shm_addr & TSC_IDMA_DES2_ADDR_MASK) | 3;      /* SHM local buffer */
   dd->next = next;                   
   dd->rem_addr_l = (uint)des_addr;                               /* des address bit 0:31         */
-  tmp = (long long)des_addr;                                     /* if des address  is 64 bit    */
+  tmp = des_addr;                                                /* if des address  is 64 bit    */
   dd->rem_addr_h = (uint)(tmp >> 32);                            /* get bit 48:64                */
   dd->status = 0;
   dd->time_msec = 0;
@@ -661,9 +661,9 @@ dma_set_wr_desc( struct dma_ctl *dma_ctl_p,
   struct dma_ctl *dc;
   struct dma_desc *dd;
   uint next, trig, intr;
-  long long tmp;
+  uint64_t tmp;
 
-  debugk(("in dma_set_wr_desc( %d : %x, %llx, %x, %x)...\n", dma_ctl_p->chan, shm_addr, (long long)src_addr, size, space));
+  debugk(("in dma_set_wr_desc( %d : %x, %llx, %x, %x)...\n", dma_ctl_p->chan, shm_addr, src_addr, size, space));
   dc = (struct dma_ctl *)dma_ctl_p;
   dd = (struct dma_desc *)&dc->wr_desc;
 
@@ -677,7 +677,7 @@ dma_set_wr_desc( struct dma_ctl *dma_ctl_p,
   dd->shm_addr = (shm_addr & TSC_IDMA_DES2_ADDR_MASK) | 3;      /* SHM local buffer */
   dd->next = next;                   
   dd->rem_addr_l = (uint)src_addr;                               /* des address bit 0:31         */
-  tmp = (long long)src_addr;                                     /* if des address  is 64 bit    */
+  tmp = src_addr;                                                /* if des address  is 64 bit    */
   dd->rem_addr_h = (uint)(tmp >> 32);                            /* get bit 48:64                */
   dd->status = 0;
   dd->time_msec = 0;
@@ -714,8 +714,8 @@ tsc_dma_move( struct tsc_device *ifc,
   unsigned char space_shm;
 
   debugk(("in tsc_dma_move() : %llx:%x %llx:%x %x %x %x\n",
-	  (long long)dr_p->des_addr, dr_p->des_space,
-	  (long long)dr_p->src_addr, dr_p->src_space,
+	  dr_p->des_addr, dr_p->des_space,
+	  dr_p->src_addr, dr_p->src_space,
 	  dr_p->size, dr_p->des_mode, dr_p->src_mode));
 
   retval = 0;

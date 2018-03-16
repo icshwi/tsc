@@ -267,7 +267,7 @@ tsc_tdma( struct cli_cmd_para *c)
   int retval;
   int chan;
   int  npara;
-  long long tmp;
+  uint64_t tmp;
 
   chan = 0;
   if( c->cnt < 1) 

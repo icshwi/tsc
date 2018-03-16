@@ -989,7 +989,7 @@ tsc_kbuf_alloc( struct tsc_device *ifc,
 		struct tsc_ioctl_kbuf_req *r)
 {
   r->k_base = (void *)pci_alloc_consistent( ifc->pdev,  r->size, &r->b_base);
-  debugk(( KERN_ALERT "alloc kernel buffer : %p - %llx [%x] %lx\n", r->k_base, (long long)r->b_base, r->size, virt_to_phys(r->k_base)));
+  debugk(( KERN_ALERT "alloc kernel buffer : %p - %llx [%x] %lx\n", r->k_base, r->b_base, r->size, virt_to_phys(r->k_base)));
   if( !r->k_base)
   {
     return( -EFAULT);
@@ -1013,7 +1013,7 @@ int
 tsc_kbuf_free( struct tsc_device *ifc,
 	       struct tsc_ioctl_kbuf_req *r)
 {
-  debugk(( KERN_ALERT "free kernel buffer : %p - %llx [%x]\n", r->k_base, (long long)r->b_base, r->size));
+  debugk(( KERN_ALERT "free kernel buffer : %p - %llx [%x]\n", r->k_base, r->b_base, r->size));
   pci_free_consistent(  ifc->pdev, r->size, r->k_base,  r->b_base);
 
   return(0);

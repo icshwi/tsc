@@ -331,7 +331,7 @@ tsc_dma( struct cli_cmd_para *c)
 {
   int retval;
   int chan;
-  long long tmp;
+  uint64_t tmp;
 
   if( c->cnt > 0) 
   {
