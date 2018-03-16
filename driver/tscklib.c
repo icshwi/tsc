@@ -45,7 +45,6 @@
  *=============================< end file header >============================*/
 #include "tscos.h"
 #include "tscdrvr.h"
-#include <linux/fsl_ifc.h>
 
 #define DBGno
 #include "debug.h"
@@ -1033,7 +1032,7 @@ EXPORT_SYMBOL(tsc_kbuf_free);
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore){
-	semaphore_release(semaphore->idx, ifc->shm_ctl[0]->sram_ptr);
+	semaphore_release(semaphore->idx, ifc->shm_ctl[0]->sram_ptr, semaphore->tag);
 	return(0);
 }
 
@@ -1049,16 +1048,9 @@ int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *se
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore){
-	uint *tag;
 	int retval = 0;
 	int ret    = 0;
 
-	tag  = (int *)kmalloc(sizeof(int), GFP_KERNEL);
-	if(copy_from_user(tag, semaphore->tag, sizeof(int))){
-		retval = -EFAULT;
-		return retval;
-	}
-	ret = semaphore_get(semaphore->idx, ifc->shm_ctl[0]->sram_ptr, tag);
-	kfree(tag);
+	ret = semaphore_get(semaphore->idx, ifc->shm_ctl[0]->sram_ptr, semaphore->tag);
 	return(retval | ret);
 }

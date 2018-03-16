@@ -46,6 +46,7 @@ static char *rcsid = "$Id: rtm.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #include "rtm.h"
 #include "ponmboxlib.h"
 #include "mtca4rtmlib.h"
+#include "TscMon.h"
 
 char *
 rtm_rcsid()

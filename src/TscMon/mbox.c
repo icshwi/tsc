@@ -45,6 +45,7 @@ static char *rcsid = "$Id: mbox.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #include <time.h>
 #include "mbox.h"
 #include "ponmboxlib.h"
+#include "TscMon.h"
 
 void print_out_rtm_info(mbox_info_t *info);
 

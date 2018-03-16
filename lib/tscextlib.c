@@ -34,7 +34,6 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/mman.h>
-typedef long dma_addr_t;
 
 #include "../include/tscioctl.h"
 #include "../include/tsculib.h"

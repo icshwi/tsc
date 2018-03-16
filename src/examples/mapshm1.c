@@ -46,7 +46,7 @@
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-main(int argc, char *argv[]){
+int main(int argc, char *argv[]){
 	struct tsc_ioctl_map_win map_win;
 	int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area

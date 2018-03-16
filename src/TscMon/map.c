@@ -44,6 +44,7 @@ static char *rcsid = "$Id: map.c,v 1.4 2015/12/02 08:26:51 ioxos Exp $";
 #include <ctype.h>
 #include <time.h>
 #include "map.h"
+#include "TscMon.h"
 
 char *
 map_rcsid()

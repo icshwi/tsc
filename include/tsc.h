@@ -27,9 +27,10 @@
 #ifndef _H_TSC
 #define _H_TSC
 
-#define	PCI_VENDOR_ID_IOXOS                 0x7357   /* IOXOS PCI VENDOR ID           */
-#define	PCI_DEVICE_ID_IOXOS_TSC_IO      0x1000   /* TSC PCI DEVICE ID IO      */
-#define	PCI_DEVICE_ID_IOXOS_TSC_CENTRAL 0x1001   /* TSC PCI DEVICE ID CENTRAL */
+#define	PCI_VENDOR_ID_IOXOS               0x7357   /* IOXOS PCI VENDOR ID         */
+#define	PCI_DEVICE_ID_IOXOS_TSC_IO        0x1000   /* TSC PCI DEVICE ID IO        */
+#define	PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1 0x1001   /* TSC PCI DEVICE ID CENTRAL 1 */
+#define	PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2 0x1002   /* TSC PCI DEVICE ID CENTRAL 2 */
 
 /*
  *  Define the number of each that the TSC supports.

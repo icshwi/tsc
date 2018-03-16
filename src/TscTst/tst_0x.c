@@ -25,7 +25,6 @@
  *=============================< end file header >============================*/
 
 #include <debug.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -51,10 +50,6 @@
 
 extern int tst_check_cmd_tstop(void);
 char *ident="        ";
-
-/////////////////////////////////////////
-#define PPC 1 // ARCHITECTURE is PPC
-////////////////////////////////////////
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tst_config

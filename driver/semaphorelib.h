@@ -49,7 +49,7 @@
 #define _H_SEMAPHORELIB
 
 int semaphore_status(struct tsc_device *ifc, struct tsc_ioctl_semaphore  *semaphore);
-int semaphore_release(uint idx, void *base_shm_ptr);
-int semaphore_get(uint idx, void *base_shm_ptr, uint *tag);
+int semaphore_release(uint idx, void *base_shm_ptr, uint tag);
+int semaphore_get(uint idx, void *base_shm_ptr, uint tag);
 
 #endif /*  _H_SEMAPHORELIB */

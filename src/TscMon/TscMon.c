@@ -45,6 +45,7 @@ static char rcsid[] = "$Id: TscMon.c,v 1.3 2016/01/26 13:00:40 ioxos Exp $";
 #include <cli.h>
 #include <tsculib.h>
 #include "cmdlist.h"
+#include "tdma.h"
 
 #include <sys/time.h>
 #include <ctype.h>
@@ -168,10 +169,6 @@ int tsc_ddr_idel_calib_start(int quiet){
 
     // IDEL control register for both DDR3 memory
     unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
-
-    /////////////////////////////////////////
-    unsigned int PPC = 1; // ARCHITECTURE is PPC
-    ////////////////////////////////////////
 
     // If calibration of both ddr, loop twice
     if(mem == 0x12){

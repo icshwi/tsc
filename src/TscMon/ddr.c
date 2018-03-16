@@ -42,6 +42,7 @@
 #include <cli.h>
 #include <tscioctl.h>
 #include <tsculib.h>
+#include "TscMon.h"
 
 #include "ddr.h"
 
@@ -55,10 +56,6 @@ unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
 unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
 
 extern int tsc_fd;
-
-/////////////////////////////////////////
-#define PPC 1 // ARCHITECTURE is PPC
-////////////////////////////////////////
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : bin

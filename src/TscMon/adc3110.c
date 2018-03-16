@@ -653,7 +653,7 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
   {
     if( (chan < 0) || (chan > 4))
     {
-      printf("Bad ADC channel [%d]\n");
+      printf("Bad ADC channel\n");
       return(-1);
     }
   }

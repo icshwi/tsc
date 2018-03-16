@@ -51,8 +51,6 @@
 #define DBG
 #include "debug.h"
 
-#define PPC 1
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : semaphore_status
  * Prototype     : int
@@ -80,9 +78,16 @@ int semaphore_status(struct tsc_device *ifc, struct tsc_ioctl_semaphore  *semaph
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int semaphore_release(uint idx, void *base_shm_ptr){
+int semaphore_release(uint idx, void *base_shm_ptr, uint tag){
+	uint temp_rd = 0;
 	base_shm_ptr = (int*)base_shm_ptr + 32 + (idx * 2); // Go to SHM offset 0x80 for SEMAPHORE region
 												  	    // + offset of specific semaphore (64b step)
+	if (tag){
+		temp_rd = ioread32(base_shm_ptr); 				// check current semaphore state
+		if((temp_rd & 0x7fffffff) != tag){
+			return -1;									// tag is not matching content of semaphore
+		}
+	}
 	*(int*)base_shm_ptr = 0;					        // Release the semaphore and reinit the tag
 	return 0;
 }
@@ -98,24 +103,24 @@ int semaphore_release(uint idx, void *base_shm_ptr){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int semaphore_get(uint idx, void *base_shm_ptr, uint *tag){
+int semaphore_get(uint idx, void *base_shm_ptr, uint tag){
 	uint temp_wr = 0;
 	uint temp_rd = 0;
 	base_shm_ptr = (int*)base_shm_ptr + 32 + (idx * 2); // Go to SHM offset 0x80 for SEMAPHORE region
 												  	    // + offset of specific semaphore (64 step)
-#ifdef PPC
-	temp_wr = 0x80 + (*tag & 0x7f); 			  	    // Get semaphore and add specific tag
-#else
-	temp_wr = 0x80000000 + ((*tag & 0x7f) << 24); 		// Get semaphore and add specific tag
-#endif
 
-	temp_rd = *(int*)base_shm_ptr;	 // Acquire current state of the semaphore to check availability
+	temp_rd = ioread32( base_shm_ptr);	    			// check current semaphore state
+	temp_wr = 0x80000000 | tag;
 
-	if((temp_rd == temp_wr) || (temp_rd == 0)){ // Semaphore is already owned or free -> get it
-		*(int*)base_shm_ptr = (temp_wr);
+	if(!(temp_rd & 0x80000000))          // if free ->
+	{
+	  iowrite32( temp_wr, base_shm_ptr); //try to acquire it
+	}
+	temp_rd = ioread32( base_shm_ptr);	// check again current semaphore state
+	if( temp_rd == temp_wr){            // Semaphore is owned by requester
 		return 0;
 	}
-	else{ // semaphore busy
+	else{                              // semaphore busy
 		return 3;
 	}
 }

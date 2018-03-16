@@ -38,6 +38,7 @@ int cli_get_para_str( struct cli_cmd_para *c, int idx, char *str, int len);
 int cli_get_para_hex( struct cli_cmd_para *c, int idx, int *val_p);
 char *cli_history_find_idx( struct cli_cmd_history *h, int idx);
 char *cli_history_find_str( struct cli_cmd_history *h, char *cmd);
+void cli_history_print( struct cli_cmd_history *h);
 
 struct cli_cmd_list
 {

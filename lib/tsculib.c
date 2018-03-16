@@ -27,7 +27,6 @@
 #ifndef lint
 static char rcsid[] = "$Id: tsculib.c,v 1.15 2016/03/02 09:44:14 ioxos Exp $";
 #endif
-typedef long dma_addr_t;
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1991,11 +1990,12 @@ int tsc_semaphore_status(uint *sts){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_semaphore_release(uint idx){
+int tsc_semaphore_release(uint idx, uint tag){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
 
 	semaphore.idx = idx;
+	semaphore.tag = tag;
 	semaphore.sts = 0;
 
 	retval = ioctl(tsc_fd, TSC_IOCTL_SEMAPHORE_RELEASE, &semaphore);
@@ -2012,7 +2012,7 @@ int tsc_semaphore_release(uint idx){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_semaphore_get(uint idx, uint *tag){
+int tsc_semaphore_get(uint idx, uint tag){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
 

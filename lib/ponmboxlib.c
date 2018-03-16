@@ -34,6 +34,7 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
 #include <errno.h>
 #include <unistd.h>
 #include "ponmboxlib.h"
+#include "tsculib.h"
 
 //#define DEBUG
 

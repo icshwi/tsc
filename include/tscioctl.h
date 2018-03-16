@@ -31,14 +31,15 @@
 #include "tsc.h"
 
 #ifndef _LINUX_TYPES_H
-	typedef long dma_addr_t;
+#include <stdint.h>
 #endif /* _LINUX_TYPES_H */
 
 #define TSC_BOARD_IFC1211        0x73571211
 #define TSC_BOARD_IFC1410        0x73571410
 
-#define TSC_BOARD_TSC_IO        PCI_DEVICE_ID_IOXOS_TSC_IO
-#define TSC_BOARD_TSC_CENTRAL        PCI_DEVICE_ID_IOXOS_TSC_CENTRAL
+#define TSC_BOARD_TSC_IO         PCI_DEVICE_ID_IOXOS_TSC_IO
+#define TSC_BOARD_TSC_CENTRAL_1  PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1
+#define TSC_BOARD_TSC_CENTRAL_2  PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2
 
 #define TSC_IOCTL_OP_MASK        0xffff0000
 
@@ -286,8 +287,8 @@ struct tsc_ioctl_rdwr
 
 struct tsc_ioctl_dma_req
 {
-  dma_addr_t src_addr;
-  dma_addr_t des_addr;
+  uint64_t src_addr;
+  uint64_t des_addr;
   uint size;
   unsigned char src_space; unsigned char src_mode; unsigned char des_space; unsigned char des_mode;
   unsigned char start_mode; unsigned char end_mode; unsigned char intr_mode; unsigned char wait_mode;
@@ -405,7 +406,7 @@ struct tsc_ioctl_kbuf_req
 {
   uint size;
   void *k_base;
-  dma_addr_t b_base;
+  uint64_t b_base;
   void *u_base;
 };
 
@@ -511,7 +512,7 @@ struct tsc_ioctl_semaphore
 {
   uint idx;
   uint sts;
-  uint *tag;
+  uint tag;
   uint *location;
 };
 

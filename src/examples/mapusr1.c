@@ -46,7 +46,7 @@
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-main( int argc, char *argv[]){
+int main( int argc, char *argv[]){
 	int *mybuffer    = calloc(1024*1024, 1);
 	int status        = 0;
 	int addr          = 0;

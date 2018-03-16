@@ -47,6 +47,7 @@ static char *rcsid = "$Id: $";
 #include <fcntl.h>
 #include <sys/mman.h>
 #include "TscMon.h"
+#include "tdma.h"
 
 extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
 struct tsc_ioctl_map_ctl mas_mem_map_ctl;
@@ -98,8 +99,8 @@ tdma_init(int quiet)
 
 int
 tsc_tdma_move( int chan,
-	       dma_addr_t des_addr,
-	       dma_addr_t src_addr,
+		   uint64_t des_addr,
+		   uint64_t src_addr,
 	       int  size,
 	       int mode)
 {
@@ -283,7 +284,7 @@ tsc_tdma( struct cli_cmd_para *c)
   if( !strncmp( "start", c->para[0], 5))
   {
     uint para;
-    dma_addr_t des_addr, src_addr;
+    uint64_t des_addr, src_addr;
     int size, mode;
     char sp, idx;
 
@@ -296,7 +297,7 @@ tsc_tdma( struct cli_cmd_para *c)
     npara = sscanf( c->para[1], "%llx:%c%c", &tmp, &sp, &idx);
     if( npara > 0)
     {
-      des_addr = (dma_addr_t)tmp;
+      des_addr = (uint64_t)tmp;
       if( npara == 3)
       {
         if( sp == 'm')
@@ -326,7 +327,7 @@ tsc_tdma( struct cli_cmd_para *c)
     npara = sscanf( c->para[2], "%llx:%c%c", &tmp, &sp, &idx);
     if( npara > 0)
     {
-      src_addr = (dma_addr_t)tmp;
+      src_addr = (uint64_t)tmp;
       if( npara == 3)
       {
         if( sp == 'm')

@@ -25,7 +25,6 @@
  *=============================< end file header >============================*/
 
 #include <debug.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <unistd.h>

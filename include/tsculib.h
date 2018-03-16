@@ -30,8 +30,16 @@
 
 #include <tscioctl.h>
 
+/////////////////////////////////////////
+#define PPC 1 // ARCHITECTURE is PPC
+////////////////////////////////////////
+
+int tsc_read_loop( ulong rem_addr, char *buf, int len, uint mode);
+int tsc_write_loop( ulong rem_addr, char *buf, int len, uint mode);
+int set_device(int device);
 int tsc_init( void);
 int tsc_exit( void);
+int tsc_get_device(void);
 char *tsc_get_lib_version( void);
 char *tsc_get_drv_version( void);
 char *tsc_get_drv_name( void);
@@ -99,8 +107,8 @@ int tsc_i2c_write( uint dev,  uint reg, uint data);
 int tsc_i2c_cmd( uint dev,  uint cmd);
 int tsc_i2c_reset( uint dev);
 int tsc_semaphore_status(uint *sts);
-int tsc_semaphore_release(uint idx);
-int tsc_semaphore_get(uint idx, uint *tag);
+int tsc_semaphore_release(uint idx, uint tag);
+int tsc_semaphore_get(uint idx, uint tag);
 int rsp1461_init(void);
 int rsp1461_presence(void);
 int rsp1461_extension_presence(int *present);

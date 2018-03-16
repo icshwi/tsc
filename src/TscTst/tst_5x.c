@@ -25,7 +25,6 @@
  *=============================< end file header >============================*/
 
 #include <debug.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -727,7 +726,7 @@ int tst_semaphore(struct tst_ctl *tc, char *tst_id){
 		TST_LOG( tc, (logline, "        SEMAPHORE#%02d in progresse ", i));
 		// Get semaphore
 		tag = 0x3;
-		if (tsc_semaphore_get(i, &tag) == 3){
+		if (tsc_semaphore_get(i, tag) == 3){
 			TST_LOG( tc, (logline, "Error SEMAPHORE#%d is locked \n", i));
 			retval = TST_STS_ERR;
 			goto semaphore_fail;
@@ -745,14 +744,14 @@ int tst_semaphore(struct tst_ctl *tc, char *tst_id){
 
 		// Try to re-get semaphore and check is not possible
 		tag = 0x6;
-		if (tsc_semaphore_get(i, &tag) != 3){
+		if (tsc_semaphore_get(i, tag) != 3){
 			TST_LOG( tc, (logline, "Error SEMAPHORE#%d is get again ! \n", i));
 			retval = TST_STS_ERR;
 			goto semaphore_fail;
 		}
 
 		// Release semaphores
-		tsc_semaphore_release(i);
+		tsc_semaphore_release(i, 0);
 
 		TST_LOG( tc, (logline, "                  -> OK \n"));
 	}

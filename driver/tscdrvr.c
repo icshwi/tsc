@@ -68,7 +68,8 @@ static DEFINE_PCI_DEVICE_TABLE(tsc_id_io) = {
 };
 
 static DEFINE_PCI_DEVICE_TABLE(tsc_id_central) = {
-	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL) },
+	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) },
+	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) },
 	{ },
 };
 
@@ -389,7 +390,7 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 		ifc = tsc.ifc_io;
 		debugk((KERN_NOTICE "tsc_io : device data structure allocated %p\n", ifc));
 	}
-	else if (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL){
+	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2)){
 		tsc.ifc_central = (struct tsc_device *)kzalloc(sizeof(struct tsc_device), GFP_KERNEL);
 		if (tsc.ifc_central == NULL) {
 			dev_err(&pdev->dev, "Failed to allocate memory for device structure\n");
@@ -418,7 +419,7 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 		}
 		debugk((KERN_NOTICE "tsc_io : PCI region allocated\n"));
 	}
-	else if (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL){
+	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2)){
 		retval = pci_request_regions( pdev, device_name_central);
 		if (retval) {
 			dev_err(&pdev->dev, "Unable to reserve resources\n");
@@ -462,7 +463,7 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 		}
 		debugk((KERN_NOTICE "tsc_io : IRQ registered\n"));
 	}
-	else if (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL){
+	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2)){
 		if( request_irq( pdev->irq, tsc_irq, IRQF_SHARED, device_name_central, ifc)){
 			debugk((KERN_NOTICE "tsc_central : Cannot register IRQ\n"));
 			goto tsc_probe_err_request_irq;
@@ -502,7 +503,7 @@ tsc_probe_err_enable:
   	if (id->device == PCI_DEVICE_ID_IOXOS_TSC_IO){
   		kfree( tsc.ifc_io);
   	}
-  	else if (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL){
+  	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2)){
   		kfree( tsc.ifc_central);
   	}
 tsc_probe_err_alloc_dev:
@@ -537,7 +538,7 @@ static void tsc_remove( struct pci_dev *pdev){
 	}
 
 	// CENTRAL is present
-	if ((tsc.ifc_central != NULL) && (pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL)){
+	if ((tsc.ifc_central != NULL) && ((pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2))){
 		ifc = tsc.ifc_central;
 		tsc_dev_exit(ifc);
 		mutex_destroy( &ifc->mutex_ctl);
@@ -555,7 +556,7 @@ static void tsc_remove( struct pci_dev *pdev){
 }
 
 /*----------------------------------------------------------------------------
- * Function name : tsc_init
+ * Function name : tsc_initialization
  * Prototype     : int
  * Parameters    : none
  * Return        : 0 if OK
@@ -566,7 +567,7 @@ static void tsc_remove( struct pci_dev *pdev){
  * 
  *----------------------------------------------------------------------------*/
 
-static int tsc_init(void){
+static int tsc_initialization(void){
 	int retval;
 	dev_t tsc_dev_id;
 	struct tsc_device *ifc_io = NULL;
@@ -575,7 +576,7 @@ static int tsc_init(void){
 	char name_io[32] = "bus/bridge/tsc_ctl_io";
 	char name_central[32] = "bus/bridge/tsc_ctl_central";
 
-	debugk(( KERN_ALERT "tsc: entering tsc_init( void)\n"));
+	debugk(( KERN_ALERT "tsc: entering tsc_initialization( void)\n"));
 
 	/*--------------------------------------------------------------------------
 	 * device number dynamic allocation
@@ -729,7 +730,7 @@ static void tsc_exit(void){
 	unregister_chrdev_region( tsc.dev_id, TSC_COUNT);
 }
 
-module_init( tsc_init);
+module_init( tsc_initialization);
 module_exit( tsc_exit);
 
 MODULE_LICENSE("GPL");

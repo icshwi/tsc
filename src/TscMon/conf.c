@@ -42,6 +42,7 @@ static char *rcsid = "$Id: conf.c,v 1.6 2015/12/03 15:14:50 ioxos Exp $";
 #include <tscioctl.h>
 #include <tsculib.h>
 #include "../../include/tscextlib.h"
+#include "TscMon.h"
 
 char *
 conf_rcsid()
@@ -363,7 +364,7 @@ conf_show_lm95235( void)
   char temp;
   uint sts;
 
-  if( (tsc_get_device_id() != TSC_BOARD_TSC_IO) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL))
+  if( (tsc_get_device_id() != TSC_BOARD_TSC_IO) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_1) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_2))
   {
     return;
   }

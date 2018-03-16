@@ -604,7 +604,7 @@ dma_set_ctl( uint space,
 int
 dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
 		 uint  shm_addr, 
-		 dma_addr_t des_addr, 
+		 uint64_t des_addr,
 		 uint size,
 		 unsigned char space,
 		 uint mode)
@@ -653,7 +653,7 @@ dma_set_rd_desc( struct dma_ctl *dma_ctl_p,
 int
 dma_set_wr_desc( struct dma_ctl *dma_ctl_p,
 		 uint  shm_addr, 
-		 dma_addr_t src_addr, 
+		 uint64_t src_addr,
 		 uint size,
 		 unsigned char space,
 		 uint mode)

@@ -25,10 +25,6 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef lint
-static char *rcsid = "$Id: dma.c,v 1.4 2015/12/04 13:27:52 ioxos Exp $";
-#endif
-
 #define DEBUGno
 #include <debug.h>
 #include <sys/types.h>
@@ -50,12 +46,6 @@ struct tsc_ioctl_dma_req dma_req[DMA_CHAN_NUM];
 struct tsc_ioctl_dma_sts dma_sts[DMA_CHAN_NUM];
 extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
 struct cli_cmd_history dma_history;
-
-char *
-dma_rcsid()
-{
-  return( rcsid);
-}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_init
@@ -383,7 +373,7 @@ tsc_dma( struct cli_cmd_para *c)
 
 
     npara = sscanf( c->para[1], "%llx:%x.%c", &tmp, &para, &sw);
-    dma_req[chan].des_addr = (dma_addr_t)tmp;
+    dma_req[chan].des_addr = (uint64_t)tmp;
 
     dma_req[chan].des_mode = 0;
     if( para ==  DMA_SPACE_KBUF)
@@ -421,7 +411,7 @@ tsc_dma( struct cli_cmd_para *c)
     }
     sw = 0;
     npara = sscanf( c->para[2], "%llx:%x.%c", &tmp, &para, &sw);
-    dma_req[chan].src_addr = (dma_addr_t)tmp;
+    dma_req[chan].src_addr = (uint64_t)tmp;
     if( para ==  DMA_SPACE_KBUF)
     {
       dma_req[chan].src_space = DMA_SPACE_PCIE;

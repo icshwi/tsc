@@ -96,7 +96,7 @@ int tsc_semaphore(struct cli_cmd_para *c){
 				return(-1);
 			}
 			else{
-				tsc_semaphore_release(idx);
+				tsc_semaphore_release(idx, 0);
 				printf("SEMAPHORE#%d released \n", idx);
 				return(0);
 			}
@@ -115,7 +115,7 @@ int tsc_semaphore(struct cli_cmd_para *c){
 			}
 			else{
 				tag = strtoul(c->para[2], &p, 16);
-				if(tsc_semaphore_get(idx, &tag) == 3){
+				if(tsc_semaphore_get(idx, tag) == 3){
 					printf("Semaphore not available !\n");
 				}
 				else{
