@@ -123,7 +123,8 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 	unsigned int    DQ_NOK[16];
 	unsigned int    DQ_OK[16];
 	float  f0, f1, f2	    = 0.0;
-	unsigned int    retval           = 0;
+	int             ppc             = 0;
+	unsigned int    retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
 	unsigned int    *buf_tx  		= NULL;	    // Locally buffer to send data to DDR3
 	unsigned int    *buf_rx  		= NULL;	    // Locally buffer to receive data from DDR3
@@ -185,6 +186,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
 	TST_LOG( tc, (logline, "%s->Executing SMEM1 & SMEM2 calibration n", tst_id));
 
+	ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
 
     // If calibration of both ddr, loop twice
     if(mem == 0x12){
@@ -390,7 +392,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 				// Increment only the tap delay when we are < MAX tap
 				if(k < (MAX - CURRENT_STEP)) {
 
-#ifdef PPC
+if (ppc == 1) {
 					if(j < 8){
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
@@ -415,7 +417,8 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 						// Update new value of count
 						temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 					}
-#else
+}
+else{
 					// Compute new count value and write IFSTA
 					data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
 					tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -426,7 +429,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 
 					// Update new value of count
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
-#endif
+}
 				}
 		}
 
@@ -458,7 +461,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 			TST_LOG( tc, (logline, "  *"));
 			TST_LOG( tc, (logline, "\n"));
 
-#ifdef PPC
+if (ppc == 1) {
 			if(j < 8){
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
@@ -477,7 +480,8 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 				data = (1 << 31) | (0x1 << (j - 8));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
 			}
-#else
+}
+else{
 			// Compute new count value and write IFSTA
 			data = final_cnt_value_store[j] << 16;
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -485,7 +489,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 			// Load new count value
 			data = (1 << 31) | (0x1 << (j));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-#endif
+}
 
 			// Check status
 			if (ok == 0){

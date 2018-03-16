@@ -205,6 +205,7 @@ int tsc_ddr_idel_calib(int mem){
 	char para_buf[32];
 	int  DQ_NOK[16];
 	int  DQ_OK[16];
+	int  ppc                        = 0;
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
@@ -269,6 +270,8 @@ int tsc_ddr_idel_calib(int mem){
 
     unsigned int word14 = 0x00000000; // 0000 0000 0000 0000 0000 0000 0000 0000
     unsigned int word15 = 0xffffffff; // 1111 1111 1111 1111 1111 1111 1111 1111
+
+    ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
 
     // If calibration of both ddr, loop twice
     if(mem == 0x12){
@@ -498,7 +501,7 @@ int tsc_ddr_idel_calib(int mem){
 				// Increment only the tap delay when we are < MAX tap
 				if(k < (MAX - CURRENT_STEP)) {
 
-#ifdef PPC
+if (ppc == 1) {
 					if(j < 8){
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
@@ -537,7 +540,8 @@ int tsc_ddr_idel_calib(int mem){
 						// Update new value of count
 						temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 					}
-#else
+}
+else {
 					// Compute new count value and write IFSTA
 					data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
 					tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -548,7 +552,7 @@ int tsc_ddr_idel_calib(int mem){
 
 					// Update new value of count
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
-#endif
+}
 				}
 		}
 
@@ -580,7 +584,7 @@ int tsc_ddr_idel_calib(int mem){
 			printf("  *");
 			printf("\n");
 
-#ifdef PPC
+if (ppc == 1) {
 			if(j < 8){
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
@@ -613,7 +617,8 @@ int tsc_ddr_idel_calib(int mem){
 				//printf("reread IFSTA after update : %x \n", data);
 
 			}
-#else
+}
+else {
 			// Compute new count value and write IFSTA
 			data = final_cnt_value_store[j] << 16;
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -621,7 +626,7 @@ int tsc_ddr_idel_calib(int mem){
 			// Load new count value
 			data = (1 << 31) | (0x1 << (j));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-#endif
+}
 
 			// Check status
 			if (ok == 0){
@@ -999,7 +1004,7 @@ int tsc_ddr_idel_calib(int mem){
 
 		// Substract maximal steps for current DQ
 		for(k = (CURRENT_DLY / CURRENT_STEP); k-- > 0 ; ){
-#ifdef PPC
+if (ppc == 1) {
 			if(j < 8){
 				tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 				data = data | (1 << 29) | (0x1 << (j + 8));
@@ -1010,11 +1015,12 @@ int tsc_ddr_idel_calib(int mem){
 				data = data | (1 << 29) | (0x1 << (j - 8));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 			}
-#else
+}
+else {
 			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 			data = data | (1 << 29) | (0x1 << (j));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data); // -
-#endif
+}
 
 			// Fill DDR3 with test pattern
 			memcpy(buf_ddr, buf_tx, size);
@@ -1081,7 +1087,7 @@ int tsc_ddr_idel_calib(int mem){
 
 			// Increment only the tap delay when we are < MAX tap
 			if(k < (MAX -1)) {
-#ifdef PPC
+if (ppc == 1) {
 				if(j < 8){
 					tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 					data = data | (1 << 30) | (0x1 << (j + 8));
@@ -1092,11 +1098,12 @@ int tsc_ddr_idel_calib(int mem){
 					data = data | (1 << 30) | (0x1 << (j - 8));
 					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data); // +
 				}
-#else
+}
+else {
 				tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 				data = data | (1 << 30) | (0x1 << (j));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
-#endif
+}
 			}
 
 			// Do transfer
@@ -1128,7 +1135,7 @@ int tsc_ddr_idel_calib(int mem){
 
 		// Place delay cursor on the left
 		for(k = 0; k < MAX ; k++){
-#ifdef PPC
+if (ppc == 1) {
 			if(j < 8){
 				tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 				data = data | (1 << 29) | (0x1 << (j + 8));
@@ -1139,11 +1146,12 @@ int tsc_ddr_idel_calib(int mem){
 				data = data | (1 << 29) | (0x1 << (j - 8));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
 			}
-#else
+}
+else {
 			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 			data = data | (1 << 29) | (0x1 << (j));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // -
-#endif
+}
 
 			// Fill DDR3 with test pattern
 			memcpy(buf_ddr, buf_tx, size);
@@ -1158,7 +1166,7 @@ int tsc_ddr_idel_calib(int mem){
 
 		// Place delay cursor on the good delay according to the marker value for current DQ
 		for(k = 0; k < marker ; k++){
-#ifdef PPC
+if (ppc == 1) {
 			if(j < 8){
 				tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 				data = data | (1 << 30) | (0x1 << (j + 8));
@@ -1169,11 +1177,12 @@ int tsc_ddr_idel_calib(int mem){
 				data = data | (1 << 30) | (0x1 << (j - 8));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
 			}
-#else
+}
+else{
 			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &data);
 			data = data | (1 << 30) | (0x1 << (j));
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data); // +
-#endif
+}
 
 			// Fill DDR3 with test pattern
 			memcpy(buf_ddr, buf_tx, size);

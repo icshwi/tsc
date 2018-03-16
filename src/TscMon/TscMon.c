@@ -24,10 +24,6 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef lint
-static char rcsid[] = "$Id: TscMon.c,v 1.3 2016/01/26 13:00:40 ioxos Exp $";
-#endif
-
 #include <termios.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -71,12 +67,6 @@ int tsc_date;
 
 static char *month[16] ={ NULL,"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",NULL,NULL};
 
-char *
-TscMon_rcsid()
-{
-  return( rcsid);
-}
-
 extern int tsc_fd;
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -94,6 +84,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 	char para_buf[32];
 	int  DQ_NOK[16];
 	int  DQ_OK[16];
+	int  ppc                        = 0;
 	float   f0, f1, f2	    		= 0.0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
@@ -169,6 +160,8 @@ int tsc_ddr_idel_calib_start(int quiet){
 
     // IDEL control register for both DDR3 memory
     unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
+
+    ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
 
     // If calibration of both ddr, loop twice
     if(mem == 0x12){
@@ -326,7 +319,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 				// Increment only the tap delay when we are < MAX tap
 				if(k < (MAX - CURRENT_STEP)) {
 
-if (PPC == 1) {
+if (ppc == 1) {
 					if(j < 8){
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
@@ -399,7 +392,7 @@ else {
 			}
 */
 
-if (PPC == 1){
+if (ppc == 1){
 			if(j < 8){
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;

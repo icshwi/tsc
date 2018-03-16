@@ -24,10 +24,6 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef lint
-static char rcsid[] = "$Id: tsculib.c,v 1.15 2016/03/02 09:44:14 ioxos Exp $";
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <pty.h>
@@ -53,29 +49,46 @@ static char tsc_drv_version[16] = {0,};
 static unsigned short tsc_vendor_id;
 static unsigned short tsc_device_id;
 
-char *
-tsc_rcsid()
-{
-  return( rcsid);
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : CheckByteOrder
+ * Prototype     : int
+ * Parameters    : void
+ * Return        : endianness
+ *----------------------------------------------------------------------------
+ * Description   : Check byte order
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int CheckByteOrder(void){
+	unsigned int i = 1;
+	char *c = (char*)&i;
+	if (*c){
+		// Little endian x86
+		return 0;
+	}
+	else{
+		// Big endian ppc
+		return 1;
+	}
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_swap_64
- * Prototype     : long long
- * Parameters    : long long data
+ * Prototype     : uint64_t
+ * Parameters    : uint64_t data
  * Return        : data swapped
  *----------------------------------------------------------------------------
  * Description   : return data swapped for 64 bits
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-long long
-tsc_swap_64( long long data)
+uint64_t
+tsc_swap_64( uint64_t data)
 {
   char ci[8];
   char co[8];
 
-  *(long long *)ci = data;
+  *(uint64_t *)ci = data;
   co[0] = ci[7];
   co[1] = ci[6];
   co[2] = ci[5];
@@ -85,7 +98,7 @@ tsc_swap_64( long long data)
   co[6] = ci[1];
   co[7] = ci[0];
 
-  return( *(long long *)co);
+  return( *(uint64_t *)co);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

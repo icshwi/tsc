@@ -30,10 +30,7 @@
 
 #include <tscioctl.h>
 
-/////////////////////////////////////////
-#define PPC 1 // ARCHITECTURE is PPC
-////////////////////////////////////////
-
+int CheckByteOrder(void);
 int tsc_read_loop( ulong rem_addr, char *buf, int len, uint mode);
 int tsc_write_loop( ulong rem_addr, char *buf, int len, uint mode);
 int set_device(int device);
@@ -53,7 +50,7 @@ int tsc_pon_write( int idx, int *data_p);   /* write to PMON register           
 int tsc_pon_read( int idx, int *data_p);    /* read from PON register             */
 int tsc_pciep_write( int idx, int *data_p); /* write to ARTIX7 PCIEP register     */
 int tsc_pciep_read( int idx, int *data_p);  /* read from ARTIX7 PCIEP register    */
-long long tsc_swap_64( long long);
+uint64_t tsc_swap_64(uint64_t);
 int tsc_swap_32( int);
 short tsc_swap_16( short);
 int tsc_write_blk( ulong addr, char *buf, int len, uint mode);
