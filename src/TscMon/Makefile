@@ -34,7 +34,7 @@ OFILES = TscMon.o script.o rdwr.o conf.o map.o mbox.o rtm.o dma.o timer.o sflash
 
 HFILES = $(INCDIR)/cli.h 
 
-all : TscMon
+all : TscMon SmemCalibration
 
 rsp1461.o: rsp1461.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c rsp1461.c
@@ -110,5 +110,9 @@ TscMon.o: TscMon.c cmdlist.h Makefile
 
 TscMon:$(OFILES)  $(OLIB) $(LIBDIR)/libtsc.a
 	$(CC) $(LIB) -o TscMon $(OFILES) -ltsc -lrt -lm
+
+SmemCalibration: SmemCalibration.c
+	$(CC) $(LIB) $(INC) -o SmemCalibration SmemCalibration.c -ltsc -lrt -lm
+
 clean:
-	$(RM) *.o *.a
+	$(RM) *.o *.a SmemCalibration TscMon
