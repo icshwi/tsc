@@ -41,7 +41,7 @@
 #include <tsculib.h>
 #include "TscMon.h"
 
-int main(void){
+int main(int argc, char * argv[]){
 
 	// SMEM control & status register
 	unsigned int SMEM_DDR3_CSR[2] = {0x800, 0xc00};
@@ -54,6 +54,7 @@ int main(void){
 
 	struct tsc_ioctl_map_win map_win;
 	char para_buf[32];
+	int  quiet                      = 0;
 	int  DQ_NOK[16];
 	int  DQ_OK[16];
 	int  ppc                        = 0;	    // Allow to check endianness
@@ -128,6 +129,17 @@ int main(void){
 
 	// Init TSC
 	tsc_fd = tsc_init();
+	if(tsc_fd < 0) {
+		printf("TSC driver not installed, please install the driver firstly. \n");
+		return (-1);
+	}
+
+	if(argc == 2){
+		if (!strcmp(argv[1], "-q")){
+			//Quiet mode
+			quiet = 1;
+		}
+	}
 
     // If calibration of both ddr, loop twice
     if(mem == 0x12){
@@ -212,6 +224,7 @@ int main(void){
 
 		buf_tx = buf_tx_start;
 
+if (!quiet) {
 		// Acquire temperature and voltage of current system
 		d0 = 0x3000;
 		tsc_smon_write(0x41, &d0);
@@ -245,7 +258,7 @@ int main(void){
 		printf("Default INC           : %d \n", CURRENT_STEP);
 		printf("Default CNT           : 0 \n");
 		printf("\n");
-
+}
 		//Reset memory calibration
 		// Only on the first memory due to the fact that reset impact both memory
 		// Calibration need to be done in the order : 1 -> 2
@@ -262,6 +275,7 @@ int main(void){
 		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Pass the entire possible delay taps
+if (!quiet) {
 		printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
 		printf(" Default delay :  ");
 		for(j = 0; j < MAX; j++){
@@ -276,7 +290,7 @@ int main(void){
 		printf("\n");
 		printf(" Delay value   : 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 \n");
 		printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
-
+}
 		// Set IDEL to 0
 		data = 0;
 		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
@@ -292,14 +306,14 @@ int main(void){
 			init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 			temp_cnt_value_store[j] = init_cnt_value_store[j];
 			//printf("IFSTA at begining: raw register: 0x%04x stored count: 0x%x \n", cnt_value, init_cnt_value_store[j]);
-
+if (!quiet) {
 			if(j < 8){
 				printf(" DQ[%02d] test   :", j + 8);
 			}
 			else{
 				printf(" DQ[%02d] test   :", j - 8);
 			}
-
+}
 			// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
 			avg_x = 0;
 			start = 0;
@@ -345,13 +359,17 @@ int main(void){
 
 				// Check data received with reference pattern
 				if (!memcmp(pattern, ref_pattern, 32 * sizeof(int))){
+if (!quiet) {
 					printf("  Y");
+}
 					end   = k;
 					NOK   = 0;
 					ok++;
 				}
 				else{
+if (!quiet) {
 					printf("  N");
+}
 				}
 
 				// Increment only the tap delay when we are < MAX tap
@@ -432,6 +450,7 @@ else {
 			final_cnt_value_store[j] = marker;
 
 			// Trace new delay
+if (!quiet) {
 			printf("\n");
 			printf(" Final delay 0x%x:", marker);
 			for(n = init_cnt_value_store[j] ; n < marker; n = n + CURRENT_STEP){
@@ -439,7 +458,7 @@ else {
 			}
 			printf("  *");
 			printf("\n");
-
+}
 if (ppc == 1) {
 			if(j < 8){
 				// Compute new count value and write IFSTA
@@ -495,9 +514,9 @@ else {
 
 			DQ_OK[j] = ok;
 			//printf(" start: 0x%x, end: 0x%x, ok: %i, avg: 0x%x, marker: 0x%x \n", start, end, ok, avg_x, marker);
-
+if (!quiet) {
 			printf("+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
-
+}
 			// Set IDEL and IFSTA to 0
 			data = 0;
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
