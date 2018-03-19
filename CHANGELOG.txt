@@ -4,6 +4,17 @@
 * Changelog file                         *
 ******************************************
 
+*** Release 1.4.5 | 20.03.2018 ***
+
+- Add standalone SMEM calibration placed in project_dir/src/TscMon
+  Insert TSC driver before executing the calibration
+  SmemCalibration    -> verbose mode
+  SmemCalibration -q -> quiet mode
+- Add 1002 PCIe ID recognition and support	
+- Support of RTM info in the PON mailbox (MTCA.4 boards) 
+- Add support for ADC3112
+- Syntax and cosmetic adaptation
+
 *** Release 1.4.4 | 05.12.2018 ***
 
 - Add timer command
