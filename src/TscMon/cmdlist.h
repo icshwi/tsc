@@ -276,12 +276,14 @@ char *dma_msg[] =
   "dma.<x> free",
   "dma.<x> clear",
   "     where <x>     =  DMA channel (0 to 3)",
-  "           <space> =  0 -> PCIe bus address",
+  "           <space> =  0 -> PCIe bus address EP#0",
+  "                      1 -> PCIe bus address EP#1",
   "                      2 -> Shared Memory #1",
   "                      3 -> Shared Memory #2",
   "                      4 -> FPGA user area #1",
   "                      5 -> FPGA user area #2",
-  "                      8 -> Test buffer allocated in system memory",
+  "                      8 -> Test buffer allocated in system memory over PCIe EP#0",
+  "                      9 -> Test buffer allocated in system memory over PCIe EP#1",
   "           If .s is appended to <space>, byte swapping if performed",
 0};
 

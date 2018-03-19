@@ -381,6 +381,11 @@ tsc_dma( struct cli_cmd_para *c)
       dma_req[chan].des_space = DMA_SPACE_PCIE;
       dma_req[chan].des_addr += tsc_kbuf_ctl[0].kbuf_p->b_base;
     }
+    else if( para ==  DMA_SPACE_KBUF1)
+    {
+      dma_req[chan].des_space = DMA_SPACE_PCIE1;
+      dma_req[chan].des_addr += tsc_kbuf_ctl[0].kbuf_p->b_base;
+    }
     else 
     {
       dma_req[chan].des_space = (char)para;
@@ -415,6 +420,11 @@ tsc_dma( struct cli_cmd_para *c)
     if( para ==  DMA_SPACE_KBUF)
     {
       dma_req[chan].src_space = DMA_SPACE_PCIE;
+      dma_req[chan].src_addr += tsc_kbuf_ctl[0].kbuf_p->b_base;
+    }
+    else if( para ==  DMA_SPACE_KBUF1)
+    {
+      dma_req[chan].src_space = DMA_SPACE_PCIE1;
       dma_req[chan].src_addr += tsc_kbuf_ctl[0].kbuf_p->b_base;
     }
     else 
