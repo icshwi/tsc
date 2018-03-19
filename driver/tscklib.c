@@ -259,12 +259,21 @@ tsc_map_mas_init( struct tsc_device *ifc)
   long size;
   int pg_num;
   uint pcie_mmuadd;
+  uint pcie_off = 0;
 
   retval = 0;
   debugk(( KERN_NOTICE "tsc : Entering tsc_map_mas_init( %p)\n", ifc));
 
+  /* choose TOSCA Agent #1 PCIe_EP CSR area (when accessing Tosca in remote)
+     in that case registers are between 0x400 - 0x7ff of CSR area */
+  if (ifc->pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) {
+	  pcie_off = 0x400;
+  } else {
+	  pcie_off = 0;
+  }
+
   /* get master interface current configuration */
-  pcie_mmuadd = ioread32( ifc->csr_ptr + TSC_CSR_PCIE_MMUADD);
+  pcie_mmuadd = ioread32( ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUADD);
 
   /* initialize data structures controlling the PCI PMEM master mapping */
   size = pci_resource_len( ifc->pdev, 0);

@@ -75,6 +75,7 @@ tsc_map_mas_set_sg( struct tsc_device *ifc,
   int npg;
   int pg_size;
   int mmu_ptr;
+  int pcie_off = 0;
 
   debugk(("in tsc_map_mas_set_sg( %p, %p, %x)\n", ifc, map_ctl_p, offset));
   p = map_ctl_p->map_p;
@@ -103,16 +104,25 @@ tsc_map_mas_set_sg( struct tsc_device *ifc,
     }
   }
   debugk(("loading MMU : %x\n", mmu_ptr));
+
+  /* choose TOSCA Agent #1 PCIe_EP CSR area (when accessing Tosca in remote)
+     in that case registers are between 0x400 - 0x7ff of CSR area */
+  if (ifc->pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) {
+	  pcie_off = 0x400;
+  } else {
+	  pcie_off = 0;
+  }
+
   mutex_lock( &ifc->csr_lock);
-  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_PCIE_MMUADD);
+  iowrite32( mmu_ptr, ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUADD);
   for( npg = 0; npg < p[offset].npg; npg++)
   {
     mode = (int)p[offset].mode | (int)((p[offset].rem_addr + (npg*pg_size)) & 0x30000);
     debugk(("mode = %x\n", mode));
-    iowrite32( mode, ifc->csr_ptr + TSC_CSR_PCIE_MMUDAT);
+    iowrite32( mode, ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUDAT);
     rem_addr = (int)(((p[offset].rem_addr + (npg*pg_size)) >> 18) & 0x3ffff);
     debugk(("rem_addr = %x\n", rem_addr));
-    iowrite32( rem_addr, ifc->csr_ptr + TSC_CSR_PCIE_MMUDAT);
+    iowrite32( rem_addr, ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUDAT);
   }
   mutex_unlock( &ifc->csr_lock);
   return(0);
@@ -138,6 +148,7 @@ tsc_map_mas_clear_sg( struct tsc_device *ifc,
 {
   struct map_blk *p;
   int mmu_ptr;
+  int pcie_off = 0;
 
   debugk(("in tsc_map_mas_clear_sg( %p, %p, %x, %x)\n", ifc, map_ctl_p, offset, npg));
   p = map_ctl_p->map_p;
@@ -161,12 +172,21 @@ tsc_map_mas_clear_sg( struct tsc_device *ifc,
     }
   }
   debugk(("clearing MMU : %x %x\n", mmu_ptr, npg));
+
+  /* choose TOSCA Agent #1 PCIe_EP CSR area (when accessing Tosca in remote)
+     in that case registers are between 0x400 - 0x7ff of CSR area */
+  if (ifc->pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) {
+	  pcie_off = 0x400;
+  } else {
+	  pcie_off = 0;
+  }
+
   mutex_lock( &ifc->csr_lock);
-  iowrite32( mmu_ptr, ifc->csr_ptr + TSC_CSR_PCIE_MMUADD);
+  iowrite32( mmu_ptr, ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUADD);
   while( npg--)
   {
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PCIE_MMUDAT);
-    iowrite32( 0, ifc->csr_ptr + TSC_CSR_PCIE_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUDAT);
+    iowrite32( 0, ifc->csr_ptr + pcie_off + TSC_CSR_PCIE_MMUDAT);
   }
   mutex_unlock( &ifc->csr_lock);
   return(0);
