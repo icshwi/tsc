@@ -55,7 +55,7 @@ static void tsc_remove(struct pci_dev *);
 
 #include "debug.h"
 
-#define DRIVER_VERSION "1.40"
+#define DRIVER_VERSION "1.50"
 
 struct tsc tsc;      /* driver main data structure for device */
 

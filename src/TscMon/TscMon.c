@@ -48,8 +48,8 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-char TscMon_version[] = "1.40";
-char TscMon_official_release[] = "1.4.4";
+char TscMon_version[] = "1.50";
+char TscMon_official_release[] = "1.4.5";
 
 int tsc_cmd_exec( struct cli_cmd_list *, struct cli_cmd_para *);
 
