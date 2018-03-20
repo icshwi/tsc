@@ -50,7 +50,7 @@
 
 extern int tst_check_cmd_tstop(void);
 
-struct tsc_ioctl_dma_req req_p; // dma request structure
+struct tsc_ioctl_dma_req req_p = {0}; // dma request structure initialized to 0
 
 // Define is the PCIe EP#0 or PCIe EP#1 is used to access kernel buffer
 int KBUF = 0;
@@ -86,7 +86,7 @@ const char * destination_txt[] = {"SRAM1", "SRAM2", "DDR1", "DDR2", "USR1", "USR
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void dma_configure(int channel, int src, int des, int size, int space_src, int space_des){
+void dma_configure(int channel, uint64_t src, uint64_t des, int size, int space_src, int space_des){
 	req_p.des_addr   = des;
 	req_p.des_space  = space_des;
 	req_p.des_mode   = 0;
