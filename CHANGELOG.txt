@@ -10,9 +10,11 @@
   Insert TSC driver before executing the calibration
   SmemCalibration    -> verbose mode
   SmemCalibration -q -> quiet mode
-- Add 1002 PCIe ID recognition and support	
+- Add DMA support for PCIe EP#1
+- Add 1002 PCIe EP#1 ID recognition and support	
 - Support of RTM info in the PON mailbox (MTCA.4 boards) 
 - Add support for ADC3112
+- 64b type update
 - Syntax and cosmetic adaptation
 
 *** Release 1.4.4 | 05.12.2018 ***
