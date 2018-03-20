@@ -52,12 +52,16 @@ extern int tst_check_cmd_tstop(void);
 
 struct tsc_ioctl_dma_req req_p; // dma request structure
 
-			                     //SRAM1    SRAM2    DDR1    DDR2    USR1    USR2    KBUF
+// Define is the PCIe EP#0 or PCIe EP#1 is used to access kernel buffer
+int KBUF = 0;
+								  //SRAM1    SRAM2    DDR1    DDR2    USR1    USR2    KBUF 0 | 1
 int source[7]                  = { 2,       3,       2,      3,      4,      5,      0};
 const char * source_txt[]      = {"SRAM1", "SRAM2", "DDR1", "DDR2", "USR1", "USR2", "KBUF"};
 
 int destination[7]             = { 2,       3,       2,      3,      4,      5,      0};
 const char * destination_txt[] = {"SRAM1", "SRAM2", "DDR1", "DDR2", "USR1", "USR2", "KBUF"};
+
+
 
 /* ->    * SRAM1 * SRAM2 * DDR1 * DDR2 * USR1 * USR2 * KBUF * DEST
  * **********************************************************
@@ -209,7 +213,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 		for (src = 0; src < 7; src++) {
 
 			// Choose offset destination according to the destination agent
-			if (source[src] == 0){				// PCIe - KBUF
+			if (source[src] == KBUF){			// PCIe - KBUF
 				offset_src = offset_shm;
 			}
 			else if (source[src] == 2){			// SRAM1 - DDR1
@@ -236,7 +240,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 			}
 
 // Initialize source with consistent data ----------------------------------------------------------------
-			if (source[src] == 0){									// PCIe - KBUF
+			if (source[src] == KBUF){								// PCIe - KBUF
 				// Fill data buffer with pattern 0 4 8 C ...
 				tst_cpu_fill(data_buf, size_ref, 1, offset_shm, 4); // KBUF has similar offset than DDR
 				// Write to source
@@ -287,7 +291,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 			for (dest = 0; dest < 7; dest++){
 
 				// Choose offset destination according to the destination agent
-				if (destination[dest] == 0){							// PCIe - KBUF
+				if (destination[dest] == KBUF){							// PCIe - KBUF
 					offset_dest = offset_shm;
 				}
 				else if (destination[dest] == 2){						// SRAM1 - DDR1
@@ -330,7 +334,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 						tst_cpu_fill(check_buf, size_ref, 0, 0, 0);
 
 // Prepare data destination with reference pattern -------------------------------------------------------
-						if (destination[dest] == 0){							// PCIe - KBUF
+						if (destination[dest] == KBUF){							// PCIe - KBUF
 							tsc_kbuf_write(buf_p.k_base, ref_buf, size_ref);
 						}
 						else if (destination[dest] == 2){						// SRAM1 - DDR1
@@ -360,11 +364,11 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 
 // Preapare DMA transfer ----------------------------------------------------------------------------------
 						// Source is KBUF
-						if (source[src] == 0){
+						if (source[src] == KBUF){
 							dma_configure(channel, buf_p.b_base + sub_offset, offset_dest + sub_offset, sub_size, source[src], destination[dest]);
 						}
 						// Destination is KBUF
-						else if (destination[dest] == 0){
+						else if (destination[dest] == KBUF){
 							dma_configure(channel, offset_src + sub_offset, buf_p.b_base + sub_offset, sub_size, source[src], destination[dest]);
 						}
 						// All others cases (SRAM, SHM, USR)
@@ -394,7 +398,7 @@ int tst_dma(struct tst_ctl *tc, char *tst_id){
 						}
 
 // Acquire data -------------------------------------------------------------------------------------------
-						if (destination[dest] == 0){							// PCIe - KBUF
+						if (destination[dest] == KBUF){							// PCIe - KBUF
 							tsc_kbuf_read(buf_p.k_base, check_buf, size_ref);
 						}
 						else if (destination[dest] == 2){						// SRAM1 - DDR1
