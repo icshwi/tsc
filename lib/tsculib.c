@@ -2878,13 +2878,78 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_sfp_status(rsp1461_sfp_id_t id, rsp1461_sfp_status_t *status){
-	int retval = 0;
+int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
+	int retval   = 0;
+	int addr     = 0;
+	int bus      = 4;
+	int reg      = 0;
+	int rs       = 1;
+	int ds       = 1;
+	int device   = 0;
+	int data     = 0;
 
-printf("Welcome in rsp1461_sfp_status \n");
-printf("SFP ID is %x \n", id);
+	switch(id){
 
-	return retval;
+	// U120 PORT#0 & PORT#1
+	case 0:
+	case 1:
+    	addr = 0x76;
+    	if (id == 0){
+    		reg = 0; // PORT#0
+    	}
+    	else if (id == 1){
+    		reg = 1; // PORT#1
+    	}
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+    	retval = tsc_i2c_read(device, reg, &data);
+    	*status = (data & 0x3f);
+		break;
+
+	// U121 PORT#0 & PORT#1
+	case 2:
+	case 3:
+    	addr = 0x77;
+    	if (id == 2){
+    		reg = 0; // PORT#0
+    	}
+    	else if (id == 3){
+    		reg = 1; // PORT#1
+    	}
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+    	retval = tsc_i2c_read(device, reg, &data);
+    	*status = (data & 0x3f);
+		break;
+
+	// U107 PORT#1
+	case 4:
+    	addr = 0x74;
+    	reg = 1; // PORT#1
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+    	retval = tsc_i2c_read(device, reg, &data);
+    	*status = (data & 0x3f);
+		break;
+
+	// U108 PORT#1 & PORT#0
+	case 5:
+	case 6:
+    	addr = 0x75;
+    	if (id == 5){
+    		reg = 1; // PORT#1
+    	}
+    	else if (id == 6){
+    		reg = 0; // PORT#0
+    	}
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+    	retval = tsc_i2c_read(device, reg, &data);
+    	*status = (data & 0x3f);
+		break;
+
+	default :
+		printf("Bad index ! \n");
+		printf("Available id is 0 to 6 \n");
+		return(-1);
+	}
+return retval;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

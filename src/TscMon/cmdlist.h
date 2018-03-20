@@ -593,6 +593,7 @@ char *rsp1461_msg[] =
   "   rsp1461 sfp status <id>",
   "      where id = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
   "                 3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
+  "                 6 -> SFP_CPU_XFI_LANE_1",
   "",
   "   rsp1461 sfp <control> <id>",
   "      where control = 1 -> SFP_TX_DISABLE, 2 -> SFP_RX_HIGH_RATE, 4 -> SFP_TX_HIGH_RATE",

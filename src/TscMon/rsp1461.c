@@ -196,7 +196,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	rsp1461_led_t           led;
 	rsp1461_sfp_control_t   sfp_control_enum;
 	rsp1461_ext_pin_state_t ext_pin_state_enum;
-	rsp1461_sfp_status_t    sfp_status;
+	uint8_t                 sfp_status;
 
 	// Check if the board is a IFC14xx
 	tsc_pon_read(0x0, &data);
@@ -343,17 +343,24 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 			// Status
 			if(!strcmp("status", c->para[1])){
 				retval = rsp1461_sfp_status(sfp_id, &sfp_status); // Check function return
-				if(sfp_status == SFP_PRESENT){
-					printf("SFP_PRESENT");
-				}
-				else if (sfp_status == SFP_TX_FAULT){
-					printf("SFP_TX_FAULT");
-				}
-				else if (sfp_status == SFP_LOSS_OF_SIGNAL) {
-					printf("SFP_LOSS_OF_SIGNAL");
+				printf("sfp #%x status: \n", sfp_id);
+				if(sfp_status & (SFP_PRESENT)){
+					printf("   SFP_PRESENT:        Absent \n");
 				}
 				else {
-					printf("Error status ! \n");
+					printf("   SFP_PRESENT:        Present \n");
+				}
+				if(sfp_status & (SFP_TX_FAULT)){
+					printf("   SFP_TX_FAULT:       Fault \n");
+				}
+				else{
+					printf("   SFP_TX_FAULT:       OK \n");
+				}
+				if(sfp_status & (SFP_LOSS_OF_SIGNAL)){
+					printf("   SFP_LOSS_OF_SIGNAL: Fault \n");
+				}
+				else{
+					printf("   SFP_LOSS_OF_SIGNAL: OK \n");
 				}
 				return retval;
 			}
