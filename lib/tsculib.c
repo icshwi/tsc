@@ -569,7 +569,7 @@ tsc_pciep_read( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_write_blk( ulong rem_addr,
+tsc_write_blk( uint64_t rem_addr,
 	       char *buf,
 	        int len,
 	        uint mode)
@@ -602,7 +602,7 @@ tsc_write_blk( ulong rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_read_blk( ulong rem_addr,
+tsc_read_blk( uint64_t rem_addr,
 	      char *buf,
 	      int len,
 	      uint mode)
@@ -635,7 +635,7 @@ tsc_read_blk( ulong rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_write_loop( ulong rem_addr,
+tsc_write_loop( uint64_t rem_addr,
 	        char *buf,
 	        int len,
 	        uint mode)
@@ -668,7 +668,7 @@ tsc_write_loop( ulong rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_read_loop( ulong rem_addr,
+tsc_read_loop( uint64_t rem_addr,
 	      char *buf,
 	      int len,
 	      uint mode)
@@ -700,7 +700,7 @@ tsc_read_loop( ulong rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_write_sgl( ulong rem_addr,
+tsc_write_sgl( uint64_t rem_addr,
 	       char *data_p,
 	       uint mode)
 {
@@ -732,7 +732,7 @@ tsc_write_sgl( ulong rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_read_sgl( ulong rem_addr,
+tsc_read_sgl( uint64_t rem_addr,
 	      char *data_p,
 	      uint mode)
 {
@@ -770,7 +770,7 @@ int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 
 	if(len < 0) return(-EINVAL);
 	if(tsc_fd < 0) return(-EBADF);
-	rdwr.rem_addr = (ulong)shm_addr;
+	rdwr.rem_addr = (uint64_t)shm_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
 	if (mem == 1) {
@@ -808,7 +808,7 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 
 	if(len < 0) return(-EINVAL);
 	if(tsc_fd < 0) return(-EBADF);
-	rdwr.rem_addr = (ulong)shm_addr;
+	rdwr.rem_addr = (uint64_t)shm_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
 	if (mem == 1) {
@@ -846,7 +846,7 @@ int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 
 	if(len < 0) return(-EINVAL);
 	if(tsc_fd < 0) return(-EBADF);
-	rdwr.rem_addr = (ulong)usr_addr;
+	rdwr.rem_addr = (uint64_t)usr_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
 	if (mem == 1) {
@@ -884,7 +884,7 @@ int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 
 	if(len < 0) return(-EINVAL);
 	if(tsc_fd < 0) return(-EBADF);
-	rdwr.rem_addr = (ulong)usr_addr;
+	rdwr.rem_addr = (uint64_t)usr_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
 	if (mem == 1) {

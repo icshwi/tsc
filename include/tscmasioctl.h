@@ -36,8 +36,8 @@
 
 struct tsc_ioctl_mas_map
 {
-  ulong rem_addr;
-  ulong loc_addr;
+  uint64_t rem_addr;
+  uint64_t loc_addr;
   uint size;
   uint mode;
   uint pg_idx;

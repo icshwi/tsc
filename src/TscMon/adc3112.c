@@ -358,7 +358,7 @@ adc3112_init( int fmc)
 
 char *
 adc3112_map_usr( struct tsc_ioctl_map_win *map,
-                 ulong rem_addr,
+		         uint64_t rem_addr,
 		 uint size,
 		 int usr)
 {

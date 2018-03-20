@@ -75,13 +75,13 @@ struct map_ctl
   {
     char flag; char usr; short npg;
     uint mode;
-    ulong rem_addr;
+    uint64_t rem_addr;
     pid_t tgid;           /* task id to which the block is allocated     */
   } *map_p;
   char rsv; char sg_id; short pg_num;
   int pg_size;
-  ulong win_base;                   /* base address of mapping window */
-  uint win_size;                    /* size of mapping window */
+  uint64_t win_base;                   /* base address of mapping window */
+  uint64_t win_size;                    /* size of mapping window */
   struct mutex map_lock;            /* mutex to lock MAP access                     */
 };
 
@@ -89,22 +89,22 @@ struct map_req
 {
   uint size;                            /* mapping size required by user            */
   char flag; char sg_id; ushort mode;   /* mapping mode                             */
-  ulong rem_addr;                       /* remote address to be mapped              */
-  ulong loc_addr;                       /* local address returned by mapper         */
+  uint64_t rem_addr;                       /* remote address to be mapped              */
+  uint64_t loc_addr;                       /* local address returned by mapper         */
   pid_t tgid;                           /* task id to which the block is allocated     */
   uint offset;                          /* offset of page containing local address  */
   uint win_size;                        /* size actually mapped                     */
-  ulong rem_base;                       /* remote address of window actually mapped */
-  ulong loc_base;                       /* local address of window actually mapped  */
+  uint64_t rem_base;                       /* remote address of window actually mapped */
+  uint64_t loc_base;                       /* local address of window actually mapped  */
   void *usr_addr;                       /* user address pointing to local address   */
-  ulong bus_base;                       /* bus base address of SG window            */
+  uint64_t bus_base;                       /* bus base address of SG window            */
 };
 
 struct map_ctl *map_init( int sg_id, long base, int pg_num, int pg_size);
 int map_blk_force( struct map_ctl *, struct map_req *);
 int map_blk_alloc( struct map_ctl *, struct map_req *);
 int map_blk_find( struct map_ctl *, struct map_req *);
-int map_blk_modify( struct map_ctl *, struct map_req *, ulong *);
+int map_blk_modify( struct map_ctl *, struct map_req *, uint64_t *);
 int map_blk_free( struct map_ctl *, int);
 int map_release( struct map_ctl *);
 void map_clear( struct map_ctl *);

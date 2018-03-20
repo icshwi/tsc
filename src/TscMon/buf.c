@@ -416,7 +416,7 @@ map_kbuf( int idx,
   tsc_kbuf_ctl[idx].map_p->req.mode.am = (char)0;
   tsc_kbuf_ctl[idx].map_p->req.mode.flags = (char)0;
   tsc_kbuf_ctl[idx].map_p->req.size = tsc_kbuf_ctl[idx].kbuf_p->size;
-  tsc_kbuf_ctl[idx].map_p->req.rem_addr = (ulong)tsc_kbuf_ctl[idx].kbuf_p->b_base;
+  tsc_kbuf_ctl[idx].map_p->req.rem_addr = tsc_kbuf_ctl[idx].kbuf_p->b_base;
   tsc_kbuf_ctl[idx].map_p->req.loc_addr = 0;
   if( offset != -1)
   {

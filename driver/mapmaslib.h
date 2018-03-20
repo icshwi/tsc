@@ -53,7 +53,7 @@ short tsc_map_mas_set_mode( struct tsc_device *ifc, struct tsc_ioctl_map_mode *m
 int tsc_map_mas_set_sg( struct tsc_device *ifc, struct map_ctl *map_ctl_p, int offset);
 int tsc_map_mas_clear_sg( struct tsc_device *ifc, struct map_ctl *map_ctl_p, int offset, int npg);
 int tsc_map_mas_alloc( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
-int tsc_map_mas_modify( struct tsc_device *ifc, struct tsc_ioctl_map_win *w, ulong *rem_base);
+int tsc_map_mas_modify( struct tsc_device *ifc, struct tsc_ioctl_map_win *w, uint64_t *rem_base);
 int tsc_map_mas_free( struct tsc_device *ifc, int sg_id, uint offset);
 int tsc_map_mas_get( struct tsc_device *ifc, struct tsc_ioctl_map_win *w);
 

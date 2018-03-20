@@ -148,8 +148,9 @@ map_blk_force( struct map_ctl *map_ctl_p,
   int retval = -1;
 
   /* in forced mode, local and remote addresses smust be aligned to page size */
-  if( (map_req_p->loc_addr % map_ctl_p->pg_size) ||
-      (map_req_p->rem_addr % map_ctl_p->pg_size)    )
+  /* need cast to ulong for 64bit divide/modulo on 32bit kernel [JFG]         */
+  if( ((ulong)map_req_p->loc_addr % map_ctl_p->pg_size) ||
+      ((ulong)map_req_p->rem_addr % map_ctl_p->pg_size)    )
   {
     return( MAP_ERR_BAD_ADDR);
   }
@@ -161,7 +162,7 @@ map_blk_force( struct map_ctl *map_ctl_p,
     return( MAP_ERR_BAD_SIZE);
   }
   npg = (ushort)(((size-1)/map_ctl_p->pg_size) + 1);
-  off = map_req_p->loc_addr / map_ctl_p->pg_size;
+  off = (ulong)map_req_p->loc_addr / map_ctl_p->pg_size;
   end = off + npg;
   if( end > map_ctl_p->pg_num)
   {
@@ -246,7 +247,7 @@ map_blk_alloc( struct map_ctl *map_ctl_p,
   int off;
 
   p = map_ctl_p->map_p;
-  size = map_req_p->size + (u32)(map_req_p->rem_addr % map_ctl_p->pg_size);
+  size = map_req_p->size + (u32)((ulong)map_req_p->rem_addr % map_ctl_p->pg_size);
   if( !size)
   {
     return( MAP_ERR_BAD_SIZE);
@@ -381,7 +382,7 @@ map_blk_find( struct map_ctl *map_ctl_p,
 int
 map_blk_modify( struct map_ctl *map_ctl_p,
                 struct map_req *map_req_p,
-		ulong *rem_addr)
+				uint64_t *rem_addr)
 {
   struct map_blk *p;
   int off;

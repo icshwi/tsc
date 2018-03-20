@@ -66,7 +66,7 @@ int main( int argc, char *argv[]){
 	tsc_read_s.m.am    = 0x0;
 
 	// Set src_addr with the desired address value (PP_OFFSET is 0x100000 and addr comes from upstream calls)
-	ulong src_addr = PP_OFFSET + addr;
+	uint64_t src_addr = PP_OFFSET + addr;
 
 	// Execute the read operation and fill the previous allocated “mybuffer” with data
 	status = tsc_read_blk(src_addr, (char*) mybuffer, size, tsc_read_s.mode);

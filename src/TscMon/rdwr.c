@@ -311,7 +311,7 @@ rdwr_get_cycle_addr( char *addr_p,
   {
     return( RDWR_ERR);
   }
-  cp->addr = (ulong)start;
+  cp->addr = (uint64_t)start;
   if( retval > 1)
   {
     len = end - start;
@@ -335,7 +335,7 @@ rdwr_get_cycle_data( char *data_p,
 		     struct rdwr_cycle_para *cp)
 {
   int retval;
-  ulong data, para;
+  uint64_t data, para;
   char op;
 
   data = cp->data;
@@ -504,7 +504,7 @@ rdwr_get_cycle_loop( char *para,
 
 static char
 *rdwr_set_prompt( char *prompt,
-		  ulong addr,
+		  uint64_t addr,
 		  int mode)
 {
   int as;
@@ -581,7 +581,7 @@ void rdwr_sprintf_bin( char *s,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static char * 
-rdwr_patch_addr( ulong addr, 
+rdwr_patch_addr( uint64_t addr,
 		 void *data_p,
 		 int mode,
 		 int swap)
@@ -634,7 +634,7 @@ rdwr_patch_addr( ulong addr,
     }
     case 8:
     {
-      sprintf( &pm_prompt[idx], "%016lx -> ", *(ulong *)p);
+      sprintf( &pm_prompt[idx], "%016llx -> ", *(uint64_t *)p);
       break;
     }
   }
@@ -675,7 +675,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     return( RDWR_ERR);
   }
   offset &= ~3;
-  cp->addr = (ulong)offset;
+  cp->addr = (uint64_t)offset;
   if( c->cnt > 1)
   {
     /* check for read and exit */
@@ -771,7 +771,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
       printf("cannot access TSC register 0x%x -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
-    next = rdwr_patch_addr( (ulong)offset, (void *)&data, cp->m.ads, 0);
+    next = rdwr_patch_addr( (uint64_t)offset, (void *)&data, cp->m.ads, 0);
     switch( next[0])
     {
       case 0:
@@ -831,7 +831,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
         break;
       }
     }
-    cp->addr = (ulong)offset;
+    cp->addr = (uint64_t)offset;
   }
   return( RDWR_OK);
 }
@@ -927,7 +927,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     }
   }
   printf("\n\n");
-  cp->addr = (ulong)(offset+4);
+  cp->addr = (uint64_t)(offset + 4);
   return( RDWR_OK);
 }
 
@@ -943,7 +943,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static void
-rdwr_show_addr( ulong addr,
+rdwr_show_addr( uint64_t addr,
 		int mode)
 {
   int as;
@@ -991,7 +991,7 @@ rdwr_show_addr( ulong addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static int 
-rdwr_show_buf( ulong addr, 
+rdwr_show_buf( uint64_t addr,
 	       void *buf,
 	       int len,
 	       int mode)
@@ -1120,7 +1120,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
     tsc_read_blk( cp->addr, buf, cp->len, cp->mode);
   }
   rdwr_show_buf( cp->addr, buf, cp->len, cp->m.swap | RDWR_MODE_GET_DS( cp->m.ads));
-  cp->addr += (ulong)cp->len;
+  cp->addr += (uint64_t)cp->len;
   free(buf);
 
   return(RDWR_OK);
@@ -1253,7 +1253,8 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 	struct rdwr_cycle_para *cp;
 	char *buf;
 	int i, nblk, last, blk, len;
-	ulong addr;
+	uint64_t addr;
+
 	int cnt = c->cnt;
 
 	if(cnt--){
@@ -1290,7 +1291,7 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 		addr = cp->addr;
 		for( i = 0; i < nblk; i++){
 			buf = (char *)malloc( (size_t)blk);
-			cp->data = (ulong)rdwr_fill_buf( buf, blk, cp);
+			cp->data = (uint64_t)rdwr_fill_buf( buf, blk, cp);
 			if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
 				if( !cp->kb_p){
 					printf("kernel buffer not available\n");
@@ -1307,7 +1308,7 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 		}
 		if( last){
 			buf = (char *)malloc( (size_t)last);
-			cp->data = (ulong)rdwr_fill_buf( buf, last, cp);
+			cp->data = (uint64_t)rdwr_fill_buf( buf, last, cp);
 			if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
 				if( !cp->kb_p){
 					printf("kernel buffer not available\n");
@@ -1383,7 +1384,7 @@ rdwr_tx_error( void *buf_in,
 	       void *buf_out,
 	       uint idx,
 	       int ds,
-	       ulong base)
+		   uint64_t base)
 {
   printf("Data error at address %x \n", idx);
   script_exit = 1;
@@ -1451,7 +1452,7 @@ rdwr_tx_error( void *buf_in,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-rdwr_test( ulong addr,
+rdwr_test( uint64_t addr,
 	   int len,
 	   struct rdwr_cycle_para *cp)
 {
@@ -1462,7 +1463,7 @@ rdwr_test( ulong addr,
   buf_in = (char *)malloc( (size_t)len);
   buf_out = (char *)malloc( (size_t)len);
 
-  cp->data = (ulong)rdwr_fill_buf( buf_in, len, cp);
+  cp->data = (uint64_t)rdwr_fill_buf( buf_in, len, cp);
   tsc_write_blk( addr, buf_in, len, cp->mode);
   tsc_read_blk( addr, buf_out, len, cp->mode);
   offset = rdwr_cmp_buf( buf_in, buf_out, len, -1);
@@ -1548,7 +1549,7 @@ tsc_rdwr_tx( struct cli_cmd_para *c)
   while( (cnt < cp->loop) || !cp->loop)
   {
     int i, nblk, last, blk;
-    ulong addr;
+    uint64_t addr;
 
     blk = 0x100000;
     nblk = len/blk;
@@ -1616,7 +1617,7 @@ tsc_rdwr_tx_error:
 int 
 tsc_rdwr_px( struct cli_cmd_para *c)
 {
-  ulong offset;
+	uint64_t offset;
   int data;
   char buf[8];
   int retval;
@@ -1646,7 +1647,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       printf("Bad address argument [%s] -> usage:\n", c->para[0]);
       goto tsc_rdwr_px_error;
     }
-    cp->addr = (ulong)offset;
+    cp->addr = (uint64_t)offset;
   }
   if( c->cnt > 1)
   {
@@ -1786,7 +1787,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
     {
       case 0:
       {
-	offset += (ulong)ds;
+	offset += (uint64_t)ds;
         break;
       }
       case '.':
@@ -1796,7 +1797,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       }
       case '-':
       {
-	offset -= (ulong)ds;
+	offset -= (uint64_t)ds;
         break;
       }
       case '=':
@@ -1853,7 +1854,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
             printf("cannot access TSC register %lx -> error %d\n", offset, retval);
             return( RDWR_ERR);
           }
-	  offset += (ulong)ds;
+	  offset += (uint64_t)ds;
 	}
         break;
       }
@@ -1989,7 +1990,7 @@ tsc_rdwr_cx( struct cli_cmd_para *c)
   ds = RDWR_MODE_GET_DS(cp->m.ads);
   rdwr_get_cycle_swap( c->ext, cp);
   script_exit = 0;
-  retval =  tsc_read_sgl( (ulong)addr, buf, cp->mode);
+  retval =  tsc_read_sgl( (uint64_t)addr, buf, cp->mode);
   if( retval < 0)
   {
     printf("Cannot access address %x\n", addr);
@@ -2181,8 +2182,8 @@ tsc_rdwr_cmp_err:
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_rdwr_lx( struct cli_cmd_para *c){
-	ulong offset;
-	ulong data;
+	uint64_t offset;
+	uint64_t data;
 	char buf[8];
 	int retval;
 	int ds;
@@ -2211,7 +2212,7 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 				tsc_print_usage( c);
 				return( RDWR_ERR);
 			}
-			cp->addr = (ulong)offset;
+			cp->addr = (uint64_t)offset;
 		}
 		rdwr = 0;
 		if( c->cnt > 1){

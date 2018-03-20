@@ -324,7 +324,7 @@ EXPORT_SYMBOL( tsc_map_mas_alloc);
 int 
 tsc_map_mas_modify( struct tsc_device *ifc,
 		    struct tsc_ioctl_map_win *w,
-		    ulong *rem_base)
+			uint64_t *rem_base)
 
 {
   struct map_ctl *map_ctl_p;

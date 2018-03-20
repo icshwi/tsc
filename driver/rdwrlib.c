@@ -206,7 +206,7 @@ tsc_read_blk( struct tsc_device *ifc,
 
   int retval;
   char *ubuf, *kbuf, *kaddr, *kbase;
-  ulong rem_addr, rem_base;
+  uint64_t rem_addr, rem_base;
   struct tsc_ioctl_map_win win;
   int first, last, nblk, mask;
   int ds;
@@ -330,7 +330,7 @@ tsc_read_sgl( struct tsc_device *ifc,
   int retval;
   void *kaddr;
   int kbuf[2];
-  ulong rem_base;
+  uint64_t rem_base;
   struct tsc_ioctl_map_win win;
   int ds;
 
@@ -547,7 +547,7 @@ tsc_write_blk( struct tsc_device *ifc,
 {
   int retval;
   char *ubuf, *kbuf, *kaddr, *kbase;
-  ulong rem_addr, rem_base;
+  uint64_t rem_addr, rem_base;
   struct tsc_ioctl_map_win win;
   int first, last, nblk, mask;
   int ds;
@@ -672,7 +672,7 @@ tsc_write_sgl( struct tsc_device *ifc,
   int retval;
   void *kaddr; 
   int kbuf[2];
-  ulong rem_base;
+  uint64_t rem_base;
   struct tsc_ioctl_map_win win;
   int ds;
 

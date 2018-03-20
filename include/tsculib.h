@@ -31,8 +31,8 @@
 #include <tscioctl.h>
 
 int CheckByteOrder(void);
-int tsc_read_loop( ulong rem_addr, char *buf, int len, uint mode);
-int tsc_write_loop( ulong rem_addr, char *buf, int len, uint mode);
+int tsc_read_loop( uint64_t rem_addr, char *buf, int len, uint mode);
+int tsc_write_loop( uint64_t rem_addr, char *buf, int len, uint mode);
 int set_device(int device);
 int tsc_init( void);
 int tsc_exit( void);
@@ -53,10 +53,10 @@ int tsc_pciep_read( int idx, int *data_p);  /* read from ARTIX7 PCIEP register  
 uint64_t tsc_swap_64(uint64_t);
 int tsc_swap_32( int);
 short tsc_swap_16( short);
-int tsc_write_blk( ulong addr, char *buf, int len, uint mode);
-int tsc_read_blk( ulong addr, char *buf, int len, uint mode);
-int tsc_write_sgl( ulong addr, char *buf, uint mode);
-int tsc_read_sgl( ulong addr, char *buf, uint mode);
+int tsc_write_blk( uint64_t addr, char *buf, int len, uint mode);
+int tsc_read_blk( uint64_t addr, char *buf, int len, uint mode);
+int tsc_write_sgl( uint64_t addr, char *buf, uint mode);
+int tsc_read_sgl( uint64_t addr, char *buf, uint mode);
 int tsc_shm_write( uint shm_addr, char *buf, int len, int ds, int swap, int mem);
 int tsc_shm_read( uint shm_addr, char *buf, int len, int ds, int swap, int mem);
 int tsc_usr_write( uint shm_addr, char *buf, int len, int ds, int swap, int mem);

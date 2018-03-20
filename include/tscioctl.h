@@ -131,13 +131,13 @@ struct tsc_ioctl_map_ctl
   {
     char flag; char usr; short npg;
     uint mode;
-    ulong rem_addr;
+    uint64_t rem_addr;
     uint tgid;           /* task id to which the block is allocated     */
   } *map_p;
   char rsv; char sg_id; short pg_num;
   int pg_size;
-  ulong win_base;
-  ulong win_size;
+  uint64_t win_base;
+  uint64_t win_size;
 };
 
 struct tsc_ioctl_map_mode
@@ -148,16 +148,16 @@ struct tsc_ioctl_map_mode
 
 struct tsc_ioctl_map_req
 {
-  ulong rem_addr;
-  ulong loc_addr;
+  uint64_t rem_addr;
+  uint64_t loc_addr;
   uint size;
   struct tsc_ioctl_map_mode mode;
 };
 
 struct tsc_ioctl_map_sts
 {
-  ulong rem_base;
-  ulong loc_base;
+  uint64_t rem_base;
+  uint64_t loc_base;
   uint size;
   struct tsc_ioctl_map_mode mode;
 };
@@ -260,7 +260,7 @@ struct tsc_ioctl_map_win
 
 struct tsc_ioctl_rdwr
 {
-  ulong rem_addr;
+  uint64_t rem_addr;
   char *buf;
   int len;
   union

@@ -30,15 +30,15 @@
 
 struct rdwr_cycle_para
 {
-  ulong addr;
-  ulong data;
+  uint64_t addr;
+  uint64_t data;
   int len;
   union
   {
     uint mode;
     struct rdwr_mode m;
   };
-  ulong para; 
+  uint64_t para;
   uint operation;
   int loop;
   struct tsc_ioctl_kbuf_req *kb_p;
