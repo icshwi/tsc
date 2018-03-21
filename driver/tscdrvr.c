@@ -62,12 +62,12 @@ struct tsc tsc;      /* driver main data structure for device */
 static const char device_name_io[]      = TSC_NAME_IO;
 static const char device_name_central[] = TSC_NAME_CENTRAL;
 
-static DEFINE_PCI_DEVICE_TABLE(tsc_id_io) = {
+static const struct pci_device_id tsc_id_io[] = {
     { PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_IO) },
 	{ },
 };
 
-static DEFINE_PCI_DEVICE_TABLE(tsc_id_central) = {
+static const struct pci_device_id tsc_id_central[] = {
 	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) },
 	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) },
 	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3) },
@@ -738,5 +738,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("IOxOS Technologies [JFG]");
 MODULE_VERSION(DRIVER_VERSION);
 MODULE_DESCRIPTION("driver for IOxOS Technologies TSC control interface");
+MODULE_DEVICE_TABLE(pci, tsc_id_central);
+MODULE_DEVICE_TABLE(pci, tsc_id_io);
 
 /*================================< end file >================================*/
