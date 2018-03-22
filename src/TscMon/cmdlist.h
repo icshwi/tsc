@@ -595,11 +595,15 @@ char *rsp1461_msg[] =
   "                 3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
   "                 6 -> SFP_CPU_XFI_LANE_1",
   "",
-  "   rsp1461 sfp <control> <id>",
-  "      where control = 1 -> SFP_TX_DISABLE, 2 -> SFP_RX_HIGH_RATE, 4 -> SFP_TX_HIGH_RATE",
-  "      where id      = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
-  "                      3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
-  "                      6 -> SFP_CPU_XFI_LANE_1",
+  "   rsp1461 sfp control <enable> <rate> <id>",
+  "      where enable = 0 -> SFP_TX_DISABLE, 1 -> SFP_TX_ENABLE",
+  "            rate   = 0 -> [SFP_TX_LOW_RATE,  SFP_RX_LOW_RATE]",
+  "                     1 -> [SFP_TX_LOW_RATE,  SFP_RX_HIGH_RATE]",
+  "                     2 -> [SFP_TX_HIGH_RATE, SFP_RX_LOW_RATE]",
+  "                     3 -> [SFP_TX_HIGH_RATE, SFP_RX_HIGH_RATE]",
+  "      where id     = 0 -> SFP_FPGA_LANE_0, 1 -> SFP_FPGA_LANE_1, 2 -> SFP_FPGA_LANE_2",
+  "                     3 -> SFP_FPGA_LANE_3, 4 -> SFP_CPU_SGMII,   5 -> SFP_CPU_XFI_LANE_0",
+  "                     6 -> SFP_CPU_XFI_LANE_1",
 0};
 
 char *rtm_msg[] = 

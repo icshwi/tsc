@@ -112,6 +112,5 @@ int rsp1461_extension_get_pin_state(int fd, int index, int *state);
 int rsp1461_led_turn_on(int fd, rsp1461_led_t led_id);
 int rsp1461_led_turn_off(int fd, rsp1461_led_t led_id);
 int rsp1461_sfp_status(int fd, rsp1461_sfp_id_t id, uint8_t *status);
-int rsp1461_sfp_control(rsp1461_sfp_id_t id, rsp1461_sfp_status_t control);
-
+int rsp1461_sfp_control(int fd, rsp1461_sfp_id_t id, int sfp_enable, int sfp_rate);
 #endif /*  _H_TSCULIB */
