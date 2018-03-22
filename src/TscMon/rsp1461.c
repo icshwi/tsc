@@ -187,7 +187,8 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	int led_id        = 0;
 
 	int sfp_id        = 0;
-	int sfp_control   = 0;
+	int sfp_enable    = 0;
+	int sfp_rate      = 0;
 	int ext_id        = 0;
 	int ext_state     = 0;
 	int ext_pin_state = 0;
@@ -331,58 +332,83 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 		}
 
 // --- SFP ---
-		else if((!strcmp("sfp", c->para[0])) && (c->cnt == 3)){
-			// ID
-			sfp_id = strtoul(c->para[2], &p, 16);
-			if((sfp_id < 0) || ( led_id > 6)){
-				printf("Bad SFP id !");
-				printf("Available id is 0 to 6 \n");
-			    tsc_print_usage(c);
-				return(-1);
-			}
-			// Status
-			if(!strcmp("status", c->para[1])){
-				retval = rsp1461_sfp_status(sfp_id, &sfp_status); // Check function return
-				printf("sfp #%x status: \n", sfp_id);
-				if(sfp_status & (SFP_PRESENT)){
-					printf("   SFP_PRESENT:        Absent \n");
-				}
-				else {
-					printf("   SFP_PRESENT:        Present \n");
-				}
-				if(sfp_status & (SFP_TX_FAULT)){
-					printf("   SFP_TX_FAULT:       Fault \n");
-				}
-				else{
-					printf("   SFP_TX_FAULT:       OK \n");
-				}
-				if(sfp_status & (SFP_LOSS_OF_SIGNAL)){
-					printf("   SFP_LOSS_OF_SIGNAL: Fault \n");
-				}
-				else{
-					printf("   SFP_LOSS_OF_SIGNAL: OK \n");
-				}
-				return retval;
-			}
-			// Control
-			else {
-				printf("rsp1461 sfp control");
-				sfp_control = strtoul(c->para[1], &p, 16);
-				if (sfp_control == 0x01){
-					sfp_control_enum = SFP_TX_DISABLE;
-				}
-				else if (sfp_control == 0x02){
-					sfp_control_enum = SFP_RX_HIGH_RATE;
-				}
-				else if (sfp_control == 0x04){
-					sfp_control_enum = SFP_TX_HIGH_RATE;
-				}
-				else {
-					printf("Bad arguments -> usage:\n");
-				    tsc_print_usage(c);
+		else if((!strcmp("sfp", c->para[0]))){
+			if (c->cnt == 3){
+				// ID
+				sfp_id = strtoul(c->para[2], &p, 16);
+				if((sfp_id < 0) || ( led_id > 6)){
+					printf("Bad SFP id !\n");
+					printf("Available id is 0 to 6 \n");
+					tsc_print_usage(c);
 					return(-1);
 				}
-				retval = rsp1461_sfp_control(sfp_id, sfp_control_enum); // Check function return
+				// Status
+				if(!strcmp("status", c->para[1])){
+					retval = rsp1461_sfp_status(sfp_id, &sfp_status); // Check function return
+					printf("sfp #%x status: \n", sfp_id);
+					if(sfp_status & (SFP_PRESENT)){
+						printf("   SFP_PRESENT:        Absent \n");
+					}
+					else {
+						printf("   SFP_PRESENT:        Present \n");
+					}
+					if(sfp_status & (SFP_TX_FAULT)){
+						printf("   SFP_TX_FAULT:       Fault \n");
+					}
+					else{
+						printf("   SFP_TX_FAULT:       OK \n");
+					}
+					if(sfp_status & (SFP_LOSS_OF_SIGNAL)){
+						printf("   SFP_LOSS_OF_SIGNAL: Fault \n");
+					}
+					else{
+						printf("   SFP_LOSS_OF_SIGNAL: OK \n");
+					}
+					return retval;
+				}
+				else {
+				    printf("Bad parameter -> usage:\n");
+				    tsc_print_usage(c);
+					return( -1);
+				}
+			}
+			else if ((c->cnt == 5)){
+				// ID
+				sfp_id = strtoul(c->para[4], &p, 16);
+				if((sfp_id < 0) || ( led_id > 6)){
+					printf("Bad SFP id !\n");
+					printf("Available id is 0 to 6 \n");
+					tsc_print_usage(c);
+					return(-1);
+				}
+				// Control
+				if(!strcmp("control", c->para[1])){
+					sfp_enable = strtoul(c->para[2], &p, 16);
+					if((sfp_enable < 0) || ( sfp_enable > 1)){
+						printf("Bad SFP enable value !\n");
+						printf("Available id is 0 or 1 \n");
+						tsc_print_usage(c);
+						return(-1);
+					}
+					sfp_rate = strtoul(c->para[3], &p, 16);
+					if((sfp_rate < 0) || ( sfp_rate > 3)){
+						printf("Bad SFP rate value ! \n");
+						printf("Available id is 0 to 3 \n");
+						tsc_print_usage(c);
+						return(-1);
+					}
+					retval = rsp1461_sfp_control(sfp_id, sfp_enable, sfp_rate); // Check function return
+				}
+				else {
+				    printf("Bad parameter -> usage:\n");
+				    tsc_print_usage(c);
+					return( -1);
+				}
+			}
+			else {
+			    printf("Not enough arguments -> usage:\n");
+			    tsc_print_usage(c);
+				return( -1);
 			}
 			return(0);
 		}

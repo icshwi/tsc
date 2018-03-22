@@ -2894,13 +2894,13 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
 	case 0:
 	case 1:
     	addr = 0x76;
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	if (id == 0){
     		reg = 0; // PORT#0
     	}
     	else if (id == 1){
     		reg = 1; // PORT#1
     	}
-    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	retval = tsc_i2c_read(device, reg, &data);
     	*status = (data & 0x3f);
 		break;
@@ -2909,13 +2909,13 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
 	case 2:
 	case 3:
     	addr = 0x77;
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	if (id == 2){
     		reg = 0; // PORT#0
     	}
     	else if (id == 3){
     		reg = 1; // PORT#1
     	}
-    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	retval = tsc_i2c_read(device, reg, &data);
     	*status = (data & 0x3f);
 		break;
@@ -2923,8 +2923,8 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
 	// U107 PORT#1
 	case 4:
     	addr = 0x74;
-    	reg = 1; // PORT#1
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+    	reg = 1; // PORT#1
     	retval = tsc_i2c_read(device, reg, &data);
     	*status = (data & 0x3f);
 		break;
@@ -2933,13 +2933,13 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
 	case 5:
 	case 6:
     	addr = 0x75;
+    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	if (id == 5){
     		reg = 1; // PORT#1
     	}
     	else if (id == 6){
     		reg = 0; // PORT#0
     	}
-    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	retval = tsc_i2c_read(device, reg, &data);
     	*status = (data & 0x3f);
 		break;
@@ -2962,11 +2962,271 @@ return retval;
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_sfp_control(rsp1461_sfp_id_t id, rsp1461_sfp_status_t control){
-	int retval = 0;
+int rsp1461_sfp_control(rsp1461_sfp_id_t id, int sfp_enable, int sfp_rate){
+	int retval   = 0;
+	int addr     = 0;
+	int bus      = 4;
+	int reg      = 0;
+	int rs       = 1;
+	int ds       = 1;
+	int device   = 0;
+	int data     = 0;
 
-printf("Welcome in rsp1461_sfp_control \n");
-printf("SFP control %x - SFP ID is %x\n", control, id);
+	switch(id){
 
+	// U120 PORT#0 & PORT#1
+	case 0:
+	case 1:
+	   	addr = 0x76;
+	   	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+	   	if (id == 0){
+	   		reg = 0; // PORT#0
+	   		retval = tsc_i2c_read(device, reg, &data); // Get current state
+	   		// Set enable
+	   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+	   		switch(sfp_rate) {
+				// Set rate[00]
+				case 0 :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[01]
+				case 1  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[10]
+				case 2  :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				// Set rate[11]
+				case 3  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				default :
+					NULL;
+	   		}
+	   		reg = 2;
+	retval = tsc_i2c_write(device, reg, data);	// Set state
+	   	}
+	   	else if (id == 1){
+	   		reg = 1; // PORT#1
+	   		retval = tsc_i2c_read(device, reg, &data); // Get current state
+	   		// Set enable
+	   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+	   		switch(sfp_rate) {
+				// Set rate[00]
+				case 0 :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[01]
+				case 1  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[10]
+				case 2  :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				// Set rate[11]
+				case 3  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				default :
+					NULL;
+	   		}
+	   		reg = 3;
+	   		retval = tsc_i2c_write(device, reg, data);	// Set state
+	   	}
+		break;
+
+	// U121 PORT#0 & PORT#1
+	case 2:
+	case 3:
+	   	addr = 0x77;
+		device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+	   	if (id == 2){
+	   		reg = 0; // PORT#0
+	   		retval = tsc_i2c_read(device, reg, &data); // Get current state
+	   		// Set enable
+	   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+	   		switch(sfp_rate) {
+				// Set rate[00]
+				case 0 :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[01]
+				case 1  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[10]
+				case 2  :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				// Set rate[11]
+				case 3  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				default :
+					NULL;
+	   		}
+	   		reg = 2;
+	   		retval = tsc_i2c_write(device, reg, data);	// Set state
+	   	}
+	   	else if (id == 3){
+	   		reg = 1; // PORT#1
+	   		retval = tsc_i2c_read(device, reg, &data); // Get current state
+	   		// Set enable
+	   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+	   		switch(sfp_rate) {
+				// Set rate[00]
+				case 0 :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[01]
+				case 1  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[10]
+				case 2  :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				// Set rate[11]
+				case 3  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				default :
+					NULL;
+	   		}
+	   		reg = 3;
+	   		retval = tsc_i2c_write(device, reg, data);	// Set state
+	   	}
+		break;
+
+	// U107 PORT#1
+	case 4:
+	   	addr = 0x74;
+	   	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+	   	reg = 1; // PORT#1
+	   	retval = tsc_i2c_read(device, reg, &data); // Get current state
+   		// Set enable
+   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+   		switch(sfp_rate) {
+			// Set rate[00]
+			case 0 :
+				data ^= (-(0) ^ data) & (1 << 1);
+				data ^= (-(0) ^ data) & (1 << 2);
+				break;
+			// Set rate[01]
+			case 1  :
+				data ^= (-(1) ^ data) & (1 << 1);
+				data ^= (-(0) ^ data) & (1 << 2);
+				break;
+			// Set rate[10]
+			case 2  :
+				data ^= (-(0) ^ data) & (1 << 1);
+				data ^= (-(1) ^ data) & (1 << 2);
+				break;
+			// Set rate[11]
+			case 3  :
+				data ^= (-(1) ^ data) & (1 << 1);
+				data ^= (-(1) ^ data) & (1 << 2);
+				break;
+			default :
+				NULL;
+   		}
+   		reg = 3;
+   		retval = tsc_i2c_write(device, reg, data);	// Set state
+		break;
+
+	// U108 PORT#1 & PORT#0
+	case 5:
+	case 6:
+	   	addr = 0x75;
+	   	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+	   	if (id == 5){
+	   		reg = 1; // PORT#1
+	   		retval = tsc_i2c_read(device, reg, &data); // Get current state
+	   		// Set enable
+	   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+	   		switch(sfp_rate) {
+				// Set rate[00]
+				case 0 :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[01]
+				case 1  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[10]
+				case 2  :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				// Set rate[11]
+				case 3  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				default :
+					NULL;
+	   		}
+	   		reg = 3;
+	   		retval = tsc_i2c_write(device, reg, data);	// Set state
+	   	}
+	   	else if (id == 6){
+	   		reg = 0; // PORT#0
+	   		retval = tsc_i2c_read(device, reg, &data); // Get current state
+	   		// Set enable
+	   		data ^= (-sfp_enable ^ data) & (1 << 0); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
+	   		switch(sfp_rate) {
+				// Set rate[00]
+				case 0 :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[01]
+				case 1  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(0) ^ data) & (1 << 2);
+					break;
+				// Set rate[10]
+				case 2  :
+					data ^= (-(0) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				// Set rate[11]
+				case 3  :
+					data ^= (-(1) ^ data) & (1 << 1);
+					data ^= (-(1) ^ data) & (1 << 2);
+					break;
+				default :
+					NULL;
+	   		}
+	   		reg = 2;
+	   		retval = tsc_i2c_write(device, reg, data);	// Set state
+	   	}
+		break;
+
+	default :
+		printf("Bad index ! \n");
+		printf("Available id is 0 to 6 \n");
+		return(-1);
+	}
 	return retval;
 }
