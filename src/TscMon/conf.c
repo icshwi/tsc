@@ -364,7 +364,7 @@ conf_show_lm95235( void)
   char temp;
   uint sts;
 
-  if( (tsc_get_device_id() != TSC_BOARD_TSC_IO) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_1) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_2))
+  if( (tsc_get_device_id() != TSC_BOARD_TSC_IO) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_1) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_2) || (tsc_get_device_id() != TSC_BOARD_TSC_CENTRAL_3))
   {
     return;
   }
