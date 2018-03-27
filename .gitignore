@@ -1,3 +1,12 @@
 **/*.o
 **/*.a
+**/*.o.*
+**/*.ko
+**/*.ko.*
+**/*.mod.c
+**/Module.symvers
+**/modules.order
+**/SmemCalibration
+**/TscMon
+**/.tmp_versions/
 
