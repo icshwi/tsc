@@ -187,7 +187,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	int retval        = -1;
 	int cnt           = c->cnt;
 	int led_id        = 0;
-
+	int i             = 0;
 	int sfp_id        = 0;
 	int sfp_enable    = 0;
 	int sfp_rate      = 0;
@@ -196,10 +196,15 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	int ext_pin_state = 0;
 	int present       = 1;	// Init to "absent"
 	int data          = 0;
+	int direction     = 0;
 	rsp1461_led_t           led;
 	rsp1461_sfp_control_t   sfp_control_enum;
 	rsp1461_ext_pin_state_t ext_pin_state_enum;
 	uint8_t                 sfp_status;
+	char aa[] = "   ";
+	char bb[] = "   ";
+	char cc[] = "   ";
+	char *strs[7] = {"fpga0", "fpga1", "fpga2", "fpga3", "eth0", "eth1", "eth2"};
 
 	// Check if the board is a IFC14xx
 	tsc_pon_read(tsc_fd, 0x0, &data);
@@ -233,13 +238,39 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 			if((!strcmp("present", c->para[1])) && (c->cnt == 2)){
 				retval = rsp1461_extension_presence(tsc_fd, &present); // Check function return
 				if (present){
-					printf("rsp1461 extension presence: NO \n");
+					printf("NO \n");
 				}
 				else {
-					printf("rsp1461 extension presence: YES \n");
+					printf("YES \n");
 				}
 				return retval;
 			}
+			// Status
+			if((!strcmp("status", c->para[1])) && (c->cnt == 2)){
+				// Check if extension board is present
+				retval = rsp1461_extension_presence(tsc_fd, &present); // Check function return
+				if (present){
+					printf("No extension board \n");
+				}
+				else {
+					// Get all status
+					printf(" --------------------------  \n");
+					printf("| I/O  | direction | state | \n");
+					for (i = 0; i < 7; i++){
+						retval = rsp1461_extension_get_pin_state(tsc_fd, i, &ext_state, &direction); // Check function return
+						printf("|------+-----------+-------| \n");
+						if(direction == 1){
+							printf("| [%x]  | in        | %x     | \n", i, ext_state);
+						}
+						else if (direction == 0){
+							printf("| [%x]  | out       | %x     | \n", i, ext_state);
+						}
+					}
+						printf(" --------------------------  \n");
+				}
+				return retval;
+			}
+
 			if (c->cnt == 3) {
 				// ID
 				ext_id = strtoul(c->para[2], &p, 16);
@@ -251,7 +282,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 				}
 				// Get
 				if(!strcmp("get", c->para[1])){
-					retval = rsp1461_extension_get_pin_state(tsc_fd, ext_id, &ext_state); // Check function return
+					retval = rsp1461_extension_get_pin_state(tsc_fd, ext_id, &ext_state, &direction); // Check function return
 					printf("Status of pin#%x is : %x \n", ext_id, ext_state);
 					return retval;
 				}
@@ -337,34 +368,95 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 		else if((!strcmp("sfp", c->para[0]))){
 			if (c->cnt == 3){
 				// ID
-				sfp_id = strtoul(c->para[2], &p, 16);
-				if((sfp_id < 0) || ( led_id > 6)){
-					printf("Bad SFP id !\n");
-					printf("Available id is 0 to 6 \n");
-					tsc_print_usage(c);
-					return(-1);
+				if(!strncmp("fpga0", c->para[2], 5)){
+					sfp_id = 0;
 				}
+				else if(!strncmp("fpga1", c->para[2], 5)){
+					sfp_id = 1;
+				}
+				else if(!strncmp("fpga2", c->para[2], 5)){
+					sfp_id = 2;
+				}
+				else if(!strncmp("fpga3", c->para[2], 5)){
+					sfp_id = 3;
+				}
+				else if(!strncmp("eth0", c->para[2], 4)){
+					sfp_id = 4;
+				}
+				else if(!strncmp("eth1", c->para[2], 4)){
+					sfp_id = 5;
+				}
+				else if(!strncmp("eth2", c->para[2], 4)){
+					sfp_id = 6;
+				}
+				else if(!strncmp("all", c->para[2], 4)){
+					sfp_id = 7;
+				}
+				else {
+					printf("Bad SFP id !\n");
+					tsc_print_usage(c);
+				}
+
 				// Status
 				if(!strcmp("status", c->para[1])){
-					retval = rsp1461_sfp_status(tsc_fd, sfp_id, &sfp_status); // Check function return
-					printf("sfp #%x status: \n", sfp_id);
-					if(sfp_status & (SFP_PRESENT)){
-						printf("   SFP_PRESENT:        Absent \n");
+					if (sfp_id == 7){
+						printf(" ------------------------------------------------  \n");
+						printf("|       | Present | TX fault | RX loss of signal | \n");
+						for (i = 0; i < 7; i++){
+							retval = rsp1461_sfp_status(tsc_fd, i, &sfp_status); // Check function return
+							if(sfp_status & (SFP_PRESENT)){
+								strcpy(aa, "no ");
+								strcpy(bb, "n/a");
+								strcpy(cc, "n/a");
+							}
+							else {
+								strcpy(aa, "yes");
+								if(sfp_status & (SFP_TX_FAULT)){
+									strcpy(bb, "yes");
+								}
+								else{
+									strcpy(bb, "no ");
+								}
+								if(sfp_status & (SFP_LOSS_OF_SIGNAL)){
+									strcpy(cc, "yes");
+								}
+								else{
+									strcpy(cc, "no ");
+								}
+							}
+							printf("|-------+---------+----------+-------------------| \n");
+							if (i < 4){
+								printf("| %s | %s     | %s      | %s               | \n", strs[i], aa, bb, cc);
+							}
+							else{
+								printf("| %s  | %s     | %s      | %s               | \n", strs[i], aa, bb, cc);
+							}
+						}
+						 printf(" ------------------------------------------------ \n");
 					}
 					else {
-						printf("   SFP_PRESENT:        Present \n");
-					}
-					if(sfp_status & (SFP_TX_FAULT)){
-						printf("   SFP_TX_FAULT:       Fault \n");
-					}
-					else{
-						printf("   SFP_TX_FAULT:       OK \n");
-					}
-					if(sfp_status & (SFP_LOSS_OF_SIGNAL)){
-						printf("   SFP_LOSS_OF_SIGNAL: Fault \n");
-					}
-					else{
-						printf("   SFP_LOSS_OF_SIGNAL: OK \n");
+						retval = rsp1461_sfp_status(tsc_fd, sfp_id, &sfp_status); // Check function return
+						printf("sfp status: \n", sfp_id);
+						if(sfp_status & (SFP_PRESENT)){
+							printf("   Present:           no \n");
+							printf("   TX fault:          n/a \n");
+							printf("   RX loss of signal: n/a \n");
+						}
+						else {
+							printf("   Present:           yes \n");
+							if(sfp_status & (SFP_TX_FAULT)){
+								printf("   TX fault:          yes \n");
+							}
+							else{
+								printf("   TX fault:          no \n");
+							}
+							if(sfp_status & (SFP_LOSS_OF_SIGNAL)){
+								printf("   RX loss of signal: yes \n");
+							}
+							else{
+								printf("   RX loss of signal: no \n");
+							}
+						}
 					}
 					return retval;
 				}
