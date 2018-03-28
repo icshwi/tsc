@@ -110,7 +110,7 @@ int rsp1461_init(void);
 int rsp1461_presence(void);
 int rsp1461_extension_presence(int *present);
 int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state);
-int rsp1461_extension_get_pin_state(int index, int *state);
+int rsp1461_extension_get_pin_state(int index, int *state, int *direction);
 int rsp1461_led_turn_on(rsp1461_led_t led_id);
 int rsp1461_led_turn_off(rsp1461_led_t led_id);
 int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status);

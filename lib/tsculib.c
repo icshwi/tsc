@@ -2557,14 +2557,14 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : rsp1461_extension_get_pin_state
  * Prototype     : int
- * Parameters    : int index, int *state
+ * Parameters    : int index, int *state, int *direction
  * Return        : status of operation
  *----------------------------------------------------------------------------
  * Description   : Extension board get pin state
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_extension_get_pin_state(int index, int *state) {
+int rsp1461_extension_get_pin_state(int index, int *state, int *direction) {
 	int retval   = 0;
 	int addr     = 0;
 	int bus      = 4;
@@ -2587,9 +2587,11 @@ switch(index){
     	// Set specific pin as an input direction
     	data = data_org;
     	if(index == 0){
+        	*direction = (data_org & (1 << 6)) >> 6;
     		data |= 1 << 6;
     	}
     	else if (index == 1){
+    		*direction = (data_org & (1 << 7)) >> 7;
     		data |= 1 << 7;
     	}
     	retval = tsc_i2c_write(device, reg, data);
@@ -2615,6 +2617,7 @@ switch(index){
     	retval = tsc_i2c_read(device, reg, &data_org);
     	// Set specific pin as an input direction
     	data = data_org;
+    	*direction = (data_org & (1 << 6)) >> 6;
     	data |= 1 << 6;
     	retval = tsc_i2c_write(device, reg, data);
     	// Get pin value
@@ -2636,9 +2639,11 @@ switch(index){
     	// Set specific pin as an input direction
     	data = data_org;
     	if(index == 3){
+    		*direction = (data_org & (1 << 6)) >> 6;
     		data |= 1 << 6;
     	}
     	else if (index == 4){
+    		*direction = (data_org & (1 << 7)) >> 7;
     		data |= 1 << 7;
     	}
     	retval = tsc_i2c_write(device, reg, data);
@@ -2666,9 +2671,11 @@ switch(index){
     	// Set specific pin as an input direction
     	data = data_org;
     	if(index == 5){
+    		*direction = (data_org & (1 << 6)) >> 6;
     		data |= 1 << 6;
     	}
     	else if (index == 6){
+    		*direction = (data_org & (1 << 7)) >> 7;
     		data |= 1 << 7;
     	}
     	retval = tsc_i2c_write(device, reg, data);
@@ -2945,8 +2952,7 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
 		break;
 
 	default :
-		printf("Bad index ! \n");
-		printf("Available id is 0 to 6 \n");
+		printf("Bad ID ! \n");
 		return(-1);
 	}
 return retval;
@@ -3009,7 +3015,7 @@ int rsp1461_sfp_control(rsp1461_sfp_id_t id, int sfp_enable, int sfp_rate){
 					NULL;
 	   		}
 	   		reg = 2;
-	retval = tsc_i2c_write(device, reg, data);	// Set state
+	   			retval = tsc_i2c_write(device, reg, data);	// Set state
 	   	}
 	   	else if (id == 1){
 	   		reg = 1; // PORT#1
