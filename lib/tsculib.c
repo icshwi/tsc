@@ -2438,7 +2438,7 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    case 4:
 	    	addr = 0x74;
 	    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-	    	if(index == 0){
+	    	if(index == 3){
 	    		if((state == RSP1461_EXT_PIN_LOW) || (state == RSP1461_EXT_PIN_HIGH)) {
 	    			// Write to the output the value
 	    			reg = 3;
@@ -2464,7 +2464,7 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			retval = tsc_i2c_write(device, reg, data);
 	    		}
 	    	}
-	    	else if (index == 1){
+	    	else if (index == 4){
 	    		if((state == RSP1461_EXT_PIN_LOW) || (state == RSP1461_EXT_PIN_HIGH)) {
 	    			// Write to the output the value
 	    			reg = 3;
@@ -2496,7 +2496,7 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    case 6:
 	    	addr = 0x74;
 	    	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-	    	if(index == 0){
+	    	if(index == 5){
 	    		if((state == RSP1461_EXT_PIN_LOW) || (state == RSP1461_EXT_PIN_HIGH)) {
 	    			// Write to the output the value
 	    			reg = 2;
@@ -2520,7 +2520,7 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			retval = tsc_i2c_write(device, reg, data);
 	    		}
 	    	}
-	    	else if (index == 1){
+	    	else if (index == 6){
 	    		if((state == RSP1461_EXT_PIN_LOW) || (state == RSP1461_EXT_PIN_HIGH)) {
 	    			// Write to the output the value
 	    			reg = 2;

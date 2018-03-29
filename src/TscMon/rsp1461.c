@@ -189,6 +189,8 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	int sfp_id        = 0;
 	int sfp_enable    = 0;
 	int sfp_rate      = 0;
+	int sfp_tx_rate   = 0;
+	int sfp_rx_rate   = 0;
 	int ext_id        = 0;
 	int ext_state     = 0;
 	int ext_pin_state = 0;
@@ -217,14 +219,14 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	// Execute init automatically one time
 	if (init_rsp == 0){
 		init_rsp = 1;
-		retval = rsp1461_init(); // Check return function
+		retval = rsp1461_init();
 		printf("Initialization done... \n");
 	}
 
 	if(cnt--) {
 // --- INIT ---
 		if(((!strcmp("init", c->para[0]))) && (c->cnt == 1)){
-			retval = rsp1461_init(); // Check return function
+			retval = rsp1461_init();
 			printf("Initialization done... \n");
 			return retval;
 		}
@@ -234,7 +236,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 
 			// Present
 			if((!strcmp("present", c->para[1])) && (c->cnt == 2)){
-				retval = rsp1461_extension_presence(&present); // Check function return
+				retval = rsp1461_extension_presence(&present);
 				if (present){
 					printf("NO \n");
 				}
@@ -246,16 +248,17 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 			// Status
 			if((!strcmp("status", c->para[1])) && (c->cnt == 2)){
 				// Check if extension board is present
-				retval = rsp1461_extension_presence(&present); // Check function return
+				retval = rsp1461_extension_presence(&present);
 				if (present){
 					printf("No extension board \n");
+					return -1;
 				}
 				else {
 					// Get all status
 					printf(" --------------------------  \n");
 					printf("| I/O  | direction | state | \n");
 					for (i = 0; i < 7; i++){
-						retval = rsp1461_extension_get_pin_state(i, &ext_state, &direction); // Check function return
+						retval = rsp1461_extension_get_pin_state(i, &ext_state, &direction);
 						printf("|------+-----------+-------| \n");
 						if(direction == 1){
 							printf("| [%x]  | in        | %x     | \n", i, ext_state);
@@ -280,33 +283,31 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 				}
 				// Get
 				if(!strcmp("get", c->para[1])){
-					retval = rsp1461_extension_get_pin_state(ext_id, &ext_state, &direction); // Check function return
-					printf("Status of pin#%x is : %x \n", ext_id, ext_state);
+					retval = rsp1461_extension_get_pin_state(ext_id, &ext_state, &direction);
+					printf("%x \n", ext_state);
 					return retval;
 				}
 				// Control
 				else {
-					ext_pin_state = strtoul(c->para[1], &p, 16);
-					if (ext_pin_state == 0){
+					if(!strncmp("z", c->para[1], 1)){
+						ext_pin_state_enum = RSP1461_EXT_PIN_Z;
+					}
+					else if(!strncmp("0", c->para[1], 1)){
 						ext_pin_state_enum = RSP1461_EXT_PIN_LOW;
 					}
-					else if (ext_pin_state == 1) {
+					else if(!strncmp("1", c->para[1], 1)){
 						ext_pin_state_enum = RSP1461_EXT_PIN_HIGH;
-					}
-					else if (ext_pin_state == 2) {
-						ext_pin_state_enum = RSP1461_EXT_PIN_Z;
 					}
 					else {
 					    printf("Bad arguments -> usage:\n");
 					    tsc_print_usage(c);
 						return(-1);
 					}
-					retval = rsp1461_extension_set_pin_state(ext_id, ext_pin_state_enum); // Check function return
-					printf("Pin#%x set \n", ext_id);
-					return retval;
 				}
-				return(0);
+				retval = rsp1461_extension_set_pin_state(ext_id, ext_pin_state_enum);
+				return retval;
 			}
+			return(0);
 		}
 
 // --- LED ---
@@ -346,12 +347,12 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 			}
 			// On
 			if(!strcmp("on", c->para[1])){
-				retval = rsp1461_led_turn_on(led); // Check function return
+				retval = rsp1461_led_turn_on(led);
 				return retval;
 			}
 			// Off
 			else if(!strcmp("off", c->para[1])){
-				retval = rsp1461_led_turn_off(led); // Check function return
+				retval = rsp1461_led_turn_off(led);
 				return retval;
 			}
 			else {
@@ -393,6 +394,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 				else {
 					printf("Bad SFP id !\n");
 					tsc_print_usage(c);
+					return -1;
 				}
 
 				// Status
@@ -401,7 +403,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 						printf(" ------------------------------------------------  \n");
 						printf("|       | Present | TX fault | RX loss of signal | \n");
 						for (i = 0; i < 7; i++){
-							retval = rsp1461_sfp_status(i, &sfp_status); // Check function return
+							retval = rsp1461_sfp_status(i, &sfp_status);
 							if(sfp_status & (SFP_PRESENT)){
 								strcpy(aa, "no ");
 								strcpy(bb, "n/a");
@@ -433,7 +435,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 						 printf(" ------------------------------------------------ \n");
 					}
 					else {
-						retval = rsp1461_sfp_status(sfp_id, &sfp_status); // Check function return
+						retval = rsp1461_sfp_status(sfp_id, &sfp_status);
 						printf("sfp status: \n", sfp_id);
 						if(sfp_status & (SFP_PRESENT)){
 							printf("   Present:           no \n");
@@ -464,32 +466,84 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 					return( -1);
 				}
 			}
-			else if ((c->cnt == 5)){
+			else if ((c->cnt == 6)){
 				// ID
-				sfp_id = strtoul(c->para[4], &p, 16);
-				if((sfp_id < 0) || ( led_id > 6)){
+				if(!strncmp("fpga0", c->para[5], 5)){
+					sfp_id = 0;
+				}
+				else if(!strncmp("fpga1", c->para[5], 5)){
+					sfp_id = 1;
+				}
+				else if(!strncmp("fpga2", c->para[5], 5)){
+					sfp_id = 2;
+				}
+				else if(!strncmp("fpga3", c->para[5], 5)){
+					sfp_id = 3;
+				}
+				else if(!strncmp("eth0", c->para[5], 4)){
+					sfp_id = 4;
+				}
+				else if(!strncmp("eth1", c->para[5], 4)){
+					sfp_id = 5;
+				}
+				else if(!strncmp("eth2", c->para[5], 4)){
+					sfp_id = 6;
+				}
+				else {
 					printf("Bad SFP id !\n");
-					printf("Available id is 0 to 6 \n");
 					tsc_print_usage(c);
-					return(-1);
+					return -1;
 				}
 				// Control
 				if(!strcmp("control", c->para[1])){
-					sfp_enable = strtoul(c->para[2], &p, 16);
-					if((sfp_enable < 0) || ( sfp_enable > 1)){
+					if(!strncmp("enable", c->para[2], 6)){
+						sfp_enable = 0;
+					}
+					else if(!strncmp("disable", c->para[2], 7)){
+						sfp_enable = 1;
+					}
+					else {
 						printf("Bad SFP enable value !\n");
-						printf("Available id is 0 or 1 \n");
+						tsc_print_usage(c);
+						return(-1);
+
+					}
+					if(!strncmp("0", c->para[3], 6)){
+						sfp_rx_rate = 0;
+					}
+					else if(!strncmp("1", c->para[3], 7)){
+						sfp_rx_rate = 1;
+					}
+					else {
+						printf("Bad SFP rx_rate value !\n");
 						tsc_print_usage(c);
 						return(-1);
 					}
-					sfp_rate = strtoul(c->para[3], &p, 16);
-					if((sfp_rate < 0) || ( sfp_rate > 3)){
-						printf("Bad SFP rate value ! \n");
-						printf("Available id is 0 to 3 \n");
+					if(!strncmp("0", c->para[4], 6)){
+						sfp_tx_rate = 0;
+					}
+					else if(!strncmp("1", c->para[4], 7)){
+						sfp_tx_rate = 1;
+					}
+					else {
+						printf("Bad SFP tx_rate value !\n");
 						tsc_print_usage(c);
 						return(-1);
 					}
-					retval = rsp1461_sfp_control(sfp_id, sfp_enable, sfp_rate); // Check function return
+					if ((sfp_tx_rate == 0) && (sfp_rx_rate == 0)){
+						sfp_rate = 0;
+					}
+					else if ((sfp_tx_rate == 0) && (sfp_rx_rate == 1)){
+						sfp_rate = 1;
+					}
+					else if ((sfp_tx_rate == 1) && (sfp_rx_rate == 0)){
+						sfp_rate = 2;
+					}
+					else if ((sfp_tx_rate == 1) && (sfp_rx_rate == 1)){
+						sfp_rate = 3;
+					}
+					retval = rsp1461_sfp_control(sfp_id, sfp_enable, sfp_rate);
+					return retval;
 				}
 				else {
 				    printf("Bad parameter -> usage:\n");
