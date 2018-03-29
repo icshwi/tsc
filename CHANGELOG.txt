@@ -4,6 +4,10 @@
 * Changelog file                         *
 ******************************************
 
+*** Release 1.4.6 | 28.03.2018 ***
+
+- Cosmetic and bug correction on RSP1461 command
+
 *** Release 1.4.5 | 20.03.2018 ***
 
 - Add standalone SMEM calibration placed in project_dir/src/TscMon
