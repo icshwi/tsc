@@ -508,10 +508,10 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 						return(-1);
 
 					}
-					if(!strncmp("0", c->para[3], 6)){
+					if(!strncmp("low", c->para[3], 3)){
 						sfp_rx_rate = 0;
 					}
-					else if(!strncmp("1", c->para[3], 7)){
+					else if(!strncmp("high", c->para[3], 4)){
 						sfp_rx_rate = 1;
 					}
 					else {
@@ -519,10 +519,10 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 						tsc_print_usage(c);
 						return(-1);
 					}
-					if(!strncmp("0", c->para[4], 6)){
+					if(!strncmp("low", c->para[4], 3)){
 						sfp_tx_rate = 0;
 					}
-					else if(!strncmp("1", c->para[4], 7)){
+					else if(!strncmp("high", c->para[4], 4)){
 						sfp_tx_rate = 1;
 					}
 					else {
