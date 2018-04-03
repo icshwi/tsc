@@ -217,11 +217,11 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	rsp1461_presence();
 
 	// Execute init automatically one time
-	if (init_rsp == 0){
-		init_rsp = 1;
-		retval = rsp1461_init();
-		printf("Initialization done... \n");
-	}
+//	if (init_rsp == 0){
+//		init_rsp = 1;
+//		retval = rsp1461_init();
+//		printf("Initialization done... \n");
+//	}
 
 	if(cnt--) {
 // --- INIT ---
