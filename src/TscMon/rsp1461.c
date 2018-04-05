@@ -216,7 +216,9 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	}
 
 	// Check if card is present
-	rsp1461_presence(tsc_fd);
+	if (rsp1461_presence(tsc_fd)) {
+		return -1;
+	}
 
 	// Execute init automatically one time
 //	if (init_rsp == 0){

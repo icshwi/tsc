@@ -2148,30 +2148,52 @@ U121 I/O expander I/O assignation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
+#define RSP_1461_ZONE3_INTERFACE_DESIGNATOR    0x00011461
+
 int rsp1461_presence(int fd) {
 	int retval = 0;
 	int offset = 0;
 	unsigned char magic_byte;
 
 	// Get mbox info for RSP presence
-	mbox_info_t *info = alloc_mbox_info();
+	mbox_info_t *info = get_mbox_info(fd);
 	if (!info){
 		printf("Allocation of mbox info structure failed \n");
 		return (-1);
 	}
 
-	if (pop_mbox_byte(fd, &offset, &magic_byte)){
-		printf("Mbox magic get failed\n");
+	switch (info->rtm_status)
+	{
+	case RTM_STATUS_ABSENT:
+		printf("No RTM\n");
 		return (-1);
-	}
-	if (magic_byte != MAGIC_BYTE_VALUE_VALID){
-		printf("Mbox magic check failed \n");
+
+	case RTM_STATUS_INCOMPATIBLE:
+		printf("Incompatible RTM\n");
+		return (-1);
+
+	case RTM_STATUS_COMPATIBLE_NO_PAYLOAD_POWER:
+		printf("No RTM payload power\n");
+		return (-1);
+
+	case RTM_STATUS_COMPATIBLE_HAS_PAYLOAD_POWER:
+		break;
+
+	default:
+		printf("Unknown RTM status: %d\n", info->rtm_status);
 		return (-1);
 	}
 
-    pop_mbox_byte(fd, &offset, &info->rtm_status);
-    pop_mbox_tribyte(fd, &offset, &info->rtm_manufacturer_id);
-    pop_mbox_int(fd, &offset, &info->rtm_zone3_interface_designator);
+	if (info->rtm_manufacturer_id != IOXOS_MANUFACTURER_ID ||
+	    info->rtm_zone3_interface_designator != RSP_1461_ZONE3_INTERFACE_DESIGNATOR)
+	{
+		printf("RTM present but not a supported RSP_1461:\n");
+		printf("  manufacturer id: 0x%06x\n", info->rtm_manufacturer_id);
+		printf("  zone3 interface designator:0x%08x\n", info->rtm_zone3_interface_designator);
+		return (-1);
+	}
+
+	free_mbox_info(info);
 
 	return retval;
 }
