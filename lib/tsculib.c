@@ -2219,14 +2219,17 @@ int rsp1461_presence(void) {
 	{
 	case RTM_STATUS_ABSENT:
 		printf("No RTM\n");
+		free_mbox_info(info);
 		return (-1);
 
 	case RTM_STATUS_INCOMPATIBLE:
 		printf("Incompatible RTM\n");
+		free_mbox_info(info);
 		return (-1);
 
 	case RTM_STATUS_COMPATIBLE_NO_PAYLOAD_POWER:
 		printf("No RTM payload power\n");
+		free_mbox_info(info);
 		return (-1);
 
 	case RTM_STATUS_COMPATIBLE_HAS_PAYLOAD_POWER:
@@ -2234,6 +2237,7 @@ int rsp1461_presence(void) {
 
 	default:
 		printf("Unknown RTM status: %d\n", info->rtm_status);
+		free_mbox_info(info);
 		return (-1);
 	}
 
@@ -2243,11 +2247,11 @@ int rsp1461_presence(void) {
 		printf("RTM present but not a supported RSP_1461:\n");
 		printf("  manufacturer id: 0x%06x\n", info->rtm_manufacturer_id);
 		printf("  zone3 interface designator:0x%08x\n", info->rtm_zone3_interface_designator);
+		free_mbox_info(info);
 		return (-1);
 	}
 
 	free_mbox_info(info);
-
 	return retval;
 }
 
