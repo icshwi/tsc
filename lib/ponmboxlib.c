@@ -45,6 +45,82 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
 #define printd(fmt,arg...)
 #endif
 
+/*
+ * Descriptors definitions
+ */
+
+#define MAGIC_BYTE_VALUE_VALID                                          0x1F
+#define MAGIC_BYTE_VALUE_TEMPORARY                                      0xAA
+
+#define DESCRIPTOR_TYPE_NONE                                            0x00
+#define DESCRIPTOR_TYPE_MAILBOX_INFO                                    0x01
+#define DESCRIPTOR_TYPE_FIRMWARE_INFO                                   0x02
+#define DESCRIPTOR_TYPE_BOARD_INFO                                      0x03
+#define DESCRIPTOR_TYPE_PRODUCT_INFO                                    0x04
+#define DESCRIPTOR_TYPE_SENSOR_DATA_VALUE                               0x05
+#define DESCRIPTOR_TYPE_SERVICE_REQUEST                                 0x06
+#define DESCRIPTOR_TYPE_RTM_INFO                                        0x07
+
+#define DESCRIPTOR_FORMAT_VERSION_FIRMWARE_INFO                         0x01
+#define DESCRIPTOR_FORMAT_VERSION_BOARD_INFO                            0x01
+#define DESCRIPTOR_FORMAT_VERSION_PRODUCT_INFO                          0x01
+#define DESCRIPTOR_FORMAT_VERSION_SENSOR_DATA_VALUE                     0x01
+#define DESCRIPTOR_FORMAT_VERSION_SERVICE_REQUEST                       0x01
+#define DESCRIPTOR_FORMAT_VERSION_RTM_INFO                              0x01
+
+#define SENSOR_DATA_VALUE_SIZE_8BIT                                     0x01
+#define SENSOR_DATA_VALUE_SIZE_16BIT                                    0x02
+#define SENSOR_DATA_VALUE_SIZE_32BIT                                    0x04
+
+#define SENSOR_VALUE_STATUS_NOT_INITIALIZED                             0x01
+#define SENSOR_VALUE_STATUS_UPDATE_IN_PROGRESS                          0x02
+#define SENSOR_VALUE_STATUS_VALID                                       0x03
+#define SENSOR_VALUE_STATUS_ERROR_UNABLE_TO_UPDATE                      0x04
+
+/*
+ * Service requests definitions
+ */
+
+#define SERVICE_REQUEST_REQUESTER_ID_OFFSET                             0x00
+#define SERVICE_REQUEST_PROVIDER_ID_OFFSET                              0x01
+#define SERVICE_REQUEST_STATUS_OFFSET                                   0x02
+#define SERVICE_REQUEST_COMPLETION_CODE_OFFSET                          0x03
+#define SERVICE_REQUEST_COMMAND_OFFSET                                  0x04
+#define SERVICE_REQUEST_ARGUMENTS_LENGTH_OFFSET                         0x05
+#define SERVICE_REQUEST_ARGUMENTS_OFFSET                                0x06
+
+#define SERVICE_REQUEST_MMC_ID                                          0x01
+#define SERVICE_REQUEST_CPU_ID                                          0x10
+#define SERVICE_REQUEST_PON_FPGA_ID                                     0x20
+#define SERVICE_REQUEST_CENTRAL_FPGA_ID                                 0x30
+#define SERVICE_REQUEST_RTM_ID                                          0x40
+
+#define SERVICE_REQUEST_STATUS_SUSPENDED                                   1
+#define SERVICE_REQUEST_STATUS_PENDING                                     2
+#define SERVICE_REQUEST_STATUS_PROCESSING                                  3
+#define SERVICE_REQUEST_STATUS_COMPLETED                                   4
+
+#define SERVICE_REQUEST_NORMAL_COMPLETION_CODE                          0x00
+
+#define SERVICE_REQUEST_MAX_ARGUMENTS_LENGTH                               8
+
+
+/*
+ * Private functions prototypes
+ */
+
+mbox_info_t *alloc_mbox_info(void);
+int get_mbox_byte(int fd, int offset, unsigned char *destination);
+int pop_mbox_byte(int fd, int *offset, unsigned char *destination);
+int pop_mbox_short(int fd, int *offset, unsigned short *destination);
+int pop_mbox_tribyte(int fd, int *offset, unsigned int *destination);
+int pop_mbox_int(int fd, int *offset, unsigned int *destination);
+unsigned char pop_mbox_string(int fd, int *offset, unsigned char **destination);
+int push_mbox_byte(int fd, int *offset, unsigned char byte);
+void enable_service_request(int fd, mbox_info_t *info, int offset);
+void wait_for_service_request_completion(int fd, mbox_info_t *info, int offset);
+
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : get_mbox_info
  * Prototype     : mbox_info_t*
