@@ -52,11 +52,39 @@ typedef enum {
   MTCA4_RTM_LED_BLINK_500MS_ON = 0x32,
 } mtca4_rtm_led_on_duration_t;
 
+typedef enum {
+  MTCA4_RTM_EEPROM_WRITE_ENABLED = 0,
+  MTCA4_RTM_EEPROM_WRITE_DISABLED
+} mtca4_rtm_eeprom_wp_t;
+
+typedef enum {
+  MTCA4_RTM_RESET_ASSERTED = 0,
+  MTCA4_RTM_RESET_DEASSERTED
+} mtca4_rtm_reset_t;
+
+typedef enum {
+  MTCA4_RTM_ZONE3_ENABLED = 0,
+  MTCA4_RTM_ZONE3_DISABLED
+} mtca4_rtm_zone3_enable_t;
+
+
 unsigned char set_mtca4_rtm_led_state(
   int fd,
   mtca4_rtm_led_id_t id,
   mtca4_rtm_led_function_t function,
   mtca4_rtm_led_on_duration_t on_duration);
+
+unsigned char set_mtca4_rtm_eeprom_wp(
+  int fd,
+  mtca4_rtm_eeprom_wp_t state);
+
+unsigned char set_mtca4_rtm_reset(
+  int fd,
+  mtca4_rtm_reset_t state);
+
+unsigned char set_mtca4_rtm_zone3_enable(
+  int fd,
+  mtca4_rtm_zone3_enable_t state);
 
 #endif
 
