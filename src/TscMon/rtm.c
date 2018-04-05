@@ -123,6 +123,132 @@ rtm_led( struct cli_cmd_para *c)
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rtm_eeprom
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : rtm eeprom write-protect control
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int 
+rtm_eeprom( struct cli_cmd_para *c)
+{
+  int retval;
+  mtca4_rtm_eeprom_wp_t state;
+
+  if ((c->cnt != 2))
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  if (!strcasecmp(c->para[1], "we"))
+  {
+    state = MTCA4_RTM_EEPROM_WRITE_ENABLED;
+  }
+  else if (!strcasecmp(c->para[1], "wp"))
+  {
+    state = MTCA4_RTM_EEPROM_WRITE_DISABLED;
+  }
+  else
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  set_mtca4_rtm_eeprom_wp(state);
+
+  return CLI_OK;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rtm_reset
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : rtm reset control
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int 
+rtm_reset( struct cli_cmd_para *c)
+{
+  int retval;
+  mtca4_rtm_reset_t state;
+
+  if ((c->cnt != 2))
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  if (!strcasecmp(c->para[1], "on"))
+  {
+    state = MTCA4_RTM_RESET_ASSERTED;
+  }
+  else if (!strcasecmp(c->para[1], "off"))
+  {
+    state = MTCA4_RTM_RESET_DEASSERTED;
+  }
+  else
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  set_mtca4_rtm_reset(state);
+
+  return CLI_OK;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : rtm_zone3
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : rtm zone3 control
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int 
+rtm_zone3( struct cli_cmd_para *c)
+{
+  int retval;
+  mtca4_rtm_eeprom_wp_t state;
+
+  if ((c->cnt != 2))
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  if (!strcasecmp(c->para[1], "on"))
+  {
+    state = MTCA4_RTM_ZONE3_ENABLED;
+  }
+  else if (!strcasecmp(c->para[1], "off"))
+  {
+    state = MTCA4_RTM_ZONE3_DISABLED;
+  }
+  else
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  set_mtca4_rtm_zone3_enable(state);
+
+  return CLI_OK;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_rtm
  * Prototype     : int
  * Parameters    : pointer to command parameter list
@@ -140,9 +266,10 @@ tsc_rtm( struct cli_cmd_para *c)
   int i    = 0;
   int data = 0;
 
-  // Check if the board is a IFC1410
+  // Check if the board is a IFC14XX
   tsc_pon_read(0x0, &data);
-  if (data != 0x73571410) {
+  data &= 0xFFFFFF00;
+  if (data != 0x73571400) {
 	printf("Command available only on IFC14xx board\n");
 	return (CLI_ERR);
   }
@@ -154,6 +281,18 @@ tsc_rtm( struct cli_cmd_para *c)
     if( !strcmp( "led", c->para[i]))
     {
       return( rtm_led( c));
+    }
+    else if( !strcmp( "reset", c->para[i]))
+    {
+      return( rtm_reset( c));
+    }
+    else if( !strcmp( "eeprom", c->para[i]))
+    {
+      return( rtm_eeprom( c));
+    }
+    else if( !strcmp( "zone3", c->para[i]))
+    {
+      return( rtm_zone3( c));
     }
   }
 

@@ -608,6 +608,15 @@ char *rtm_msg[] =
   "rtm led <led_name> <led_state>",
   "   where <led_name> = green, red",
   "         <led_state> = on, off, slow_blink, fast_blink",
+  "",
+  "rtm eeprom <state>",
+  "   where <state> = we (write enabled), wp (write protected)",
+  "",
+  "rtm reset <state>",
+  "   where <state> = on, off",
+  "",
+  "rtm zone3 <state>",
+  "   where <state> = on, off",
 0};
 
 char *semaphore_msg[]=
