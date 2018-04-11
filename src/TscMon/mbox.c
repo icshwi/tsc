@@ -50,6 +50,8 @@ static char *rcsid = "$Id: mbox.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 extern int tsc_fd;
 
 void print_out_rtm_info(mbox_info_t *info);
+void print_out_payload_sensor_info(mbox_info_t *mbox_info, char *sensor_name);
+void print_out_payload_sensor_details(payload_sensor_handle_t *handle);
 
 char *
 mbox_rcsid()
@@ -192,6 +194,7 @@ mbox_write( struct cli_cmd_para *c)
 int 
 mbox_info( struct cli_cmd_para *c)
 {
+  static unsigned char sensors_installed = 0;
 
   if (c->cnt > 1)
   {
@@ -206,63 +209,78 @@ mbox_info( struct cli_cmd_para *c)
     return( CLI_ERR);
   }
 
-  printf("Firmware revision:               %d.%d.%d (%08x)\n",
+  puts("--------------------------------------------------------");
+  puts("  AMC Info");
+  puts("--------------------------------------------------------");
+  printf("  MMC firmware revision:           %d.%d.%d (%08x)\n",
          info->firmware_revision.major,
          info->firmware_revision.minor,
          info->firmware_revision.maintenance,
          info->firmware_revision.build_id);
-  printf("AMC slot number:                 %d\n", info->amc_slot_number);
-  printf("Board name:                      %s\n", info->board_name);
-  printf("Board revision:                  %s\n", info->board_revision);
-  printf("Board serial number:             %s\n", info->board_serial_number);
-  printf("Product name:                    %s\n", info->product_name);
-  printf("Product revision:                %s\n", info->product_revision);
-  printf("Product serial number:           %s\n", info->product_serial_number);
+  printf("  AMC slot number [0-11]:          %d\n", info->amc_slot_number);
+  printf("  Board name:                      %s\n", info->board_name);
+  printf("  Board revision:                  %s\n", info->board_revision);
+  printf("  Board serial number:             %s\n", info->board_serial_number);
+  printf("  Product name:                    %s\n", info->product_name);
+  printf("  Product revision:                %s\n", info->product_revision);
+  printf("  Product serial number:           %s\n", info->product_serial_number);
+
+  puts("--------------------------------------------------------");
+  puts("  RTM Info");
+  puts("--------------------------------------------------------");
   switch (info->rtm_status)
   {
   case RTM_STATUS_ABSENT:
-    puts("No RTM board");
+    puts("  No RTM board");
     break;
 
   case RTM_STATUS_INCOMPATIBLE:
-    puts("RTM present but not compatible");
+    puts("  RTM present but not compatible");
     print_out_rtm_info(info);
     break;
 
   case RTM_STATUS_COMPATIBLE_NO_PAYLOAD_POWER:
     print_out_rtm_info(info);
-    puts("RTM has no payload power");
+    puts("  Power state:                     RTM has no payload power");
     break;
 
   case RTM_STATUS_COMPATIBLE_HAS_PAYLOAD_POWER:
     print_out_rtm_info(info);
-    puts("RTM has payload power");
+    puts("  Power state:                     RTM has payload power");
     break;
 
   default:
-    printf("Unknown RTM status: %d\n", info->rtm_status);
+    printf("  Unknown RTM status: %d\n", info->rtm_status);
   }
 
+  puts("--------------------------------------------------------");
+  puts("  Management-side sensors");
+  puts("--------------------------------------------------------");
   mbox_sensor_data_value_t *sensor = info->sensors_values;
   int value = 0;
   int retval;
   int timestamp = 0;
   while (sensor)
   {
-    printf("Sensor %s:", sensor->name);
+    printf("  Sensor \"%s\":", sensor->name);
     if (retval = get_mbox_sensor_value(tsc_fd, info, sensor->name, &value, &timestamp))
     {
-      printf(" failed to get data of sensor: %s\n", strerror(retval));
+      printf("   failed to get data of sensor: %s\n", strerror(retval));
     }
     else puts("");
-    printf("  status = (%d) %s\n", sensor->status, mbox_sensor_status[sensor->status]);
-    printf("  value = %d\n", value);
-    printf("  timestamp = %d\n", timestamp);
+    printf("    status = (%d) %s\n", sensor->status, mbox_sensor_status[sensor->status]);
+    printf("    value = %d\n", value);
+    printf("    timestamp = %d\n", timestamp);
     sensor = sensor->next;
   }
 
-  free_mbox_info(info);
+  puts("--------------------------------------------------------");
+  puts("  Payload-side sensors");
+  puts("--------------------------------------------------------");
+  print_out_payload_sensor_info(info, NULL);
 
+  puts("--------------------------------------------------------");
+  free_mbox_info(info);
   return CLI_OK;
 }
 
@@ -270,8 +288,205 @@ mbox_info( struct cli_cmd_para *c)
 void
 print_out_rtm_info(mbox_info_t *info)
 {
-  printf("RTM manufacturer id:             %06x\n", info->rtm_manufacturer_id);
-  printf("RTM zone 3 interface designator: %08x\n", info->rtm_zone3_interface_designator);
+  printf("  RTM manufacturer id:             %06x\n", info->rtm_manufacturer_id);
+  printf("  RTM zone 3 interface designator: %08x\n", info->rtm_zone3_interface_designator);
+}
+
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_payload_sensor
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : perform payload sensor-related operations
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int mbox_payload_sensor( struct cli_cmd_para *c)
+{
+  if (c->cnt < 2)
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  if( !strcmp( "show", c->para[1]))
+  {
+    return( mbox_payload_sensor_show( c));
+  }
+  else if( !strcmp( "create", c->para[1]))
+  {
+    return( mbox_payload_sensor_create( c));
+  }
+  else if( !strcmp( "set", c->para[1]))
+  {
+    return( mbox_payload_sensor_set( c));
+  }
+  tsc_print_usage( c);
+  return( CLI_ERR);
+}
+
+
+int mbox_payload_sensor_show( struct cli_cmd_para *c)
+{
+  char *sensor_name = NULL;
+
+  if (c->cnt == 2)
+  {
+    sensor_name = NULL;
+  }
+  else if (c->cnt == 3)
+  {
+    sensor_name = c->para[2];
+  }
+  else
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  mbox_info_t *info = get_mbox_info(tsc_fd);
+  if (!info)
+  {
+    puts("failed to get mbox info");
+    return( CLI_ERR);
+  }
+
+  print_out_payload_sensor_info(info, sensor_name);
+
+  free_mbox_info(info);
+  return CLI_OK;
+}
+
+
+void print_out_payload_sensor_info(mbox_info_t *mbox_info, char *sensor_name)
+{
+  payload_sensor_handle_t *all_sensors;
+  payload_sensor_handle_t *current_handle;
+  if (!get_payload_sensors(tsc_fd, mbox_info, &all_sensors))
+  {
+    if (sensor_name == NULL)
+    {
+      payload_sensor_handle_t *current_handle = all_sensors;
+      while (current_handle)
+      {
+        print_out_payload_sensor_details(current_handle);
+        current_handle = current_handle->next;
+      }
+    }
+    else
+    {
+      current_handle = find_payload_sensor(all_sensors, sensor_name);
+      if (current_handle)
+      {
+        print_out_payload_sensor_details(current_handle);
+      }
+      else
+      {
+        printf("no such sensor \"%s\"", sensor_name);
+      }
+    }
+
+    free_payload_sensors(all_sensors);
+  }
+  else
+  {
+    puts("No payload sensors");
+  }
+}
+
+
+void print_out_payload_sensor_details(payload_sensor_handle_t *handle)
+{
+  if (!handle) return;
+  printf("  Sensor \"%s\":\n", handle->sensor_name);
+  printf("    descriptor offset = 0x%04x\n", handle->descriptor_offset);
+  printf("    value size = %d\n", handle->value_size);
+
+  int value = 0;
+  get_payload_sensor_value(tsc_fd, handle, &value);
+  printf("    value = %d (0x%08x)\n", value, value);
+}
+
+
+int mbox_payload_sensor_create( struct cli_cmd_para *c)
+{
+  if (c->cnt != 4)
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  char *sensor_name = c->para[2];
+  int value_size = atoi(c->para[3]);
+  if (value_size < 1 || value_size > 4)
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  mbox_info_t *info = get_mbox_info(tsc_fd);
+  if (!info)
+  {
+    puts("failed to get mbox info");
+    return( CLI_ERR);
+  }
+
+  payload_sensor_handle_t *handle;
+  if (!create_payload_sensor(tsc_fd, info, sensor_name, value_size, &handle))
+  {
+    print_out_payload_sensor_details(handle);
+    free_payload_sensors(handle);
+  }
+
+  free_mbox_info(info);
+  return CLI_OK;
+}
+
+
+int mbox_payload_sensor_set( struct cli_cmd_para *c)
+{
+  if (c->cnt != 4)
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  char *sensor_name = c->para[2];
+  int value = strtol(c->para[3], NULL, 16);
+
+  mbox_info_t *info = get_mbox_info(tsc_fd);
+  if (!info)
+  {
+    puts("failed to get mbox info");
+    return( CLI_ERR);
+  }
+
+  payload_sensor_handle_t *all_sensors;
+  payload_sensor_handle_t *current_handle;
+  if (!get_payload_sensors(tsc_fd, info, &all_sensors))
+  {
+    current_handle = find_payload_sensor(all_sensors, sensor_name);
+    if (current_handle)
+    {
+      set_payload_sensor_value(tsc_fd, current_handle, value);
+    }
+    else
+    {
+      printf("No such sensor \"%s\"", sensor_name);
+    }
+
+    free_payload_sensors(all_sensors);
+  }
+  else
+  {
+    puts("No payload sensors");
+  }
+
+  free_mbox_info(info);
+  return CLI_OK;
 }
 
 
@@ -308,13 +523,17 @@ tsc_mbox( struct cli_cmd_para *c)
     {
       return( mbox_read( c));
     }
-    if( !strcmp( "write", c->para[i]))
+    else if( !strcmp( "write", c->para[i]))
     {
       return( mbox_write( c));
     }
-    if( !strcmp( "info", c->para[i]))
+    else if( !strcmp( "info", c->para[i]))
     {
       return( mbox_info( c));
+    }
+    else if( !strcmp( "payload_sensor", c->para[i]))
+    {
+      return( mbox_payload_sensor( c));
     }
   }
   tsc_print_usage( c);

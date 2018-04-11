@@ -70,12 +70,15 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
 
 #define SENSOR_DATA_VALUE_SIZE_8BIT                                     0x01
 #define SENSOR_DATA_VALUE_SIZE_16BIT                                    0x02
+#define SENSOR_DATA_VALUE_SIZE_24BIT                                    0x03
 #define SENSOR_DATA_VALUE_SIZE_32BIT                                    0x04
 
 #define SENSOR_VALUE_STATUS_NOT_INITIALIZED                             0x01
 #define SENSOR_VALUE_STATUS_UPDATE_IN_PROGRESS                          0x02
 #define SENSOR_VALUE_STATUS_VALID                                       0x03
 #define SENSOR_VALUE_STATUS_ERROR_UNABLE_TO_UPDATE                      0x04
+
+#define SENSOR_NAME_MAX_LENGTH                                          0x10
 
 /*
  * Service requests definitions
@@ -104,6 +107,19 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
 
 #define SERVICE_REQUEST_MAX_ARGUMENTS_LENGTH                               8
 
+/*
+ * Payload sensors definitions
+ */
+
+#define PAYLOAD_SENSOR_DESCRIPTOR_STATUS_OFFSET                            2
+#define PAYLOAD_SENSOR_DESCRIPTOR_TIMESTAMP_OFFSET                         3
+#define PAYLOAD_SENSOR_DESCRIPTOR_VALUE_SIZE_OFFSET                        7
+#define PAYLOAD_SENSOR_DESCRIPTOR_VALUE_OFFSET                             8
+#define PAYLOAD_SENSOR_DESCRIPTOR_8BIT_VALUE_NAME_OFFSET                   9
+#define PAYLOAD_SENSOR_DESCRIPTOR_16BIT_VALUE_NAME_OFFSET                 10
+#define PAYLOAD_SENSOR_DESCRIPTOR_24BIT_VALUE_NAME_OFFSET                 11
+#define PAYLOAD_SENSOR_DESCRIPTOR_32BIT_VALUE_NAME_OFFSET                 12
+
 
 /*
  * Private functions prototypes
@@ -111,14 +127,23 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
 
 mbox_info_t *alloc_mbox_info(void);
 int get_mbox_byte(int fd, int offset, unsigned char *destination);
+int pop_mbox_data(int fd, int *offset, unsigned int *destination, int data_size);
 int pop_mbox_byte(int fd, int *offset, unsigned char *destination);
 int pop_mbox_short(int fd, int *offset, unsigned short *destination);
 int pop_mbox_tribyte(int fd, int *offset, unsigned int *destination);
 int pop_mbox_int(int fd, int *offset, unsigned int *destination);
 unsigned char pop_mbox_string(int fd, int *offset, unsigned char **destination);
+int set_mbox_byte(int fd, int offset, unsigned char byte);
+int push_mbox_data(int fd, int *offset, unsigned int byte, int data_size);
 int push_mbox_byte(int fd, int *offset, unsigned char byte);
+int push_mbox_short(int fd, int *offset, unsigned short data);
+int push_mbox_int(int fd, int *offset, unsigned int data);
 void enable_service_request(int fd, mbox_info_t *info, int offset);
 void wait_for_service_request_completion(int fd, mbox_info_t *info, int offset);
+unsigned char skip_c_string(int fd, int *offset);
+unsigned char skip_existing_mbox_sensors(int fd, mbox_info_t *info, int *offset);
+int descriptor_name_offset_for_value_size(int value_size);
+payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, char *name);
 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -419,6 +444,35 @@ int get_mbox_byte(int fd, int offset, unsigned char *destination)
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : pop_mbox_data
+ * Prototype     : int
+ * Parameters    : offset, destination, data size
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : pop mailbox data of given size
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int pop_mbox_data(int fd, int *offset, unsigned int *destination, int data_size)
+{
+  if (data_size > sizeof(unsigned int)) return EINVAL;
+
+  int retval;
+  unsigned char byte;
+
+  (*destination) = 0;
+  while (data_size--)
+  {
+    retval = get_mbox_byte(fd, (*offset), &byte);
+    if (retval) return retval;
+    (*offset)++;
+    (*destination) = ((*destination) << 8) | byte;
+  }
+
+  return 0;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : pop_mbox_byte
  * Prototype     : int
  * Parameters    : offset, destination
@@ -430,9 +484,9 @@ int get_mbox_byte(int fd, int offset, unsigned char *destination)
 
 int pop_mbox_byte(int fd, int *offset, unsigned char *destination)
 {
-  int retval = get_mbox_byte(fd, *offset, destination);
-  printd("%s() offset = %d, data = 0x%02x\n", __func__, *offset, *destination);
-  (*offset)++;
+  unsigned int value;
+  int retval = pop_mbox_data(fd, offset, &value, 1);
+  (*destination) = (unsigned char)(value & 0xFF);
   return retval;
 }
 
@@ -448,21 +502,10 @@ int pop_mbox_byte(int fd, int *offset, unsigned char *destination)
 
 int pop_mbox_short(int fd, int *offset, unsigned short *destination)
 {
-  int retval;
-  unsigned char byte;
-  unsigned char loop;
-
-  (*destination) = 0;
-  for (loop = 0 ; loop < 2 ; loop++)
-  {
-    retval = pop_mbox_byte(fd, offset, &byte);
-    printd("byte = 0x%02x\n", byte);
-    if (retval) return retval;
-    (*destination) = ((*destination) << 8) | byte;
-  }
-  printd("%s() data = 0x%04x\n", __func__, *destination);
-
-  return 0;
+  unsigned int value;
+  int retval = pop_mbox_data(fd, offset, &value, 2);
+  (*destination) = (unsigned short)(value & 0xFFFF);
+  return retval;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -477,21 +520,7 @@ int pop_mbox_short(int fd, int *offset, unsigned short *destination)
 
 int pop_mbox_tribyte(int fd, int *offset, unsigned int *destination)
 {
-  int retval;
-  unsigned char byte;
-  unsigned char loop;
-
-  (*destination) = 0;
-  for (loop = 0 ; loop < 3 ; loop++)
-  {
-    retval = pop_mbox_byte(fd, offset, &byte);
-    printd("byte = 0x%02x\n", byte);
-    if (retval) return retval;
-    (*destination) = ((*destination) << 8) | byte;
-  }
-  printd("%s() data = 0x%06x\n", __func__, *destination);
-
-  return 0;
+  return pop_mbox_data(fd, offset, destination, 3);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -506,19 +535,7 @@ int pop_mbox_tribyte(int fd, int *offset, unsigned int *destination)
 
 int pop_mbox_int(int fd, int *offset, unsigned int *destination)
 {
-  int retval;
-  unsigned char byte;
-  unsigned char loop;
-
-  (*destination) = 0;
-  for (loop = 0 ; loop < 4 ; loop++)
-  {
-    retval = pop_mbox_byte(fd, offset, &byte);
-    if (retval) return retval;
-    (*destination) = ((*destination) << 8) | byte;
-  }
-
-  return 0;
+  return pop_mbox_data(fd, offset, destination, 4);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -534,36 +551,41 @@ int pop_mbox_int(int fd, int *offset, unsigned int *destination)
 unsigned char pop_mbox_string(int fd, int *offset, unsigned char **destination)
 {
   int size = 0;
-  unsigned char c;
-  unsigned char buffer[256];
+  char c;
+  do
+  {
+    get_mbox_byte(fd, (*offset) + size++, &c);
+  }
+  while (c);
 
-  while (1)
+  char *buffer = malloc(size);
+  if (!buffer) return 0;
+
+  (*destination) = buffer;
+  do
   {
     pop_mbox_byte(fd, offset, &c);
-    buffer[size++] = c;
-    if (!c) break;
+    (*(buffer++)) = c;
   }
-
-  (*destination) = malloc(size);
-  strncpy((*destination), buffer, size);
+  while (c);
 
   return size;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : push_mbox_byte
+ * Function name : set_mbox_byte
  * Prototype     : int
- * Parameters    : offset, byte
+ * Parameters    : offset, destination
  * Return        : status
  *----------------------------------------------------------------------------
- * Description   : push mailbox (byte)
+ * Description   : set mailbox byte
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int push_mbox_byte(int fd, int *offset, unsigned char byte)
+int set_mbox_byte(int fd, int offset, unsigned char byte)
 {
   int retval;
-  int byte_offset = (*offset)++;
+  int byte_offset = offset;
   int word_offset = byte_offset >> 2;
   int data;
   int mask;
@@ -589,6 +611,109 @@ int push_mbox_byte(int fd, int *offset, unsigned char byte)
   {
     return EIO;
   }
+
+  return 0;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : push_mbox_data
+ * Prototype     : int
+ * Parameters    : offset, byte
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : push mailbox (variable sized data)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int push_mbox_data(int fd, int *offset, unsigned int data, int data_size)
+{
+  if (data_size > sizeof(unsigned int)) return EINVAL;
+
+  unsigned char bytes[data_size];
+  int loop = data_size;
+  while (loop--)
+  {
+    bytes[loop] = data & 0xFF;
+    data >>= 8;
+  }
+
+  int retval;
+  loop = 0;
+  while (data_size--)
+  {
+    retval = set_mbox_byte(fd, *offset, bytes[loop++]);
+    if (retval) return retval;
+    (*offset)++;
+  }
+
+  return 0;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : push_mbox_byte
+ * Prototype     : int
+ * Parameters    : offset, data
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : push mailbox (byte)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int push_mbox_byte(int fd, int *offset, unsigned char data)
+{
+  return push_mbox_data(fd, offset, (unsigned int)data, 1);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : push_mbox_short
+ * Prototype     : int
+ * Parameters    : offset, data
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : push mailbox (short)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int push_mbox_short(int fd, int *offset, unsigned short data)
+{
+  return push_mbox_data(fd, offset, (unsigned int)data, 2);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : push_mbox_int
+ * Prototype     : int
+ * Parameters    : offset, data
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : push mailbox (int)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int push_mbox_int(int fd, int *offset, unsigned int data)
+{
+  return push_mbox_data(fd, offset, data, 4);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : push_mbox_string
+ * Prototype     : int
+ * Parameters    : offset, string
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : push mailbox (C string)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int push_mbox_string(int fd, int *offset, unsigned char *string)
+{
+  int retval;
+
+  do
+  {
+    retval = push_mbox_byte(fd, offset, *string);
+    if (retval) return retval;
+  }
+  while(*(string++));
 
   return 0;
 }
@@ -630,4 +755,251 @@ void wait_for_service_request_completion(int fd, mbox_info_t *info, int offset)
   }
   while (status != SERVICE_REQUEST_STATUS_COMPLETED);
 }
+
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : create_payload_sensor
+ * Prototype     : unsigned char
+ * Parameters    : info, value_size, name
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : create a new payload-side sensor descriptor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+unsigned char create_payload_sensor(int fd, mbox_info_t *info, unsigned char *name, int value_size, payload_sensor_handle_t **handle)
+{
+  if (!info) return EFAULT;
+  if (!name) return EFAULT;
+  if (!handle) return EFAULT;
+
+  int name_length = strlen(name) + 1;
+  if (strlen(name) > SENSOR_NAME_MAX_LENGTH) return ENAMETOOLONG;
+
+  int offset;
+  if (skip_existing_mbox_sensors(fd, info, &offset)) return EFAULT;
+  (*handle) = create_payload_sensor_handle(offset, value_size, name);
+
+  push_mbox_byte(fd, &offset, DESCRIPTOR_TYPE_SENSOR_DATA_VALUE);
+  push_mbox_byte(fd, &offset, DESCRIPTOR_FORMAT_VERSION_SENSOR_DATA_VALUE);
+  push_mbox_byte(fd, &offset, SENSOR_VALUE_STATUS_NOT_INITIALIZED);
+  push_mbox_int(fd, &offset, 0x00); // timestamp
+  push_mbox_byte(fd, &offset, value_size);
+  push_mbox_data(fd, &offset, 0x00, value_size); // value
+  push_mbox_string(fd, &offset, name);
+  push_mbox_byte(fd, &offset, DESCRIPTOR_TYPE_NONE); // end of descriptor
+
+  return 0;
+}
+
+
+unsigned char get_payload_sensor_value(int fd, payload_sensor_handle_t *handle, int *value)
+{
+  if (!handle) return EFAULT;
+  if (!value) return EFAULT;
+
+  int value_offset = handle->descriptor_offset + PAYLOAD_SENSOR_DESCRIPTOR_VALUE_OFFSET;
+  return pop_mbox_data(fd, &value_offset, value, handle->value_size);
+}
+
+
+unsigned char set_payload_sensor_value(int fd, payload_sensor_handle_t *handle, int value)
+{
+  if (!handle) return EFAULT;
+
+  unsigned char retval;
+  retval = set_mbox_byte(
+             fd,
+             handle->descriptor_offset + PAYLOAD_SENSOR_DESCRIPTOR_STATUS_OFFSET,
+             SENSOR_VALUE_STATUS_UPDATE_IN_PROGRESS);
+  if (retval) return retval;
+
+  int value_offset = handle->descriptor_offset + PAYLOAD_SENSOR_DESCRIPTOR_VALUE_OFFSET;
+  retval = push_mbox_data(fd, &value_offset, value, handle->value_size);
+  if (retval) return retval;
+
+  return set_mbox_byte(
+           fd,
+           handle->descriptor_offset + PAYLOAD_SENSOR_DESCRIPTOR_STATUS_OFFSET,
+           SENSOR_VALUE_STATUS_VALID);
+}
+
+
+unsigned char get_payload_sensors(int fd, mbox_info_t *info, payload_sensor_handle_t **handle)
+{
+  if (!info) return EFAULT;
+  if (!handle) return EFAULT;
+
+  int offset = info->payload_descriptors_offset;
+  int continue_parsing = 1;
+  unsigned char descriptor_type;
+  unsigned char descriptor_format_version;
+  int name_offset;
+  unsigned char *name;
+  unsigned char value_size;
+  payload_sensor_handle_t *last_handle = NULL;
+  payload_sensor_handle_t *new_handle;
+
+  (*handle) = NULL;
+
+  while (continue_parsing)
+  {
+    pop_mbox_byte(fd, &offset, &descriptor_type);
+    pop_mbox_byte(fd, &offset, &descriptor_format_version);
+
+    switch (descriptor_type)
+    {
+    case DESCRIPTOR_TYPE_NONE:
+      continue_parsing = 0;
+      break;
+
+    case DESCRIPTOR_TYPE_SENSOR_DATA_VALUE:
+      get_mbox_byte(fd, offset - 2 + PAYLOAD_SENSOR_DESCRIPTOR_VALUE_SIZE_OFFSET, &value_size);
+      name_offset = offset - 2 + descriptor_name_offset_for_value_size(value_size);
+      pop_mbox_string(fd, &name_offset, &name);
+      new_handle = create_payload_sensor_handle(offset-2, value_size, name);
+      free(name);
+      if (!(*handle)) (*handle) = new_handle;
+      if (last_handle) last_handle->next = new_handle;
+      last_handle = new_handle;
+      offset = name_offset;
+      break;
+
+    default:
+      free_payload_sensors(*handle);
+      return EFAULT;
+    }
+  }
+
+  if (*handle) return 0;
+  return ENODATA;
+}
+
+
+payload_sensor_handle_t *find_payload_sensor(payload_sensor_handle_t *handle, char *name)
+{
+  if (!handle) return NULL;
+  if (!name) return NULL;
+
+  do
+  {
+    if (!strcmp(handle->sensor_name, name)) return handle;
+    handle = handle->next;
+  }
+  while (handle);
+
+  return NULL;
+}
+
+
+void free_payload_sensors(payload_sensor_handle_t *handle)
+{
+  if (!handle) return;
+
+  payload_sensor_handle_t *next_handle;
+  do
+  {
+    next_handle = handle->next;
+    free(handle->sensor_name);
+    free(handle);
+    handle = next_handle;
+  }
+  while (handle);
+}
+
+
+// private
+
+unsigned char skip_c_string(int fd, int *offset)
+{
+  char c;
+  do
+  {
+    pop_mbox_byte(fd, offset, &c);
+  }
+  while (c);
+  return 0;
+}
+
+
+unsigned char skip_existing_mbox_sensors(int fd, mbox_info_t *info, int *offset)
+{
+  if (!info) return EFAULT;
+  if (!offset) return EFAULT;
+
+  int running_offset = info->payload_descriptors_offset;
+  int continue_parsing = 1;
+  unsigned char descriptor_type;
+  unsigned char descriptor_format_version;
+  unsigned char c;
+  unsigned char value_size;
+
+  while (continue_parsing)
+  {
+    pop_mbox_byte(fd, &running_offset, &descriptor_type);
+    pop_mbox_byte(fd, &running_offset, &descriptor_format_version);
+    //printf("%s() descriptor type = %d, format = %d\n", __func__, descriptor_type, descriptor_format_version);
+
+    switch (descriptor_type)
+    {
+    case DESCRIPTOR_TYPE_NONE:
+      continue_parsing = 0;
+      (*offset) = running_offset - 2;
+      break;
+
+    case DESCRIPTOR_TYPE_SENSOR_DATA_VALUE:
+      get_mbox_byte(fd, running_offset - 2 + PAYLOAD_SENSOR_DESCRIPTOR_VALUE_SIZE_OFFSET, &value_size);
+      running_offset = running_offset - 2 + descriptor_name_offset_for_value_size(value_size);
+      skip_c_string(fd, &running_offset);
+      break;
+
+    default:
+      return EFAULT;
+    }
+  }
+
+  return 0;
+}
+
+
+int descriptor_name_offset_for_value_size(int value_size)
+{
+  switch (value_size)
+  {
+  case SENSOR_DATA_VALUE_SIZE_8BIT:
+    return PAYLOAD_SENSOR_DESCRIPTOR_8BIT_VALUE_NAME_OFFSET;
+
+  case SENSOR_DATA_VALUE_SIZE_16BIT:
+    return PAYLOAD_SENSOR_DESCRIPTOR_16BIT_VALUE_NAME_OFFSET;
+
+  case SENSOR_DATA_VALUE_SIZE_24BIT:
+    return PAYLOAD_SENSOR_DESCRIPTOR_24BIT_VALUE_NAME_OFFSET;
+
+  case SENSOR_DATA_VALUE_SIZE_32BIT:
+    return PAYLOAD_SENSOR_DESCRIPTOR_32BIT_VALUE_NAME_OFFSET;
+  }
+  return 0;
+}
+
+
+payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, char *name)
+{
+  if (!name) return NULL;
+
+  payload_sensor_handle_t *handle = malloc(sizeof(payload_sensor_handle_t));
+  if (!handle) return NULL;
+
+  handle->sensor_name = malloc(strlen(name));
+  if (!handle->sensor_name)
+  {
+    free(handle);
+    return NULL;
+  }
+  strcpy(handle->sensor_name, name);
+
+  handle->next = NULL;
+  handle->descriptor_offset = offset;
+  handle->value_size = value_size;
+}
+
 

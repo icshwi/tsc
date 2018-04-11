@@ -84,4 +84,21 @@ void free_mbox_info(mbox_info_t *info);
 int get_mbox_sensor_value(int fd, mbox_info_t *info, unsigned char *name, int *value, int *timestamp);
 unsigned char send_mbox_service_request(int fd, mbox_info_t *info, unsigned char command, unsigned char argc, ...);
 
+typedef struct payload_sensor_handle_s payload_sensor_handle_t;
+
+typedef struct payload_sensor_handle_s
+{
+  payload_sensor_handle_t *next;
+  char *sensor_name;
+  int descriptor_offset;
+  int value_size;
+} payload_sensor_handle_t;
+
+unsigned char create_payload_sensor(int fd, mbox_info_t *info, unsigned char *name, int value_size, payload_sensor_handle_t **handle);
+unsigned char get_payload_sensor_value(int fd, payload_sensor_handle_t *handle, int *value);
+unsigned char set_payload_sensor_value(int fd, payload_sensor_handle_t *handle, int value);
+unsigned char get_payload_sensors(int fd, mbox_info_t *info, payload_sensor_handle_t **handle);
+payload_sensor_handle_t *find_payload_sensor(payload_sensor_handle_t *handle, char *name);
+void free_payload_sensors(payload_sensor_handle_t *handle);
+
 #endif

@@ -500,6 +500,10 @@ char *mbox_msg[] =
   "  mbox read <address> [<count>]",
   "  mbox write <address> <value>",
   "  mbox info",
+  "  mbox payload_sensor show [<name]>",
+  "  mbox payload_sensor create <name> <size>",
+  "   where <size>    = 1..4",
+  "  mbox payload_sensor set <name> <value>",
 0};
 
 char *pc_msg[] = 
