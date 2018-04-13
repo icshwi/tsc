@@ -199,7 +199,7 @@ tsc_i2c( struct cli_cmd_para *c)
   {
     ds = 1;
     sscanf( c->para[1],"read.%d", &ds);
-    device |= ((ds-1)&3)<<18; 
+    device |= ((ds-1)&3)<<18;
     printf("i2c read: %08x %x\n", device, reg);
     tsc_i2c_read( device, reg, &data);
     printf("data = %x\n", data);
