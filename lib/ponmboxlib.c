@@ -792,6 +792,15 @@ unsigned char create_payload_sensor(int fd, mbox_info_t *info, unsigned char *na
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : get_payload_sensor_value
+ * Prototype     : unsigned char
+ * Parameters    : handle, value
+ * Return        : sensor data value
+ *----------------------------------------------------------------------------
+ * Description   : get payload sensor value
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char get_payload_sensor_value(int fd, payload_sensor_handle_t *handle, int *value)
 {
@@ -802,6 +811,15 @@ unsigned char get_payload_sensor_value(int fd, payload_sensor_handle_t *handle, 
   return pop_mbox_data(fd, &value_offset, value, handle->value_size);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : set_payload_sensor_value
+ * Prototype     : unsigned char
+ * Parameters    : handle, value
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : set payload sensor value
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char set_payload_sensor_value(int fd, payload_sensor_handle_t *handle, int value)
 {
@@ -824,6 +842,15 @@ unsigned char set_payload_sensor_value(int fd, payload_sensor_handle_t *handle, 
            SENSOR_VALUE_STATUS_VALID);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : get_payload_sensors
+ * Prototype     : unsigned char
+ * Parameters    : info, handle
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : get payload sensor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char get_payload_sensors(int fd, mbox_info_t *info, payload_sensor_handle_t **handle)
 {
@@ -875,6 +902,15 @@ unsigned char get_payload_sensors(int fd, mbox_info_t *info, payload_sensor_hand
   return ENODATA;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : find_payload_sensor
+ * Prototype     : payload_sensor_handle_t
+ * Parameters    : handle, name
+ * Return        : NULL
+ *----------------------------------------------------------------------------
+ * Description   : find payload sensor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 payload_sensor_handle_t *find_payload_sensor(payload_sensor_handle_t *handle, char *name)
 {
@@ -891,6 +927,15 @@ payload_sensor_handle_t *find_payload_sensor(payload_sensor_handle_t *handle, ch
   return NULL;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : free_payload_sensors
+ * Prototype     : void
+ * Parameters    : handle
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : free payload sensor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void free_payload_sensors(payload_sensor_handle_t *handle)
 {
@@ -910,6 +955,16 @@ void free_payload_sensors(payload_sensor_handle_t *handle)
 
 // private
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : skip_c_string
+ * Prototype     : unsigned char
+ * Parameters    : offset
+ * Return        : 0
+ *----------------------------------------------------------------------------
+ * Description   : skip c string
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 unsigned char skip_c_string(int fd, int *offset)
 {
   char c;
@@ -921,6 +976,15 @@ unsigned char skip_c_string(int fd, int *offset)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : skip_existing_mbox_sensors
+ * Prototype     : unsigned char
+ * Parameters    : info, offset
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : skip exiting mbox sensor
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char skip_existing_mbox_sensors(int fd, mbox_info_t *info, int *offset)
 {
@@ -961,6 +1025,15 @@ unsigned char skip_existing_mbox_sensors(int fd, mbox_info_t *info, int *offset)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : descriptor_name_offset_for_value_size
+ * Prototype     : int
+ * Parameters    : value_size
+ * Return        : status
+ *----------------------------------------------------------------------------
+ * Description   : descriptor name offset for value size
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int descriptor_name_offset_for_value_size(int value_size)
 {
@@ -981,6 +1054,15 @@ int descriptor_name_offset_for_value_size(int value_size)
   return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : create_payload_sensor_handle
+ * Prototype     : payload_sensor_handle_t
+ * Parameters    : offset, value_size, name
+ * Return        : NULL
+ *----------------------------------------------------------------------------
+ * Description   : create payloas sensor handle
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, char *name)
 {

@@ -285,6 +285,17 @@ mbox_info( struct cli_cmd_para *c)
 }
 
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : print_out_rtm_info
+ * Prototype     : void
+ * Parameters    : info
+ * Return        : void
+ *
+ *----------------------------------------------------------------------------
+ * Description   : print out rtm info
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void
 print_out_rtm_info(mbox_info_t *info)
 {
@@ -328,6 +339,16 @@ int mbox_payload_sensor( struct cli_cmd_para *c)
   return( CLI_ERR);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_payload_sensor_show
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : status
+ *
+ *----------------------------------------------------------------------------
+ * Description   : mbox payload sensor show
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int mbox_payload_sensor_show( struct cli_cmd_para *c)
 {
@@ -360,6 +381,16 @@ int mbox_payload_sensor_show( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : print_out_payload_sensor_info
+ * Prototype     : void
+ * Parameters    : mbox_info, sensor_name
+ * Return        : void
+ *
+ *----------------------------------------------------------------------------
+ * Description   : print out payload sensor info
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void print_out_payload_sensor_info(mbox_info_t *mbox_info, char *sensor_name)
 {
@@ -397,6 +428,16 @@ void print_out_payload_sensor_info(mbox_info_t *mbox_info, char *sensor_name)
   }
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : print_out_payload_sensor_details
+ * Prototype     : void
+ * Parameters    : handle
+ * Return        : void
+ *
+ *----------------------------------------------------------------------------
+ * Description   : print out payload sensor details
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void print_out_payload_sensor_details(payload_sensor_handle_t *handle)
 {
@@ -410,6 +451,16 @@ void print_out_payload_sensor_details(payload_sensor_handle_t *handle)
   printf("    value = %d (0x%08x)\n", value, value);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_payload_sensor_create
+ * Prototype     : int
+ * Parameters    : cli_cmd_para
+ * Return        : status
+ *
+ *----------------------------------------------------------------------------
+ * Description   : mbox payload sensor create
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int mbox_payload_sensor_create( struct cli_cmd_para *c)
 {
@@ -445,6 +496,16 @@ int mbox_payload_sensor_create( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_payload_sensor_set
+ * Prototype     : int
+ * Parameters    : cli_cmd_para
+ * Return        : status
+ *
+ *----------------------------------------------------------------------------
+ * Description   : mbox payload sensor set
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int mbox_payload_sensor_set( struct cli_cmd_para *c)
 {
