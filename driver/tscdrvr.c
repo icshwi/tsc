@@ -59,13 +59,7 @@ static void tsc_remove(struct pci_dev *);
 
 struct tsc tsc;      /* driver main data structure for device */
 
-static const char device_name_io[]      = TSC_NAME_IO;
 static const char device_name_central[] = TSC_NAME_CENTRAL;
-
-static const struct pci_device_id tsc_id_io[] = {
-    { PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_IO) },
-	{ },
-};
 
 static const struct pci_device_id tsc_id_central[] = {
 	{ PCI_DEVICE(PCI_VENDOR_ID_IOXOS, PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) },
@@ -74,12 +68,6 @@ static const struct pci_device_id tsc_id_central[] = {
 	{ },
 };
 
-static struct pci_driver tsc_driver_io = {
-	.name     = device_name_io,
-	.id_table = tsc_id_io,
-	.probe    = tsc_probe,
-	.remove   = tsc_remove,
-};
 static struct pci_driver tsc_driver_central = {
 	.name     = device_name_central,
 	.id_table = tsc_id_central,
@@ -87,11 +75,7 @@ static struct pci_driver tsc_driver_central = {
 	.remove   = tsc_remove,
 };
 
-static struct class *bridge_sysfs_class_io;	     /* Sysfs class */
 static struct class *bridge_sysfs_class_central; /* Sysfs class */
-
-static int tsc_probe(struct pci_dev *, const struct pci_device_id *);
-static void tsc_remove(struct pci_dev *);
 
 /*----------------------------------------------------------------------------
  * Function name : tsc_irq
@@ -155,21 +139,10 @@ static int tsc_open( struct inode *inode, struct file *filp){
 
 	debugk(( KERN_ALERT "tsc: entering tsc_open( %p, %p)\n", inode, filp));
 
-	minor = iminor( file_inode(filp)); // Get minor value
+	minor = iminor( file_inode(filp));
 	debugk(( KERN_ALERT "tsc: minor value: %x)\n", minor));
 
-	// IO device
-	if (minor == 0) {
-		ifc = tsc.ifc_io;
-	}
-	// CENTRAL device
-	else if (minor == 1){
-		ifc = tsc.ifc_central;
-	}
-	else {
-		debugk(( KERN_ALERT "tsc: opening failed !\n"));
-		return -1;
-	}
+	ifc = &tsc.ifc_central[minor];
 
 	mutex_lock( &ifc->mutex_ctl);
 
@@ -195,26 +168,16 @@ static int tsc_open( struct inode *inode, struct file *filp){
 static long tsc_ioctl( struct file *filp, unsigned int cmd, unsigned long arg){
 	struct tsc_device *ifc;
 	int retval;
-	int minor = -1;
 
 	debugk(( KERN_ALERT "tsc: entering tsc_ioctl( %p, %x, %lx)\n", filp, cmd, arg));
 	ifc = ( struct tsc_device *)filp->private_data;
-
-	minor = iminor( file_inode(filp)); // Get minor value
 
 	retval = 0;
 	switch ( cmd &  TSC_IOCTL_OP_MASK){
     	case TSC_IOCTL_ID:{
     		if( cmd == TSC_IOCTL_ID_NAME){
-    			if (minor == 0){
-    				if( copy_to_user( (void *)arg, TSC_NAME_IO, strlen(TSC_NAME_IO))){
-    					retval = -EFAULT;
-    				}
-    			}
-    			else if (minor == 1){
-    				if( copy_to_user( (void *)arg, TSC_NAME_CENTRAL, strlen(TSC_NAME_CENTRAL))){
-    					retval = -EFAULT;
-    				}
+				if( copy_to_user( (void *)arg, TSC_NAME_CENTRAL, strlen(TSC_NAME_CENTRAL))){
+					retval = -EFAULT;
     			}
     		}
     		else if( cmd == TSC_IOCTL_ID_VERSION){
@@ -377,30 +340,27 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	int retval;
 	struct tsc_device *ifc = NULL;
 	short tmp;
+	static int card = 0;
 
 	retval = 0;
-	debugk(( KERN_ALERT "tsc: entering tsc_probe( %p, %p)\n", pdev, id));
+	debugk(( KERN_ALERT "tsc: entering tsc_probe( %p, %p) card:%d\n", pdev, id, card));
 
-	if (id->device == PCI_DEVICE_ID_IOXOS_TSC_IO){
-		tsc.ifc_io = (struct tsc_device *)kzalloc(sizeof(struct tsc_device), GFP_KERNEL);
-		if (tsc.ifc_io == NULL) {
-			dev_err(&pdev->dev, "Failed to allocate memory for device structure\n");
-			retval = -ENOMEM;
-			goto tsc_probe_err_alloc_dev;
-		}
-		ifc = tsc.ifc_io;
-		debugk((KERN_NOTICE "tsc_io : device data structure allocated %p\n", ifc));
+	if (card >= tsc.nr_devs) {
+		dev_err(&pdev->dev, "This should not happen\n");
+		return -1;
 	}
-	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3)){
-		tsc.ifc_central = (struct tsc_device *)kzalloc(sizeof(struct tsc_device), GFP_KERNEL);
+
+	if (tsc.ifc_central == NULL){
+		tsc.ifc_central = (struct tsc_device *)kzalloc(tsc.nr_devs * sizeof(struct tsc_device), GFP_KERNEL);
 		if (tsc.ifc_central == NULL) {
 			dev_err(&pdev->dev, "Failed to allocate memory for device structure\n");
 			retval = -ENOMEM;
 			goto tsc_probe_err_alloc_dev;
 		}
-		ifc = tsc.ifc_central;
-		debugk((KERN_NOTICE "tsc_central : device data structure allocated %p\n", ifc));
 	}
+	ifc = &tsc.ifc_central[card];
+	debugk((KERN_NOTICE "tsc_central : device %d data structure allocated %p\n", card, ifc));
+	card++;
 
 	/* Enable the device */
 	retval = pci_enable_device(pdev);
@@ -412,22 +372,12 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	debugk((KERN_NOTICE "tsc : PCI device enabled\n"));
 
 	/* Map Registers */
-	if (id->device == PCI_DEVICE_ID_IOXOS_TSC_IO){
-		retval = pci_request_regions( pdev, device_name_io);
-		if (retval) {
-			dev_err(&pdev->dev, "Unable to reserve resources\n");
-			goto tsc_probe_err_resource;
-		}
-		debugk((KERN_NOTICE "tsc_io : PCI region allocated\n"));
+	retval = pci_request_regions( pdev, device_name_central);
+	if (retval) {
+		dev_err(&pdev->dev, "Unable to reserve resources\n");
+		goto tsc_probe_err_resource;
 	}
-	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3)){
-		retval = pci_request_regions( pdev, device_name_central);
-		if (retval) {
-			dev_err(&pdev->dev, "Unable to reserve resources\n");
-			goto tsc_probe_err_resource;
-		}
-		debugk((KERN_NOTICE "tsc_central : PCI region allocated\n"));
-	}
+	debugk((KERN_NOTICE "tsc_central : PCI region allocated\n"));
 
 	/* map CSR registers through BAR 3 (size 8k) */
 	debugk((KERN_NOTICE "tsc : pci resource start BAR3 : %lx\n", pci_resource_start(pdev, 3)));
@@ -457,20 +407,11 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	debugk((KERN_NOTICE "tsc : MSI enabled : ifc irq = %d\n", pdev->irq));
 
 	/* register interrupt service routine tsc_irq */
-	if (id->device == PCI_DEVICE_ID_IOXOS_TSC_IO){
-		if( request_irq( pdev->irq, tsc_irq, IRQF_SHARED, device_name_io, ifc)){
-			debugk((KERN_NOTICE "tsc_io : Cannot register IRQ\n"));
-			goto tsc_probe_err_request_irq;
-		}
-		debugk((KERN_NOTICE "tsc_io : IRQ registered\n"));
+	if( request_irq( pdev->irq, tsc_irq, IRQF_SHARED, device_name_central, ifc)){
+		debugk((KERN_NOTICE "tsc_central : Cannot register IRQ\n"));
+		goto tsc_probe_err_request_irq;
 	}
-	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3)){
-		if( request_irq( pdev->irq, tsc_irq, IRQF_SHARED, device_name_central, ifc)){
-			debugk((KERN_NOTICE "tsc_central : Cannot register IRQ\n"));
-			goto tsc_probe_err_request_irq;
-		}
-		debugk((KERN_NOTICE "tsc_central : IRQ registered\n"));
-	}
+	debugk((KERN_NOTICE "tsc_central : IRQ registered\n"));
 
 	/* create protection mutex for control device */
 	mutex_init( &ifc->mutex_ctl);
@@ -490,10 +431,11 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	debugk(( KERN_NOTICE "tsc : enable interrupts and PCIe master access [%04x]\n", tmp));
 	pci_write_config_word( ifc->pdev, PCI_COMMAND, tmp);
 
+	pci_set_drvdata(pdev, ifc);
 	return( retval);
 
 tsc_probe_err_request_irq:
- 	 pci_disable_msi( ifc->pdev);
+	pci_disable_msi( ifc->pdev);
 tsc_probe_err_enable_msi:
 	iounmap( ifc->csr_ptr);
 tsc_probe_err_remap:
@@ -501,12 +443,7 @@ tsc_probe_err_remap:
 tsc_probe_err_resource:
   	pci_disable_device( pdev);
 tsc_probe_err_enable:
-  	if (id->device == PCI_DEVICE_ID_IOXOS_TSC_IO){
-  		kfree( tsc.ifc_io);
-  	}
-  	else if ((id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) || (id->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3)){
-  		kfree( tsc.ifc_central);
-  	}
+	kfree( tsc.ifc_central);
 tsc_probe_err_alloc_dev:
   	return( retval);
 }
@@ -522,37 +459,27 @@ tsc_probe_err_alloc_dev:
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static void tsc_remove( struct pci_dev *pdev){
-	struct tsc_device *ifc;
+	struct tsc_device *ifc = pci_get_drvdata(pdev);
+	static int devs = 1;
 
 	debugk(( KERN_ALERT "tsc: entering tsc_remove(%p) %x\n", pdev, pdev->device));
 
-	// IO is present
-	if ((tsc.ifc_io != NULL) && (pdev->device == PCI_DEVICE_ID_IOXOS_TSC_IO)){
-		ifc = tsc.ifc_io;
-		tsc_dev_exit(ifc);
-		mutex_destroy( &ifc->mutex_ctl);
-		free_irq( ifc->pdev->irq, (void *)ifc);
-		pci_disable_msi( ifc->pdev);
-		iounmap( ifc->csr_ptr);
-		kfree(ifc);
-		tsc.ifc_io = NULL;
-	}
-
-	// CENTRAL is present
-	if ((tsc.ifc_central != NULL) && ((pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_1) || (pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) || (pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3))){
-		ifc = tsc.ifc_central;
+	if (tsc.ifc_central != NULL){
 		tsc_dev_exit(ifc);
 		mutex_destroy( &ifc->mutex_ctl);
 		free_irq( ifc->pdev->irq, (void *)ifc);
 		pci_disable_msi(ifc->pdev);
 		iounmap( ifc->csr_ptr);
-		kfree(ifc);
-		tsc.ifc_central = NULL;
+		if (devs == tsc.nr_devs) {
+			kfree(tsc.ifc_central);
+			tsc.ifc_central = NULL;
+		}
 	}
 
 	pci_release_regions(pdev);
     pci_disable_device(pdev);
 
+	devs++;
 	return;
 }
 
@@ -571,11 +498,12 @@ static void tsc_remove( struct pci_dev *pdev){
 static int tsc_initialization(void){
 	int retval;
 	dev_t tsc_dev_id;
-	struct tsc_device *ifc_io = NULL;
 	struct tsc_device *ifc_central = NULL;
 	int major = -1;
-	char name_io[32] = "bus/bridge/tsc_ctl_io";
 	char name_central[32] = "bus/bridge/tsc_ctl_central";
+	char name_device[32];
+	struct pci_dev *pdev = NULL;
+	int count = 0;
 
 	debugk(( KERN_ALERT "tsc: entering tsc_initialization( void)\n"));
 
@@ -609,28 +537,12 @@ static int tsc_initialization(void){
 	/*--------------------------------------------------------------------------
 	 * Register as PCI driver
 	 *--------------------------------------------------------------------------*/
-
-	// IO --------------
-
-	tsc.ifc_io = NULL;
-	retval = pci_register_driver( &tsc_driver_io);
-	if(retval) {
-		debugk((KERN_NOTICE "tsc_io : Error %d registering driver\n", retval));
-		//goto tsc_init_err_pci_register_driver;
+	tsc.nr_devs = 0;
+	while((pdev=pci_get_device(PCI_VENDOR_ID_IOXOS, PCI_ANY_ID, pdev)) != NULL)
+	{
+		tsc.nr_devs++;
+		debugk(( KERN_ALERT "Device %d found vendor_id=0x%x and device_id=0x%x...\n",tsc.nr_devs, pdev->vendor,pdev->device));
 	}
-
-	/* verify if tsc device has been discovered */
-	if( !tsc.ifc_io){
-		device_destroy(bridge_sysfs_class_io, MKDEV(MAJOR(tsc.dev_id), 0));
-		pci_unregister_driver( &tsc_driver_io);
-		debugk((KERN_NOTICE "tsc_io : didn't find tsc_IO PCI device\n"));
-	}
-	else {
-		ifc_io = tsc.ifc_io;
-		debugk((KERN_NOTICE "tsc_io : driver registered [%p]\n", ifc_io));
-	}
-
-	// CENTRAL --------------
 
 	tsc.ifc_central = NULL;
 	retval = pci_register_driver( &tsc_driver_central);
@@ -652,45 +564,31 @@ static int tsc_initialization(void){
 	/*--------------------------------------------------------------------------
 	 * Check if at least one FPGA has been found
 	 *--------------------------------------------------------------------------*/
-
-	if((tsc.ifc_io == NULL) && (tsc.ifc_central == NULL)){
+	if(tsc.ifc_central == NULL){
 		goto tsc_no_device;
 	}
+
 	/*--------------------------------------------------------------------------
 	 * Create sysfs entries - on udev systems this creates the dev files
 	 *--------------------------------------------------------------------------*/
-
-	if (tsc.ifc_io != NULL) {
-		bridge_sysfs_class_io = class_create( THIS_MODULE, device_name_io);
-		if (IS_ERR( bridge_sysfs_class_io)){
-			retval = PTR_ERR(bridge_sysfs_class_io);
-			tsc_remove( ifc_io->pdev);
-		}
-		else {
-			device_create(bridge_sysfs_class_io, NULL, MKDEV(major, 0), NULL, name_io, 0);
-		}
+	bridge_sysfs_class_central = class_create( THIS_MODULE, device_name_central);
+	if (IS_ERR( bridge_sysfs_class_central)){
+		retval = PTR_ERR(bridge_sysfs_class_central);
+		for(count = 0; count < tsc.nr_devs; count++)
+			tsc_remove(tsc.ifc_central[count].pdev);
 	}
-
-	if (tsc.ifc_central != NULL) {
-		bridge_sysfs_class_central = class_create( THIS_MODULE, device_name_central);
-		if (IS_ERR( bridge_sysfs_class_central)){
-			retval = PTR_ERR(bridge_sysfs_class_central);
-			tsc_remove(ifc_central->pdev);
+	else {
+		for(count = 0; count < tsc.nr_devs; count++) {
+			snprintf(name_device, 32, "%s%d", name_central, count);
+			device_create(bridge_sysfs_class_central, NULL, MKDEV(major, count), NULL, name_device);
 		}
-		else {
-			device_create(bridge_sysfs_class_central, NULL, MKDEV(major, 1), NULL, name_central, 1);
-		}
-	}
-
-	if((tsc.ifc_io == NULL) && (tsc.ifc_central == NULL)){
-		goto tsc_no_device;
 	}
 
 	return( 0);
 
 	/*--------------------------------------------------------------------------
 	 * Cleanup after an error has been detected
-   *--------------------------------------------------------------------------*/
+	 *--------------------------------------------------------------------------*/
 tsc_no_device:
   	cdev_del( &tsc.cdev);
 tsc_init_err_cdev_add:
@@ -711,18 +609,12 @@ tsc_init_err_alloc_chrdev:
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 static void tsc_exit(void){
+	int count;
 	debugk(( KERN_ALERT "tsc: entering tsc_exit( void)\n"));
 
-	// IO
-	if (tsc.ifc_io != NULL) {
-		device_destroy(bridge_sysfs_class_io, MKDEV(MAJOR(tsc.dev_id), 0));
-	    pci_unregister_driver( &tsc_driver_io);
-		class_destroy(bridge_sysfs_class_io);
-	}
-
-	// CENTRAL
 	if (tsc.ifc_central != NULL) {
-		device_destroy(bridge_sysfs_class_central, MKDEV(MAJOR(tsc.dev_id), 1));
+		for(count = 0; count < tsc.nr_devs; count++)
+			device_destroy(bridge_sysfs_class_central, MKDEV(MAJOR(tsc.dev_id), count));
 		pci_unregister_driver( &tsc_driver_central);
 		class_destroy(bridge_sysfs_class_central);
 	}
@@ -739,6 +631,5 @@ MODULE_AUTHOR("IOxOS Technologies [JFG]");
 MODULE_VERSION(DRIVER_VERSION);
 MODULE_DESCRIPTION("driver for IOxOS Technologies TSC control interface");
 MODULE_DEVICE_TABLE(pci, tsc_id_central);
-MODULE_DEVICE_TABLE(pci, tsc_id_io);
 
 /*================================< end file >================================*/

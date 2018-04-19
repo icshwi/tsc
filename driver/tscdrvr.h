@@ -93,13 +93,12 @@ struct tsc
 {
   struct cdev cdev;
   dev_t dev_id;
-  struct tsc_device *ifc_io;
   struct tsc_device *ifc_central;
+  int nr_devs;
 };
 
 #define TSC_COUNT                   64       /* Maximum number of TSC devices    */
 #define TSC_NAME           "tsc"         /* Name of the tsc device           */
-#define TSC_NAME_IO        "tsc_io"      /* Name of the tsc io device        */
 #define TSC_NAME_CENTRAL   "tsc_central" /* Name of the tsc central device   */
 #define TSC_MINOR_START              0       /* First minor number                   */
 #define TSC_IRQ_NUM                 64       /* Number of interrupt source (4*16)    */
