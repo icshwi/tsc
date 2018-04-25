@@ -42,6 +42,8 @@
 #include <time.h>
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_semaphore
  * Prototype     : int
@@ -63,7 +65,7 @@ int tsc_semaphore(struct cli_cmd_para *c){
 	// Select sub command and check syntax
 	if(cnt--) {
 		if((!strcmp("status", c->para[0])) && (c->cnt == 1)) {
-			tsc_semaphore_status(&sts);
+			tsc_semaphore_status(tsc_fd, &sts);
 			printf("SEMAPHORE global status = 0x%08x\n", sts);
 			printf("SEMAPHORE#0             : %01x\n", (sts & 0x00000001));
 			printf("SEMAPHORE#1             : %01x\n", (sts & 0x00000002) >> 1);
@@ -96,7 +98,7 @@ int tsc_semaphore(struct cli_cmd_para *c){
 				return(-1);
 			}
 			else{
-				tsc_semaphore_release(idx, 0);
+				tsc_semaphore_release(tsc_fd, idx, 0);
 				printf("SEMAPHORE#%d released \n", idx);
 				return(0);
 			}
@@ -115,7 +117,7 @@ int tsc_semaphore(struct cli_cmd_para *c){
 			}
 			else{
 				tag = strtoul(c->para[2], &p, 16);
-				if(tsc_semaphore_get(idx, tag) == 3){
+				if(tsc_semaphore_get(tsc_fd, idx, tag) == 3){
 					printf("Semaphore not available !\n");
 				}
 				else{

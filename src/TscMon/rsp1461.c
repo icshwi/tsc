@@ -43,6 +43,8 @@
 #include "rsp1461.h"
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 /*
 User I2C devices
  -----------------------------------------------------------------------------
@@ -199,26 +201,26 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	uint8_t                 sfp_status;
 
 	// Check if the board is a IFC14xx
-	tsc_pon_read(0x0, &data);
+	tsc_pon_read(tsc_fd, 0x0, &data);
 	if (((data & 0xffffff00) >> 8) != 0x735714) {
 		printf("The board is not compatible...\n");
 		return -1;
 	}
 
 	// Check if card is present
-	rsp1461_presence();
+	rsp1461_presence(tsc_fd);
 
 	// Execute init automatically one time
 	if (init_rsp == 0){
 		init_rsp = 1;
-		retval = rsp1461_init(); // Check return function
+		retval = rsp1461_init(tsc_fd); // Check return function
 		printf("Initialization done... \n");
 	}
 
 	if(cnt--) {
 // --- INIT ---
 		if(((!strcmp("init", c->para[0]))) && (c->cnt == 1)){
-			retval = rsp1461_init(); // Check return function
+			retval = rsp1461_init(tsc_fd); // Check return function
 			printf("Initialization done... \n");
 			return retval;
 		}
@@ -228,7 +230,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 
 			// Present
 			if((!strcmp("present", c->para[1])) && (c->cnt == 2)){
-				retval = rsp1461_extension_presence(&present); // Check function return
+				retval = rsp1461_extension_presence(tsc_fd, &present); // Check function return
 				if (present){
 					printf("rsp1461 extension presence: NO \n");
 				}
@@ -248,7 +250,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 				}
 				// Get
 				if(!strcmp("get", c->para[1])){
-					retval = rsp1461_extension_get_pin_state(ext_id, &ext_state); // Check function return
+					retval = rsp1461_extension_get_pin_state(tsc_fd, ext_id, &ext_state); // Check function return
 					printf("Status of pin#%x is : %x \n", ext_id, ext_state);
 					return retval;
 				}
@@ -269,7 +271,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 					    tsc_print_usage(c);
 						return(-1);
 					}
-					retval = rsp1461_extension_set_pin_state(ext_id, ext_pin_state_enum); // Check function return
+					retval = rsp1461_extension_set_pin_state(tsc_fd, ext_id, ext_pin_state_enum); // Check function return
 					printf("Pin#%x set \n", ext_id);
 					return retval;
 				}
@@ -314,12 +316,12 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 			}
 			// On
 			if(!strcmp("on", c->para[1])){
-				retval = rsp1461_led_turn_on(led); // Check function return
+				retval = rsp1461_led_turn_on(tsc_fd, led); // Check function return
 				return retval;
 			}
 			// Off
 			else if(!strcmp("off", c->para[1])){
-				retval = rsp1461_led_turn_off(led); // Check function return
+				retval = rsp1461_led_turn_off(tsc_fd, led); // Check function return
 				return retval;
 			}
 			else {
@@ -342,7 +344,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 			}
 			// Status
 			if(!strcmp("status", c->para[1])){
-				retval = rsp1461_sfp_status(sfp_id, &sfp_status); // Check function return
+				retval = rsp1461_sfp_status(tsc_fd, sfp_id, &sfp_status); // Check function return
 				printf("sfp #%x status: \n", sfp_id);
 				if(sfp_status & (SFP_PRESENT)){
 					printf("   SFP_PRESENT:        Absent \n");

@@ -128,7 +128,7 @@ int main(int argc, char * argv[]){
     ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
 
 	// Init TSC
-	tsc_fd = tsc_init();
+	tsc_fd = tsc_init(0);
 	if(tsc_fd < 0) {
 		printf("TSC driver not installed, please install the driver firstly. \n");
 		return (-1);
@@ -177,7 +177,7 @@ int main(int argc, char * argv[]){
 		}
 
 		map_win.req.mode.flags = 0;
-		retval = tsc_map_alloc(&map_win);
+		retval = tsc_map_alloc(tsc_fd, &map_win);
 		if(retval < 0){
 			printf("Error in mapping SHM");
 			return (-1);
@@ -227,31 +227,31 @@ int main(int argc, char * argv[]){
 if (!quiet) {
 		// Acquire temperature and voltage of current system
 		d0 = 0x3000;
-		tsc_smon_write(0x41, &d0);
+		tsc_smon_write(tsc_fd, 0x41, &d0);
 		printf("   FPGA System Monitoring\n");
-		tsc_smon_read(0x00, &d0);
+		tsc_smon_read(tsc_fd, 0x00, &d0);
 		f0 = (((double)(d0 >> 6) * 503.975) / 1024.) - (double)273.15;
-		tsc_smon_read(0x20, &d1);
+		tsc_smon_read(tsc_fd, 0x20, &d1);
 		f1 = (((double)(d1 >> 6) * 503.975) / 1024.) - 273.15;
-		tsc_smon_read(0x24, &d2);
+		tsc_smon_read(tsc_fd, 0x24, &d2);
 		f2 = (((double)(d2 >> 6) * 503.975) / 1024.) - 273.15;
 		printf("      Temperature          : %.2f [%.2f - %.2f]\n", f0, f1, f2);
-		tsc_smon_read(0x01, &d0);
+		tsc_smon_read(tsc_fd, 0x01, &d0);
 		f0 = (((double)(d0 >> 6) * 3.0) / 1024.);
-		tsc_smon_read(0x21, &d1);
+		tsc_smon_read(tsc_fd, 0x21, &d1);
 		f1 = (((double)(d1 >> 6) * 3.0) / 1024.);
-		tsc_smon_read(0x25, &d2);
+		tsc_smon_read(tsc_fd, 0x25, &d2);
 		f2 = (((double)(d2 >> 6) * 3.0) / 1024.);
 		printf("      VCCint               : %.2f [%.2f - %.2f]\n", f0, f1, f2);
-		tsc_smon_read(0x02, &d0);
+		tsc_smon_read(tsc_fd, 0x02, &d0);
 		f0 = (((double)(d0 >> 6) * 3.0) / 1024.);
-		tsc_smon_read(0x22, &d1);
+		tsc_smon_read(tsc_fd, 0x22, &d1);
 		f1 = (((double)(d1 >> 6) * 3.0) / 1024.);
-		tsc_smon_read(0x26, &d2);
+		tsc_smon_read(tsc_fd, 0x26, &d2);
 		f2 = (((double)(d2 >> 6) * 3.0) / 1024.);
 		printf("      VCCaux               : %.2f [%.2f - %.2f]\n", f0, f1, f2);
 		d0 = 3;
-		tsc_smon_write(0x40, &d0);
+		tsc_smon_write(tsc_fd, 0x40, &d0);
 
 		printf("\n");
 		printf("Calibration pattern   : 0101 1001 0011 0100 1011 0101 1001 0011 \n");
@@ -264,15 +264,15 @@ if (!quiet) {
 		// Calibration need to be done in the order : 1 -> 2
 		if(mem == 1){
 			data = 0x8000;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 			data = 0x2080;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 		}
 
 		// Reset calibration register
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Pass the entire possible delay taps
 if (!quiet) {
@@ -293,15 +293,15 @@ if (!quiet) {
 }
 		// Set IDEL to 0
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Loop on 16 DQ
 		for(j = 0; j < 16; j++){
 
 			// Store initial value of count of the IFSTA register
 			dq_path = j << 12;
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
-			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &dq_path);
+			tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
 
 			init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 			temp_cnt_value_store[j] = init_cnt_value_store[j];
@@ -379,12 +379,12 @@ if (ppc == 1) {
 					if(j < 8){
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
-						tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 						//printf("Current cnt:%x New cnt: %x Computed cnt: %x \n", temp_cnt_value_store[j], (temp_cnt_value_store[j] + CURRENT_STEP), data);
 
 						// Load new count value
 						data = (1 << 31) | (0x1 << (j + 8));
-						tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 						// Check
 						//data = (j + 8) << 12;
@@ -398,12 +398,12 @@ if (ppc == 1) {
 					else {
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
-						tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 						//printf("Current cnt:%x New cnt: %x Computed cnt: %x \n", temp_cnt_value_store[j], (temp_cnt_value_store[j] + CURRENT_STEP), data);
 
 						// Load new count value
 						data = (1 << 31) | (0x1 << (j - 8));
-						tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1 ], &data);
 
 						// Check
 						//data = (j - 8) << 12;
@@ -418,11 +418,11 @@ if (ppc == 1) {
 else {
 					// Compute new count value and write IFSTA
 					data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
-					tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+					tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 					// Load new count value
 					data = (1 << 31) | (0x1 << (j));
-					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+					tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 					// Update new value of count
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
@@ -463,11 +463,11 @@ if (ppc == 1) {
 			if(j < 8){
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
-				tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 				// Load new count value
 				data = (1 << 31) | (0x1 << (j + 8));
-				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 				// Check
 				//data = (j + 8) << 12;
@@ -479,11 +479,11 @@ if (ppc == 1) {
 			else {
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
-				tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 				// Load new count value
 				data = (1 << 31) | (0x1 << (j - 8));
-				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1 ], &data);
 
 				// Check
 				//data = (j - 8) << 12;
@@ -496,11 +496,11 @@ if (ppc == 1) {
 else {
 			// Compute new count value and write IFSTA
 			data = final_cnt_value_store[j] << 16;
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 			// Load new count value
 			data = (1 << 31) | (0x1 << (j));
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 }
 
 			// Check status
@@ -519,8 +519,8 @@ if (!quiet) {
 }
 			// Set IDEL and IFSTA to 0
 			data = 0;
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 		}
 
@@ -617,12 +617,12 @@ if (!quiet) {
 
 		// Set IDEL and IFSTA to 0
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 		// Unmap DDR3 memory
 		munmap(buf_ddr, map_win.req.size);
-		tsc_map_free(&map_win);
+		tsc_map_free(tsc_fd, &map_win);
 
 		// Free buffer
 		free(buf_tx);
@@ -632,7 +632,7 @@ if (!quiet) {
     }
 
 	// TSC exit
-	tsc_exit();
+	tsc_exit(tsc_fd);
 
     return 0;
 }

@@ -48,6 +48,8 @@ static char *rcsid = "$Id: rtm.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #include "mtca4rtmlib.h"
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 char *
 rtm_rcsid()
 {
@@ -117,7 +119,7 @@ rtm_led( struct cli_cmd_para *c)
     return( CLI_ERR);
   }
 
-  set_mtca4_rtm_led_state(led_id, led_function, led_on_duration);
+  set_mtca4_rtm_led_state(tsc_fd, led_id, led_function, led_on_duration);
 
   return CLI_OK;
 }
@@ -141,7 +143,7 @@ tsc_rtm( struct cli_cmd_para *c)
   int data = 0;
 
   // Check if the board is a IFC1410
-  tsc_pon_read(0x0, &data);
+  tsc_pon_read(tsc_fd, 0x0, &data);
   if (data != 0x73571410) {
 	printf("Command available only on IFC14xx board\n");
 	return (CLI_ERR);

@@ -46,6 +46,8 @@ static char *rcsid = "$Id: timer.c,v 1.1 2015/12/18 13:12:01 ioxos Exp $";
 #include <time.h>
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 char *
 timer_rcsid()
 {
@@ -69,24 +71,24 @@ int tsc_timer( struct cli_cmd_para *c){
 	if(cnt--) {
 		// Start timer
 		if( !strcmp( "start", c->para[0])) {
-			tsc_timer_start( TIMER_BASE_1000 | TIMER_100MHZ, 0);
+			tsc_timer_start(tsc_fd, TIMER_BASE_1000 | TIMER_100MHZ, 0);
 			return( TSC_OK);
 		}
 		// Restart timer
 		else if( !strcmp( "restart", c->para[0])) {
-			tsc_timer_restart();
+			tsc_timer_restart(tsc_fd);
 			return( TSC_OK);
 		}
 		// Stop timer
 		else if( !strcmp( "stop", c->para[0])) {
-			tsc_timer_stop();
+			tsc_timer_stop(tsc_fd);
 			return( TSC_OK);
 		}
 		// Read timer
 		else if( !strcmp( "read", c->para[0])) {
 			struct tsc_time tm;
 
-			tsc_timer_read( &tm);
+			tsc_timer_read(tsc_fd, &tm);
 			printf("current timer value : %d.%06d msec\n", tm.msec, (tm.usec&TIMER_UTIME_MASK)*10);
 			return( TSC_OK);
 		}
@@ -96,7 +98,7 @@ int tsc_timer( struct cli_cmd_para *c){
 			int hh,mm,ss, ms;
 			int sec;
 
-			tsc_timer_read( &tm);
+			tsc_timer_read(tsc_fd, &tm);
 
 			hh  = tm.msec/3600;
 			mm  = tm.msec/60;

@@ -145,6 +145,8 @@ struct adc3110_acq_res
 #define I2C_CTL_EXEC_ERR   0x00300000
 #define I2C_CTL_EXEC_MASK  0x00300000
 
+extern int tsc_fd;
+
 char *
 adc3110_rcsid()
 {
@@ -347,8 +349,8 @@ adc3110_acq( struct cli_cmd_para *c,
   adc_mas_map_win.req.rem_addr = 0x1000000;
   if( fmc == 2) adc_mas_map_win.req.rem_addr = 0x11000000;
   adc_mas_map_win.req.size = 0x2000000;
-  tsc_map_alloc( &adc_mas_map_win);
-  adc_buf = (char *)tsc_pci_mmap( adc_mas_map_win.sts.loc_base, adc_mas_map_win.sts.size);
+  tsc_map_alloc(tsc_fd, &adc_mas_map_win);
+  adc_buf = (char *)tsc_pci_mmap(tsc_fd, adc_mas_map_win.sts.loc_base, adc_mas_map_win.sts.size);
 #else
   adc_mas_map.rem_addr = 0x11000000;
   adc_mas_map.mode = MAP_ENABLE|MAP_ENABLE_WR|MAP_SPACE_SHM;
@@ -358,22 +360,22 @@ adc3110_acq( struct cli_cmd_para *c,
   tscext_map_alloc( &adc_mas_map);
   adc_buf = tscext_mmap( &adc_mas_map);
 #endif
-  tscext_csr_wr( csr_base+0xc, smem);
-  tscext_csr_wr( csr_base+0x4, trig);
+  tscext_csr_wr(tsc_fd, csr_base+0xc, smem);
+  tscext_csr_wr(tsc_fd, csr_base+0x4, trig);
   csr &= 0xfff00fff;
   if( idx == 0) csr |= 0x10000;
   if( idx == 1) csr |= 0x32000;
   if( idx == 2) csr |= 0x54000;
   if( idx == 3) csr |= 0x76000;
-  tscext_csr_wr( csr_base+0x0, 0x80000000 | csr);
-  tscext_csr_wr( csr_base+0x0, 0x40000000 | csr);
+  tscext_csr_wr(tsc_fd, csr_base+0x0, 0x80000000 | csr);
+  tscext_csr_wr(tsc_fd, csr_base+0x0, 0x40000000 | csr);
   usleep( 200000);
-  tscext_csr_wr( csr_base+0x8, 0x40000000 | last_addr);
+  tscext_csr_wr(tsc_fd, csr_base+0x8, 0x40000000 | last_addr);
 
   tmo = 800;
   while( --tmo)
   {
-    csr = tscext_csr_rd( csr_base+0x0);
+    csr = tscext_csr_rd(tsc_fd, csr_base+0x0);
     if( ( csr & 0x30000000) == 0x30000000) break;
     usleep( 1000);
   }
@@ -525,7 +527,7 @@ adc3110_acq( struct cli_cmd_para *c,
   printf(" -> done\n");
 #ifdef TSC
   tsc_pci_munmap( adc_buf, adc_mas_map_win.sts.size);
-  tsc_map_free( &adc_mas_map_win);
+  tsc_map_free(tsc_fd, &adc_mas_map_win);
 #else
   tscext_munmap( &adc_mas_map);
   tscext_map_free( &adc_mas_map);
@@ -610,13 +612,13 @@ adc_write( int reg,
   //printf("cmd = %08x - data = %08x\n", cmd, data);
   if( fmc == 2)
   {
-	tscext_csr_wr( ADC_BASE_SERIAL_B + 4, data);
-	tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
+	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B + 4, data);
+	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B, cmd);
   }
   else
   {
-	tscext_csr_wr( ADC_BASE_SERIAL_A + 4, data);
-	tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
+	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A + 4, data);
+	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A, cmd);
   }
 }
 
@@ -700,8 +702,8 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
       }
     }
     adc_mas_map_usr[i].req.size = 0x20000;
-    tsc_map_alloc( &adc_mas_map_usr[i]);
-    adc_buf1[i] = (char *)tsc_pci_mmap( adc_mas_map_usr[i].sts.loc_base, adc_mas_map_usr[i].sts.size);
+    tsc_map_alloc(tsc_fd, &adc_mas_map_usr[i]);
+    adc_buf1[i] = (char *)tsc_pci_mmap(tsc_fd, adc_mas_map_usr[i].sts.loc_base, adc_mas_map_usr[i].sts.size);
     adc_buf2[i] = adc_buf1[i] + 0x10000;
     for( n = 0; n < 64; n++)
     {
@@ -726,8 +728,8 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
   }
   usleep( 5000);
 
-  tscext_csr_wr( idelay_base, 0x8000ffff); /*  RESET IDELAYE3 + ISERDES3 */
-  tscext_csr_wr( idelay_base, 0x00000000); /*                            */
+  tscext_csr_wr(tsc_fd, idelay_base, 0x8000ffff); /*  RESET IDELAYE3 + ISERDES3 */
+  tscext_csr_wr(tsc_fd, idelay_base, 0x00000000); /*                            */
   usleep( 1000);
 
   /* scan IDELAY     */
@@ -751,8 +753,8 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
         //printf("%3d : set adc_buf: %08x\n", idelay, *(unsigned long *)&adc_buf1[i][0]);
 
         /* set IDELAY value */
-        tscext_csr_wr( idelay_base, 0x00000FFF | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
-        tscext_csr_wr( idelay_base, 0x10000FFF | (idelay << 16) | (i << 12)); /*                              */
+        tscext_csr_wr(tsc_fd, idelay_base, 0x00000FFF | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+        tscext_csr_wr(tsc_fd, idelay_base, 0x10000FFF | (idelay << 16) | (i << 12)); /*                              */
       }
     }
 
@@ -760,20 +762,20 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
     if(( chan == -1) || ( chan < 4))
     {
       //printf("trig acquisition for channel %d\n", chan);
-      tscext_csr_wr( csr_base[0] + 4, 0x00000000); /*  SCOPE_ADC3110 SRAM1 Trigger mode    */
-      tscext_csr_wr( csr_base[0] + 0, 0x80000021); /*  SCOPE_ADC3110 SRAM1 Trigger mode    */
-      tscext_csr_wr( csr_base[0] + 0, 0x40000021); /*  SCOPE_ADC3110 SRAM1 Mode            */
+      tscext_csr_wr(tsc_fd, csr_base[0] + 4, 0x00000000); /*  SCOPE_ADC3110 SRAM1 Trigger mode    */
+      tscext_csr_wr(tsc_fd, csr_base[0] + 0, 0x80000021); /*  SCOPE_ADC3110 SRAM1 Trigger mode    */
+      tscext_csr_wr(tsc_fd, csr_base[0] + 0, 0x40000021); /*  SCOPE_ADC3110 SRAM1 Mode            */
       usleep( 1000);
-      tscext_csr_wr( csr_base[0] + 8, 0x40000000); /*  Force Trigger          */
+      tscext_csr_wr(tsc_fd, csr_base[0] + 8, 0x40000000); /*  Force Trigger          */
     }
     if(( chan == -1) || ( chan == 4))
     {
       //printf("trig acquisition for channel %d\n", chan);
-      tscext_csr_wr( csr_base[4] + 4, 0x00000000); /*  SCOPE_ADC3110 SRAM2 Trigger mode    */
-      tscext_csr_wr( csr_base[4] + 0, 0x80000021); /*  SCOPE_ADC3110 SRAM2 Trigger mode    */
-      tscext_csr_wr( csr_base[4] + 0, 0x40000021); /*  SCOPE_ADC3110 SRAM2 Mode            */
+      tscext_csr_wr(tsc_fd, csr_base[4] + 4, 0x00000000); /*  SCOPE_ADC3110 SRAM2 Trigger mode    */
+      tscext_csr_wr(tsc_fd, csr_base[4] + 0, 0x80000021); /*  SCOPE_ADC3110 SRAM2 Trigger mode    */
+      tscext_csr_wr(tsc_fd, csr_base[4] + 0, 0x40000021); /*  SCOPE_ADC3110 SRAM2 Mode            */
       usleep( 1000);
-      tscext_csr_wr( csr_base[4] + 8, 0x40000000); /*  Force Trigger          */
+      tscext_csr_wr(tsc_fd, csr_base[4] + 8, 0x40000000); /*  Force Trigger          */
     }
     usleep( 2000);                       /*  wait for acquisition to complete          */
 
@@ -859,8 +861,8 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
       idelay = (min+max)*4;
       printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
       /* set IDELAY value */
-      tscext_csr_wr( idelay_base, 0x0000003F | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
-      tscext_csr_wr( idelay_base, 0x1000003F | (idelay << 16) | (i << 12)); /*                              */
+      tscext_csr_wr(tsc_fd, idelay_base, 0x0000003F | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+      tscext_csr_wr(tsc_fd, idelay_base, 0x1000003F | (idelay << 16) | (i << 12)); /*                              */
       printf("Loading IDELAY %03x in channel %d\n", idelay, i*2);
 
       max_found = 0;
@@ -899,8 +901,8 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
       idelay = (min+max)*4;
       printf(" [%02x-%02x-%02x]\n", min*8, idelay, max*8);
       /* set IDELAY value */
-      tscext_csr_wr( idelay_base, 0x00000FC0 | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
-      tscext_csr_wr( idelay_base, 0x10000FC0 | (idelay << 16) | (i << 12)); /*                              */
+      tscext_csr_wr(tsc_fd, idelay_base, 0x00000FC0 | (idelay << 16) | (i << 12)); /* Load IDELAY Count Channel_xy */
+      tscext_csr_wr(tsc_fd, idelay_base, 0x10000FC0 | (idelay << 16) | (i << 12)); /*                              */
       printf("Loading IDELAY %03x in channel %d\n", idelay, i*2 + 1);
 
     }
@@ -910,7 +912,7 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
     //printf("unmapping adc_buf\n");
     tsc_pci_munmap( adc_buf1[i], adc_mas_map_usr[i].sts.size);
     //printf("free adc_mas_map_usr\n");
-    tsc_map_free( &adc_mas_map_usr[i]);
+    tsc_map_free(tsc_fd, &adc_mas_map_usr[i]);
   }
 
   return(0);
@@ -1030,8 +1032,8 @@ tsc_adc3110( struct cli_cmd_para *c)
       //shm_mas_map_win.req.mode.space = MAP_SPACE_USR1;
       shm_mas_map_win.req.rem_addr = offset;
       shm_mas_map_win.req.size = size;
-      tsc_map_alloc( &shm_mas_map_win);
-      acq_buf = (char *)tsc_pci_mmap( shm_mas_map_win.sts.loc_base, shm_mas_map_win.sts.size);
+      tsc_map_alloc(tsc_fd, &shm_mas_map_win);
+      acq_buf = (char *)tsc_pci_mmap(tsc_fd, shm_mas_map_win.sts.loc_base, shm_mas_map_win.sts.size);
 #else
       shm_mas_map.rem_addr = offset;
       shm_mas_map.mode = MAP_ENABLE|MAP_ENABLE_WR|MAP_SPACE_SHM;
@@ -1092,7 +1094,7 @@ tsc_adc3110( struct cli_cmd_para *c)
     }
 #ifdef TSC
     tsc_pci_munmap( acq_buf, shm_mas_map_win.sts.size);
-    tsc_map_free( &shm_mas_map_win);
+    tsc_map_free(tsc_fd, &shm_mas_map_win);
 #else
     tscext_munmap( &shm_mas_map);
     tscext_map_free( &shm_mas_map);
@@ -1159,21 +1161,21 @@ tsc_adc3110( struct cli_cmd_para *c)
       tmo = 1000;
       if( fmc == 2)
       {
-    	tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B, cmd);
         while( --tmo)
         {
-	  if( !(tscext_csr_rd( ADC_BASE_SERIAL_B) & 0x80000000)) break;
+	  if( !(tscext_csr_rd(tsc_fd, ADC_BASE_SERIAL_B) & 0x80000000)) break;
         }
-      data = tscext_csr_rd( ADC_BASE_SERIAL_B + 4);
+      data = tscext_csr_rd(tsc_fd, ADC_BASE_SERIAL_B + 4);
       }
       else
       {
-    	tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A, cmd);
         while( --tmo)
         {
-	  if( !(tscext_csr_rd( ADC_BASE_SERIAL_A) & 0x80000000)) break;
+	  if( !(tscext_csr_rd(tsc_fd, ADC_BASE_SERIAL_A) & 0x80000000)) break;
         }
-        data = tscext_csr_rd( ADC_BASE_SERIAL_A + 4);
+        data = tscext_csr_rd(tsc_fd, ADC_BASE_SERIAL_A + 4);
       }
       //if( cmd & 0x02) data = data >> 5; /* LMK */
       printf("cmd = %08x - data = %08x\n", cmd, data);
@@ -1193,7 +1195,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 	if( add->idx == 1) cmd += 1;
       }
       if( (cmd & 0x30000) == 0x10000) reg = tsc_swap_16( reg);
-      status = tsc_i2c_read( cmd, reg, &data);
+      status = tsc_i2c_read(tsc_fd, cmd, reg, &data);
       if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
       {
         printf("%s: reg=%x -> error = %08x\n", add->name, reg, status);
@@ -1230,13 +1232,13 @@ tsc_adc3110( struct cli_cmd_para *c)
       printf("cmd = %08x - data = %08x\n", cmd, data);
       if( fmc == 2)
       {
-    	tscext_csr_wr( ADC_BASE_SERIAL_B + 4, data);
-    	tscext_csr_wr( ADC_BASE_SERIAL_B, cmd);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B + 4, data);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B, cmd);
       }
       else 
       {
-    	tscext_csr_wr( ADC_BASE_SERIAL_A + 4, data);
-    	tscext_csr_wr( ADC_BASE_SERIAL_A, cmd);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A + 4, data);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A, cmd);
       }
     }
     if( add->bus == BUS_I2C)
@@ -1255,7 +1257,7 @@ tsc_adc3110( struct cli_cmd_para *c)
       }
       printf("cmd = %08x - data = %08x\n", cmd, data);
       if( (cmd & 0x30000) == 0x10000) reg = tsc_swap_16( reg);
-      status = tsc_i2c_write( cmd, reg, data);
+      status = tsc_i2c_write(tsc_fd, cmd, reg, data);
       if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
       {
         printf("%s: reg=%x -> error = %08x\n", add->name, reg, status);
@@ -1296,84 +1298,84 @@ tsc_adc3110( struct cli_cmd_para *c)
     {
       int cmd_sav;
 
-      cmd_sav = tscext_csr_rd( 0x1188);
+      cmd_sav = tscext_csr_rd(tsc_fd, 0x1188);
       cmd_sav &= ~( 0xff << (8*add->idx));
 
       cmd = cmd_sav | (1 << (8*add->idx));
-      tscext_csr_wr( 0x1188, cmd);
-      tscext_csr_rd( 0x1188);
+      tscext_csr_wr(tsc_fd, 0x1188, cmd);
+      tscext_csr_rd(tsc_fd, 0x1188);
 
       cmd = cmd_sav;
-      tscext_csr_wr( 0x1188, cmd);
-      tscext_csr_rd( 0x1188);
+      tscext_csr_wr(tsc_fd, 0x1188, cmd);
+      tscext_csr_rd(tsc_fd, 0x1188);
 
-      tscext_csr_wr( ADC_BASE_BMOV_B, offset);
+      tscext_csr_wr(tsc_fd, ADC_BASE_BMOV_B, offset);
       //cmd = 0x80000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0xa0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       cmd = 0xb0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
-      tscext_csr_wr( ADC_BASE_BMOV_B + 4, cmd);
-      tscext_csr_rd( ADC_BASE_BMOV_B + 4);
+      tscext_csr_wr(tsc_fd, ADC_BASE_BMOV_B + 4, cmd);
+      tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_B + 4);
 
       cmd = cmd_sav | (2 << (8*add->idx));
-      tscext_csr_wr( 0x1188, cmd);
-      tscext_csr_rd( 0x1188);
+      tscext_csr_wr(tsc_fd, 0x1188, cmd);
+      tscext_csr_rd(tsc_fd, 0x1188);
 
       if( c->para[1][0] == 'c') /* if check operation */
       {
         /* select test pattern generation mode */
-    	tscext_csr_wr( ADC_BASE_SERIAL_B + 4, 0x44);
-    	tscext_csr_wr( ADC_BASE_SERIAL_B,  0xc000000f | add->cmd);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B + 4, 0x44);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B,  0xc000000f | add->cmd);
       }
       tmo = 100;
       while( --tmo)
       {
         usleep(2000);
-        if( tscext_csr_rd( ADC_BASE_BMOV_B + 4) & 0x80000000) break;
+        if( tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_B + 4) & 0x80000000) break;
       }
-      printf("acquisition status : %08x - %08x\n", tscext_csr_rd( ADC_BASE_BMOV_B),  tscext_csr_rd( ADC_BASE_BMOV_B + 4));
+      printf("acquisition status : %08x - %08x\n", tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_B),  tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_B + 4));
     }
     else
     {
       int cmd_sav;
 
-      cmd_sav = tscext_csr_rd( 0x1184);
+      cmd_sav = tscext_csr_rd(tsc_fd, 0x1184);
       cmd_sav &= ~( 0xff << (8*add->idx));
 
       cmd = cmd_sav | (1 << (8*add->idx));
-      tscext_csr_wr( 0x1184, cmd);
-      tscext_csr_rd( 0x1184);
+      tscext_csr_wr(tsc_fd, 0x1184, cmd);
+      tscext_csr_rd(tsc_fd, 0x1184);
 
       cmd = cmd_sav;;
-      tscext_csr_wr( 0x1184, cmd);
-      tscext_csr_rd( 0x1184);
+      tscext_csr_wr(tsc_fd, 0x1184, cmd);
+      tscext_csr_rd(tsc_fd, 0x1184);
 
-      tscext_csr_wr( ADC_BASE_BMOV_A, offset);
+      tscext_csr_wr(tsc_fd, ADC_BASE_BMOV_A, offset);
       //cmd = 0x80000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0x90000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       //cmd = 0xa0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
       cmd = 0xb0000000 | ( add->idx << 26) | (size & 0x3fffe00) | 0x5;
-      tscext_csr_wr( ADC_BASE_BMOV_A + 4, cmd);
-      tscext_csr_rd( ADC_BASE_BMOV_A+4);
+      tscext_csr_wr(tsc_fd, ADC_BASE_BMOV_A + 4, cmd);
+      tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_A+4);
 
       cmd = cmd_sav | (2 << (8*add->idx));
-      tscext_csr_wr( 0x1184, cmd);
-      tscext_csr_rd( 0x1184);
+      tscext_csr_wr(tsc_fd, 0x1184, cmd);
+      tscext_csr_rd(tsc_fd, 0x1184);
 
       if( c->para[1][0] == 'c') /* if check operation */
       {
         /* select test pattern generation mode */
-    	tscext_csr_wr( ADC_BASE_SERIAL_A + 4, 0x44);
-    	tscext_csr_wr( ADC_BASE_SERIAL_A,  0xc000000f | add->cmd);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A + 4, 0x44);
+    	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A,  0xc000000f | add->cmd);
       }
 
       tmo = 100;
       while( --tmo)
       {
         usleep(2000);
-        if( tscext_csr_rd( ADC_BASE_BMOV_A + 4) & 0x80000000) break;
+        if( tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_A + 4) & 0x80000000) break;
       }
-      printf("acquisition status : %08x - %08x\n", tscext_csr_rd( ADC_BASE_BMOV_A),  tscext_csr_rd( ADC_BASE_BMOV_A + 4));
+      printf("acquisition status : %08x - %08x\n", tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_A),  tscext_csr_rd(tsc_fd, ADC_BASE_BMOV_A + 4));
     }
     if( c->para[1][0] == 'c')
     {
@@ -1398,8 +1400,8 @@ tsc_adc3110( struct cli_cmd_para *c)
           shm_mas_map_win.req.rem_addr  |= 0x10000000;
 	}
         shm_mas_map_win.req.size = size;
-        tsc_map_alloc( &shm_mas_map_win);
-        acq_buf = (char *)tsc_pci_mmap( shm_mas_map_win.sts.loc_base, shm_mas_map_win.sts.size);
+        tsc_map_alloc(tsc_fd, &shm_mas_map_win);
+        acq_buf = (char *)tsc_pci_mmap(tsc_fd, shm_mas_map_win.sts.loc_base, shm_mas_map_win.sts.size);
 #else
         shm_mas_map.rem_addr = offset;
         if( fmc == 2)
@@ -1530,7 +1532,7 @@ tsc_adc3110( struct cli_cmd_para *c)
       }
 #ifdef TSC
       tsc_pci_munmap( acq_buf, shm_mas_map_win.sts.size);
-      tsc_map_free( &shm_mas_map_win);
+      tsc_map_free(tsc_fd, &shm_mas_map_win);
 #else
       tscext_munmap( &shm_mas_map);
       tscext_map_free( &shm_mas_map);
@@ -1614,16 +1616,16 @@ tsc_adc3110( struct cli_cmd_para *c)
       device |= 0x80000000;
     }
     device = 0x40040048;
-    status = tsc_i2c_read( device, 1, &ctl);
+    status = tsc_i2c_read(tsc_fd, device, 1, &ctl);
     if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
     {
       printf("%s: reg=%x -> error = %08x\n", add->name, reg, status);
     }
     else
     {
-      tsc_i2c_read( device, 0, &temp);
-      tsc_i2c_read( device, 2, &lo);
-      tsc_i2c_read( device, 3, &hi);
+      tsc_i2c_read(tsc_fd, device, 0, &temp);
+      tsc_i2c_read(tsc_fd, device, 2, &lo);
+      tsc_i2c_read(tsc_fd, device, 3, &hi);
       if( temp & 0x100)
       {
 	temp = ((temp & 0xff) << 5) + ((temp & 0xf8) >> 3);
@@ -1679,14 +1681,14 @@ tsc_adc3110( struct cli_cmd_para *c)
       printf("usage: adc3110.<fmc> tmp109 set <lo> <hi>\n");
       return(-1);
     }
-    status = tsc_i2c_read( device, 1, &ctl);
+    status = tsc_i2c_read(tsc_fd, device, 1, &ctl);
     if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
     {
       printf("%s: reg=%x -> error = %08x\n", add->name, reg, status);
     }
     else
     {
-      tsc_i2c_read( device, 0, &temp);
+      tsc_i2c_read(tsc_fd, device, 0, &temp);
       lo = (int)(flo*16);
       hi = (int)(fhi*16);
       if( temp & 0x100)
@@ -1701,9 +1703,9 @@ tsc_adc3110( struct cli_cmd_para *c)
 	lo = ((lo & 0xff0) >> 4) | ((lo & 0xf) << 12);
 	hi = ((hi & 0xff0) >> 4) | ((hi & 0xf) << 12);
       }
-      tsc_i2c_write( device, 2, lo);
+      tsc_i2c_write(tsc_fd, device, 2, lo);
       usleep(10000);
-      tsc_i2c_write( device, 3, hi);
+      tsc_i2c_write(tsc_fd, device, 3, hi);
       usleep(10000);
       printf("current temperature: %.2f [%.2f - %.2f]\n", (float)temp/16, flo, fhi);
     }
@@ -1730,7 +1732,7 @@ tsc_adc3110( struct cli_cmd_para *c)
     for( i = 0x0; i < 0x100; i++)
     {
       //tsc_i2c_read( device, tsc_swap_16( 0x7000 + i), &data);
-      tsc_i2c_read( device, (0x7000 + i), &data);
+      tsc_i2c_read(tsc_fd, device, (0x7000 + i), &data);
       p[i] = (unsigned char)data;
     }
     op = 0;
@@ -1956,7 +1958,7 @@ tsc_adc3110( struct cli_cmd_para *c)
       for( i = 0x0; i < 0x100; i++)
       {
 	data = p[i];
-        tsc_i2c_write( device, (0x7000+i), data);
+        tsc_i2c_write(tsc_fd, device, (0x7000+i), data);
         //tsc_i2c_write( device, tsc_swap_16(0x7000+i), data);
 	usleep(5000);
       }
@@ -2003,7 +2005,7 @@ tsc_adc3110( struct cli_cmd_para *c)
     for( i = 0; i < size; i++)
     {
       //tsc_i2c_read( device, tsc_swap_16(off+i), &data);
-      tsc_i2c_read( device, (off+i), &data);
+      tsc_i2c_read(tsc_fd, device, (off+i), &data);
       p[i] = (unsigned char)data;
     }
     p = (unsigned char *)&buf[0];

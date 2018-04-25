@@ -211,6 +211,8 @@ struct tsc_ioctl_map_win adc3112_mas_map;
 #define I2C_CTL_EXEC_ERR   0x00300000
 #define I2C_CTL_EXEC_MASK  0x00300000
 
+extern int tsc_fd;
+
 char *
 adc3112_rcsid()
 {
@@ -238,12 +240,12 @@ adc3112_spi_read( int fmc,
   cmd |=  0x80000000 | reg;
   tmo = 1000;
   //printf("adc3112_spi_read( %x, %x, %x) csr = %x\n", fmc, cmd, reg, csr);
-  tscext_csr_wr( csr, cmd);
+  tscext_csr_wr(tsc_fd, csr, cmd);
   while( --tmo)
   {
-    if( !(tscext_csr_rd( csr) & 0x80000000)) break;
+    if( !(tscext_csr_rd(tsc_fd, csr) & 0x80000000)) break;
   }
-  data = tscext_csr_rd( csr + 4);
+  data = tscext_csr_rd(tsc_fd, csr + 4);
   //printf("cmd = %08x - data = %08x\n", cmd, data);
   if( !tmo)
   {
@@ -275,13 +277,13 @@ adc3112_spi_write( int fmc,
   csr = adc3112_reg[FMC_IDX(fmc)].serial;
   cmd |= 0xc0000000 | reg;
   //printf("adc3112_spi_write( %x, %x, %x, %x) csr = %x\n", fmc, cmd, reg, data, csr);
-  tscext_csr_wr( csr + 4, data);          /* load data */
-  tscext_csr_rd( csr+4);                  /* flush data */
-  tscext_csr_wr( csr, cmd);               /* write data */
+  tscext_csr_wr(tsc_fd, csr + 4, data);          /* load data */
+  tscext_csr_rd(tsc_fd, csr+4);                  /* flush data */
+  tscext_csr_wr(tsc_fd, csr, cmd);               /* write data */
   tmo = 1000;
   while( --tmo)
   {
-    if( !(tscext_csr_rd( csr) & 0x80000000)) break; /* check end of write cycle */
+    if( !(tscext_csr_rd(tsc_fd, csr) & 0x80000000)) break; /* check end of write cycle */
   }
   if( !tmo)
   {
@@ -374,8 +376,8 @@ adc3112_map_usr( struct tsc_ioctl_map_win *map,
   }
   map->req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
   map->req.size = size;
-  tsc_map_alloc( map);
-  return( tsc_pci_mmap( map->sts.loc_base, map->sts.size));
+  tsc_map_alloc(tsc_fd, map);
+  return( tsc_pci_mmap(tsc_fd, map->sts.loc_base, map->sts.size));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -393,7 +395,7 @@ adc3112_unmap_usr( struct tsc_ioctl_map_win *map,
 		   char *u_addr)
 {
   tsc_pci_munmap( u_addr, map->sts.size);
-  return( tsc_map_free( map));
+  return( tsc_map_free(tsc_fd, map));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -411,11 +413,11 @@ adc3112_trig_acq( int reg_base,
 		  int trig)
 {
   //printf("Trig data acquisition...\n");
-  tscext_csr_wr( reg_base + 0x0, 0x80040001);/* FASTSCOPE Abort/Stop previous acquisition SRAM1 (in case of..) */
-  tscext_csr_wr( reg_base + 0x4, trig);      /* FASTSCOPE Define trigger mode */
-  tscext_csr_wr( reg_base + 0x0, 0x40040001);/* Arm data acquisition SRAM1 */
+  tscext_csr_wr(tsc_fd, reg_base + 0x0, 0x80040001);/* FASTSCOPE Abort/Stop previous acquisition SRAM1 (in case of..) */
+  tscext_csr_wr(tsc_fd, reg_base + 0x4, trig);      /* FASTSCOPE Define trigger mode */
+  tscext_csr_wr(tsc_fd, reg_base + 0x0, 0x40040001);/* Arm data acquisition SRAM1 */
   usleep( 2000);
-  tscext_csr_wr( reg_base + 0x8, 0x40000000);/* FASTSCOPE Manual trigger command */
+  tscext_csr_wr(tsc_fd, reg_base + 0x8, 0x40000000);/* FASTSCOPE Manual trigger command */
   usleep( 2000);
 
 #ifdef JFG
@@ -587,7 +589,7 @@ adc3112_fpfbuf_save( struct cli_cmd_para *c,
   {
     csr = ACQ_REG_BASE_2;
   }
-  num_samples = tscext_csr_rd( csr+4);
+  num_samples = tscext_csr_rd(tsc_fd, csr+4);
   printf("CSR = %08x - %08x\n", csr+4, num_samples);
   num_frames = (num_samples >> 12) & 0x1ff;
   num_samples &= 0x1ff;
@@ -1363,7 +1365,7 @@ adc3112_calib_init( struct adc3112_calib_ctl *cc,
     cc->chan[chan].data_buf = data_buf + ADC_OFF_CHAN_1*chan;
     /* reset ADC gain to default value */
     reg_gain = reg_ttim_cal - 0x10 + (4*chan);
-    tscext_csr_wr( reg_gain, 0x4000);
+    tscext_csr_wr(tsc_fd, reg_gain, 0x4000);
   }
   return(0);
 }
@@ -1387,12 +1389,12 @@ adc3112_calib_get_ttim( struct adc3112_calib_ctl *cc,
   for( bit = 0; bit < 12; bit++)
   {
     data = (bit<<20) | (chan << 26);
-    tscext_csr_wr( cc->reg_ttim_cal, data);
-    cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
+    tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+    cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
   }
   data = (0xc00000) | (chan << 26);
-  tscext_csr_wr( cc->reg_ttim_cal, data);
-  cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
+  tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+  cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
   return(0);
 }
 
@@ -1414,8 +1416,8 @@ adc3112_calib_set_default( struct adc3112_calib_ctl *cc,
 
   /* load default delay */
   data = 0x40000000 | (chan << 26);
-  tscext_csr_wr( cc->reg_ttim_cal, data); 
-  tscext_csr_rd( cc->reg_ttim_cal);
+  tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data); 
+  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
   cc->chan[chan].delay = 0;
   /* update ttim array */
   adc3112_calib_get_ttim( cc, chan);
@@ -1454,12 +1456,12 @@ adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
     for( bit = 0; bit < 12; bit++)
     {
       data = 0xa0000000 | (bit<<20) | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+      cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
     }
     data = 0xa0c00000 | (chan << 26);
-    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-    cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
+    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+    cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
   }
   else
   {
@@ -1470,16 +1472,16 @@ adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
       {
 	//printf("increment bit %d\n", bit);
 	data = 0xa0000000 | (bit<<20) | (chan << 26);
-	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
+	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
       }
     }
     if( set & 0x1000)
     {
       //printf("decrement bit 12\n");
       data = 0xa0c00000 | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+      cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
     }
   }
   return(0);
@@ -1515,12 +1517,12 @@ adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
     for( bit = 0; bit < 12; bit++)
     {
       data = 0x80000000 | (bit<<20) | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+      cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
     }
     data = 0x80c00000 | (chan << 26);
-    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-    cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
+    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+    cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
   }
   else
   {
@@ -1531,16 +1533,16 @@ adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
       {
 	//printf("decrement bit %d\n", bit);
 	data = 0x80000000 | (bit<<20) | (chan << 26);
-	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd( cc->reg_ttim_cal);
+	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
       }
     }
     if( set & 0x1000)
     {
       //printf("decrement bit 12\n");
       data = 0x80c00000 | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr( cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[0] =  tscext_csr_rd( cc->reg_ttim_cal);
+      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
+      cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
     }
   }
   return(0);
@@ -1566,12 +1568,12 @@ adc3112_ads_read( int csr,
 
   cmd =  0x81000000 | ((chan&2)<<15) | reg;
   tmo = 1000;
-  tscext_csr_wr( csr, cmd);
+  tscext_csr_wr(tsc_fd, csr, cmd);
   while( --tmo)
   {
-    if( !(tscext_csr_rd( csr) & 0x80000000)) break;
+    if( !(tscext_csr_rd(tsc_fd, csr) & 0x80000000)) break;
   }
-  data = tscext_csr_rd( csr + 4);
+  data = tscext_csr_rd(tsc_fd, csr + 4);
   //printf("cmd = %08x - data = %08x\n", cmd, data);
   if( !tmo)
   {
@@ -1602,13 +1604,13 @@ adc3112_ads_write( int csr,
 
   cmd =  0xc1000000 | ((chan&2)<<15) | reg;
   //printf("cmd = %08x - data = %08x\n", cmd, data);
-  tscext_csr_wr( csr + 4, data);          /* load data */
-  tscext_csr_rd( csr+4);                  /* flush data */
-  tscext_csr_wr( csr, cmd);               /* write data */
+  tscext_csr_wr(tsc_fd, csr + 4, data);          /* load data */
+  tscext_csr_rd(tsc_fd, csr+4);                  /* flush data */
+  tscext_csr_wr(tsc_fd, csr, cmd);               /* write data */
   tmo = 1000;
   while( --tmo)
   {
-    if( !(tscext_csr_rd( csr) & 0x80000000)) break; /* check end of write cycle */
+    if( !(tscext_csr_rd(tsc_fd, csr) & 0x80000000)) break; /* check end of write cycle */
   }
   if( !tmo)
   {
@@ -2368,7 +2370,7 @@ adc3112_itl_set_gain( struct adc3112_itl_ctl *ic,
   data = ((-ic->chan[chan].offset)<<16) | (ic->chan[chan].gain & 0xffff);
   reg = ic->reg_itl_gain + (4*chan);
   printf("set gain for channel %d : %x : %x -> %x [%x]\n", chan, ic->chan[chan].gain, ic->chan[chan].offset, data, reg);
-  tscext_csr_wr( reg, data);
+  tscext_csr_wr(tsc_fd, reg, data);
   return(0);
 }
 
@@ -2487,7 +2489,7 @@ adc3112_itl_calib( struct cli_cmd_para *c,
   {
     int data;
 
-    data = tscext_csr_rd( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
+    data = tscext_csr_rd(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
     ic->chan[chan].gain = data & 0xffff;
     ic->chan[chan].offset = (int)(-(short)(data >>16));
   }
@@ -2663,7 +2665,7 @@ tsc_adc3112( struct cli_cmd_para *c)
   }
   if( fmc == 1)
   {
-    id = tscext_csr_rd( ADC_REG_SIGN_A);
+    id = tscext_csr_rd(tsc_fd, ADC_REG_SIGN_A);
     if( ( id & 0xffff0000) != 0x31120000)
     {
       printf("no ADC3112 installed on FMC#1 [%08x] !!\n", id);
@@ -2672,7 +2674,7 @@ tsc_adc3112( struct cli_cmd_para *c)
   }
   if( fmc == 2)
   {
-    id = tscext_csr_rd( ADC_REG_SIGN_B);
+    id = tscext_csr_rd(tsc_fd, ADC_REG_SIGN_B);
     if( ( id & 0xffff0000) != 0x31120000)
     {
       printf("no ADC3112 installed on FMC#2 [%08x] !!\n", id);
@@ -2724,13 +2726,13 @@ tsc_adc3112( struct cli_cmd_para *c)
     }
     if( add->bus & BUS_SPI)
     {
-      tsc_timer_read( &utmi);
+      tsc_timer_read(tsc_fd, &utmi);
       data = adc3112_spi_read( fmc, add->cmd, reg);
       if( data < 0)
       {
 	return( -1);
       }
-      tsc_timer_read( &utmo);
+      tsc_timer_read(tsc_fd, &utmo);
       usec = (utmo.msec - utmi.msec)*1000 + ((utmo.usec & 0x1ffff) - (utmi.usec & 0x1ffff))/100;
       printf("cmd = %08x - data = %08x [%d usec]\n", add->cmd | reg, data, usec);
     }
@@ -2762,12 +2764,12 @@ tsc_adc3112( struct cli_cmd_para *c)
     printf("%s.%s %s %s %s %s \n", c->cmd, c->ext, c->para[0], c->para[1], c->para[2], c->para[3]);
     if( add->bus & BUS_SPI)
     {
-      tsc_timer_read( &utmi);
+      tsc_timer_read(tsc_fd, &utmi);
       if( adc3112_spi_write( fmc, add->cmd, reg, data) < 0)
       {
 	return( -1);
       }
-      tsc_timer_read( &utmo);
+      tsc_timer_read(tsc_fd, &utmo);
       usec = (utmo.msec - utmi.msec)*1000 + ((utmo.usec & 0x1ffff) - (utmi.usec & 0x1ffff))/100;
       printf("cmd = %08x - data = %08x [%d usec]\n", add->cmd | reg, data, usec);
     }
@@ -2792,16 +2794,16 @@ tsc_adc3112( struct cli_cmd_para *c)
     {
       device |= 0x80000000;
     }
-    status = tsc_i2c_read( device, 1, &ctl);
+    status = tsc_i2c_read(tsc_fd, device, 1, &ctl);
     if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
     {
       printf("%s: reg=%x -> error = %08x\n", add->name, reg, status);
     }
     else
     {
-      tsc_i2c_read( device, 0, &temp);
-      tsc_i2c_read( device, 2, &lo);
-      tsc_i2c_read( device, 3, &hi);
+      tsc_i2c_read(tsc_fd, device, 0, &temp);
+      tsc_i2c_read(tsc_fd, device, 2, &lo);
+      tsc_i2c_read(tsc_fd, device, 3, &hi);
       if( temp & 0x100)
       {
 	temp = ((temp & 0xff) << 5) + ((temp & 0xf8) >> 3);
@@ -2825,33 +2827,33 @@ tsc_adc3112( struct cli_cmd_para *c)
       tmo = 1000;
       if( fmc == 2)
       {
-        tscext_csr_wr( ADC_REG_SERIAL_B, cmd);
+        tscext_csr_wr(tsc_fd, ADC_REG_SERIAL_B, cmd);
         while( tmo--)
         {
-	  if( !(tscext_csr_rd( ADC_REG_SERIAL_B) & 0x80000000)) break;
+	  if( !(tscext_csr_rd(tsc_fd, ADC_REG_SERIAL_B) & 0x80000000)) break;
         }
 	if( !tmo)
 	{
 	  printf("read operation didn't complete\n");
 	  return(-1);
 	}
-        data = tscext_csr_rd( ADC_REG_SERIAL_B + 4);
+        data = tscext_csr_rd(tsc_fd, ADC_REG_SERIAL_B + 4);
 	printf("%s temperature = %d °C\n", add->name, (char)data);
 	return(0);
       }
       else
       {
-        tscext_csr_wr( ADC_REG_SERIAL_A, cmd);
+        tscext_csr_wr(tsc_fd, ADC_REG_SERIAL_A, cmd);
         while( tmo--)
         {
-	  if( !(tscext_csr_rd( ADC_REG_SERIAL_A) & 0x80000000)) break;
+	  if( !(tscext_csr_rd(tsc_fd, ADC_REG_SERIAL_A) & 0x80000000)) break;
         }
 	if( !tmo)
 	{
 	  printf("read operation didn't complete\n");
 	  return(-1);
 	}
-        data = tscext_csr_rd( ADC_REG_SERIAL_A + 4);
+        data = tscext_csr_rd(tsc_fd, ADC_REG_SERIAL_A + 4);
 	printf("%s temperature = %d degree\n", add->name, (char)data);
 	return(0);
       }
@@ -2949,22 +2951,22 @@ tsc_adc3112( struct cli_cmd_para *c)
         p = (unsigned char *)&adc3112_sign;
         for( i = 0x0; i < sizeof(struct adc3112_sign); i++)
         {
-          tsc_i2c_read( device, tsc_swap_16( 0x7000 + i), &data);
+          tsc_i2c_read(tsc_fd, device, tsc_swap_16( 0x7000 + i), &data);
           p[i] = (unsigned char)data;
         }
 
 	chan = add->idx;
-	itl_corr = tscext_csr_rd( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
+	itl_corr = tscext_csr_rd(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
 	sprintf( &adc3112_sign.itl_corr[chan][0], "%08x", itl_corr);
 
 	chan += 2;
-	itl_corr = tscext_csr_rd( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
+	itl_corr = tscext_csr_rd(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
 	sprintf( &adc3112_sign.itl_corr[chan][0], "%08x", itl_corr);
 
         for( i = 0x0; i < sizeof(struct adc3112_sign); i++)
         {
 	  data = p[i];
-          tsc_i2c_write( device, tsc_swap_16(0x7000+i), data);
+          tsc_i2c_write(tsc_fd, device, tsc_swap_16(0x7000+i), data);
 	  usleep(5000);
         }
       }
@@ -2986,17 +2988,17 @@ tsc_adc3112( struct cli_cmd_para *c)
         p = (unsigned char *)&adc3112_sign;
         for( i = 0x0; i < sizeof(struct adc3112_sign); i++)
         {
-          tsc_i2c_read( device, tsc_swap_16( 0x7000 + i), &data);
+          tsc_i2c_read(tsc_fd, device, tsc_swap_16( 0x7000 + i), &data);
           p[i] = (unsigned char)data;
         }
 	chan = add->idx;
 	sscanf( &adc3112_sign.itl_corr[chan][0], "%08x", &itl_corr); 
 	//printf("restoring chan %d : %08x [%08x]\n", chan, itl_corr, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
-	tscext_csr_wr( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), itl_corr);
+	tscext_csr_wr(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), itl_corr);
 	chan += 2;
 	sscanf( &adc3112_sign.itl_corr[chan][0], "%08x", &itl_corr); 
 	//printf("restoring chan %d : %08x [%08x]\n", chan, itl_corr, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan));
-	tscext_csr_wr( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), itl_corr);
+	tscext_csr_wr(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), itl_corr);
       }
       if( !strncmp( "enable", c->para[2], 3))
       {
@@ -3012,9 +3014,9 @@ tsc_adc3112( struct cli_cmd_para *c)
       if( !strncmp( "reset", c->para[2], 5))
       {
 	chan = add->idx;
-	tscext_csr_wr( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), 0x4000);
+	tscext_csr_wr(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), 0x4000);
 	chan += 2;
-	tscext_csr_wr( adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), 0x4000);
+	tscext_csr_wr(tsc_fd, adc3112_reg[FMC_IDX(fmc)].gain + (4*chan), 0x4000);
       }
     }
     else 
@@ -3049,7 +3051,7 @@ tsc_adc3112( struct cli_cmd_para *c)
     p = (unsigned char *)&adc3112_sign;
     for( i = 0x0; i < 0x100; i++)
     {
-      tsc_i2c_read( device, tsc_swap_16( 0x7000 + i), &data);
+      tsc_i2c_read(tsc_fd, device, tsc_swap_16( 0x7000 + i), &data);
       p[i] = (unsigned char)data;
     }
     op = 0;
@@ -3235,7 +3237,7 @@ tsc_adc3112( struct cli_cmd_para *c)
       for( i = 0x0; i < 0x100; i++)
       {
 	data = p[i];
-        tsc_i2c_write( device, tsc_swap_16(0x7000+i), data);
+        tsc_i2c_write(tsc_fd, device, tsc_swap_16(0x7000+i), data);
 	usleep(5000);
       }
       printf("EEPROM signature update done\n");
@@ -3284,7 +3286,7 @@ tsc_adc3112( struct cli_cmd_para *c)
     p = &buf[0];
     for( i = 0; i < size; i++)
     {
-      tsc_i2c_read( device, tsc_swap_16(off+i), &data);
+      tsc_i2c_read(tsc_fd, device, tsc_swap_16(off+i), &data);
       p[i] = (unsigned char)data;
     }
     p = (unsigned char *)&buf[0];

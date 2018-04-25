@@ -67,7 +67,7 @@ int tsc_date;
 
 static char *month[16] ={ NULL,"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",NULL,NULL};
 
-extern int tsc_fd;
+int tsc_fd;
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_ddr_idel_calib_start
@@ -203,7 +203,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 		}
 
 		map_win.req.mode.flags = 0;
-		retval = tsc_map_alloc(&map_win);
+		retval = tsc_map_alloc(tsc_fd, &map_win);
 		if(retval < 0){
 			printf("Error in mapping SHM");
 			return (-1);
@@ -255,27 +255,27 @@ int tsc_ddr_idel_calib_start(int quiet){
 		// Calibration need to be done in the order : 1 -> 2
 		if(mem == 1){
 			data = 0x8000;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 			data = 0x2080;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 		}
 
 		// Reset calibration register
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Set IDEL to 0
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Loop on 16 DQ
 		for(j = 0; j < 16; j++){
 
 			// Store initial value of count of the IFSTA register
 			dq_path = j << 12;
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
-			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &dq_path);
+			tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
 
 			init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
 			temp_cnt_value_store[j] = init_cnt_value_store[j];
@@ -323,11 +323,11 @@ if (ppc == 1) {
 					if(j < 8){
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
-						tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 						// Load new count value
 						data = (1 << 31) | (0x1 << (j + 8));
-						tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 						// Update new value of count
 						temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
@@ -335,11 +335,11 @@ if (ppc == 1) {
 					else {
 						// Compute new count value and write IFSTA
 						data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
-						tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 						// Load new count value
 						data = (1 << 31) | (0x1 << (j - 8));
-						tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
+						tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1 ], &data);
 
 						// Update new value of count
 						temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
@@ -348,11 +348,11 @@ if (ppc == 1) {
 else {
 					// Compute new count value and write IFSTA
 					data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
-					tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+					tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 					// Load new count value
 					data = (1 << 31) | (0x1 << (j));
-					tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+					tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 					// Update new value of count
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
@@ -396,32 +396,32 @@ if (ppc == 1){
 			if(j < 8){
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
-				tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 				// Load new count value
 				data = (1 << 31) | (0x1 << (j + 8));
-				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 			}
 			else {
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
-				tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 				// Load new count value
 				data = (1 << 31) | (0x1 << (j - 8));
-				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
+				tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1 ], &data);
 
 			}
 }
 else{
 			// Compute new count value and write IFSTA
 			data = final_cnt_value_store[j] << 16;
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 			// Load new count value
 			data = (1 << 31) | (0x1 << (j));
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 }
 
 			// Check status
@@ -437,8 +437,8 @@ else{
 
 			// Set IDEL and IFSTA to 0
 			data = 0;
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 		}
 
@@ -495,12 +495,12 @@ else{
 
 		// Set IDEL and IFSTA to 0
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 		// Unmap DDR3 memory
 		munmap(buf_ddr, map_win.req.size);
-		tsc_map_free(&map_win);
+		tsc_map_free(tsc_fd, &map_win);
 
 		// Free buffer
 		free(buf_tx);
@@ -553,16 +553,18 @@ int main(int argc, char *argv[]){
 		}
 	}
 
-	if( tsc_init() < 0){
+	/* TscMon is only aware of first IFC */
+	tsc_fd = tsc_init(0);
+	if(tsc_fd < 0){
 		printf("Cannot find interface\n");
 		exit( -1);
 	}
 
-	retval = tsc_csr_read( 0x18, &tsc_sign);
+	retval = tsc_csr_read(tsc_fd, 0x18, &tsc_sign);
 	if( retval < 0){
 		printf("  ERROR -> cannot access ILOC_SIGN register !!\n");
 	}
-	tsc_csr_read( 0x28, &tsc_date);
+	tsc_csr_read(tsc_fd, 0x28, &tsc_date);
 	ss = tsc_date & 0x3f;
 	mn = (tsc_date>>6) & 0x3f;
 	hh = (tsc_date>>12) & 0x1f;
@@ -639,7 +641,7 @@ int main(int argc, char *argv[]){
 		printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
 		printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
 
-		tsc_pon_read(0x0, &data);
+		tsc_pon_read(tsc_fd, 0x0, &data);
 		if (data == 0x73571211) {
 			printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
 		}
@@ -769,7 +771,7 @@ TscMon_exit:
 
   	/* restore previous terminal setting */
   	tcsetattr( 0, TCSANOW, &termios_old);
-  	tsc_exit();
+	tsc_exit(tsc_fd);
   	exit(0);
 }
 

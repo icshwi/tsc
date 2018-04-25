@@ -47,6 +47,8 @@ static char *rcsid = "$Id: mbox.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #include "ponmboxlib.h"
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 void print_out_rtm_info(mbox_info_t *info);
 
 char *
@@ -104,13 +106,13 @@ mbox_read( struct cli_cmd_para *c)
   offset >>= 2;
   while( count--)
   {
-    retval = tsc_pon_write( 0xd0, &offset);
+    retval = tsc_pon_write(tsc_fd, 0xd0, &offset);
     if( retval < 0)
     {
       puts("cannot write to mailbox address register");
       return( CLI_ERR);
     }
-    retval = tsc_pon_read( 0xd4, &data);
+    retval = tsc_pon_read(tsc_fd, 0xd4, &data);
     if( retval < 0)
     {
       puts("cannot read from mailbox data register");
@@ -160,13 +162,13 @@ mbox_write( struct cli_cmd_para *c)
   }
 
   offset >>= 2;
-  retval = tsc_pon_write( 0xd0, &offset);
+  retval = tsc_pon_write(tsc_fd, 0xd0, &offset);
   if( retval < 0)
   {
     puts("cannot write to mailbox address register");
     return( CLI_ERR);
   }
-  retval = tsc_pon_write( 0xd4, &data);
+  retval = tsc_pon_write(tsc_fd, 0xd4, &data);
   if( retval < 0)
   {
     puts("cannot write to mailbox data register");
@@ -197,7 +199,7 @@ mbox_info( struct cli_cmd_para *c)
     return( CLI_ERR);
   }
 
-  mbox_info_t *info = get_mbox_info();
+  mbox_info_t *info = get_mbox_info(tsc_fd);
   if (!info)
   {
     puts("failed to get mbox info");
@@ -248,7 +250,7 @@ mbox_info( struct cli_cmd_para *c)
   while (sensor)
   {
     printf("Sensor %s:", sensor->name);
-    if (retval = get_mbox_sensor_value(info, sensor->name, &value, &timestamp))
+    if (retval = get_mbox_sensor_value(tsc_fd, info, sensor->name, &value, &timestamp))
     {
       printf(" failed to get data of sensor: %s\n", strerror(retval));
     }
@@ -292,7 +294,7 @@ tsc_mbox( struct cli_cmd_para *c)
   int data = 0;
 
   // Check if the board is a IFC14xx
-  tsc_pon_read(0x0, &data);
+  tsc_pon_read(tsc_fd, 0x0, &data);
   if (((data & 0xffffff00) >> 8) != 0x735714) {
 	printf("Command available only on IFC14xx board\n");
 	return (CLI_ERR);

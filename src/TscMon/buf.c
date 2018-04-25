@@ -47,6 +47,7 @@ static char *rcsid = "$Id: $";
 #include "TscMon.h"
 
 struct tsc_kbuf_ctl tsc_kbuf_ctl[TSC_NUM_KBUF];
+extern int tsc_fd;
 
 char *
 buf_rcsid()
@@ -145,8 +146,8 @@ kbuf_cmp( struct cli_cmd_para *c)
     free(buf1);
      return( TSC_ERR);
   }
-  tsc_kbuf_read( tsc_kbuf_ctl[idx1].kbuf_p->k_base + off1, (char *)buf1, (uint)size);
-  tsc_kbuf_read( tsc_kbuf_ctl[idx2].kbuf_p->k_base + off2, (char *)buf2, (uint)size);
+  tsc_kbuf_read(tsc_fd, tsc_kbuf_ctl[idx1].kbuf_p->k_base + off1, (char *)buf1, (uint)size);
+  tsc_kbuf_read(tsc_fd, tsc_kbuf_ctl[idx2].kbuf_p->k_base + off2, (char *)buf2, (uint)size);
   for( i = 0; i < size; i++)
   {
     if( buf1[i] != buf2[i])
@@ -247,7 +248,7 @@ int alloc_kbuf( int idx,
     return( TSC_ERR);
   }
   tsc_kbuf_ctl[idx].kbuf_p->size = (uint)size;
-  if( tsc_kbuf_alloc( tsc_kbuf_ctl[idx].kbuf_p))
+  if( tsc_kbuf_alloc(tsc_fd, tsc_kbuf_ctl[idx].kbuf_p))
   {
     printf("Cannot allocate kernel buffer\n");
     free(tsc_kbuf_ctl[idx].kbuf_p);
@@ -354,11 +355,11 @@ kbuf_free( struct cli_cmd_para *c)
       {
         if( tsc_kbuf_ctl[i].map_p)
         {
-          tsc_map_free( tsc_kbuf_ctl[i].map_p);
+          tsc_map_free(tsc_fd, tsc_kbuf_ctl[i].map_p);
 	  free( tsc_kbuf_ctl[i].map_p);
           tsc_kbuf_ctl[i].map_p = NULL;
 	}
-        tsc_kbuf_free( tsc_kbuf_ctl[i].kbuf_p);
+        tsc_kbuf_free(tsc_fd, tsc_kbuf_ctl[i].kbuf_p);
 	free( tsc_kbuf_ctl[i].kbuf_p);
         tsc_kbuf_ctl[i].kbuf_p = NULL;
       }
@@ -370,11 +371,11 @@ kbuf_free( struct cli_cmd_para *c)
     {
       if( tsc_kbuf_ctl[idx].map_p)
       {
-        tsc_map_free( tsc_kbuf_ctl[idx].map_p);
+        tsc_map_free(tsc_fd, tsc_kbuf_ctl[idx].map_p);
         free( tsc_kbuf_ctl[idx].map_p);
         tsc_kbuf_ctl[idx].map_p = NULL;
       }
-      tsc_kbuf_free( tsc_kbuf_ctl[idx].kbuf_p);
+      tsc_kbuf_free(tsc_fd, tsc_kbuf_ctl[idx].kbuf_p);
       free( tsc_kbuf_ctl[idx].kbuf_p);
       tsc_kbuf_ctl[idx].kbuf_p = NULL;
     }
@@ -424,7 +425,7 @@ map_kbuf( int idx,
     tsc_kbuf_ctl[idx].map_p->req.mode.flags = (char)MAP_FLAG_FORCE;
   }
 
-  if( tsc_map_alloc( tsc_kbuf_ctl[idx].map_p))
+  if( tsc_map_alloc(tsc_fd, tsc_kbuf_ctl[idx].map_p))
   {
     printf("Cannot allocate kernel buffer\n");
     free(tsc_kbuf_ctl[idx].map_p);
@@ -538,7 +539,7 @@ kbuf_unmap( struct cli_cmd_para *c)
       if( tsc_kbuf_ctl[i].map_p)
       {
         printf("Unmappins kernel buffer %d : %08llx\n", i, tsc_kbuf_ctl[i].kbuf_p->b_base);
-        tsc_map_free( tsc_kbuf_ctl[i].map_p);
+        tsc_map_free(tsc_fd, tsc_kbuf_ctl[i].map_p);
 	free( tsc_kbuf_ctl[i].map_p);
         tsc_kbuf_ctl[i].map_p = NULL;
       }
@@ -549,7 +550,7 @@ kbuf_unmap( struct cli_cmd_para *c)
     if( tsc_kbuf_ctl[idx].map_p )
     {
       printf("Unmapping kernel buffer %d : %08llx\n", idx, tsc_kbuf_ctl[idx].kbuf_p->b_base);
-      tsc_map_free( tsc_kbuf_ctl[idx].map_p);
+      tsc_map_free(tsc_fd, tsc_kbuf_ctl[idx].map_p);
       free( tsc_kbuf_ctl[idx].map_p);
       tsc_kbuf_ctl[idx].map_p = NULL;
     }

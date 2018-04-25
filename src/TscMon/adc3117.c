@@ -162,6 +162,8 @@ struct cli_cmd_history adc3117_history;
 char adc3117_prompt[32];
 struct tsc_ioctl_map_win adc3117_mas_map_win;
 
+extern int tsc_fd;
+
 char *
 adc3117_rcsid()
 {
@@ -195,23 +197,23 @@ adc3117_init( int fmc)
       adc3117_reg[fmc_idx].sign   = ADC_REG_SIGN_B;
       adc3117_reg[fmc_idx].csr    = ADC_REG_CSR_B;
       adc3117_reg[fmc_idx].serial = ADC_REG_SERIAL_B;
-      tscext_csr_wr( 0x1320,1);
-      tscext_csr_wr( 0x1324,0xfffff000);
-      tscext_csr_wr( 0x1328,5);
+      tscext_csr_wr(tsc_fd, 0x1320,1);
+      tscext_csr_wr(tsc_fd, 0x1324,0xfffff000);
+      tscext_csr_wr(tsc_fd, 0x1328,5);
     }
     else
     {
       adc3117_reg[fmc_idx].sign   = ADC_REG_SIGN_A;
       adc3117_reg[fmc_idx].csr    = ADC_REG_CSR_A;
       adc3117_reg[fmc_idx].serial = ADC_REG_SERIAL_A;
-      tscext_csr_wr( 0x1220,1);
-      tscext_csr_wr( 0x1224,0xfffff000);
-      tscext_csr_wr( 0x1228,5);
+      tscext_csr_wr(tsc_fd, 0x1220,1);
+      tscext_csr_wr(tsc_fd, 0x1224,0xfffff000);
+      tscext_csr_wr(tsc_fd, 0x1228,5);
    }
   }
   /* start ADC scanning for all channels */
-  tscext_csr_wr( ACQ_REG_ADC_CTL, 0x3ff000);
-  tscext_csr_wr( ACQ_REG_ADC_CTL+4, 2);
+  tscext_csr_wr(tsc_fd, ACQ_REG_ADC_CTL, 0x3ff000);
+  tscext_csr_wr(tsc_fd, ACQ_REG_ADC_CTL+4, 2);
   return;
 }
 
@@ -243,8 +245,8 @@ adc3117_map_usr( struct tsc_ioctl_map_win *map,
   }
   map->req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
   map->req.size = size;
-  tsc_map_alloc( map);
-  return( (char *)tsc_pci_mmap( map->sts.loc_base, map->sts.size));
+  tsc_map_alloc(tsc_fd, map);
+  return( (char *)tsc_pci_mmap(tsc_fd, map->sts.loc_base, map->sts.size));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -262,7 +264,7 @@ adc3117_unmap_usr( struct tsc_ioctl_map_win *map,
 		   char *buf_ptr)
 {
   tsc_pci_munmap( buf_ptr, map->sts.size);
-  return( tsc_map_free( map));
+  return( tsc_map_free(tsc_fd, map));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -280,11 +282,11 @@ adc3117_trig_acq( int reg_base,
 		  int trig)
 {
   //printf("Trig data acquisition...\n");
-  tscext_csr_wr( reg_base + 0x0, 0x80040001);/* FASTSCOPE Abort/Stop previous acquisition SRAM1 (in case of..) */
-  tscext_csr_wr( reg_base + 0x4, trig);      /* FASTSCOPE Define trigger mode */
-  tscext_csr_wr( reg_base + 0x0, 0x40040001);/* Arm data acquisition SRAM1 */
+  tscext_csr_wr(tsc_fd, reg_base + 0x0, 0x80040001);/* FASTSCOPE Abort/Stop previous acquisition SRAM1 (in case of..) */
+  tscext_csr_wr(tsc_fd, reg_base + 0x4, trig);      /* FASTSCOPE Define trigger mode */
+  tscext_csr_wr(tsc_fd, reg_base + 0x0, 0x40040001);/* Arm data acquisition SRAM1 */
   usleep( 2000);
-  tscext_csr_wr( reg_base + 0x8, 0x40000000);/* FASTSCOPE Manual trigger command */
+  tscext_csr_wr(tsc_fd, reg_base + 0x8, 0x40000000);/* FASTSCOPE Manual trigger command */
   usleep( 2000);
 
 #ifdef JFG
@@ -379,12 +381,12 @@ adc3117_acq( struct cli_cmd_para *c,
   short *data_p;
 
   printf("Channel %d trig acquisition\n", idx);
-  tscext_csr_wr( ACQ_REG_BUF_CTL, idx/2);
-  tscext_csr_wr( ACQ_REG_BUF_CTL+4, 2);
+  tscext_csr_wr(tsc_fd, ACQ_REG_BUF_CTL, idx/2);
+  tscext_csr_wr(tsc_fd, ACQ_REG_BUF_CTL+4, 2);
   tmo = 100000;
   while( --tmo)
   {
-    if( !(tscext_csr_rd( ACQ_REG_BUF_CTL+4) & 0x10)) break;
+    if( !(tscext_csr_rd(tsc_fd, ACQ_REG_BUF_CTL+4) & 0x10)) break;
   }
   adc_buf = adc3117_map_usr( &adc3117_mas_map_win, 0x100000, 0x100000, fmc);
   printf("Processing data channel %d...\n", idx);
@@ -560,7 +562,7 @@ adc3117_eeprom_sign( struct cli_cmd_para *c,
     p = (unsigned char *)&adc3117_sign;
     for( i = 0x0; i < 0x100; i++)
     {
-      tsc_i2c_read( device, 0x7000 + i, &data);
+      tsc_i2c_read(tsc_fd, device, 0x7000 + i, &data);
       //tsc_i2c_read( device, tsc_swap_16( 0x7000 + i), &data);
       p[i] = (unsigned char)data;
     }
@@ -696,7 +698,7 @@ adc3117_eeprom_sign( struct cli_cmd_para *c,
       for( i = 0x0; i < 0x100; i++)
       {
 	data = p[i];
-        tsc_i2c_write( device, 0x7000+i, data);
+        tsc_i2c_write(tsc_fd, device, 0x7000+i, data);
         //tsc_i2c_write( device, tsc_swap_16(0x7000+i), data);
 	usleep(5000);
       }
@@ -758,7 +760,7 @@ adc3117_eeprom_dump( struct cli_cmd_para *c,
   {
     data = 0;
     //tsc_i2c_read( device, tsc_swap_16(off+i), &data);
-    tsc_i2c_read( device, off+i, &data);
+    tsc_i2c_read(tsc_fd, device, off+i, &data);
     p[i] = (unsigned char)data;
   }
   p = (unsigned char *)&buf[0];
@@ -823,7 +825,7 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
     for( i = 0; i < sizeof( struct adc3117_vref); i++)
     {
       data = p[i];
-      tsc_i2c_write( device, 0x6000+i, data);
+      tsc_i2c_write(tsc_fd, device, 0x6000+i, data);
       usleep(5000);
     }
     printf("Done\n");
@@ -835,7 +837,7 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
     for( i = 0; i < sizeof( struct adc3117_vref); i++)
     {
       data = 0;
-      tsc_i2c_read( device, 0x6000+i, &data);
+      tsc_i2c_read(tsc_fd, device, 0x6000+i, &data);
       p[i] = (char)data;
     }
     printf("Done\n");
@@ -950,7 +952,7 @@ tsc_adc3117( struct cli_cmd_para *c)
   }
   if( fmc == 1)
   {
-    id = tscext_csr_rd( ADC_REG_SIGN_A);
+    id = tscext_csr_rd(tsc_fd, ADC_REG_SIGN_A);
     if( ( id & 0xffff0000) != 0x31170000)
     {
       printf("no ADC3117 installed on FMC#1 [%08x] !!\n", id);
@@ -960,7 +962,7 @@ tsc_adc3117( struct cli_cmd_para *c)
   }
   if( fmc == 2)
   {
-    id = tscext_csr_rd( ADC_REG_SIGN_B);
+    id = tscext_csr_rd(tsc_fd, ADC_REG_SIGN_B);
     if( ( id & 0xffff0000) != 0x31170000)
     {
       printf("no ADC3117 installed on FMC#2 [%08x] !!\n", id);
@@ -1025,16 +1027,16 @@ tsc_adc3117( struct cli_cmd_para *c)
     {
       device |= 0x80000000;
     }
-    status = tsc_i2c_read( device, 1, &ctl);
+    status = tsc_i2c_read(tsc_fd, device, 1, &ctl);
     if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
     {
       printf("%s: ctl register -> error = %08x\n", add->name, status);
     }
     else
     {
-      tsc_i2c_read( device, 0, &temp);
-      tsc_i2c_read( device, 2, &lo);
-      tsc_i2c_read( device, 3, &hi);
+      tsc_i2c_read(tsc_fd, device, 0, &temp);
+      tsc_i2c_read(tsc_fd, device, 2, &lo);
+      tsc_i2c_read(tsc_fd, device, 3, &hi);
       if( temp & 0x100)
       {
 	temp = ((temp & 0xff) << 5) + ((temp & 0xf8) >> 3);

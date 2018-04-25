@@ -46,6 +46,8 @@ static char *rcsid = "$Id: sflash.c,v 1.2 2016/03/02 09:44:17 ioxos Exp $";
 #include <time.h>
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 char *
 sflash_rcsid()
 {
@@ -86,7 +88,7 @@ int tsc_sflash_dump( struct cli_cmd_para *c){
       
   printf("Dumping SFLASH %d from offset %x [size %x] ...", offset >> 28, offset & 0xfffffff, size);
   buf_des = malloc( size);
-  tsc_sflash_read( offset, buf_des, size);
+  tsc_sflash_read(tsc_fd, offset, buf_des, size);
 
   printf(" -> done\n");
 
@@ -140,7 +142,7 @@ static int sflash_read( int start, char *buf, int size, int blk){
     printf("%08x\b\b\b\b\b\b\b\b", start);
     fflush(stdout);
     usleep( 10000);
-    retval = tsc_sflash_read( start, buf, size);
+    retval = tsc_sflash_read(tsc_fd, start, buf, size);
     if (retval < 0)
     {
       return( retval);
@@ -156,7 +158,7 @@ static int sflash_read( int start, char *buf, int size, int blk){
       printf("%08x\b\b\b\b\b\b\b\b", start);
       fflush( stdout);
       usleep( 10000);
-      retval = tsc_sflash_read( start, buf, blk);
+      retval = tsc_sflash_read(tsc_fd, start, buf, blk);
       if (retval < 0){
         return( retval);
       }
@@ -167,7 +169,7 @@ static int sflash_read( int start, char *buf, int size, int blk){
       printf("%08x\b\b\b\b\b\b\b\b", start);
       fflush( stdout);
       usleep( 10000);
-      retval = tsc_sflash_read( start, buf, last);
+      retval = tsc_sflash_read(tsc_fd, start, buf, last);
       if (retval < 0){
         return( retval);
       }
@@ -220,7 +222,7 @@ static int sflash_write(uint offset, char *buf_src, uint size){
   printf("%08x\b\b\b\b\b\b\b\b", start);
   fflush( stdout);
   usleep(10000);
-  retval = tsc_sflash_write( start, p, first);
+  retval = tsc_sflash_write(tsc_fd, start, p, first);
   if (retval < 0){
     return( retval);
   }
@@ -231,7 +233,7 @@ static int sflash_write(uint offset, char *buf_src, uint size){
     printf("%08x\b\b\b\b\b\b\b\b", start);
     fflush( stdout);
     usleep(10000);
-    retval = tsc_sflash_write( start, p, blk_size);
+    retval = tsc_sflash_write(tsc_fd, start, p, blk_size);
     if (retval < 0){
       return( retval);
     }
@@ -242,7 +244,7 @@ static int sflash_write(uint offset, char *buf_src, uint size){
   printf("%08x\b\b\b\b\b\b\b\b", start);
   fflush( stdout);
   usleep(10000);
-  retval = tsc_sflash_write( start, p, last);
+  retval = tsc_sflash_write(tsc_fd, start, p, last);
   if (retval < 0){
     return( retval);
   }
@@ -495,7 +497,7 @@ int tsc_sflash_dynopt(struct cli_cmd_para *c){
   int retval;
 
   /* fill dynopt from SFLASH */
-  retval = tsc_sflash_read( SFLASH_DYNOPT_OFF, (char *)&dynopt, sizeof(dynopt));
+  retval = tsc_sflash_read(tsc_fd, SFLASH_DYNOPT_OFF, (char *)&dynopt, sizeof(dynopt));
   if( retval < 0){
     perror("Cannot access SFLASH !!\n");
     return( TSC_ERR);
@@ -648,7 +650,7 @@ int tsc_sflash_dynopt(struct cli_cmd_para *c){
   /* load dynamic options in SFLASH */
   printf("Loading dynamic options in SFLASH [%08x]...", dynopt.bcnt);
   fflush( stdout);
-  retval = tsc_sflash_write( SFLASH_DYNOPT_OFF, (char *)&dynopt, sizeof(dynopt));
+  retval = tsc_sflash_write(tsc_fd, SFLASH_DYNOPT_OFF, (char *)&dynopt, sizeof(dynopt));
   if( retval < 0){
     perror("Cannot overwrite dynamic options in SFLASH !!\n");
     return( TSC_ERR);
@@ -673,14 +675,14 @@ int tsc_sflash( struct cli_cmd_para *c){
   if(!strcmp( "rdid", c->para[0])){
     char id[4];
 
-    tsc_sflash_rdid(id);
+    tsc_sflash_rdid(tsc_fd, id);
     printf("SFLASH IDENTIFIER = %02x.%02x.%02x\n", id[0], id[1], id[2]);
     return(TSC_OK);
   }
   else if( !strcmp( "rdsr", c->para[0])){
     short sr;
 
-    tsc_sflash_rdsr( (char *)&sr);
+    tsc_sflash_rdsr(tsc_fd, (char *)&sr);
     printf("SFLASH SR = %04x\n", sr);
     return(TSC_OK);
   }
@@ -694,8 +696,8 @@ int tsc_sflash( struct cli_cmd_para *c){
       return(TSC_ERR);
     }
     sr = (short)tmp;
-    tsc_sflash_wrsr( (char *)&sr);
-    tsc_sflash_rdsr( (char *)&sr);
+    tsc_sflash_wrsr(tsc_fd, (char *)&sr);
+    tsc_sflash_rdsr(tsc_fd, (char *)&sr);
     printf("SFLASH SR = %04x\n", sr);
     return(TSC_OK);
   }

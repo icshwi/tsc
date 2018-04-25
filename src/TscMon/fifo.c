@@ -41,6 +41,8 @@
 #include <time.h>
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_fifo
  * Prototype     : int
@@ -80,11 +82,11 @@ int tsc_fifo(struct cli_cmd_para *c) {
 			mode = strtoul( c->para[i+1], &p, 16);
 			if (mode == 0) {
 				printf("FIFO#%x is initialized in FIFO mode ...\n", idx);
-				tsc_fifo_init(idx, mode);
+				tsc_fifo_init(tsc_fd, idx, mode);
 			}
 			else if (mode == 1){
 				printf("FIFO#%x is initialized in MAILBOX mode ...\n", idx);
-				tsc_fifo_init(idx, mode);
+				tsc_fifo_init(tsc_fd, idx, mode);
 			}
 			else {
 			    printf("Not enough arguments -> usage:\n");
@@ -95,7 +97,7 @@ int tsc_fifo(struct cli_cmd_para *c) {
 
 		// Status ----------
 		else if((!strcmp( "status", c->para[i])) && (c->cnt == 1)){
-			tsc_fifo_status(idx, &sts);
+			tsc_fifo_status(tsc_fd, idx, &sts);
 			printf("FIFO#%d status                     = 0x%08x\n", idx, sts);
 			printf("FIFO#%d current word counter       : 0x%02x\n", idx, (sts & 0x000000ff));
 			printf("FIFO#%d current SRAM write pointer : 0x%02x\n", idx, (sts & 0x0000ff00) >> 8);
@@ -113,7 +115,7 @@ int tsc_fifo(struct cli_cmd_para *c) {
 
 		// Clear ----------
 		else if((!strcmp("clear", c->para[i]))  && (c->cnt == 1)){
-			tsc_fifo_clear( idx, &sts);
+			tsc_fifo_clear(tsc_fd, idx, &sts);
 			printf("FIFO#%d cleared \n", idx);
 			return(0);
 		}
@@ -121,7 +123,7 @@ int tsc_fifo(struct cli_cmd_para *c) {
 		// Read ----------
 		else if((!strcmp( "read", c->para[i])) && (c->cnt == 1)){
 			if(idx != -1){
-				if(tsc_fifo_read(idx, &data, 1, &sts) > 0){
+				if(tsc_fifo_read(tsc_fd, idx, &data, 1, &sts) > 0){
 					printf("FIFO#%d data = %08x [%08x]\n", idx, data, sts);
 				}
 				else{
@@ -138,7 +140,7 @@ int tsc_fifo(struct cli_cmd_para *c) {
 					printf("Bad parameter! Type \"? fifo\" for help \n");
 				}
 				data = strtoul( c->para[i+1], &p, 16);
-				if(!tsc_fifo_write( idx, &data, 1, &sts)){
+				if(!tsc_fifo_write(tsc_fd, idx, &data, 1, &sts)){
 					printf("FIFO#%d is full\n", idx);
 				}
 			}
@@ -157,7 +159,7 @@ int tsc_fifo(struct cli_cmd_para *c) {
 					}
 				}
 				printf("FIFO#%d waiting [%d msec] ...\n", idx, tmo);
-				retval = tsc_fifo_wait_ef( idx, &sts, tmo);		// Check not_empty flag with IRQ
+				retval = tsc_fifo_wait_ef(tsc_fd, idx, &sts, tmo);		// Check not_empty flag with IRQ
 				if( retval == -1){
 					printf("Timeout : ");
 				}

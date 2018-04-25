@@ -46,6 +46,8 @@ static char *rcsid = "$Id: map.c,v 1.4 2015/12/02 08:26:51 ioxos Exp $";
 #include "map.h"
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 char *
 map_rcsid()
 {
@@ -103,13 +105,13 @@ map_show( char *name)
     return( -1);
   } 
   map_ctl.map_p = (struct tsc_map_blk *)0;
-  if( tsc_map_read( &map_ctl) < 0)
+  if( tsc_map_read(tsc_fd, &map_ctl) < 0)
   {
     printf("Cannot access map %s !!\n", name);
     return( -1);
   } 
   map_ctl.map_p = malloc( (uint)map_ctl.pg_num*(sizeof( struct tsc_map_blk)));
-  if( tsc_map_read( &map_ctl) < 0)
+  if( tsc_map_read(tsc_fd, &map_ctl) < 0)
   {
     printf("Cannot read map %s !!\n", name);
     return( -1);
@@ -212,7 +214,7 @@ map_clear( char *name)
     printf("wrong map name : %s\n", name);
     return( -1);
   } 
-  if( tsc_map_clear( &map_ctl) < 0)
+  if( tsc_map_clear(tsc_fd, &map_ctl) < 0)
   {
     printf("Cannot access map %s !!\n", name);
     return( -1);
@@ -291,7 +293,7 @@ map_alloc( struct cli_cmd_para *c)
     return( -1);
   }
   map_ctl.map_p = (struct tsc_map_blk *)0;
-  tsc_map_read( &map_ctl);
+  tsc_map_read(tsc_fd, &map_ctl);
   if( map_ctl.sg_id == MAP_ID_INVALID)
   {
     printf("map %s doesn't exist !!\n", c->para[1]);
@@ -334,7 +336,7 @@ map_alloc( struct cli_cmd_para *c)
     map_win.req.mode.flags = MAP_FLAG_FORCE;
   }
   printf("mapping mode: %x\n", map_win.req.mode.am);
-  retval = tsc_map_alloc( &map_win);
+  retval = tsc_map_alloc(tsc_fd, &map_win);
   if( !retval)
   {
     //printf("mapping done at offset [%x]%x\n", map_win.pg_idx*map_ctl.pg_size, map_win.req.win_size);
@@ -380,7 +382,7 @@ map_free( struct cli_cmd_para *c)
     goto map_free_usage;
   }
   map_ctl.map_p = (struct tsc_map_blk *)0;
-  tsc_map_read( &map_ctl);
+  tsc_map_read(tsc_fd, &map_ctl);
   if( map_ctl.sg_id == MAP_ID_INVALID)
   {
     printf("map %s doesn't exist !!\n", c->para[1]);
@@ -394,7 +396,7 @@ map_free( struct cli_cmd_para *c)
     goto map_free_usage;
   }
   map_win.pg_idx = map_win.pg_idx/map_ctl.pg_size;
-  return( tsc_map_free( &map_win));
+  return( tsc_map_free(tsc_fd, &map_win));
 
 map_free_usage:
   printf("usage: map free <map_name> <offset>\n");

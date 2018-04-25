@@ -76,6 +76,8 @@ struct tsc_i2c_devices i2c_devices_ifc[] =
   { NULL,       0x00000000}
 };
 
+extern int tsc_fd;
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_i2c
  * Prototype     : int
@@ -134,7 +136,7 @@ tsc_i2c( struct cli_cmd_para *c)
   if(!strcmp( "read", c->para[1]))
   {
     printf("i2c read: %x %x\n", device, reg);
-    tsc_i2c_read( device, reg, &data);
+    tsc_i2c_read(tsc_fd, device, reg, &data);
     printf("data = %x\n", data);
     return( I2C_OK);
   }
@@ -201,7 +203,7 @@ tsc_i2c( struct cli_cmd_para *c)
     sscanf( c->para[1],"read.%d", &ds);
     device |= ((ds-1)&3)<<18; 
     printf("i2c read: %08x %x\n", device, reg);
-    tsc_i2c_read( device, reg, &data);
+    tsc_i2c_read(tsc_fd, device, reg, &data);
     printf("data = %x\n", data);
     return( I2C_OK);
   }
@@ -218,7 +220,7 @@ tsc_i2c( struct cli_cmd_para *c)
       return( I2C_ERR);
     }
     printf("i2c write: %08x %x\n", device, reg, data);
-    tsc_i2c_write( device, reg, data);
+    tsc_i2c_write(tsc_fd, device, reg, data);
     return( I2C_OK);
   }
   return( I2C_ERR);

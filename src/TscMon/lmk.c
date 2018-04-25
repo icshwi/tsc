@@ -54,6 +54,8 @@
 #define IFC_LMKCTL_LMK1  0x00010000
 #define IFC_LMKCTL_ADD   0x0000001f
 
+extern int tsc_fd;
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_lmk
  * Prototype     : int
@@ -95,20 +97,20 @@ tsc_lmk( struct cli_cmd_para *c)
   {
     int tmo;
 
-    tsc_pon_read( IFC_CSR_LMKCTL, &tmp);
+    tsc_pon_read(tsc_fd, IFC_CSR_LMKCTL, &tmp);
     reg |= tmp & ~(IFC_LMKCTL_WRITE | IFC_LMKCTL_LMK1 | IFC_LMKCTL_ADD);
     reg |= IFC_LMKCTL_READ;
-    tsc_pon_write( IFC_CSR_LMKCTL, &reg);
+    tsc_pon_write(tsc_fd, IFC_CSR_LMKCTL, &reg);
     tmo = 100;
     while( tmo--)
     {
-      tsc_pon_read( IFC_CSR_LMKCTL, &tmp);
+      tsc_pon_read(tsc_fd, IFC_CSR_LMKCTL, &tmp);
       if( !(tmp & IFC_LMKCTL_READ))
       {
 	break;
       }
     }
-    tsc_pon_read( IFC_CSR_LMKDAT, &data);
+    tsc_pon_read(tsc_fd, IFC_CSR_LMKDAT, &data);
     printf("LMK%d reg:%02x = %08x\n", idx, reg&IFC_LMKCTL_ADD, data);
     return( LMK_OK);
   }
@@ -126,11 +128,11 @@ tsc_lmk( struct cli_cmd_para *c)
       tsc_print_usage( c);
       return( LMK_ERR);
     }
-    tsc_pon_write( IFC_CSR_LMKDAT, &data);
-    tsc_pon_read( IFC_CSR_LMKCTL, &tmp);
+    tsc_pon_write(tsc_fd, IFC_CSR_LMKDAT, &data);
+    tsc_pon_read(tsc_fd, IFC_CSR_LMKCTL, &tmp);
     reg |= tmp & ~(IFC_LMKCTL_WRITE | IFC_LMKCTL_LMK1 | IFC_LMKCTL_ADD);
     reg |= IFC_LMKCTL_WRITE;
-    tsc_pon_write( IFC_CSR_LMKCTL, &reg);
+    tsc_pon_write(tsc_fd, IFC_CSR_LMKCTL, &reg);
     return( LMK_OK);
   }
   return( LMK_ERR);

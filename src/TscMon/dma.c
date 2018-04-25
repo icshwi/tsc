@@ -46,6 +46,7 @@ struct tsc_ioctl_dma_req dma_req[DMA_CHAN_NUM];
 struct tsc_ioctl_dma_sts dma_sts[DMA_CHAN_NUM];
 extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
 struct cli_cmd_history dma_history;
+extern int tsc_fd;
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_init
@@ -141,7 +142,7 @@ dma_mode( int chan)
   yn = 'y';
   mode.chan = chan;
   mode.op = DMA_MODE_GET;
-  tsc_dma_mode( &mode);
+  tsc_dma_mode(tsc_fd, &mode);
 
   printf("setting source mode (DMA WR engine) : %04x\n", (unsigned short)mode.wr_mode);
 
@@ -312,7 +313,7 @@ dma_mode( int chan)
   printf("mode = %04x\n", (unsigned short)mode.rd_mode);
   mode.chan = chan;
   mode.op = DMA_MODE_SET;
-  tsc_dma_mode( &mode);
+  tsc_dma_mode(tsc_fd, &mode);
   return( 0);
 }
 
@@ -461,12 +462,12 @@ tsc_dma( struct cli_cmd_para *c)
     dma_req[chan].end_mode = 0;
     dma_req[chan].wait_mode = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4); /* 5 sec timeout */
     //dma_req[chan].wait_mode = 0;
-    if( tsc_dma_alloc( chan))
+    if( tsc_dma_alloc(tsc_fd, chan))
     {
       printf("Cannot perform DMA transfer on channel #%d -> %s\n", chan, strerror(errno));
       return( TSC_ERR);
     }
-    retval = tsc_dma_move(&dma_req[chan]);
+    retval = tsc_dma_move(tsc_fd, &dma_req[chan]);
     if( retval < 0)
     {
       printf("Cannot perform DMA transfer on channel #%d -> %s\n", chan, strerror(errno));
@@ -479,7 +480,7 @@ tsc_dma( struct cli_cmd_para *c)
       if(  dma_req[chan].dma_status & DMA_STATUS_TMO)
       {
   	printf("NOK -> timeout - status = %08x\n",  dma_req[chan].dma_status);
-	tsc_dma_clear( chan);
+	tsc_dma_clear(tsc_fd, chan);
       }
       else if(  dma_req[chan].dma_status & DMA_STATUS_ERR)
       {
@@ -490,7 +491,7 @@ tsc_dma( struct cli_cmd_para *c)
 	  printf("OK -> status = %08x\n", dma_req[chan].dma_status);
       }
     }
-    tsc_dma_free( chan);
+    tsc_dma_free(tsc_fd, chan);
     usleep(2000);
     return( TSC_OK);
   }
@@ -501,7 +502,7 @@ tsc_dma( struct cli_cmd_para *c)
     sts = &dma_sts[chan];
     sts->dma.chan = (char)chan;
     printf("DMA#%d CSR registers\n", chan);
-    tsc_dma_status( sts);
+    tsc_dma_status(tsc_fd, sts);
     printf("RD: %08x: %08x : %08x: %08x\n", sts->rd_csr, sts->rd_ndes, sts->rd_cdes, sts->rd_cnt);
     printf("WR: %08x: %08x : %08x: %08x\n", sts->wr_csr, sts->wr_ndes, sts->wr_cdes, sts->wr_cnt);
     return( TSC_OK);
@@ -512,7 +513,7 @@ tsc_dma( struct cli_cmd_para *c)
 
     dma_req[chan].start_mode = (char)DMA_START_CHAN(chan);
     dma_req[chan].wait_mode = DMA_WAIT_INTR | DMA_WAIT_1S | (5<<4); /* 5 sec timeout */
-    retval = tsc_dma_wait( &dma_req[chan]);
+    retval = tsc_dma_wait(tsc_fd, &dma_req[chan]);
     if( retval < 0)
     {
       printf("Cannot perform DMA wait on channel #%d -> %s\n", chan, strerror(errno));
@@ -537,7 +538,7 @@ tsc_dma( struct cli_cmd_para *c)
   else if( !strncmp( "allocate", c->para[0], 3))
   {
     printf("DMA#%d allocate...", chan);
-    if( tsc_dma_alloc( chan))
+    if( tsc_dma_alloc(tsc_fd, chan))
     {    
       printf(" BUSY\n");
     }
@@ -550,7 +551,7 @@ tsc_dma( struct cli_cmd_para *c)
   else if( !strncmp( "free", c->para[0], 3))
   {
     printf("DMA#%d free...", chan);
-    if( tsc_dma_free( chan))
+    if( tsc_dma_free(tsc_fd, chan))
     {    
       printf(" BUSY\n");
     }
@@ -562,7 +563,7 @@ tsc_dma( struct cli_cmd_para *c)
   }
   else if( !strncmp( "clear", c->para[0], 3))
   {
-    tsc_dma_clear( chan);
+    tsc_dma_clear(tsc_fd, chan);
     return( TSC_OK);
   }
   else if( !strncmp( "mode", c->para[0], 3))

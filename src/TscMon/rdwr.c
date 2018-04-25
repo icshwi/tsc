@@ -66,6 +66,8 @@ extern int script_exit;
 
 extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
 
+extern int tsc_fd;
+
 char *
 rdwr_rcsid()
 {
@@ -239,11 +241,6 @@ rdwr_exit( void)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 struct rdwr_cycle_para * rdwr_get_cycle_space( char *cmd_p){
-	int device = -1;
-
-	// Get current device used to match correct command history
-	device = tsc_get_device();
-	printf("device: %d\n", device);
 
 	if( cmd_p[1] == 'p'){
 		if( strlen( cmd_p) > 2 ){
@@ -256,18 +253,18 @@ struct rdwr_cycle_para * rdwr_get_cycle_space( char *cmd_p){
 	if( cmd_p[1] == 's'){
 		if( strlen( cmd_p) > 2 ){
 			if( cmd_p[2] == '2'){
-				return( &last_shm2_cycle[device]);
+				return( &last_shm2_cycle[0]);
 			}
 		}
-		return( &last_shm_cycle[device]);
+		return( &last_shm_cycle[0]);
 	}
 	if( cmd_p[1] == 'u'){
 		if( strlen( cmd_p) > 2 ){
 			if( cmd_p[2] == '2'){
-				return( &last_usr2_cycle[device]);
+				return( &last_usr2_cycle[0]);
 			}
 		}
-		return( &last_usr_cycle[device]);
+		return( &last_usr_cycle[0]);
 	}
 	if( cmd_p[1] == 'm') {
 		last_kbuf_cycle[0].kb_p = tsc_kbuf_ctl[0].kbuf_p;
@@ -685,20 +682,20 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
       {
         if( c->cmd[2] == '1')
         {
-          retval =  tsc_pciep_read( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+          retval =  tsc_pciep_read(tsc_fd, TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
 	}
 	else 
 	{
-          retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+          retval =  tsc_pciep_read(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
 	}
       }
       else if( c->cmd[1] == 'i')
       {
-        retval =  tsc_pon_read( offset, &data);
+        retval =  tsc_pon_read(tsc_fd, offset, &data);
       }
       else
       {
-        retval =  tsc_csr_read( offset, &data);
+        retval =  tsc_csr_read(tsc_fd, offset, &data);
       }
       if( retval < 0)
       {
@@ -718,20 +715,20 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     {
       if( c->cmd[2] == '1')
       {
-        retval =  tsc_pciep_write( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+        retval =  tsc_pciep_write(tsc_fd, TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
       }
       else 
       {
-        retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+        retval =  tsc_pciep_write(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
       }
     }
     else if( c->cmd[1] == 'i')
     {
-      retval =  tsc_pon_write( offset, &data);
+      retval =  tsc_pon_write(tsc_fd, offset, &data);
     }
     else
     {
-      retval =  tsc_csr_write( offset, &data);
+      retval =  tsc_csr_write(tsc_fd, offset, &data);
     }
     if( retval < 0)
     {
@@ -751,20 +748,20 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     {
       if( c->cmd[2] == '1')
       {
-        retval =  tsc_pciep_read( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+        retval =  tsc_pciep_read(tsc_fd, TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
       }
       else 
       {
-        retval =  tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+        retval =  tsc_pciep_read(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
       }
     }
     else if( c->cmd[1] == 'i')
     {
-      retval =  tsc_pon_read( offset, &data);
+      retval =  tsc_pon_read(tsc_fd, offset, &data);
     }
     else
     {
-      retval =  tsc_csr_read( offset, &data);
+      retval =  tsc_csr_read(tsc_fd, offset, &data);
     }
     if( retval < 0)
     {
@@ -806,20 +803,20 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
           {
             if( c->cmd[2] == '1')
             {
-	      retval =  tsc_pciep_write( TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
+	      retval =  tsc_pciep_write(tsc_fd, TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
             }
             else 
             {
-	      retval =  tsc_pciep_write( TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
+	      retval =  tsc_pciep_write(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
 	    }
 	  }
 	  else if( c->cmd[1] == 'i')
           {
-	    retval =  tsc_pon_write( offset, &data);
+	    retval =  tsc_pon_write(tsc_fd, offset, &data);
 	  }
 	  else 
           {
-	    retval =  tsc_csr_write( offset, &data);
+	    retval =  tsc_csr_write(tsc_fd, offset, &data);
 	  }
           if( retval < 0)
           {
@@ -894,7 +891,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     offset = start + i;
     if( c->cmd[1] == 'c')
     {
-      retval = tsc_pciep_read( TSC_A7_PCIEP_ADDPT_CFG | offset, &data);
+      retval = tsc_pciep_read(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | offset, &data);
       if( retval < 0)
       {
         printf("\ncannot access TSC PCI CFG register 0x%x -> error %d\n", offset*4, retval);
@@ -905,7 +902,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     }
     else if( c->cmd[1] == 'i')
     {
-      retval = tsc_pon_read( offset, &data);
+      retval = tsc_pon_read(tsc_fd, offset, &data);
       if( retval < 0)
       {
         printf("\ncannot access PON register 0x%x -> error %d\n", offset, retval);
@@ -916,7 +913,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     }
     else
     {
-      retval = tsc_csr_read( offset, &data);
+      retval = tsc_csr_read(tsc_fd, offset, &data);
       if( retval < 0)
       {
         printf("\ncannot access TSC register 0x%x -> error %d\n", offset, retval);
@@ -1113,11 +1110,11 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
       free(buf);
       return( RDWR_ERR);
     }
-    tsc_kbuf_read( cp->kb_p->k_base + cp->addr, buf, (uint)cp->len);
+    tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + cp->addr, buf, (uint)cp->len);
   }
   else 
   {
-    tsc_read_blk( cp->addr, buf, cp->len, cp->mode);
+    tsc_read_blk(tsc_fd, cp->addr, buf, cp->len, cp->mode);
   }
   rdwr_show_buf( cp->addr, buf, cp->len, cp->m.swap | RDWR_MODE_GET_DS( cp->m.ads));
   cp->addr += (uint64_t)cp->len;
@@ -1297,10 +1294,10 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 					printf("kernel buffer not available\n");
 					return( RDWR_ERR);
 				}
-				tsc_kbuf_write( cp->kb_p->k_base + addr, buf, (uint)blk);
+				tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + addr, buf, (uint)blk);
 			}
 			else {
-				tsc_write_blk( addr, buf, blk, cp->mode);
+				tsc_write_blk(tsc_fd, addr, buf, blk, cp->mode);
 			}
 			addr += blk;
 
@@ -1314,10 +1311,10 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 					printf("kernel buffer not available\n");
 					return( RDWR_ERR);
 				}
-				tsc_kbuf_write( cp->kb_p->k_base + addr, buf, (uint)last);
+				tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + addr, buf, (uint)last);
 			}
 			else {
-				tsc_write_blk( addr, buf, last, cp->mode);
+				tsc_write_blk(tsc_fd, addr, buf, last, cp->mode);
 			}
 			free(buf);
 		}
@@ -1464,8 +1461,8 @@ rdwr_test( uint64_t addr,
   buf_out = (char *)malloc( (size_t)len);
 
   cp->data = (uint64_t)rdwr_fill_buf( buf_in, len, cp);
-  tsc_write_blk( addr, buf_in, len, cp->mode);
-  tsc_read_blk( addr, buf_out, len, cp->mode);
+  tsc_write_blk(tsc_fd, addr, buf_in, len, cp->mode);
+  tsc_read_blk(tsc_fd, addr, buf_out, len, cp->mode);
   offset = rdwr_cmp_buf( buf_in, buf_out, len, -1);
   if( offset < len)
   {
@@ -1661,11 +1658,11 @@ tsc_rdwr_px( struct cli_cmd_para *c)
           printf("kernel buffer not available\n");
           return( RDWR_ERR);
         }
-	retval =  tsc_kbuf_read( cp->kb_p->k_base + offset, buf, (uint)ds);
+	retval =  tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
       }
       else 
       {
-	retval =  tsc_read_sgl( offset, buf, cp->mode);
+	retval =  tsc_read_sgl(tsc_fd, offset, buf, cp->mode);
       }
       if( retval < 0)
       {
@@ -1747,11 +1744,11 @@ tsc_rdwr_px( struct cli_cmd_para *c)
           printf("kernel buffer not available\n");
           return( RDWR_ERR);
         }
- 	retval =  tsc_kbuf_write( cp->kb_p->k_base + offset, buf, (uint)ds);
+ 	retval =  tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
       }
       else 
       {
-	retval =  tsc_write_sgl( offset, buf, cp->mode);
+	retval =  tsc_write_sgl(tsc_fd, offset, buf, cp->mode);
       }
       if( retval < 0)
       {
@@ -1771,11 +1768,11 @@ tsc_rdwr_px( struct cli_cmd_para *c)
         printf("kernel buffer not available\n");
         return( RDWR_ERR);
       }
-      retval =  tsc_kbuf_read( cp->kb_p->k_base + offset, buf, (uint)ds);
+      retval =  tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
     }
     else 
     {
-      retval =  tsc_read_sgl( offset, buf, cp->mode);
+      retval =  tsc_read_sgl(tsc_fd, offset, buf, cp->mode);
     }
     if( retval < 0)
     {
@@ -1843,11 +1840,11 @@ tsc_rdwr_px( struct cli_cmd_para *c)
               printf("kernel buffer not available\n");
               return( RDWR_ERR);
             }
-	    retval =  tsc_kbuf_write( cp->kb_p->k_base + offset, buf, (uint)ds);
+	    retval =  tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
 	  }
 	  else  
           {
-	    retval =  tsc_write_sgl( offset, buf, cp->mode);
+	    retval =  tsc_write_sgl(tsc_fd, offset, buf, cp->mode);
           }
           if( retval < 0)
           {
@@ -1914,11 +1911,11 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
   script_exit = 0;
   if( c->cmd[1] == 'i')
   {
-    retval = tsc_pon_read( offset, &data);
+    retval = tsc_pon_read(tsc_fd, offset, &data);
   }
   else 
   {
-    retval = tsc_csr_read( offset, &data);
+    retval = tsc_csr_read(tsc_fd, offset, &data);
   }
   if( retval < 0)
   {
@@ -1990,7 +1987,7 @@ tsc_rdwr_cx( struct cli_cmd_para *c)
   ds = RDWR_MODE_GET_DS(cp->m.ads);
   rdwr_get_cycle_swap( c->ext, cp);
   script_exit = 0;
-  retval =  tsc_read_sgl( (uint64_t)addr, buf, cp->mode);
+  retval =  tsc_read_sgl(tsc_fd, (uint64_t)addr, buf, cp->mode);
   if( retval < 0)
   {
     printf("Cannot access address %x\n", addr);
@@ -2091,7 +2088,7 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
     if( (sp1 == 's') && (idx1 == 2)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0);
     if( (sp1 == 'u') && (idx1 == 1)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0);
     if( (sp1 == 'u') && (idx1 == 2)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0);
-    tsc_read_blk( off1, buf1, len, mode1);
+    tsc_read_blk(tsc_fd, off1, buf1, len, mode1);
   }
   else if( sp1 == 'k')
   {
@@ -2105,7 +2102,7 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
       printf("Kernel buffer #%d not allocated\n", idx1);
       goto tsc_rdwr_cmp_err;
     }
-    tsc_kbuf_read( last_kbuf_cycle[idx1].kb_p->k_base + off1, buf1, len);
+    tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx1].kb_p->k_base + off1, buf1, len);
   }
   else
   {
@@ -2130,7 +2127,7 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
     if( (sp2 == 's') && (idx2 == 2)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0);
     if( (sp2 == 'u') && (idx2 == 1)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0);
     if( (sp2 == 'u') && (idx2 == 2)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0);
-    tsc_read_blk( off2, buf2, len, mode2);
+    tsc_read_blk(tsc_fd, off2, buf2, len, mode2);
   }
   else if( sp2 == 'k')
   {
@@ -2144,7 +2141,7 @@ tsc_rdwr_cmp( struct cli_cmd_para *c)
       printf("Kernel buffer #%d not allocated\n", idx2);
       goto tsc_rdwr_cmp_err;
     }
-    tsc_kbuf_read( last_kbuf_cycle[idx2].kb_p->k_base + off2, buf2, len);
+    tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx2].kb_p->k_base + off2, buf2, len);
   }
   else
   {
@@ -2262,10 +2259,10 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 						*(uint64_t *)buf = data;
 					}
 				}
-				tsc_write_loop( offset, buf, 1000, cp->mode);
+				tsc_write_loop(tsc_fd, offset, buf, 1000, cp->mode);
 			}
 			else {
-				tsc_read_loop( offset, buf, 1000, cp->mode);
+				tsc_read_loop(tsc_fd, offset, buf, 1000, cp->mode);
 			}
 			if( aio_error( &aiocb) != EINPROGRESS){
 				aio_return( &aiocb);

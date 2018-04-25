@@ -53,6 +53,8 @@ extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
 struct tsc_ioctl_map_ctl mas_mem_map_ctl;
 struct tsc_ioctl_map_ctl mas_pmem_map_ctl;
 
+extern int tsc_fd;
+
 char *
 tdma_rcsid()
 {
@@ -74,13 +76,13 @@ tdma_init(int quiet)
 {
   mas_mem_map_ctl.sg_id =  MAP_ID_MAS_PCIE_MEM;
   mas_mem_map_ctl.map_p = (struct tsc_map_blk *)0;
-  tsc_map_read( &mas_mem_map_ctl);
+  tsc_map_read(tsc_fd, &mas_mem_map_ctl);
   if (quiet == 0){
 	  printf("MEM Win Base : 0x%08lx\n", mas_mem_map_ctl.win_base);
   }
   mas_pmem_map_ctl.sg_id =  MAP_ID_MAS_PCIE_PMEM;
   mas_pmem_map_ctl.map_p = (struct tsc_map_blk *)0;
-  tsc_map_read( &mas_pmem_map_ctl);
+  tsc_map_read(tsc_fd, &mas_pmem_map_ctl);
   if (quiet == 0){
 	  printf("PMEM Win Base : 0x%08lx\n", mas_pmem_map_ctl.win_base);
   }

@@ -44,6 +44,8 @@ static char *rcsid = "$Id: conf.c,v 1.6 2015/12/03 15:14:50 ioxos Exp $";
 #include "../../include/tscextlib.h"
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 char *
 conf_rcsid()
 {
@@ -66,7 +68,7 @@ conf_show_static( void)
   int d0;
   int a24_base;
 
-  tsc_csr_read( 0x00, &d0);
+  tsc_csr_read(tsc_fd, 0x00, &d0);
   printf("   Static Options [0x%08x]\n", d0);
 
   if( d0 & (1<<31))
@@ -134,7 +136,7 @@ conf_show_ddr( void)
 
   printf("   DDR3 configuration\n");
 
-  tsc_csr_read( TSC_CSR_SMEM_DDR3_CSR, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_SMEM_DDR3_CSR, &d0);
   printf("      DDR3_SIZE            : ");
     switch( (d0 >> 2) & 3)
     {
@@ -179,7 +181,7 @@ conf_show_ipcie( void)
 
   printf("    PCIE identifier \n");
 
-  tsc_csr_read( TSC_CSR_IPCIE, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_IPCIE, &d0);
   printf("      Board ID             : ");
     switch( d0 & 0xf)
     {
@@ -252,16 +254,16 @@ conf_show_identifiers( void)
 
   printf("   Identifiers\n");
 
-  tsc_csr_read( TSC_CSR_ILOC_EFUSE_USR, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_ILOC_EFUSE_USR, &d0);
   printf("      FPGA eFUSE           : 0x%08x\n", d0);
 
-  tsc_csr_read( TSC_CSR_ILOC_SIGN, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_ILOC_SIGN, &d0);
   printf("      FPGA Signature       : 0x%08x\n", d0);
 
-  tsc_csr_read( TSC_CSR_ILOC_GENCTL, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_ILOC_GENCTL, &d0);
   printf("      FPGA Version         : 0x%08x\n", d0);
 
-  tsc_csr_read( TSC_CSR_ILOC_TOSCA2_SIGN, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_ILOC_TOSCA2_SIGN, &d0);
   printf("      TOSCA Signature      : 0x%08x\n", d0);
 
 
@@ -285,16 +287,16 @@ conf_show_msi( void)
 
   printf("   PCIe MSI counters\n");
 
-  tsc_csr_read( TSC_CSR_A7_PCIE_REQCNT, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_A7_PCIE_REQCNT, &d0);
   printf("      MSI Requests         : 0x%08x\n", d0);
 
-  tsc_csr_read( TSC_CSR_A7_PCIE_ARMCNT, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_A7_PCIE_ARMCNT, &d0);
   printf("      MSI Armed            : 0x%08x\n", d0);
 
-  tsc_csr_read( TSC_CSR_A7_PCIE_ACKCNT, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_A7_PCIE_ACKCNT, &d0);
   printf("      MSI Acknowledge      : 0x%08x\n", d0);
 
-  tsc_csr_read( TSC_CSR_A7_PCIE_CTL, &d0);
+  tsc_csr_read(tsc_fd, TSC_CSR_A7_PCIE_CTL, &d0);
   printf("      MSI Status           : 0x%08x\n", d0);
 
   return;
@@ -317,31 +319,31 @@ conf_show_smon( void)
   double f0, f1, f2;
 
   d0 = 0x3000;
-  tsc_smon_write( 0x41, &d0);
+  tsc_smon_write(tsc_fd, 0x41, &d0);
   printf("   System Monitoring\n");
-  tsc_smon_read( 0x00, &d0);
+  tsc_smon_read(tsc_fd, 0x00, &d0);
   f0 = (((double)(d0>>6)*503.975)/1024.) - (double)273.15;
-  tsc_smon_read( 0x20, &d1);
+  tsc_smon_read(tsc_fd, 0x20, &d1);
   f1 = (((double)(d1>>6)*503.975)/1024.) - 273.15;
-  tsc_smon_read( 0x24, &d2);
+  tsc_smon_read(tsc_fd, 0x24, &d2);
   f2 = (((double)(d2>>6)*503.975)/1024.) - 273.15;
   printf("      Temperature          : %.2f [%.2f - %.2f]\n", f0, f1, f2);
-  tsc_smon_read( 0x01, &d0);
+  tsc_smon_read(tsc_fd, 0x01, &d0);
   f0 = (((double)(d0>>6)*3.0)/1024.);
-  tsc_smon_read( 0x21, &d1);
+  tsc_smon_read(tsc_fd, 0x21, &d1);
   f1 = (((double)(d1>>6)*3.0)/1024.);
-  tsc_smon_read( 0x25, &d2);
+  tsc_smon_read(tsc_fd, 0x25, &d2);
   f2 = (((double)(d2>>6)*3.0)/1024.);
   printf("      VCCint               : %.2f [%.2f - %.2f]\n", f0, f1, f2);
-  tsc_smon_read( 0x02, &d0);
+  tsc_smon_read(tsc_fd, 0x02, &d0);
   f0 = (((double)(d0>>6)*3.0)/1024.);
-  tsc_smon_read( 0x22, &d1);
+  tsc_smon_read(tsc_fd, 0x22, &d1);
   f1 = (((double)(d1>>6)*3.0)/1024.);
-  tsc_smon_read( 0x26, &d2);
+  tsc_smon_read(tsc_fd, 0x26, &d2);
   f2 = (((double)(d2>>6)*3.0)/1024.);
   printf("      VCCaux               : %.2f [%.2f - %.2f]\n", f0, f1, f2);
   d0 = 3;
-  tsc_smon_write( 0x40, &d0);
+  tsc_smon_write(tsc_fd, 0x40, &d0);
 
   return;
 }
@@ -370,7 +372,7 @@ conf_show_lm95235( void)
   }
   dev = I2C_DEV( 0x4c, 0, 0);
   reg = 0xfe;
-  sts = tsc_i2c_read( dev, reg, &data);
+  sts = tsc_i2c_read(tsc_fd, dev, reg, &data);
   if( (sts & TSC_I2C_CTL_EXEC_MASK) == TSC_I2C_CTL_EXEC_ERR)
   {
     printf("   Cannot access LM95235 [%08x]\n", sts);
@@ -378,17 +380,17 @@ conf_show_lm95235( void)
   }
   mid = (unsigned char)data;
   reg = 0xff;
-  tsc_i2c_read( dev, reg, &data);
+  tsc_i2c_read(tsc_fd, dev, reg, &data);
   did = (char)data;
   if( (mid == 0x01) && (did == 0xb1))
   {
     printf("   LM95235 Temperature sensor\n");
     reg = 0;
-    tsc_i2c_read( dev, reg, &data);
+    tsc_i2c_read(tsc_fd, dev, reg, &data);
     temp = (unsigned char)data;
     printf("      Local Temp           : %d\n", temp);
     reg = 1;
-    tsc_i2c_read( dev, reg, &data);
+    tsc_i2c_read(tsc_fd, dev, reg, &data);
     temp = (char)data;
     printf("      Remote Temp          : %d\n", temp);
   }
@@ -420,7 +422,7 @@ conf_show_bmr463( void)
   uint sts, data;
   int board_type;
 
-  tsc_pon_read(0, &board_type);
+  tsc_pon_read(tsc_fd, 0, &board_type);
   if(  board_type != TSC_BOARD_IFC1211)
   {
     return;
@@ -428,7 +430,7 @@ conf_show_bmr463( void)
   printf("   DC-DC Voltage Regulators\n");
   for( i = 0; i < 3; i++)
   {
-    sts = tscext_bmr_read( i, 0x88, &data, 2);/*0x88*/
+    sts = tscext_bmr_read(tsc_fd, i, 0x88, &data, 2);/*0x88*/
     if( (sts < 0))
     {
       printf("      BMR#%d -> readout error [%08x]\n", i,sts);
@@ -438,15 +440,15 @@ conf_show_bmr463( void)
       d0 = (unsigned short)data;
       f0 = tscext_bmr_conv_11bit_u( d0);
       usleep( 10000);
-      sts = tscext_bmr_read( i, 0x8b, &data, 2);
+      sts = tscext_bmr_read(tsc_fd, i, 0x8b, &data, 2);
       d1 = (unsigned short)data;
       f1 = tscext_bmr_conv_16bit_u( d1);
       usleep( 10000);
-      sts = tscext_bmr_read( i, 0x8c, &data, 2);
+      sts = tscext_bmr_read(tsc_fd, i, 0x8c, &data, 2);
       d2 = (unsigned short)data;
       f2 = tscext_bmr_conv_11bit_u( d2);
       usleep( 10000);
-      sts = tscext_bmr_read( i, 0x8d, &data, 2);/*0x8d*/
+      sts = tscext_bmr_read(tsc_fd, i, 0x8d, &data, 2);/*0x8d*/
       d3 = (unsigned short)data;
       f3 = tscext_bmr_conv_11bit_s( d3);
       usleep( 10000);
@@ -483,14 +485,14 @@ conf_show_max5970( void)
   uint max5970 = 0x20000030;
   int board_type;
 
-  tsc_pon_read(0, &board_type);
+  tsc_pon_read(tsc_fd, 0, &board_type);
   if(  board_type != TSC_BOARD_IFC1211)
   {
     return;
   }
 
   printf("   MAX5970 Voltage Monitor\n");
-  sts = tsc_i2c_read( max5970, 0, &data);
+  sts = tsc_i2c_read(tsc_fd, max5970, 0, &data);
   if( (sts & TSC_I2C_CTL_EXEC_MASK) == TSC_I2C_CTL_EXEC_ERR)
   {
     printf("      -> ERROR : cannot access device registers [%08x]\n", sts);
@@ -502,9 +504,9 @@ conf_show_max5970( void)
   mean = 0;
   for( i = 0; i < 0x1000; i++)
   {
-    sts = tsc_i2c_read( max5970, reg, &data);
+    sts = tsc_i2c_read(tsc_fd, max5970, reg, &data);
     tmp = (data&0xff) << 2;
-    sts = tsc_i2c_read( max5970, reg+1, &data);
+    sts = tsc_i2c_read(tsc_fd, max5970, reg+1, &data);
     tmp |= data&3;
     mean += tmp;
     if( tmp > max) max = tmp;
@@ -522,9 +524,9 @@ conf_show_max5970( void)
   /* it seems the calculated value is 50% to high ?? */
   printf("        Current 5V0 (A)    : %.2f [%.2f - %.2f]\n", f0/1.5, f1/1.5, f2/1.5);
   reg = 2;
-  sts = tsc_i2c_read( max5970, reg, &data);
+  sts = tsc_i2c_read(tsc_fd, max5970, reg, &data);
   tmp = (data&0xff) << 2;
-  sts = tsc_i2c_read( max5970, reg+1, &data);
+  sts = tsc_i2c_read(tsc_fd, max5970, reg+1, &data);
   tmp |= data&3;
   f0 = (float)tmp;
   f0 = (f0*16)/1024; 
@@ -535,9 +537,9 @@ conf_show_max5970( void)
   mean = 0;
   for( i = 0; i < 0x1000; i++)
   {
-    sts = tsc_i2c_read( max5970, reg, &data);
+    sts = tsc_i2c_read(tsc_fd, max5970, reg, &data);
     tmp = (data&0xff) << 2;
-    sts = tsc_i2c_read( max5970, reg+1, &data);
+    sts = tsc_i2c_read(tsc_fd, max5970, reg+1, &data);
     tmp |= data&3;
     mean += tmp;
     if( tmp > max) max = tmp;
@@ -556,9 +558,9 @@ conf_show_max5970( void)
   printf("        Current 3V3 (A)    : %.2f [%.2f - %.2f]\n", f0/1.5, f1/1.5, f2/1.5);
 
   reg = 6;
-  sts = tsc_i2c_read( max5970, reg, &data);
+  sts = tsc_i2c_read(tsc_fd, max5970, reg, &data);
   tmp = (data&0xff) << 2;
-  sts = tsc_i2c_read( max5970, reg+1, &data);
+  sts = tsc_i2c_read(tsc_fd, max5970, reg+1, &data);
   tmp |= data&3;
   f0 = (float)tmp;
   f0 = (f0*16)/1024; 
@@ -577,9 +579,8 @@ conf_show_max5970( void)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void conf_show_device(void){
-	int device = -1;
+	int device = 0;
 
-	device = tsc_get_device();
 	if(device == 0){
 		printf("   Current device\n");
 		printf("      central\n");
@@ -723,7 +724,7 @@ int tsc_set_device(struct cli_cmd_para *c){
 	if(cnt--){
 		if(!strcmp( "device", c->para[0])){
 			if (!strncmp( "central", c->para[1], 3)){
-				retval = set_device(0);
+				retval = 0;
 				if(retval == 0){
 					printf("   -> Device : central - OK\n");
 				}
@@ -732,7 +733,7 @@ int tsc_set_device(struct cli_cmd_para *c){
 				}
 			}
 			else if(!strncmp( "io", c->para[1], 3)){
-				retval = set_device(1);
+				retval = -1;
 				if(retval == 0){
 					printf("   -> Device : io - OK\n");
 				}
