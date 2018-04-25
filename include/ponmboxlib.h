@@ -135,19 +135,19 @@ typedef struct
 } mbox_info_t;
 
 mbox_info_t *alloc_mbox_info(void);
-mbox_info_t *get_mbox_info(void);
+mbox_info_t *get_mbox_info(int fd);
 
-int get_mbox_byte(int offset, unsigned char *destination);
-int pop_mbox_byte(int *offset, unsigned char *destination);
-int pop_mbox_short(int *offset, unsigned short *destination);
-int pop_mbox_tribyte(int *offset, unsigned int *destination);
-int pop_mbox_int(int *offset, unsigned int *destination);
-int push_mbox_byte(int *offset, unsigned char byte);
-int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, int *timestamp);
-void enable_service_request(mbox_info_t *info, int offset);
-void wait_for_service_request_completion(mbox_info_t *info, int offset);
+int get_mbox_byte(int fd, int offset, unsigned char *destination);
+int pop_mbox_byte(int fd, int *offset, unsigned char *destination);
+int pop_mbox_short(int fd, int *offset, unsigned short *destination);
+int pop_mbox_tribyte(int fd, int *offset, unsigned int *destination);
+int pop_mbox_int(int fd, int *offset, unsigned int *destination);
+int push_mbox_byte(int fd, int *offset, unsigned char byte);
+int get_mbox_sensor_value(int fd, mbox_info_t *info, unsigned char *name, int *value, int *timestamp);
+void enable_service_request(int fd, mbox_info_t *info, int offset);
+void wait_for_service_request_completion(int fd, mbox_info_t *info, int offset);
 void free_mbox_info(mbox_info_t *info);
-unsigned char send_mbox_service_request(mbox_info_t *info, unsigned char command, unsigned char argc, ...);
-unsigned char pop_mbox_string(int *offset, unsigned char **destination);
+unsigned char send_mbox_service_request(int fd, mbox_info_t *info, unsigned char command, unsigned char argc, ...);
+unsigned char pop_mbox_string(int fd, int *offset, unsigned char **destination);
 
 #endif

@@ -44,11 +44,12 @@
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char set_mtca4_rtm_led_state(
+  int fd,
   mtca4_rtm_led_id_t id,
   mtca4_rtm_led_function_t function,
   mtca4_rtm_led_on_duration_t on_duration)
 {
-  mbox_info_t *mbox = get_mbox_info();
-  return send_mbox_service_request(mbox, CMD_SET_RTM_LED_STATE, 3, id, function, on_duration);
+  mbox_info_t *mbox = get_mbox_info(fd);
+  return send_mbox_service_request(fd, mbox, CMD_SET_RTM_LED_STATE, 3, id, function, on_duration);
 }
 

@@ -53,6 +53,7 @@ typedef enum {
 } mtca4_rtm_led_on_duration_t;
 
 unsigned char set_mtca4_rtm_led_state(
+  int fd,
   mtca4_rtm_led_id_t id,
   mtca4_rtm_led_function_t function,
   mtca4_rtm_led_on_duration_t on_duration);

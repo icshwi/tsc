@@ -41,9 +41,6 @@
 #include "../include/i2c-dev.h"
 
 char tsc_lib_version[] = "1.30";
-int tsc_fd         = -1;
-int tsc_fd_io      = -1;
-int tsc_fd_central = -1;
 static char tsc_drv_name[16] = {0,};
 static char tsc_drv_version[16] = {0,};
 static unsigned short tsc_vendor_id;
@@ -150,29 +147,6 @@ tsc_swap_16( short data)
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_get_device
- * Prototype     : int
- * Parameters    : void
- * Return        : device id : central = 0, io = 1
- *----------------------------------------------------------------------------
- * Description   : return device id
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int tsc_get_device(void){
-	int device = -1;
-
-	if (tsc_fd == tsc_fd_central){
-		device = 0;
-	}
-	else if (tsc_fd == tsc_fd_io){
-		device = 1;
-	}
-
-	return device;
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_get_lib_version
  * Prototype     : char
  * Parameters    : void
@@ -263,27 +237,23 @@ tsc_get_device_id()
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_init()
+tsc_init(uint32_t card)
 {
-  if(tsc_fd < 0 )
+  char device_name[32];
+  int fd;
+
+  sprintf(device_name, "%s%d", "/dev/bus/bridge/tsc_ctl_central", card);
+  fd = open(device_name, O_RDWR);
+
+  if(fd >= 0)
   {
-	// Open both devices
-    tsc_fd_central = open("/dev/bus/bridge/tsc_ctl_central", O_RDWR);
-    tsc_fd_io      = open("/dev/bus/bridge/tsc_ctl_io", O_RDWR);
-
-    // CENTRAL device must be accessible, IO device is present only on IFC1211 board
-    if( tsc_fd_central >= 0)
-    {
-      // By default CENTRAL devices is used
-      tsc_fd = tsc_fd_central;
-
-      ioctl(tsc_fd, TSC_IOCTL_ID_NAME, tsc_drv_name);
-      ioctl(tsc_fd, TSC_IOCTL_ID_VERSION, tsc_drv_version);
-      ioctl(tsc_fd, TSC_IOCTL_ID_VENDOR, &tsc_vendor_id);
-      ioctl(tsc_fd, TSC_IOCTL_ID_DEVICE, &tsc_device_id);
-    }
+    ioctl(fd, TSC_IOCTL_ID_NAME, tsc_drv_name);
+    ioctl(fd, TSC_IOCTL_ID_VERSION, tsc_drv_version);
+    ioctl(fd, TSC_IOCTL_ID_VENDOR, &tsc_vendor_id);
+    ioctl(fd, TSC_IOCTL_ID_DEVICE, &tsc_device_id);
   }
-  return( tsc_fd);
+
+  return(fd);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -298,21 +268,18 @@ tsc_init()
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_exit()
+tsc_exit(int fd)
 {
   int retval;
 
   retval = -EBADF;
-  if( tsc_fd >= 0)
+  if(fd >= 0)
   {
-    retval = close(tsc_fd);
-    retval = close(tsc_fd_central);
-    retval = close(tsc_fd_io);
+    retval = close(fd);
   }
-  tsc_fd         = -1;
-  tsc_fd_central = -1;
-  tsc_fd_io      = -1;
-  return( retval);
+  fd = -1;
+
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -328,15 +295,15 @@ tsc_exit()
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_csr_write( int idx,
+tsc_csr_write(int fd, int idx,
 	       int *data_p)
 {
   struct tsc_ioctl_csr_op csr_op;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   csr_op.offset = idx;
   csr_op.data = *data_p;
-  return( ioctl( tsc_fd, TSC_IOCTL_CSR_WR, &csr_op));
+  return(ioctl(fd, TSC_IOCTL_CSR_WR, &csr_op));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -353,19 +320,19 @@ tsc_csr_write( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_csr_read( int idx,
+tsc_csr_read(int fd, int idx,
 	      int *data_p)
 {
   struct tsc_ioctl_csr_op csr_op;
   int retval;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   csr_op.offset = idx;
   csr_op.data = -1;
-  retval = ioctl( tsc_fd, TSC_IOCTL_CSR_RD, &csr_op);
+  retval = ioctl(fd, TSC_IOCTL_CSR_RD, &csr_op);
   *data_p = csr_op.data;
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -381,16 +348,16 @@ tsc_csr_read( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_csr_set( int idx,
+tsc_csr_set(int fd, int idx,
 	     int *data_p)
 {
   struct tsc_ioctl_csr_op csr_op;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   csr_op.offset = idx;
   csr_op.data = *data_p;
   csr_op.mask = *data_p;
-  return( ioctl( tsc_fd, TSC_IOCTL_CSR_WRm, &csr_op));
+  return(ioctl(fd, TSC_IOCTL_CSR_WRm, &csr_op));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -406,15 +373,15 @@ tsc_csr_set( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_smon_write( int idx,
+tsc_smon_write(int fd, int idx,
 	       int *data_p)
 {
   struct tsc_ioctl_csr_op smon_op;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   smon_op.offset = idx;
   smon_op.data = *data_p;
-  return( ioctl( tsc_fd, TSC_IOCTL_CSR_SMON_WR, &smon_op));
+  return(ioctl(fd, TSC_IOCTL_CSR_SMON_WR, &smon_op));
 }
 
 
@@ -432,19 +399,19 @@ tsc_smon_write( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_smon_read( int idx,
+tsc_smon_read(int fd, int idx,
 	      int *data_p)
 {
   struct tsc_ioctl_csr_op smon_op;
   int retval;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   smon_op.offset = idx;
   smon_op.data = -1;
-  retval = ioctl( tsc_fd, TSC_IOCTL_CSR_SMON_RD, &smon_op);
+  retval = ioctl(fd, TSC_IOCTL_CSR_SMON_RD, &smon_op);
   *data_p = smon_op.data;
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -460,15 +427,15 @@ tsc_smon_read( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_pon_write( int idx,
+tsc_pon_write(int fd, int idx,
 	       int *data_p)
 {
   struct tsc_ioctl_csr_op pon_op;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   pon_op.offset = idx;
   pon_op.data = *data_p;
-  return( ioctl( tsc_fd, TSC_IOCTL_CSR_PON_WR, &pon_op));
+  return(ioctl(fd, TSC_IOCTL_CSR_PON_WR, &pon_op));
 }
 
 
@@ -486,19 +453,19 @@ tsc_pon_write( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_pon_read( int idx,
+tsc_pon_read(int fd, int idx,
 	      int *data_p)
 {
   struct tsc_ioctl_csr_op pon_op;
   int retval;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   pon_op.offset = idx;
   pon_op.data = -1;
-  retval = ioctl( tsc_fd, TSC_IOCTL_CSR_PON_RD, &pon_op);
+  retval = ioctl(fd, TSC_IOCTL_CSR_PON_RD, &pon_op);
   *data_p = pon_op.data;
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -514,15 +481,15 @@ tsc_pon_read( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_pciep_write( int idx,
+tsc_pciep_write(int fd, int idx,
 	         int *data_p)
 {
   struct tsc_ioctl_csr_op pciep_op;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   pciep_op.offset = idx;
   pciep_op.data = *data_p;
-  return( ioctl( tsc_fd, TSC_IOCTL_CSR_PCIEP_WR, &pciep_op));
+  return(ioctl(fd, TSC_IOCTL_CSR_PCIEP_WR, &pciep_op));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -539,19 +506,19 @@ tsc_pciep_write( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_pciep_read( int idx,
+tsc_pciep_read(int fd, int idx,
 	      int *data_p)
 {
   struct tsc_ioctl_csr_op pciep_op;
   int retval;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   pciep_op.offset = idx;
   pciep_op.data = -1;
-  retval = ioctl( tsc_fd, TSC_IOCTL_CSR_PCIEP_RD, &pciep_op);
+  retval = ioctl(fd, TSC_IOCTL_CSR_PCIEP_RD, &pciep_op);
   *data_p = pciep_op.data;
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -569,7 +536,7 @@ tsc_pciep_read( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_write_blk( uint64_t rem_addr,
+tsc_write_blk(int fd, uint64_t rem_addr,
 	       char *buf,
 	        int len,
 	        uint mode)
@@ -578,14 +545,14 @@ tsc_write_blk( uint64_t rem_addr,
   int retval;
 
   if( len <= 0) return(-EINVAL);
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rdwr.rem_addr = rem_addr;
   rdwr.buf = buf;
   rdwr.len = len;
   rdwr.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+  retval = ioctl(fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -602,7 +569,7 @@ tsc_write_blk( uint64_t rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_read_blk( uint64_t rem_addr,
+tsc_read_blk(int fd, uint64_t rem_addr,
 	      char *buf,
 	      int len,
 	      uint mode)
@@ -611,14 +578,14 @@ tsc_read_blk( uint64_t rem_addr,
   int retval;
 
   if( len <= 0) return(-EINVAL);
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rdwr.rem_addr = rem_addr;
   rdwr.buf = buf;
   rdwr.len = len;
   rdwr.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+  retval = ioctl(fd, TSC_IOCTL_RDWR_READ, &rdwr);
 
-  return( retval);
+  return(retval);
 }
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_write_loop
@@ -635,7 +602,7 @@ tsc_read_blk( uint64_t rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_write_loop( uint64_t rem_addr,
+tsc_write_loop(int fd, uint64_t rem_addr,
 	        char *buf,
 	        int len,
 	        uint mode)
@@ -644,14 +611,14 @@ tsc_write_loop( uint64_t rem_addr,
   int retval;
 
   if( len <= 0) return(-EINVAL);
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rdwr.rem_addr = rem_addr;
   rdwr.buf = buf;
   rdwr.len = len | RDWR_LOOP;
   rdwr.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+  retval = ioctl(fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -668,7 +635,7 @@ tsc_write_loop( uint64_t rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_read_loop( uint64_t rem_addr,
+tsc_read_loop(int fd, uint64_t rem_addr,
 	      char *buf,
 	      int len,
 	      uint mode)
@@ -677,14 +644,14 @@ tsc_read_loop( uint64_t rem_addr,
   int retval;
 
   if( len <= 0) return(-EINVAL);
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rdwr.rem_addr = rem_addr;
   rdwr.buf = buf;
   rdwr.len = len | RDWR_LOOP;
   rdwr.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+  retval = ioctl(fd, TSC_IOCTL_RDWR_READ, &rdwr);
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -700,21 +667,21 @@ tsc_read_loop( uint64_t rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_write_sgl( uint64_t rem_addr,
+tsc_write_sgl(int fd, uint64_t rem_addr,
 	       char *data_p,
 	       uint mode)
 {
   struct tsc_ioctl_rdwr rdwr;
   int retval;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rdwr.rem_addr = rem_addr;
   rdwr.buf = data_p;
   rdwr.len = 0;
   rdwr.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+  retval = ioctl(fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -732,21 +699,21 @@ tsc_write_sgl( uint64_t rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_read_sgl( uint64_t rem_addr,
+tsc_read_sgl(int fd, uint64_t rem_addr,
 	      char *data_p,
 	      uint mode)
 {
   struct tsc_ioctl_rdwr rdwr;
   int retval;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rdwr.rem_addr = rem_addr;
   rdwr.buf = data_p;
   rdwr.len = 0;
   rdwr.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+  retval = ioctl(fd, TSC_IOCTL_RDWR_READ, &rdwr);
 
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -764,12 +731,12 @@ tsc_read_sgl( uint64_t rem_addr,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
+int tsc_shm_write(int fd, uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
 	if(len < 0) return(-EINVAL);
-	if(tsc_fd < 0) return(-EBADF);
+	if(fd < 0) return(-EBADF);
 	rdwr.rem_addr = (uint64_t)shm_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
@@ -780,11 +747,11 @@ int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 		rdwr.m.space = RDWR_SPACE_SHM2;
 	}
 	rdwr.m.am = 0;
-	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
+	rdwr.m.ads = (char)RDWR_MODE_SET_DS(rdwr.m.ads,(char)ds);
 	rdwr.m.swap = (char)swap;
-	retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+	retval = ioctl(fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
 
-	return( retval);
+	return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -802,12 +769,12 @@ int tsc_shm_write(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
+int tsc_shm_read(int fd, uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
 	if(len < 0) return(-EINVAL);
-	if(tsc_fd < 0) return(-EBADF);
+	if(fd < 0) return(-EBADF);
 	rdwr.rem_addr = (uint64_t)shm_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
@@ -818,9 +785,9 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
 		rdwr.m.space = RDWR_SPACE_SHM2;
 	}
 	rdwr.m.am = 0;
-	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
+	rdwr.m.ads = (char)RDWR_MODE_SET_DS(rdwr.m.ads,(char)ds);
 	rdwr.m.swap = (char)swap;
-	retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+	retval = ioctl(fd, TSC_IOCTL_RDWR_READ, &rdwr);
 
 	return(retval);
 }
@@ -840,12 +807,12 @@ int tsc_shm_read(uint shm_addr, char *buf, int len, int ds, int swap, int mem){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
+int tsc_usr_write(int fd, uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
 	if(len < 0) return(-EINVAL);
-	if(tsc_fd < 0) return(-EBADF);
+	if(fd < 0) return(-EBADF);
 	rdwr.rem_addr = (uint64_t)usr_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
@@ -856,11 +823,11 @@ int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 		rdwr.m.space = RDWR_SPACE_USR2;
 	}
 	rdwr.m.am = 0;
-	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
+	rdwr.m.ads = (char)RDWR_MODE_SET_DS(rdwr.m.ads,(char)ds);
 	rdwr.m.swap = (char)swap;
-	retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
+	retval = ioctl(fd, TSC_IOCTL_RDWR_WRITE, &rdwr);
 
-	return( retval);
+	return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -878,12 +845,12 @@ int tsc_usr_write(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
+int tsc_usr_read(int fd, uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 	struct tsc_ioctl_rdwr rdwr;
 	int retval;
 
 	if(len < 0) return(-EINVAL);
-	if(tsc_fd < 0) return(-EBADF);
+	if(fd < 0) return(-EBADF);
 	rdwr.rem_addr = (uint64_t)usr_addr;
 	rdwr.buf = buf;
 	rdwr.len = len;
@@ -894,9 +861,9 @@ int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
 		rdwr.m.space = RDWR_SPACE_USR2;
 	}
 	rdwr.m.am = 0;
-	rdwr.m.ads = (char)RDWR_MODE_SET_DS( rdwr.m.ads,(char)ds);
+	rdwr.m.ads = (char)RDWR_MODE_SET_DS(rdwr.m.ads,(char)ds);
 	rdwr.m.swap = (char)swap;
-	retval = ioctl( tsc_fd, TSC_IOCTL_RDWR_READ, &rdwr);
+	retval = ioctl(fd, TSC_IOCTL_RDWR_READ, &rdwr);
 
 	return(retval);
 }
@@ -912,15 +879,15 @@ int tsc_usr_read(uint usr_addr, char *buf, int len, int ds, int swap, int mem){
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_map_alloc( struct tsc_ioctl_map_win *w)
+tsc_map_alloc(int fd, struct tsc_ioctl_map_win *w)
 {
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   switch( w->req.mode.sg_id)
   {
     case MAP_ID_MAS_PCIE_MEM:
     case MAP_ID_MAS_PCIE_PMEM:
     {
-      return( ioctl( tsc_fd, TSC_IOCTL_MAP_MAS_ALLOC, w));
+      return(ioctl(fd, TSC_IOCTL_MAP_MAS_ALLOC, w));
     }
     default:
     {
@@ -940,15 +907,15 @@ tsc_map_alloc( struct tsc_ioctl_map_win *w)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_map_get( struct tsc_ioctl_map_win *w)
+tsc_map_get(int fd, struct tsc_ioctl_map_win *w)
 {
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   switch( w->sts.mode.sg_id)
   {
     case MAP_ID_MAS_PCIE_MEM:
     case MAP_ID_MAS_PCIE_PMEM:
     {
-      return( ioctl( tsc_fd, TSC_IOCTL_MAP_MAS_GET, w));
+      return(ioctl(fd, TSC_IOCTL_MAP_MAS_GET, w));
     }
     default:
     {
@@ -968,22 +935,21 @@ tsc_map_get( struct tsc_ioctl_map_win *w)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_map_free( struct tsc_ioctl_map_win *w)
+tsc_map_free(int fd, struct tsc_ioctl_map_win *w)
 {
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   switch( w->req.mode.sg_id)
   {
     case MAP_ID_MAS_PCIE_MEM:
     case MAP_ID_MAS_PCIE_PMEM:
     {
-      return( ioctl( tsc_fd, TSC_IOCTL_MAP_MAS_FREE, w));
+      return(ioctl(fd, TSC_IOCTL_MAP_MAS_FREE, w));
     }
     default:
     {
       return(-1);
     }
   }
-  return( 0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -997,22 +963,21 @@ tsc_map_free( struct tsc_ioctl_map_win *w)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_map_modify( struct tsc_ioctl_map_win *w)
+tsc_map_modify(int fd, struct tsc_ioctl_map_win *w)
 {
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   switch( w->req.mode.sg_id)
   {
     case MAP_ID_MAS_PCIE_MEM:
     case MAP_ID_MAS_PCIE_PMEM:
     {
-      return( ioctl( tsc_fd, TSC_IOCTL_MAP_MAS_MODIFY, w));
+      return(ioctl(fd, TSC_IOCTL_MAP_MAS_MODIFY, w));
     }
     default:
     {
       return(-1);
     }
   }
-  return( 0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1026,10 +991,10 @@ tsc_map_modify( struct tsc_ioctl_map_win *w)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_map_read( struct tsc_ioctl_map_ctl *m)
+tsc_map_read(int fd, struct tsc_ioctl_map_ctl *m)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_MAP_READ, m));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_MAP_READ, m));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1043,10 +1008,10 @@ tsc_map_read( struct tsc_ioctl_map_ctl *m)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_map_clear( struct tsc_ioctl_map_ctl *m)
+tsc_map_clear(int fd, struct tsc_ioctl_map_ctl *m)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_MAP_CLEAR, m));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_MAP_CLEAR, m));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1060,11 +1025,11 @@ tsc_map_clear( struct tsc_ioctl_map_ctl *m)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void *
-tsc_pci_mmap( off_t pci_addr,
+tsc_pci_mmap(int fd, off_t pci_addr,
 	      size_t size)
 {
-  if( tsc_fd < 0) return(NULL);
-  return( mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, tsc_fd, pci_addr));
+  if(fd < 0) return(NULL);
+  return(mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pci_addr));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1077,11 +1042,10 @@ tsc_pci_mmap( off_t pci_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_pci_munmap( void *addr,
+tsc_pci_munmap(void *addr,
 	        size_t size)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( munmap( addr, size));
+  return(munmap(addr, size));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1095,10 +1059,10 @@ tsc_pci_munmap( void *addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_kbuf_alloc( struct tsc_ioctl_kbuf_req *kr_p)
+tsc_kbuf_alloc(int fd, struct tsc_ioctl_kbuf_req *kr_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_KBUF_ALLOC, kr_p));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_KBUF_ALLOC, kr_p));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1112,10 +1076,10 @@ tsc_kbuf_alloc( struct tsc_ioctl_kbuf_req *kr_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_kbuf_free( struct tsc_ioctl_kbuf_req *kr_p)
+tsc_kbuf_free(int fd, struct tsc_ioctl_kbuf_req *kr_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_KBUF_FREE, kr_p));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_KBUF_FREE, kr_p));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1129,10 +1093,10 @@ tsc_kbuf_free( struct tsc_ioctl_kbuf_req *kr_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void *
-tsc_kbuf_mmap( struct tsc_ioctl_kbuf_req *kr_p)
+tsc_kbuf_mmap(int fd, struct tsc_ioctl_kbuf_req *kr_p)
 {
-  if( tsc_fd < 0) return(NULL);
-  kr_p->u_base =  mmap( NULL, kr_p->size, PROT_READ | PROT_WRITE, MAP_SHARED, tsc_fd, (off_t)kr_p->b_base);
+  if(fd < 0) return(NULL);
+  kr_p->u_base =  mmap(NULL, kr_p->size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (off_t)kr_p->b_base);
   return( kr_p->u_base);
 }
 
@@ -1147,9 +1111,8 @@ tsc_kbuf_mmap( struct tsc_ioctl_kbuf_req *kr_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_kbuf_munmap( struct tsc_ioctl_kbuf_req *kr_p)
+tsc_kbuf_munmap(struct tsc_ioctl_kbuf_req *kr_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
   return( munmap( kr_p->u_base, kr_p->size));
 }
 
@@ -1166,17 +1129,17 @@ tsc_kbuf_munmap( struct tsc_ioctl_kbuf_req *kr_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_kbuf_read( void *k_addr,
+tsc_kbuf_read(int fd, void *k_addr,
 	       char *buf,
 	       uint size)
 {
   struct tsc_ioctl_kbuf_rw rw;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rw.buf = (void *)buf;
   rw.k_addr = k_addr;
   rw.size = size;
-  return( ioctl( tsc_fd, TSC_IOCTL_KBUF_READ, &rw));
+  return(ioctl(fd, TSC_IOCTL_KBUF_READ, &rw));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1192,17 +1155,17 @@ tsc_kbuf_read( void *k_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_kbuf_write( void *k_addr,
+tsc_kbuf_write(int fd, void *k_addr,
 	        char *buf,
 	        uint size)
 {
   struct tsc_ioctl_kbuf_rw rw;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rw.buf = (void *)buf;
   rw.k_addr = k_addr;
   rw.size = size;
-  return( ioctl( tsc_fd, TSC_IOCTL_KBUF_WRITE, &rw));
+  return(ioctl(fd, TSC_IOCTL_KBUF_WRITE, &rw));
 }
   
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1216,10 +1179,10 @@ tsc_kbuf_write( void *k_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_move( struct tsc_ioctl_dma_req *dr_p)
+tsc_dma_move(int fd, struct tsc_ioctl_dma_req *dr_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_MOVE, dr_p));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_MOVE, dr_p));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1233,10 +1196,10 @@ tsc_dma_move( struct tsc_ioctl_dma_req *dr_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p)
+tsc_dma_wait(int fd, struct tsc_ioctl_dma_req *dr_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_WAIT, dr_p));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_WAIT, dr_p));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1250,10 +1213,10 @@ tsc_dma_wait( struct tsc_ioctl_dma_req *dr_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
+tsc_dma_status(int fd, struct tsc_ioctl_dma_sts *ds_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_STATUS, ds_p));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_STATUS, ds_p));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1267,10 +1230,10 @@ tsc_dma_status( struct tsc_ioctl_dma_sts *ds_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_mode( struct tsc_ioctl_dma_sts *dm_p)
+tsc_dma_mode(int fd, struct tsc_ioctl_dma_sts *dm_p)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_MODE, dm_p));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_MODE, dm_p));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1284,13 +1247,13 @@ tsc_dma_mode( struct tsc_ioctl_dma_sts *dm_p)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_alloc( int chan)
+tsc_dma_alloc(int fd, int chan)
 {
   struct tsc_ioctl_dma dma;
 
   dma.chan = (char)chan;
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_ALLOC, &dma));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_ALLOC, &dma));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1304,13 +1267,13 @@ tsc_dma_alloc( int chan)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_free( int chan)
+tsc_dma_free(int fd, int chan)
 {
   struct tsc_ioctl_dma dma;
 
   dma.chan = (char)chan;
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_FREE, &dma));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_FREE, &dma));
 }
  
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1324,13 +1287,13 @@ tsc_dma_free( int chan)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_clear( int chan)
+tsc_dma_clear(int fd, int chan)
 {
   struct tsc_ioctl_dma dma;
 
   dma.chan = (char)chan;
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_DMA_CLEAR, &dma));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_CLEAR, &dma));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1346,10 +1309,10 @@ tsc_dma_clear( int chan)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_rdid( char *id)
+tsc_sflash_rdid(int fd, char *id)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_SFLASH_RDID, id));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_SFLASH_RDID, id));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1363,10 +1326,10 @@ tsc_sflash_rdid( char *id)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_rdsr( char *sr)
+tsc_sflash_rdsr(int fd, char *sr)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_SFLASH_RDSR, sr));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_SFLASH_RDSR, sr));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1380,10 +1343,10 @@ tsc_sflash_rdsr( char *sr)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_wrsr( char *sr)
+tsc_sflash_wrsr(int fd, char *sr)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_SFLASH_WRSR, sr));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_SFLASH_WRSR, sr));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1399,15 +1362,15 @@ tsc_sflash_wrsr( char *sr)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_read( int offset, char *buf, int len)
+tsc_sflash_read(int fd, int offset, char *buf, int len)
 {
   struct tsc_ioctl_rdwr rw;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rw.rem_addr = offset;
   rw.buf = buf;
   rw.len = len;
-  return( ioctl( tsc_fd, TSC_IOCTL_SFLASH_READ, &rw));
+  return(ioctl(fd, TSC_IOCTL_SFLASH_READ, &rw));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1423,15 +1386,15 @@ tsc_sflash_read( int offset, char *buf, int len)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_sflash_write( int offset, char *buf, int len)
+tsc_sflash_write(int fd, int offset, char *buf, int len)
 {
   struct tsc_ioctl_rdwr rw;
 
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   rw.rem_addr = offset;
   rw.buf = buf;
   rw.len = len;
-  return( ioctl( tsc_fd, TSC_IOCTL_SFLASH_WRITE, &rw));
+  return(ioctl(fd, TSC_IOCTL_SFLASH_WRITE, &rw));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1446,7 +1409,7 @@ tsc_sflash_write( int offset, char *buf, int len)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_timer_start( int mode,
+tsc_timer_start(int fd, int mode,
 		 int msec)
 {
   struct tsc_ioctl_timer tmr;
@@ -1455,8 +1418,8 @@ tsc_timer_start( int mode,
   tmr.time.msec = msec;
   tmr.time.usec = 0;
 
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_TIMER_START, &tmr));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_TIMER_START, &tmr));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1470,10 +1433,10 @@ tsc_timer_start( int mode,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_timer_restart( void)
+tsc_timer_restart(int fd)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_TIMER_RESTART, NULL));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_TIMER_RESTART, NULL));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1487,10 +1450,10 @@ tsc_timer_restart( void)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_timer_stop( )
+tsc_timer_stop(int fd)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_TIMER_STOP, NULL));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_TIMER_STOP, NULL));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1505,10 +1468,10 @@ tsc_timer_stop( )
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_timer_read( struct tsc_time *tm)
+tsc_timer_read(int fd, struct tsc_time *tm)
 {
-  if( tsc_fd < 0) return(-EBADF);
-  return( ioctl( tsc_fd, TSC_IOCTL_TIMER_READ, tm));
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_TIMER_READ, tm));
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1523,17 +1486,17 @@ tsc_timer_read( struct tsc_time *tm)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_fifo_init( int idx,
+tsc_fifo_init(int fd, int idx,
                int mode)
 {
   struct tsc_ioctl_fifo fifo;
   int retval;
   
-  if( tsc_fd < 0) return(-EBADF);
+  if(fd < 0) return(-EBADF);
   fifo.idx  = idx;
   fifo.mode = mode;
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_INIT, &fifo);
-  return( retval);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_INIT, &fifo);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1548,7 +1511,7 @@ tsc_fifo_init( int idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_fifo_status( uint idx,
+tsc_fifo_status(int fd, uint idx,
 		 uint *sts)
 {
   struct tsc_ioctl_fifo fifo;
@@ -1557,7 +1520,8 @@ tsc_fifo_status( uint idx,
   fifo.idx = idx;
   fifo.sts = 0;
 
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_STATUS, &fifo);
+  if(fd < 0) return(-EBADF);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_STATUS, &fifo);
   if(sts)
   {
     *sts = fifo.sts;
@@ -1584,7 +1548,7 @@ tsc_fifo_status( uint idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_fifo_clear( uint idx,
+tsc_fifo_clear(int fd, uint idx,
 		uint *sts)
 {
   struct tsc_ioctl_fifo fifo;
@@ -1592,12 +1556,13 @@ tsc_fifo_clear( uint idx,
   
   fifo.idx = idx;
   fifo.sts = 0;
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_CLEAR, &fifo);
+  if(fd < 0) return(-EBADF);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_CLEAR, &fifo);
   if(sts)
   {
     *sts = fifo.sts;
   }
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1613,7 +1578,7 @@ tsc_fifo_clear( uint idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_fifo_wait_ef( uint idx,
+tsc_fifo_wait_ef(int fd, uint idx,
 		  uint *sts,
 		  uint tmo)
 {
@@ -1623,12 +1588,13 @@ tsc_fifo_wait_ef( uint idx,
   fifo.idx = idx;
   fifo.tmo = tmo;
   fifo.sts = 0;
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_WAIT_EF, &fifo);
+  if(fd < 0) return(-EBADF);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_WAIT_EF, &fifo);
   if(sts)
   {
     *sts = fifo.sts;
   }
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1644,7 +1610,7 @@ tsc_fifo_wait_ef( uint idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_fifo_wait_ff( uint idx,
+tsc_fifo_wait_ff(int fd, uint idx,
 		  uint *sts,
 		  uint tmo)
 {
@@ -1654,12 +1620,13 @@ tsc_fifo_wait_ff( uint idx,
   fifo.idx = idx;
   fifo.tmo = tmo;
   fifo.sts = 0;
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_WAIT_FF, &fifo);
+  if(fd < 0) return(-EBADF);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_WAIT_FF, &fifo);
   if(sts)
   {
     *sts = fifo.sts;
   }
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1679,7 +1646,7 @@ tsc_fifo_wait_ff( uint idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_fifo_read( uint idx,
+tsc_fifo_read(int fd, uint idx,
 	       uint *data,
 	       uint wcnt,
 	       uint *sts)
@@ -1691,12 +1658,13 @@ tsc_fifo_read( uint idx,
   fifo.data = data;
   fifo.cnt  = wcnt;
   fifo.sts  = 0;
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_READ, &fifo);
+  if(fd < 0) return(-EBADF);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_READ, &fifo);
   if(sts)
   {
     *sts = fifo.sts;
   }
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1716,7 +1684,7 @@ tsc_fifo_read( uint idx,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_fifo_write( uint idx,
+tsc_fifo_write(int fd, uint idx,
 	        uint *data,
 	        uint wcnt,
 	        uint *sts)
@@ -1728,12 +1696,13 @@ tsc_fifo_write( uint idx,
   fifo.data = data;
   fifo.cnt  = wcnt;
   fifo.sts  = 0;
-  retval = ioctl( tsc_fd, TSC_IOCTL_FIFO_WRITE, &fifo);
+  if(fd < 0) return(-EBADF);
+  retval = ioctl(fd, TSC_IOCTL_FIFO_WRITE, &fifo);
   if(sts)
   {
     *sts = fifo.sts;
   }
-  return( retval);
+  return(retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1806,46 +1775,47 @@ i2c_set_dev( int dev)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_i2c_read( uint dev,
+tsc_i2c_read(int fd, uint dev,
 	      uint reg,
 	      uint *data)
 {
-  if( dev & 0x80000000)
+  if(dev & 0x80000000)
   {
     struct tsc_ioctl_i2c i2c;
 
     i2c.device = dev & ~0x80000000;
     i2c.cmd = reg;
     i2c.data = 0;
-    ioctl( tsc_fd, TSC_IOCTL_I2C_READ, &i2c);
+    if(fd < 0) return(-EBADF);
+    ioctl(fd, TSC_IOCTL_I2C_READ, &i2c);
     *data = i2c.data;
 
-    return( i2c.status);
+    return(i2c.status);
   }
   else 
   {
-    int fd;
+    int fd_i2c;
     int cmd_size;
     int data_size;
 
-    fd = i2c_set_dev( dev);
-    if( fd < 0)
+    fd_i2c = i2c_set_dev(dev);
+    if(fd_i2c < 0)
     {
       return(-1);
     }
     cmd_size  = ((dev>>16)&3)+1;
     data_size = ((dev>>18)&3)+1;
-    if( cmd_size == 2)
+    if(cmd_size == 2)
     {
-      i2c_smbus_write_byte_data(fd, (reg>>8)&0xff, reg&0xff);
-      *data = i2c_smbus_read_byte(fd);
+      i2c_smbus_write_byte_data(fd_i2c, (reg>>8)&0xff, reg&0xff);
+      *data = i2c_smbus_read_byte(fd_i2c);
     }
-    if( cmd_size == 1)
+    if(cmd_size == 1)
     {
-      if( data_size == 1) *data = i2c_smbus_read_byte_data(fd, reg);
-      if( data_size == 2) *data = i2c_smbus_read_word_data(fd, reg);
+      if(data_size == 1) *data = i2c_smbus_read_byte_data(fd_i2c, reg);
+      if(data_size == 2) *data = i2c_smbus_read_word_data(fd_i2c, reg);
     }
-    close(fd);
+    close(fd_i2c);
   }
   return(0);
 }
@@ -1863,34 +1833,36 @@ tsc_i2c_read( uint dev,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_i2c_cmd( uint dev,
+tsc_i2c_cmd(int fd, uint dev,
 	     uint cmd)
 {
-  int fd;
+  int fd_i2c;
 
-  if( dev & 0x80000000)
+  if(dev & 0x80000000)
   {
     struct tsc_ioctl_i2c i2c;
 
     i2c.device = dev & ~0x80000000;
     i2c.cmd = cmd;
     i2c.data = 0;
-    ioctl( tsc_fd, TSC_IOCTL_I2C_CMD, &i2c);
+    if(fd < 0) return(-EBADF);
+    ioctl(fd, TSC_IOCTL_I2C_CMD, &i2c);
 
-    return( i2c.status);
+    return(i2c.status);
   }
   else 
   {
-    fd = i2c_set_dev( dev);
-    if( fd < 0)
+    fd_i2c = i2c_set_dev(dev);
+    if(fd_i2c < 0)
     {
       return(-1);
     }
-    if( i2c_smbus_write_byte(fd, cmd) < 0)
+    if(i2c_smbus_write_byte(fd_i2c, cmd) < 0)
     {
       return(-1);
     }
-    close(fd);
+    close(fd_i2c);
+    return(0);
   }
 }
 
@@ -1908,44 +1880,45 @@ tsc_i2c_cmd( uint dev,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_i2c_write( uint dev,
+tsc_i2c_write(int fd, uint dev,
 	       uint reg,
 	       uint data)
 {
-  if( dev & 0xe0000000)
+  if(dev & 0xe0000000)
   {
     struct tsc_ioctl_i2c i2c;
 
     i2c.device = dev & ~0x80000000;
     i2c.cmd = reg;
     i2c.data = data;
-    ioctl( tsc_fd, TSC_IOCTL_I2C_WRITE, &i2c);
+    if(fd < 0) return(-EBADF);
+    ioctl(fd, TSC_IOCTL_I2C_WRITE, &i2c);
 
-    return( i2c.status);
+    return(i2c.status);
   }
   else 
   {
-    int fd;
+    int fd_i2c;
     int cmd_size;
     int data_size;
 
-    fd = i2c_set_dev( dev);
-    if( fd < 0)
+    fd_i2c = i2c_set_dev(dev);
+    if(fd_i2c < 0)
     {
       return(-1);
     }
     cmd_size  = ((dev>>16)&3)+1;
     data_size = ((dev>>18)&3)+1;
-    if( cmd_size == 2)
+    if(cmd_size == 2)
     {
-      i2c_smbus_write_word_data(fd, (reg>>8)&0xff, (reg&0xff) | ((data&0xff)<<8));
+      i2c_smbus_write_word_data(fd_i2c, (reg>>8)&0xff, (reg&0xff) | ((data&0xff)<<8));
     }
-    if( cmd_size == 1)
+    if(cmd_size == 1)
     {
-      if( data_size == 1) i2c_smbus_write_byte_data(fd, reg, data);
-      if( data_size == 2) i2c_smbus_write_word_data(fd, reg, data);
+      if(data_size == 1) i2c_smbus_write_byte_data(fd_i2c, reg, data);
+      if(data_size == 2) i2c_smbus_write_word_data(fd_i2c, reg, data);
     }
-    close(fd);
+    close(fd_i2c);
   }
   return(0);
 }
@@ -1962,7 +1935,7 @@ tsc_i2c_write( uint dev,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_i2c_reset( uint dev)
+tsc_i2c_reset(uint dev)
 {
   return(0);
 }
@@ -1977,13 +1950,14 @@ tsc_i2c_reset( uint dev)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_semaphore_status(uint *sts){
+int tsc_semaphore_status(int fd, uint *sts){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
 
 	semaphore.sts = 0;
 
-	retval = ioctl(tsc_fd, TSC_IOCTL_SEMAPHORE_STATUS, &semaphore);
+	if(fd < 0) return(-EBADF);
+	retval = ioctl(fd, TSC_IOCTL_SEMAPHORE_STATUS, &semaphore);
 	if(sts){
 		*sts = semaphore.sts;
 	}
@@ -2003,7 +1977,7 @@ int tsc_semaphore_status(uint *sts){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_semaphore_release(uint idx, uint tag){
+int tsc_semaphore_release(int fd, uint idx, uint tag){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
 
@@ -2011,7 +1985,8 @@ int tsc_semaphore_release(uint idx, uint tag){
 	semaphore.tag = tag;
 	semaphore.sts = 0;
 
-	retval = ioctl(tsc_fd, TSC_IOCTL_SEMAPHORE_RELEASE, &semaphore);
+	if(fd < 0) return(-EBADF);
+	retval = ioctl(fd, TSC_IOCTL_SEMAPHORE_RELEASE, &semaphore);
 	return(retval);
 }
 
@@ -2025,43 +2000,15 @@ int tsc_semaphore_release(uint idx, uint tag){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int tsc_semaphore_get(uint idx, uint tag){
+int tsc_semaphore_get(int fd, uint idx, uint tag){
 	struct tsc_ioctl_semaphore semaphore;
 	int retval = 0;
 
 	semaphore.idx = idx;
 	semaphore.tag = tag;
 
-	retval = ioctl(tsc_fd, TSC_IOCTL_SEMAPHORE_GET, &semaphore);
-	return(retval);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : set_device
- * Prototype     : int
- * Parameters    : device number
- * Return        : status of operation
- *----------------------------------------------------------------------------
- * Description   : change between central and io device if available
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int set_device(int device){
-	int retval = 0;
-
-	// 0 -> CENTRAL device
-	// 1 -> IO      device
-	if((device == 0) && (tsc_fd_central >= 0)) {
-		tsc_fd = tsc_fd_central;
-	}
-	else if ((device == 1) && (tsc_fd_io >= 0)){
-		tsc_fd = tsc_fd_io;
-	}
-	// CENTRAL (never happens) or IO not available (IFC1410)
-	else{
-		return(-1);
-	}
-
+	if(fd < 0) return(-EBADF);
+	retval = ioctl(fd, TSC_IOCTL_SEMAPHORE_GET, &semaphore);
 	return(retval);
 }
 
@@ -2201,7 +2148,7 @@ U121 I/O expander I/O assignation
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_presence(void) {
+int rsp1461_presence(int fd) {
 	int retval = 0;
 	int offset = 0;
 	unsigned char magic_byte;
@@ -2213,7 +2160,7 @@ int rsp1461_presence(void) {
 		return (-1);
 	}
 
-	if (pop_mbox_byte(&offset, &magic_byte)){
+	if (pop_mbox_byte(fd, &offset, &magic_byte)){
 		printf("Mbox magic get failed\n");
 		return (-1);
 	}
@@ -2222,9 +2169,9 @@ int rsp1461_presence(void) {
 		return (-1);
 	}
 
-    pop_mbox_byte(&offset, &info->rtm_status);
-    pop_mbox_tribyte(&offset, &info->rtm_manufacturer_id);
-    pop_mbox_int(&offset, &info->rtm_zone3_interface_designator);
+    pop_mbox_byte(fd, &offset, &info->rtm_status);
+    pop_mbox_tribyte(fd, &offset, &info->rtm_manufacturer_id);
+    pop_mbox_int(fd, &offset, &info->rtm_zone3_interface_designator);
 
 	return retval;
 }
@@ -2239,7 +2186,7 @@ int rsp1461_presence(void) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_init(void){
+int rsp1461_init(int fd){
 	int retval = 0;
 	int addr   = 0;
 	int bus    = 4;
@@ -2254,40 +2201,40 @@ int rsp1461_init(void){
 	data = 0x38; // 0011'1000 out->0, in->1
 	reg  = 6; // Port[0]
 	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 	reg  = 7; // Port[1]
 	data = 0x38; // 0011'1000 out->0, in->1
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 
 // ----- Init U121 -----
 	addr = 0x77;
 	reg  = 6; // Port[0]
 	data = 0x38; // 0011'1000 out->0, in->1
 	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 	reg  = 7; // Port[1]
 	data = 0x38; // 0011'1000 out->0, in->1
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 
 // ----- Init U107 -----
 	addr = 0x74;
 	reg  = 6; // Port[0]
 	data = 0xff; // 1111'1111 out->0, in->1
 	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 	reg  = 7; // Port[1]
 	data = 0xf8; // 1111'1000 out->0, in->1
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 
 // ----- Init U108 -----
 	addr = 0x75;
 	reg  = 6; // Port[0]
 	data = 0xf8; // 1111'1000 out->0, in->1
 	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 	reg  = 7; // Port[1]
 	data = 0xf8; // 1111'1000 out->0, in->1
-	retval = tsc_i2c_write(device, reg, data);
+	retval = tsc_i2c_write(fd, device, reg, data);
 
 	//check on-board devices presence
 	//set I/O expanders pins direction and default state
@@ -2306,7 +2253,7 @@ int rsp1461_init(void){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_extension_presence(int *present) {
+int rsp1461_extension_presence(int fd, int *present) {
 	int retval = 0;
 	int addr   = 0x74; //U107
 	int bus    = 4;
@@ -2318,7 +2265,7 @@ int rsp1461_extension_presence(int *present) {
 
     // Check U107 EXT presence bit at port 0
 	device = (bus&7)<<29; device |= addr & 0x7f;device |= ((rs-1)&3)<<16; device |= ((ds-1)&3)<<18;
-	retval = tsc_i2c_read(device, reg, &data);
+	retval = tsc_i2c_read(fd, device, reg, &data);
 	*present = (data & 0x8) >> 3;
 
 	return retval;
@@ -2334,7 +2281,7 @@ int rsp1461_extension_presence(int *present) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
+int rsp1461_extension_set_pin_state(int fd, int index, rsp1461_ext_pin_state_t state) {
 	int retval = 0;
 	int addr     = 0;
 	int bus      = 4;
@@ -2356,25 +2303,25 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			// Write to the output the value
 	    			reg = 2;
 	    			// Read pin value
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			data ^= (-state ^ data) & (1 << 6); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    			// Configure pin as an output
 	    	    	reg = 6;
 	    	    	// Read pin direction
-	    	    	retval = tsc_i2c_read(device, reg, &data);
+	    	    	retval = tsc_i2c_read(fd, device, reg, &data);
 	    	    	// Set specific pin as an output direction (clear bit)
 	    	    	data &= ~(1 << 6);
-	    	    	retval = tsc_i2c_write(device, reg, data);
+	    	    	retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    		else if (state == RSP1461_EXT_PIN_Z){
 	    			// Configure pin as an input
 	    	    	reg = 6;
 	    	    	// Read pin direction
-	    	    	retval = tsc_i2c_read(device, reg, &data);
+	    	    	retval = tsc_i2c_read(fd, device, reg, &data);
 	    	    	// Set specific pin as an input direction (set bit)
 	    	    	data |= 1 << 6;
-	    	    	retval = tsc_i2c_write(device, reg, data);
+	    	    	retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    	}
 	    	else if (index == 1){
@@ -2382,25 +2329,25 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			// Write to the output the value
 	    			reg = 2;
 	    			// Read pin value
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			data ^= (-state ^ data) & (1 << 7); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    			// Configure pin as an output
 	    	    	reg = 6;
 	    	    	// Read pin direction
-	    	    	retval = tsc_i2c_read(device, reg, &data);
+	    	    	retval = tsc_i2c_read(fd, device, reg, &data);
 	    	    	// Set specific pin as an output direction (clear bit)
 	    	    	data &= ~(1 << 7);
-	    	    	retval = tsc_i2c_write(device, reg, data);
+	    	    	retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    		else if (state == RSP1461_EXT_PIN_Z){
 	    			// Configure pin as an input
 	    	    	reg = 6;
 	    	    	// Read pin direction
-	    	    	retval = tsc_i2c_read(device, reg, &data);
+	    	    	retval = tsc_i2c_read(fd, device, reg, &data);
 	    	    	// Set specific pin as an input direction (set bit)
 	    	    	data |= 1 << 7;
-	    	    	retval = tsc_i2c_write(device, reg, data);
+	    	    	retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    	}
 	    	break;
@@ -2412,25 +2359,25 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    		// Write to the output the value
 	    		reg = 3;
 	    		// Read pin value
-	    		retval = tsc_i2c_read(device, reg, &data);
+	    		retval = tsc_i2c_read(fd, device, reg, &data);
 	    		data ^= (-state ^ data) & (1 << 6); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    		retval = tsc_i2c_write(device, reg, data);
+	    		retval = tsc_i2c_write(fd, device, reg, data);
 	    		// Configure pin as an output
 	    	   	reg = 7;
 	    	   	// Read pin direction
-	    	   	retval = tsc_i2c_read(device, reg, &data);
+	    	   	retval = tsc_i2c_read(fd, device, reg, &data);
 	    	   	// Set specific pin as an output direction (clear bit)
 	    	   	data &= ~(1 << 6);
-	    	   	retval = tsc_i2c_write(device, reg, data);
+	    	   	retval = tsc_i2c_write(fd, device, reg, data);
 	    	}
 	    	else if (state == RSP1461_EXT_PIN_Z){
 	    		// Configure pin as an input
 	    	   	reg = 7;
 	    	   	// Read pin direction
-	    	   	retval = tsc_i2c_read(device, reg, &data);
+	    	   	retval = tsc_i2c_read(fd, device, reg, &data);
 	    	   	// Set specific pin as an input direction (set bit)
 	    	   	data |= 1 << 6;
-	    	   	retval = tsc_i2c_write(device, reg, data);
+	    	   	retval = tsc_i2c_write(fd, device, reg, data);
 	    	}
 	        break;
 	    // U107 PORT#1
@@ -2443,25 +2390,25 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			// Write to the output the value
 	    			reg = 3;
 	    			// Read pin value
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			data ^= (-state ^ data) & (1 << 6); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    			// Configure pin as an output
 	    			reg = 7;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an output direction (clear bit)
 	    			data &= ~(1 << 6);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    		else if (state == RSP1461_EXT_PIN_Z){
 	    			// Configure pin as an input
 	    			reg = 7;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an input direction (set bit)
 	    			data |= 1 << 6;
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    	}
 	    	else if (index == 1){
@@ -2469,25 +2416,25 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			// Write to the output the value
 	    			reg = 3;
 	    			// Read pin value
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			data ^= (-state ^ data) & (1 << 7); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    			// Configure pin as an output
 	    			reg = 7;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an output direction (clear bit)
 	    			data &= ~(1 << 7);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    		else if (state == RSP1461_EXT_PIN_Z){
 	    			// Configure pin as an input
 	    			reg = 7;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an input direction (set bit)
 	    			data |= 1 << 7;
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    	}
 	    	break;
@@ -2501,23 +2448,23 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			// Write to the output the value
 	    			reg = 2;
 	    			data ^= (-state ^ data) & (1 << 6); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    			// Configure pin as an output
 	    			reg = 6;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an output direction (clear bit)
 	    			data &= ~(1 << 6);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    		else if (state == RSP1461_EXT_PIN_Z){
 	    			// Configure pin as an input
 	    			reg = 6;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an input direction (set bit)
 	    			data |= 1 << 6;
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    	}
 	    	else if (index == 1){
@@ -2525,23 +2472,23 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
 	    			// Write to the output the value
 	    			reg = 2;
 	    			data ^= (-state ^ data) & (1 << 7); // Bit n will be set if x is 1, and cleared if x is 0. // number ^= (-x ^ number) & (1 << n);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    			// Configure pin as an output
 	    			reg = 6;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an output direction (clear bit)
 	    			data &= ~(1 << 7);
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    		else if (state == RSP1461_EXT_PIN_Z){
 	    			// Configure pin as an input
 	    			reg = 6;
 	    			// Read pin direction
-	    			retval = tsc_i2c_read(device, reg, &data);
+	    			retval = tsc_i2c_read(fd, device, reg, &data);
 	    			// Set specific pin as an input direction (set bit)
 	    			data |= 1 << 7;
-	    			retval = tsc_i2c_write(device, reg, data);
+	    			retval = tsc_i2c_write(fd, device, reg, data);
 	    		}
 	    	}
 	        break;
@@ -2564,7 +2511,7 @@ int rsp1461_extension_set_pin_state(int index, rsp1461_ext_pin_state_t state) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_extension_get_pin_state(int index, int *state) {
+int rsp1461_extension_get_pin_state(int fd, int index, int *state) {
 	int retval   = 0;
 	int addr     = 0;
 	int bus      = 4;
@@ -2583,7 +2530,7 @@ switch(index){
     	reg = 6;
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	// Read pin direction
-    	retval = tsc_i2c_read(device, reg, &data_org);
+    	retval = tsc_i2c_read(fd, device, reg, &data_org);
     	// Set specific pin as an input direction
     	data = data_org;
     	if(index == 0){
@@ -2592,10 +2539,10 @@ switch(index){
     	else if (index == 1){
     		data |= 1 << 7;
     	}
-    	retval = tsc_i2c_write(device, reg, data);
+    	retval = tsc_i2c_write(fd, device, reg, data);
     	// Get pin value
     	reg = 0;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	if(index == 0){
     		*state = (data & 0x40) >> 6;
     	}
@@ -2604,7 +2551,7 @@ switch(index){
     	}
     	// Re-set pin direction as original
     	reg = 6;
-    	retval = tsc_i2c_write(device, reg, data_org);
+    	retval = tsc_i2c_write(fd, device, reg, data_org);
         break;
     // U108 PORT#1
     case 2:
@@ -2612,18 +2559,18 @@ switch(index){
     	reg = 7;
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	// Read pin direction
-    	retval = tsc_i2c_read(device, reg, &data_org);
+    	retval = tsc_i2c_read(fd, device, reg, &data_org);
     	// Set specific pin as an input direction
     	data = data_org;
     	data |= 1 << 6;
-    	retval = tsc_i2c_write(device, reg, data);
+    	retval = tsc_i2c_write(fd, device, reg, data);
     	// Get pin value
     	reg = 1;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	*state = (data & 0x40) >> 6;
     	// Re-set pin direction as original
     	reg = 7;
-    	retval = tsc_i2c_write(device, reg, data_org);
+    	retval = tsc_i2c_write(fd, device, reg, data_org);
         break;
     // U107 PORT#1
     case 3:
@@ -2632,7 +2579,7 @@ switch(index){
     	reg = 7;
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	// Read pin direction
-    	retval = tsc_i2c_read(device, reg, &data_org);
+    	retval = tsc_i2c_read(fd, device, reg, &data_org);
     	// Set specific pin as an input direction
     	data = data_org;
     	if(index == 3){
@@ -2641,10 +2588,10 @@ switch(index){
     	else if (index == 4){
     		data |= 1 << 7;
     	}
-    	retval = tsc_i2c_write(device, reg, data);
+    	retval = tsc_i2c_write(fd, device, reg, data);
     	// Get pin value
     	reg = 1;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	if(index == 3){
     		*state = (data & 0x40) >> 6;
     	}
@@ -2653,7 +2600,7 @@ switch(index){
     	}
     	// Re-set pin direction as original
     	reg = 7;
-    	retval = tsc_i2c_write(device, reg, data_org);
+    	retval = tsc_i2c_write(fd, device, reg, data_org);
         break;
     // U107 PORT#0
     case 5:
@@ -2662,7 +2609,7 @@ switch(index){
     	reg = 6;
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
     	// Read pin direction
-    	retval = tsc_i2c_read(device, reg, &data_org);
+    	retval = tsc_i2c_read(fd, device, reg, &data_org);
     	// Set specific pin as an input direction
     	data = data_org;
     	if(index == 5){
@@ -2671,10 +2618,10 @@ switch(index){
     	else if (index == 6){
     		data |= 1 << 7;
     	}
-    	retval = tsc_i2c_write(device, reg, data);
+    	retval = tsc_i2c_write(fd, device, reg, data);
     	// Get pin value
     	reg = 0;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	if(index == 5){
     		*state = (data & 0x40) >> 6;
     	}
@@ -2683,7 +2630,7 @@ switch(index){
     	}
     	// Re-set pin direction as original
     	reg = 6;
-    	retval = tsc_i2c_write(device, reg, data_org);
+    	retval = tsc_i2c_write(fd, device, reg, data_org);
         break;
     default :
 		printf("Bad pin index ! \n");
@@ -2703,7 +2650,7 @@ switch(index){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_led_turn_on(rsp1461_led_t led_id) {
+int rsp1461_led_turn_on(int fd, rsp1461_led_t led_id) {
 	int retval = 0;
 	int addr   = 0;
 	int bus    = 4;
@@ -2720,7 +2667,7 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 		// PORT#1 RSP1461_LED123_GREEN[0] & RSP1461_LED123_RED[1]
 		if ((int)led_id < 2){
 			reg = 1;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 
 			if((int)led_id == 0){
 				data |= 1 << 6;
@@ -2729,12 +2676,12 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 				data |= 1 << 7;
 			}
 			reg = 3;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 		// PORT#0 RSP1461_LED124_GREEN[2] & RSP1461_LED124_RED[3]
 		else if ((int)led_id > 1){
 			reg = 0;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 
 			if((int)led_id == 2){
 				data |= 1 << 6;
@@ -2743,7 +2690,7 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 				data |= 1 << 7;
 			}
 			reg = 2;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 	}
 // ----- U120 -----
@@ -2753,7 +2700,7 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 		// PORT#1 RSP1461_LED125_GREEN[4] & RSP1461_LED125_RED[5]
 		if ((int)led_id < 6){
 			reg = 1;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 
 			if((int)led_id == 4){
 				data |= 1 << 6;
@@ -2762,12 +2709,12 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 				data |= 1 << 7;
 			}
 			reg = 3;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 		// PORT#0 SP1461_LED126_GREEN[6] & RSP1461_LED126_RED[7]
 		else if ((int)led_id > 5){
 			reg = 0;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 
 			if((int)led_id == 6){
 				data |= 1 << 6;
@@ -2776,7 +2723,7 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
 				data |= 1 << 7;
 			}
 			reg = 2;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 	}
 	return retval;
@@ -2792,7 +2739,7 @@ int rsp1461_led_turn_on(rsp1461_led_t led_id) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_led_turn_off(rsp1461_led_t led_id) {
+int rsp1461_led_turn_off(int fd, rsp1461_led_t led_id) {
 	int retval = 0;
 	int addr   = 0;
 	int bus    = 4;
@@ -2809,7 +2756,7 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 		// PORT#1 RSP1461_LED123_GREEN[0] & RSP1461_LED123_RED[1]
 		if ((int)led_id < 2){
 			reg = 1;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 			if((int)led_id == 0){
 				data &= ~(1 << 6);
 			}
@@ -2817,12 +2764,12 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 				data &= ~(1 << 7);
 			}
 			reg = 3;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 		// PORT#0 RSP1461_LED124_GREEN[2] & RSP1461_LED124_RED[3]
 		else if ((int)led_id > 1){
 			reg = 0;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 			if((int)led_id == 2){
 				data &= ~(1 << 6);
 			}
@@ -2830,7 +2777,7 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 				data &= ~(1 << 7);
 			}
 			reg = 2;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 	}
 // ----- U120 -----
@@ -2840,7 +2787,7 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 		// PORT#1 RSP1461_LED125_GREEN[4] & RSP1461_LED125_RED[5]
 		if ((int)led_id < 6){
 			reg = 1;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 			if((int)led_id == 4){
 				data &= ~(1 << 6);
 			}
@@ -2848,12 +2795,12 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 				data &= ~(1 << 7);
 			}
 			reg = 3;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 		// PORT#0 SP1461_LED126_GREEN[6] & RSP1461_LED126_RED[7]
 		else if ((int)led_id > 5){
 			reg = 0;
-			retval = tsc_i2c_read(device, reg, &data);
+			retval = tsc_i2c_read(fd, device, reg, &data);
 
 			if((int)led_id == 6){
 				data &= ~(1 << 6);
@@ -2862,7 +2809,7 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
 				data &= ~(1 << 7);
 			}
 			reg = 2;
-			retval = tsc_i2c_write(device, reg, data);
+			retval = tsc_i2c_write(fd, device, reg, data);
 		}
 	}
 	return retval;
@@ -2878,7 +2825,7 @@ int rsp1461_led_turn_off(rsp1461_led_t led_id) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
+int rsp1461_sfp_status(int fd, rsp1461_sfp_id_t id, uint8_t *status){
 	int retval   = 0;
 	int addr     = 0;
 	int bus      = 4;
@@ -2901,7 +2848,7 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
     		reg = 1; // PORT#1
     	}
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	*status = (data & 0x3f);
 		break;
 
@@ -2916,7 +2863,7 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
     		reg = 1; // PORT#1
     	}
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	*status = (data & 0x3f);
 		break;
 
@@ -2925,7 +2872,7 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
     	addr = 0x74;
     	reg = 1; // PORT#1
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	*status = (data & 0x3f);
 		break;
 
@@ -2940,7 +2887,7 @@ int rsp1461_sfp_status(rsp1461_sfp_id_t id, uint8_t *status){
     		reg = 0; // PORT#0
     	}
     	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
-    	retval = tsc_i2c_read(device, reg, &data);
+    	retval = tsc_i2c_read(fd, device, reg, &data);
     	*status = (data & 0x3f);
 		break;
 

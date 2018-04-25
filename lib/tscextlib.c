@@ -114,7 +114,7 @@ tscext_bmr_conv_16bit_u( unsigned short val)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tscext_bmr_read( uint bmr,
+tscext_bmr_read(int fd, uint bmr,
 	      uint reg,
 	      uint *data,
 	      uint cnt)
@@ -147,7 +147,7 @@ tscext_bmr_read( uint bmr,
   }
   device = I2C_DEV( device, 1, TSC_I2C_CTL_CMDSIZ(1)|TSC_I2C_CTL_DATSIZ(cnt));
 
-  return( tsc_i2c_read( device, reg, data));
+  return( tsc_i2c_read(fd, device, reg, data));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -161,7 +161,7 @@ tscext_bmr_read( uint bmr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tscext_bmr_write( uint bmr,
+tscext_bmr_write(int fd, uint bmr,
 	       uint reg,
 	       uint data,
 	       uint cnt)
@@ -194,7 +194,7 @@ tscext_bmr_write( uint bmr,
   }
   device = I2C_DEV( device, 1, TSC_I2C_CTL_CMDSIZ(1)|TSC_I2C_CTL_DATSIZ(2));
 
-  return( tsc_i2c_write( device, reg, data));
+  return( tsc_i2c_write(fd, device, reg, data));
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -208,10 +208,10 @@ tscext_bmr_write( uint bmr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tscext_csr_rd( int reg)
+tscext_csr_rd(int fd, int reg)
 {
   int data;
-  tsc_csr_read( reg, &data);
+  tsc_csr_read(fd, reg, &data);
   return( data);
 }
 
@@ -226,8 +226,8 @@ tscext_csr_rd( int reg)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
-tscext_csr_wr( int reg,
+tscext_csr_wr(int fd, int reg,
 	    int data)
 {
-  tsc_csr_write( reg, &data);
+  tsc_csr_write(fd, reg, &data);
 }

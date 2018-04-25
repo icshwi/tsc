@@ -55,7 +55,7 @@ static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $"
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-mbox_info_t *get_mbox_info(void)
+mbox_info_t *get_mbox_info(int fd)
 {
   int i;
   unsigned char data;
@@ -66,7 +66,7 @@ mbox_info_t *get_mbox_info(void)
   unsigned char descriptor_format_version;
   mbox_sensor_data_value_t *sensor = NULL;
 
-  if (pop_mbox_byte(&offset, &magic_byte)) return NULL;
+  if (pop_mbox_byte(fd, &offset, &magic_byte)) return NULL;
   if (magic_byte != MAGIC_BYTE_VALUE_VALID) return NULL;
 
   mbox_info_t *info = alloc_mbox_info();
@@ -74,8 +74,8 @@ mbox_info_t *get_mbox_info(void)
 
   while (continue_parsing)
   {
-    pop_mbox_byte(&offset, &descriptor_type);
-    pop_mbox_byte(&offset, &descriptor_format_version);
+    pop_mbox_byte(fd, &offset, &descriptor_type);
+    pop_mbox_byte(fd, &offset, &descriptor_format_version);
     printd("%s() descriptor type = %d, format = %d\n", __func__, descriptor_type, descriptor_format_version);
 
     switch (descriptor_type)
@@ -85,38 +85,38 @@ mbox_info_t *get_mbox_info(void)
       break;
 
     case DESCRIPTOR_TYPE_MAILBOX_INFO:
-      pop_mbox_short(&offset, &info->management_service_requests_offset);
-      pop_mbox_short(&offset, &info->payload_descriptors_offset);
-      pop_mbox_short(&offset, &info->payload_service_requests_offset);
+      pop_mbox_short(fd, &offset, &info->management_service_requests_offset);
+      pop_mbox_short(fd, &offset, &info->payload_descriptors_offset);
+      pop_mbox_short(fd, &offset, &info->payload_service_requests_offset);
       printd("%s() management service requests at 0x%04x\n", __func__, info->management_service_requests_offset);
       printd("%s() payload descriptors at 0x%04x\n", __func__, info->payload_descriptors_offset);
       printd("%s() payload service requests at 0x%04x\n", __func__, info->payload_service_requests_offset);
       break;
 
     case DESCRIPTOR_TYPE_FIRMWARE_INFO:
-      pop_mbox_byte(&offset, &info->firmware_revision.major);
-      pop_mbox_byte(&offset, &info->firmware_revision.minor);
-      pop_mbox_byte(&offset, &info->firmware_revision.maintenance);
-      pop_mbox_int(&offset, &info->firmware_revision.build_id);
+      pop_mbox_byte(fd, &offset, &info->firmware_revision.major);
+      pop_mbox_byte(fd, &offset, &info->firmware_revision.minor);
+      pop_mbox_byte(fd, &offset, &info->firmware_revision.maintenance);
+      pop_mbox_int(fd, &offset, &info->firmware_revision.build_id);
       break;
 
     case DESCRIPTOR_TYPE_BOARD_INFO:
-      pop_mbox_byte(&offset, &info->amc_slot_number);
-      pop_mbox_string(&offset, &info->board_name);
-      pop_mbox_string(&offset, &info->board_revision);
-      pop_mbox_string(&offset, &info->board_serial_number);
+      pop_mbox_byte(fd, &offset, &info->amc_slot_number);
+      pop_mbox_string(fd, &offset, &info->board_name);
+      pop_mbox_string(fd, &offset, &info->board_revision);
+      pop_mbox_string(fd, &offset, &info->board_serial_number);
       break;
 
     case DESCRIPTOR_TYPE_PRODUCT_INFO:
-      pop_mbox_string(&offset, &info->product_name);
-      pop_mbox_string(&offset, &info->product_revision);
-      pop_mbox_string(&offset, &info->product_serial_number);
+      pop_mbox_string(fd, &offset, &info->product_name);
+      pop_mbox_string(fd, &offset, &info->product_revision);
+      pop_mbox_string(fd, &offset, &info->product_serial_number);
       break;
 
     case DESCRIPTOR_TYPE_RTM_INFO:
-      pop_mbox_byte(&offset, &info->rtm_status);
-      pop_mbox_tribyte(&offset, &info->rtm_manufacturer_id);
-      pop_mbox_int(&offset, &info->rtm_zone3_interface_designator);
+      pop_mbox_byte(fd, &offset, &info->rtm_status);
+      pop_mbox_tribyte(fd, &offset, &info->rtm_manufacturer_id);
+      pop_mbox_int(fd, &offset, &info->rtm_zone3_interface_designator);
       break;
 
     case DESCRIPTOR_TYPE_SENSOR_DATA_VALUE:
@@ -126,10 +126,10 @@ mbox_info_t *get_mbox_info(void)
       offset += 1;
       sensor->timestamp_offset = offset;
       offset += 4;
-      pop_mbox_byte(&offset, &sensor->value_size);
+      pop_mbox_byte(fd, &offset, &sensor->value_size);
       sensor->value_offset = offset;
       offset += sensor->value_size;
-      pop_mbox_string(&offset, &sensor->name);
+      pop_mbox_string(fd, &offset, &sensor->name);
       sensor->next = info->sensors_values;
       info->sensors_values = sensor;
       break;
@@ -185,7 +185,7 @@ void free_mbox_info(mbox_info_t *info)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, int *timestamp)
+int get_mbox_sensor_value(int fd, mbox_info_t *info, unsigned char *name, int *value, int *timestamp)
 {
   if (!info || !name || !value || !timestamp) return EFAULT;
 
@@ -198,7 +198,7 @@ int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, in
     if (!strcmp(sensor->name, name))
     {
       offset = sensor->status_offset;
-      pop_mbox_byte(&offset, &sensor->status);
+      pop_mbox_byte(fd, &offset, &sensor->status);
       switch (sensor->status)
       {
       case SENSOR_VALUE_STATUS_NOT_INITIALIZED:
@@ -221,7 +221,7 @@ int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, in
       (*timestamp) = 0;
       for (i = 0 ; i < 4 ; i++)
       {
-        pop_mbox_byte(&offset, &data);
+        pop_mbox_byte(fd, &offset, &data);
         (*timestamp) = ((*timestamp) << 8) | data;
       }
 
@@ -229,7 +229,7 @@ int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, in
       (*value) = 0;
       for (i = 0 ; i < sensor->value_size ; i++)
       {
-        pop_mbox_byte(&offset, &data);
+        pop_mbox_byte(fd, &offset, &data);
         (*value) = ((*value) << 8) | data;
       }
 
@@ -252,30 +252,30 @@ int get_mbox_sensor_value(mbox_info_t *info, unsigned char *name, int *value, in
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-unsigned char send_mbox_service_request(mbox_info_t *info, unsigned char command, unsigned char argc, ...)
+unsigned char send_mbox_service_request(int fd, mbox_info_t *info, unsigned char command, unsigned char argc, ...)
 {
   if (!info) return EFAULT;
   if (argc > SERVICE_REQUEST_MAX_ARGUMENTS_LENGTH) return E2BIG;
 
   int offset = info->payload_service_requests_offset;
-  push_mbox_byte(&offset, SERVICE_REQUEST_CPU_ID);
-  push_mbox_byte(&offset, SERVICE_REQUEST_MMC_ID);
-  push_mbox_byte(&offset, SERVICE_REQUEST_STATUS_SUSPENDED);
-  push_mbox_byte(&offset, SERVICE_REQUEST_NORMAL_COMPLETION_CODE);
-  push_mbox_byte(&offset, command);
-  push_mbox_byte(&offset, argc);
+  push_mbox_byte(fd, &offset, SERVICE_REQUEST_CPU_ID);
+  push_mbox_byte(fd, &offset, SERVICE_REQUEST_MMC_ID);
+  push_mbox_byte(fd, &offset, SERVICE_REQUEST_STATUS_SUSPENDED);
+  push_mbox_byte(fd, &offset, SERVICE_REQUEST_NORMAL_COMPLETION_CODE);
+  push_mbox_byte(fd, &offset, command);
+  push_mbox_byte(fd, &offset, argc);
 
   va_list vl;
   va_start(vl, argc);
   while (argc--)
   {
-    push_mbox_byte(&offset, (unsigned char)va_arg(vl, int));
+    push_mbox_byte(fd, &offset, (unsigned char)va_arg(vl, int));
   }
   va_end(vl);
 
 
-  enable_service_request(info, info->payload_service_requests_offset);
-  wait_for_service_request_completion(info, info->payload_service_requests_offset);
+  enable_service_request(fd, info, info->payload_service_requests_offset);
+  wait_for_service_request_completion(fd, info, info->payload_service_requests_offset);
   return 0;
 }
 
@@ -317,7 +317,7 @@ mbox_info_t *alloc_mbox_info(void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int get_mbox_byte(int offset, unsigned char *destination)
+int get_mbox_byte(int fd, int offset, unsigned char *destination)
 {
   int retval;
   int byte_offset = offset;
@@ -326,12 +326,12 @@ int get_mbox_byte(int offset, unsigned char *destination)
 
   if (!destination) return EFAULT;
 
-  retval = tsc_pon_write(0xd0, &word_offset);
+  retval = tsc_pon_write(fd, 0xd0, &word_offset);
   if( retval < 0)
   {
     return EIO;
   }
-  retval = tsc_pon_read(0xd4, &data);
+  retval = tsc_pon_read(fd, 0xd4, &data);
   if( retval < 0)
   {
     return EIO;
@@ -352,9 +352,9 @@ int get_mbox_byte(int offset, unsigned char *destination)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int pop_mbox_byte(int *offset, unsigned char *destination)
+int pop_mbox_byte(int fd, int *offset, unsigned char *destination)
 {
-  int retval = get_mbox_byte(*offset, destination);
+  int retval = get_mbox_byte(fd, *offset, destination);
   printd("%s() offset = %d, data = 0x%02x\n", __func__, *offset, *destination);
   (*offset)++;
   return retval;
@@ -370,7 +370,7 @@ int pop_mbox_byte(int *offset, unsigned char *destination)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int pop_mbox_short(int *offset, unsigned short *destination)
+int pop_mbox_short(int fd, int *offset, unsigned short *destination)
 {
   int retval;
   unsigned char byte;
@@ -379,7 +379,7 @@ int pop_mbox_short(int *offset, unsigned short *destination)
   (*destination) = 0;
   for (loop = 0 ; loop < 2 ; loop++)
   {
-    retval = pop_mbox_byte(offset, &byte);
+    retval = pop_mbox_byte(fd, offset, &byte);
     printd("byte = 0x%02x\n", byte);
     if (retval) return retval;
     (*destination) = ((*destination) << 8) | byte;
@@ -399,7 +399,7 @@ int pop_mbox_short(int *offset, unsigned short *destination)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int pop_mbox_tribyte(int *offset, unsigned int *destination)
+int pop_mbox_tribyte(int fd, int *offset, unsigned int *destination)
 {
   int retval;
   unsigned char byte;
@@ -408,7 +408,7 @@ int pop_mbox_tribyte(int *offset, unsigned int *destination)
   (*destination) = 0;
   for (loop = 0 ; loop < 3 ; loop++)
   {
-    retval = pop_mbox_byte(offset, &byte);
+    retval = pop_mbox_byte(fd, offset, &byte);
     printd("byte = 0x%02x\n", byte);
     if (retval) return retval;
     (*destination) = ((*destination) << 8) | byte;
@@ -428,7 +428,7 @@ int pop_mbox_tribyte(int *offset, unsigned int *destination)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int pop_mbox_int(int *offset, unsigned int *destination)
+int pop_mbox_int(int fd, int *offset, unsigned int *destination)
 {
   int retval;
   unsigned char byte;
@@ -437,7 +437,7 @@ int pop_mbox_int(int *offset, unsigned int *destination)
   (*destination) = 0;
   for (loop = 0 ; loop < 4 ; loop++)
   {
-    retval = pop_mbox_byte(offset, &byte);
+    retval = pop_mbox_byte(fd, offset, &byte);
     if (retval) return retval;
     (*destination) = ((*destination) << 8) | byte;
   }
@@ -455,7 +455,7 @@ int pop_mbox_int(int *offset, unsigned int *destination)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-unsigned char pop_mbox_string(int *offset, unsigned char **destination)
+unsigned char pop_mbox_string(int fd, int *offset, unsigned char **destination)
 {
   int size = 0;
   unsigned char c;
@@ -463,7 +463,7 @@ unsigned char pop_mbox_string(int *offset, unsigned char **destination)
 
   while (1)
   {
-    pop_mbox_byte(offset, &c);
+    pop_mbox_byte(fd, offset, &c);
     buffer[size++] = c;
     if (!c) break;
   }
@@ -484,7 +484,7 @@ unsigned char pop_mbox_string(int *offset, unsigned char **destination)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int push_mbox_byte(int *offset, unsigned char byte)
+int push_mbox_byte(int fd, int *offset, unsigned char byte)
 {
   int retval;
   int byte_offset = (*offset)++;
@@ -492,12 +492,12 @@ int push_mbox_byte(int *offset, unsigned char byte)
   int data;
   int mask;
 
-  retval = tsc_pon_write(0xd0, &word_offset);
+  retval = tsc_pon_write(fd, 0xd0, &word_offset);
   if( retval < 0)
   {
     return EIO;
   }
-  retval = tsc_pon_read(0xd4, &data);
+  retval = tsc_pon_read(fd, 0xd4, &data);
   if( retval < 0)
   {
     return EIO;
@@ -508,7 +508,7 @@ int push_mbox_byte(int *offset, unsigned char byte)
   data &= ~mask;
   data |= byte << byte_offset;
 
-  retval = tsc_pon_write(0xd4, &data);
+  retval = tsc_pon_write(fd, 0xd4, &data);
   if( retval < 0)
   {
     return EIO;
@@ -527,10 +527,10 @@ int push_mbox_byte(int *offset, unsigned char byte)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void enable_service_request(mbox_info_t *info, int offset)
+void enable_service_request(int fd, mbox_info_t *info, int offset)
 {
   offset += SERVICE_REQUEST_STATUS_OFFSET; 
-  push_mbox_byte(&offset, SERVICE_REQUEST_STATUS_PENDING);
+  push_mbox_byte(fd, &offset, SERVICE_REQUEST_STATUS_PENDING);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -543,14 +543,14 @@ void enable_service_request(mbox_info_t *info, int offset)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void wait_for_service_request_completion(mbox_info_t *info, int offset)
+void wait_for_service_request_completion(int fd, mbox_info_t *info, int offset)
 {
   offset += SERVICE_REQUEST_STATUS_OFFSET; 
   unsigned char status = SERVICE_REQUEST_STATUS_PENDING;
   do
   {
     usleep(10000);
-    get_mbox_byte(offset, &status);
+    get_mbox_byte(fd, offset, &status);
   }
   while (status != SERVICE_REQUEST_STATUS_COMPLETED);
 }
