@@ -40,7 +40,7 @@
 #include "../include/tscioctl.h"
 #include "../include/i2c-dev.h"
 
-char tsc_lib_version[] = "1.30";
+char tsc_lib_version[] = "2.00";
 static char tsc_drv_name[16] = {0,};
 static char tsc_drv_version[16] = {0,};
 static unsigned short tsc_vendor_id;
