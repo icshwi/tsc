@@ -1344,14 +1344,14 @@ int
 rdwr_cmp_buf( void *buf1,
 	      void *buf2,
 	      int len,
-	      long mask)
+	      int mask)
 {
-  long *p1, *p2;
+  int *p1, *p2;
   int i;
-  long in, out;
+  int in, out;
 
-  p1 = (long *)buf1;
-  p2 = (long *)buf2;
+  p1 = (int *)buf1;
+  p2 = (int *)buf2;
   i = 0;
   while( i < len)
   {
@@ -1361,7 +1361,7 @@ rdwr_cmp_buf( void *buf1,
     {
       break;
     }
-    i += sizeof( long);
+    i += sizeof( int);
   }
   return( i);
 }
@@ -2030,141 +2030,142 @@ tsc_rdwr_cx( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int
-tsc_rdwr_cmp( struct cli_cmd_para *c)
-{
-  int off1, off2, offset;
-  char sp1, sp2;
-  int idx1, idx2;
-  int len;
-  char *buf1, *buf2;
-  int mode1, mode2;
-  int retval;
+int tsc_rdwr_cmp( struct cli_cmd_para *c){
+	int off1, off2, offset;
+	char sp1, sp2;
+	int idx1, idx2;
+	int len;
+	char *buf1, *buf2;
+	int mode1, mode2;
+	int retval;
 
-  retval = RDWR_ERR;
+	retval = RDWR_ERR;
 
-  if( c->cnt < 3)
-  {
-    printf("Not enough arguments -> usage:\n");
-    tsc_print_usage( c);
-    return( retval);
-  }
-  if( sscanf( c->para[0],"%x:%c%d", &off1, &sp1, &idx1) < 2)
-  {
-    printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
-    tsc_print_usage( c);
-    return( retval);
-  }
-  if( sscanf( c->para[1],"%x:%c%d", &off2, &sp2, &idx2) < 2)
-  {
-    printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
-    tsc_print_usage( c);
-    return( retval);
-  }
-  if( sscanf( c->para[2],"%x", &len) < 1)
-  {
-    printf("Bad length argument [%s] -> usage:\n", c->para[0]);
-    tsc_print_usage( c);
-    return( retval);
-  }
-  printf("Comparing data buffers..");
+	if( c->cnt < 3){
+		printf("Not enough arguments -> usage:\n");
+		tsc_print_usage( c);
+		return( retval);
+	}
+	if( sscanf( c->para[0],"%x:%c%d", &off1, &sp1, &idx1) < 2){
+		printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+		tsc_print_usage( c);
+		return( retval);
+	}
+	if( sscanf( c->para[1],"%x:%c%d", &off2, &sp2, &idx2) < 2){
+		printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+		tsc_print_usage( c);
+		return( retval);
+	}
+	if( sscanf( c->para[2],"%x", &len) < 1){
+		printf("Bad length argument [%s] -> usage:\n", c->para[0]);
+		tsc_print_usage( c);
+		return( retval);
+	}
+	else if (!((len % 4)  == 0)){
+		printf("Bad length argument [%s] -> usage:\n", c->para[0]);
+		tsc_print_usage( c);
+		return( retval);
+	}
+	printf("Comparing data buffers..");
 
-  mode1 = 0;
-  buf1 = (char *)malloc( len);
-  buf2 = NULL;
-  if( !buf1)
-  {
-    printf("Cannot allocate memory\n");
-    return( retval);
-  }
-  if( (sp1 == 's') || (sp1 == 'u'))
-  {
-    if( (idx1 < 1) || (idx1 > 2))
-    {
-      printf("Bad space identifier: %c%d\n", sp1, idx1);
-      goto tsc_rdwr_cmp_err;
-    }
-    if( (sp1 == 's') && (idx1 == 1)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM1, 0);
-    if( (sp1 == 's') && (idx1 == 2)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0);
-    if( (sp1 == 'u') && (idx1 == 1)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0);
-    if( (sp1 == 'u') && (idx1 == 2)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0);
-    tsc_read_blk(tsc_fd, off1, buf1, len, mode1);
-  }
-  else if( sp1 == 'k')
-  {
-    if( (idx1 < 0) || (idx1 >= TSC_NUM_KBUF))
-    {
-      printf("Bad kernel buffer index %d\n", idx1);
-      goto tsc_rdwr_cmp_err;
-    }
-    if( !last_kbuf_cycle[idx1].kb_p)
-    {
-      printf("Kernel buffer #%d not allocated\n", idx1);
-      goto tsc_rdwr_cmp_err;
-    }
-    tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx1].kb_p->k_base + off1, buf1, len);
-  }
-  else
-  {
-    printf("Bad space identifier: %c%d\n");
-    goto tsc_rdwr_cmp_err;
-  }
-  mode2 = 0;
-  buf2 = (char *)malloc( len);
-  if( !buf2)
-  {
-    printf("Cannot allocate memory\n");
-    return( retval);
-  }
-  if( (sp2 == 's') || (sp2 == 'u'))
-  {
-    if( (idx2 < 1) || (idx2 > 2))
-    {
-      printf("Bad space identifier: %c%d\n", sp2, idx2);
-      goto tsc_rdwr_cmp_err;
-    }
-    if( (sp2 == 's') && (idx2 == 1)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM1, 0);
-    if( (sp2 == 's') && (idx2 == 2)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0);
-    if( (sp2 == 'u') && (idx2 == 1)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0);
-    if( (sp2 == 'u') && (idx2 == 2)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0);
-    tsc_read_blk(tsc_fd, off2, buf2, len, mode2);
-  }
-  else if( sp2 == 'k')
-  {
-    if( (idx2 < 0) || (idx2 >= TSC_NUM_KBUF))
-    {
-      printf("Bad kernel buffer index %d\n", idx2);
-      goto tsc_rdwr_cmp_err;
-    }
-    if( !last_kbuf_cycle[idx2].kb_p)
-    {
-      printf("Kernel buffer #%d not allocated\n", idx2);
-      goto tsc_rdwr_cmp_err;
-    }
-    tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx2].kb_p->k_base + off2, buf2, len);
-  }
-  else
-  {
-    printf("Bad space identifier: %c%d\n");
-    goto tsc_rdwr_cmp_err;
-  }
-  offset = rdwr_cmp_buf( buf1, buf2, len, -1);
-  if( offset < len)
-  {
-    printf(" -> NOK\n");
-    rdwr_tx_error( buf1, buf2, offset,  RDWR_SIZE_INT, 0);
-    retval = RDWR_ERR;
-  }
-  else
-  {
-    printf(" -> OK\n");
-    retval = RDWR_OK;
-  }
+	mode1 = 0;
+	buf1 = (char *)malloc( len);
+	bzero(buf1, len);
+	buf2 = NULL;
+	if( !buf1){
+		printf("Cannot allocate memory\n");
+		return( retval);
+	}
+	if( (sp1 == 's') || (sp1 == 'u')){
+		if( (idx1 < 1) || (idx1 > 2)){
+			printf("Bad space identifier: %c%d\n", sp1, idx1);
+			goto tsc_rdwr_cmp_err;
+		}
+		if (CheckByteOrder()) { // PPC Big Endian
+			if( (sp1 == 's') && (idx1 == 1)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM1, 0);
+			if( (sp1 == 's') && (idx1 == 2)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0);
+			if( (sp1 == 'u') && (idx1 == 1)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0);
+			if( (sp1 == 'u') && (idx1 == 2)) mode1 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0);
+		}
+		else { // x86 Little Endian
+			if( (sp1 == 's') && (idx1 == 1)) mode1 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM1, 0));
+			if( (sp1 == 's') && (idx1 == 2)) mode1 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0));
+			if( (sp1 == 'u') && (idx1 == 1)) mode1 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0));
+			if( (sp1 == 'u') && (idx1 == 2)) mode1 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0));
+		}
+		tsc_read_blk(tsc_fd, off1, buf1, len, mode1);
+	}
+	else if( sp1 == 'k'){
+		if( (idx1 < 0) || (idx1 >= TSC_NUM_KBUF)){
+			printf("Bad kernel buffer index %d\n", idx1);
+			goto tsc_rdwr_cmp_err;
+		}
+		if( !last_kbuf_cycle[idx1].kb_p){
+			printf("Kernel buffer #%d not allocated\n", idx1);
+			goto tsc_rdwr_cmp_err;
+		}
+		tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx1].kb_p->k_base + off1, buf1, len);
+	}
+	else{
+		printf("Bad space identifier: %c%d\n");
+		goto tsc_rdwr_cmp_err;
+	}
+	mode2 = 0;
+	buf2 = (char *)malloc( len);
+	bzero(buf2, len);
+	if( !buf2){
+		printf("Cannot allocate memory\n");
+		return( retval);
+	}
+	if( (sp2 == 's') || (sp2 == 'u')){
+		if( (idx2 < 1) || (idx2 > 2)){
+			printf("Bad space identifier: %c%d\n", sp2, idx2);
+			goto tsc_rdwr_cmp_err;
+		}
+		if (CheckByteOrder()) { // PPC Big Endian
+			if( (sp2 == 's') && (idx2 == 1)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM1, 0);
+			if( (sp2 == 's') && (idx2 == 2)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0);
+			if( (sp2 == 'u') && (idx2 == 1)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0);
+			if( (sp2 == 'u') && (idx2 == 2)) mode2 = RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0);
+		}
+		else { // x86 Little Endian
+			if( (sp2 == 's') && (idx2 == 1)) mode2 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM1, 0));
+			if( (sp2 == 's') && (idx2 == 2)) mode2 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_SHM2, 0));
+			if( (sp2 == 'u') && (idx2 == 1)) mode2 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_USR1, 0));
+			if( (sp2 == 'u') && (idx2 == 2)) mode2 = tsc_swap_32(RDWR_MODE_SET( 0x44, RDWR_SPACE_USR2, 0));
+		}
+		tsc_read_blk(tsc_fd, off2, buf2, len, mode2);
+	}
+	else if( sp2 == 'k'){
+		if( (idx2 < 0) || (idx2 >= TSC_NUM_KBUF)){
+			printf("Bad kernel buffer index %d\n", idx2);
+			goto tsc_rdwr_cmp_err;
+		}
+		if( !last_kbuf_cycle[idx2].kb_p){
+			printf("Kernel buffer #%d not allocated\n", idx2);
+			goto tsc_rdwr_cmp_err;
+		}
+		tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx2].kb_p->k_base + off2, buf2, len);
+	}
+	else{
+		printf("Bad space identifier: %c%d\n");
+		goto tsc_rdwr_cmp_err;
+	}
+	offset = rdwr_cmp_buf( buf1, buf2, len, -1);
+	if( offset < len){
+		printf(" -> NOK\n");
+		rdwr_tx_error( buf1, buf2, offset,  RDWR_SIZE_INT, 0);
+		retval = RDWR_ERR;
+	}
+	else{
+		printf(" -> OK\n");
+		retval = RDWR_OK;
+	}
 
 tsc_rdwr_cmp_err:
-  if( buf1) free(buf1);
-  if( buf2) free(buf2);
-  return( retval);
+	if( buf1) free(buf1);
+  	if( buf2) free(buf2);
+  	return( retval);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

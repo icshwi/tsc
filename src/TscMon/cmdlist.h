@@ -153,7 +153,7 @@ char *cmp_msg[] =
   "cmp <off1>.<sp1><idx1> <off2>.<sp2><idx2> <len>",
   "   where <off>     = address offset in hexadecimal",
   "         <sp><idx> = buffer space [s1,s2,u1,u2,k0->k7]",
-  "         <len>     = buffer size in bytes",
+  "         <len>     = buffer size in 4 bytes multiple",
 0};
 
 char *conf_msg[] = 
