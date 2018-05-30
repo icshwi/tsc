@@ -108,7 +108,7 @@ tsc_map_mas_set_sg( struct tsc_device *ifc,
   /* choose TOSCA Agent #1 PCIe_EP CSR area (when accessing Tosca in remote)
      in that case registers are between 0x400 - 0x7ff of CSR area */
   if (ifc->pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) {
-	  pcie_off = 0x400;
+	  pcie_off = TSC_CSR_A7_PCIE1_BASE;
   } else {
 	  pcie_off = 0;
   }
@@ -176,7 +176,7 @@ tsc_map_mas_clear_sg( struct tsc_device *ifc,
   /* choose TOSCA Agent #1 PCIe_EP CSR area (when accessing Tosca in remote)
      in that case registers are between 0x400 - 0x7ff of CSR area */
   if (ifc->pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) {
-	  pcie_off = 0x400;
+	  pcie_off = TSC_CSR_A7_PCIE1_BASE;
   } else {
 	  pcie_off = 0;
   }
