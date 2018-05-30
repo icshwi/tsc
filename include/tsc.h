@@ -43,6 +43,7 @@
 #define TSC_MAX_SEMAPHORE              8	 /* Max Semaphores                   */
 #define TSC_MAX_EVENT                 16	 /* Max Event Queues                 */
 #define TSC_IRQ_NUM                   64  /* number of interrupt sources         */
+#define TSC_AGENT_SW_NUM               6  /* number agent switches               */
 
 #define TSC_IRQ_CTL_ILOC                0  /*  ILOC controler IRQ base           */
 #define TSC_IRQ_CTL_IDMA               32  /*  IDMA controler IRQ base           */
@@ -147,6 +148,7 @@
 
 #define TSC_CSR_BASE                0x400
 #define TSC_CSR_SLOT1               0x400
+#define TSC_CSR_AGENT_SW_OFFSET     0x400
 #define TSC_CSR_MASCSR              0x404
 #define TSC_CSR_SLVCSR              0x408
 #define TSC_CSR_SLVCSR_A32          0x408
@@ -371,6 +373,13 @@ static const int TSC_CSR_IDMA2_DCNT[4] = { TSC_CSR_IDMA2_RD_0_DCNT, TSC_CSR_IDMA
 #define TSC_CSR_USER_ROM	            0xf80
 
 #define TSC_CSR_OFFSET_MAX	       0xfff
+
+#define TSC_CSR_ITC_OFFSET         0x0080
+
+#define TSC_CSR_ITC_IACK_OFFSET    0x0000
+#define TSC_CSR_ITC_CSR_OFFSET     0x0004
+#define TSC_CSR_ITC_IMC_OFFSET     0x0008
+#define TSC_CSR_ITC_IMS_OFFSET     0x000C
 
 /*
  *  SPI FLASH control bits (CSR + $010)

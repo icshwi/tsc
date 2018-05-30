@@ -172,9 +172,7 @@ tsc_dev_exit( struct tsc_device *ifc)
 int 
 tsc_irq_init( struct tsc_device *ifc)
 {
-  int retval;
-  int i;
-  int ena;
+  int retval, i, enable, agent_sw_offset;
 
   retval = 0;
   debugk(( KERN_NOTICE "tsc : Entering tsc_irq_init( %p)\n", ifc));
@@ -185,19 +183,16 @@ tsc_irq_init( struct tsc_device *ifc)
   {
     tsc_irq_unregister( ifc, i);
   }
-  /* initialize interrupt controllers */
-  /* mask all interrupt sources */
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_USER_ITC_IMS);
 
-  /* clear all pending interrupts and enable controller */
-  ena = TSC_ALL_ITC_CSR_CLEARIP | TSC_ALL_ITC_CSR_GLENA;
-  iowrite32( ena, ifc->csr_ptr + TSC_CSR_ILOC_ITC_CSR);
-  iowrite32( ena | TSC_ITC_CSR_AUTOIACK, ifc->csr_ptr + TSC_CSR_ITC_CSR);
-  iowrite32( ena, ifc->csr_ptr + TSC_CSR_IDMA_ITC_CSR);
-  iowrite32( ena, ifc->csr_ptr + TSC_CSR_USER_ITC_CSR);
+  /* initialize interrupt controllers */
+  enable = TSC_ALL_ITC_CSR_CLEARIP | TSC_ALL_ITC_CSR_GLENA;
+  for (i = 0; i < TSC_AGENT_SW_NUM; i++) {
+    agent_sw_offset = i * TSC_CSR_AGENT_SW_OFFSET;
+    /* mask all interrupt sources */
+    iowrite32(TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + agent_sw_offset + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_IMS_OFFSET);
+    /* clear all pending interrupts and enable controller */
+    iowrite32(enable, ifc->csr_ptr + agent_sw_offset + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_CSR_OFFSET);
+  }
 
   return( retval);
 }
@@ -215,22 +210,17 @@ tsc_irq_init( struct tsc_device *ifc)
 void 
 tsc_irq_exit( struct tsc_device *ifc)
 {
-  int dis;
+  int i, agent_sw_offset;
 
   debugk(( KERN_NOTICE "tsc : Entering tsc_irq_exit( %p)\n", ifc));
   /* disable interrupt controllers */
-  /* mask all interrupt sources */
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
-  iowrite32( TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + TSC_CSR_USER_ITC_IMS);
-
-  /* clear all pending interrupts and disable controller */
-  dis = TSC_ALL_ITC_CSR_CLEARIP;
-  iowrite32( dis, ifc->csr_ptr + TSC_CSR_ILOC_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + TSC_CSR_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + TSC_CSR_IDMA_ITC_CSR);
-  iowrite32( dis, ifc->csr_ptr + TSC_CSR_USER_ITC_CSR);
+  for (i = 0; i < TSC_AGENT_SW_NUM; i++) {
+    agent_sw_offset = i * TSC_CSR_AGENT_SW_OFFSET;
+    /* mask all interrupt sources */
+    iowrite32(TSC_ALL_ITC_MASK_ALL, ifc->csr_ptr + agent_sw_offset + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_IMS_OFFSET);
+    /* clear all pending interrupts */
+    iowrite32(TSC_ALL_ITC_CSR_CLEARIP, ifc->csr_ptr + agent_sw_offset + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_CSR_OFFSET);
+  }
 
   /* release data structures controlling interrupt handling */
   if( ifc->irq_tbl)
@@ -267,7 +257,7 @@ tsc_map_mas_init( struct tsc_device *ifc)
   /* choose TOSCA Agent #1 PCIe_EP CSR area (when accessing Tosca in remote)
      in that case registers are between 0x400 - 0x7ff of CSR area */
   if (ifc->pdev->device == PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2) {
-	  pcie_off = 0x400;
+	  pcie_off = TSC_CSR_A7_PCIE1_BASE;
   } else {
 	  pcie_off = 0;
   }
