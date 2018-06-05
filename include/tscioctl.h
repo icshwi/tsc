@@ -279,6 +279,7 @@ struct tsc_ioctl_rdwr
 #define TSC_IOCTL_DMA_ALLOC        (TSC_IOCTL_DMA | 0x5)
 #define TSC_IOCTL_DMA_FREE         (TSC_IOCTL_DMA | 0x6)
 #define TSC_IOCTL_DMA_MODE         (TSC_IOCTL_DMA | 0x7)
+#define TSC_IOCTL_DMA_TRANSFER     (TSC_IOCTL_DMA | 0x8)
 
 #define DMA_CHAN_NUM    4        /* number of DMA channels         */
 #define DMA_CHAN_0      0        /* DMA channel #0                 */
@@ -294,6 +295,7 @@ struct tsc_ioctl_dma_req
   unsigned char src_space; unsigned char src_mode; unsigned char des_space; unsigned char des_mode;
   unsigned char start_mode; unsigned char end_mode; unsigned char intr_mode; unsigned char wait_mode;
   uint dma_status;
+  uint fmc;
 };
 
 struct tsc_ioctl_dma_mode

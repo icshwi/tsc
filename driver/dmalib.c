@@ -253,6 +253,42 @@ tsc_dma_alloc( struct tsc_device *ifc,
   return( retval);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_free
+ * Prototype     : int
+ * Parameters    : pointer to dma control structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : free DMA channel
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+dma_free(struct dma_ctl *dma_ctl_p)
+{
+  int retval = 0;
+
+  /* protect against concurrent access to queue control structure */
+  mutex_lock(&dma_ctl_p->dma_lock);
+
+  if(dma_ctl_p->state == DMA_STS_IDLE)
+  {
+    goto dma_free_exit;
+  }
+  if((dma_ctl_p->state != DMA_STS_ALLOCATED) &&
+     (dma_ctl_p->state != DMA_STS_DONE))
+  {
+    retval = -EPERM;
+    goto dma_free_exit;
+  }
+  dma_ctl_p->state = DMA_STS_IDLE;
+
+dma_free_exit:
+  /* release locking semaphore */
+  mutex_unlock(&dma_ctl_p->dma_lock);
+
+  return retval;
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_free
@@ -265,58 +301,41 @@ tsc_dma_alloc( struct tsc_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_free( struct tsc_device *ifc,
-	      struct tsc_ioctl_dma *dma_p)
+tsc_dma_free(struct tsc_device *ifc,
+             struct tsc_ioctl_dma *dma_p)
 {
   struct dma_ctl *dma_ctl_p;
-  int retval;
+  int retval = 0;
 
-  retval = 0;
-  if( (dma_p->chan < 0) || (dma_p->chan >= DMA_CHAN_NUM))
+  if((dma_p->chan < 0) || (dma_p->chan >= DMA_CHAN_NUM))
   {
-    return( -EINVAL);
+    return -EINVAL;
   }
+
   dma_ctl_p = ifc->dma_ctl[(int)dma_p->chan];
-  if( dma_ctl_p->state == DMA_STS_IDLE)
-  {
-    goto dma_free_exit;
-  }
-  if( ( dma_ctl_p->state != DMA_STS_ALLOCATED) &&
-      ( dma_ctl_p->state != DMA_STS_DONE)          )
-  {
-    retval = -EPERM;
-    goto dma_free_exit;
-  }
-  dma_ctl_p->state = DMA_STS_IDLE;
-
-dma_free_exit:
+  retval = dma_free(dma_ctl_p);
   dma_p->state = (char)dma_ctl_p->state;
-  return( retval);
+  return retval;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_dma_clear
+ * Function name : dma_clear
  * Prototype     : int
- * Parameters    : pointer to tsc device control structure, dma structure
+ * Parameters    : pointer to dma control structure
  * Return        : error/success
  *----------------------------------------------------------------------------
- * Description   : clear dma channel
+ * Description   : clear DMA channel
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-tsc_dma_clear( struct tsc_device *ifc,
-	       struct tsc_ioctl_dma *dma_p)
+dma_clear(struct dma_ctl *dma_ctl_p)
 {
-  struct dma_ctl *dma_ctl_p;
-  int retval;
+  int retval = 0;
 
-  retval = 0;
-  if( (dma_p->chan < 0) || (dma_p->chan >= DMA_CHAN_NUM))
-  {
-    return( -EINVAL);
-  }
-  dma_ctl_p = ifc->dma_ctl[(int)dma_p->chan];
+  /* protect against concurrent access to queue control structure */
+  mutex_lock(&dma_ctl_p->dma_lock);
+
   if( ( dma_ctl_p->state != DMA_STS_STARTED) &&
       ( dma_ctl_p->state != DMA_STS_WAITING)          )
   {
@@ -354,8 +373,37 @@ tsc_dma_clear( struct tsc_device *ifc,
   dma_ctl_p->state = DMA_STS_ALLOCATED;
 
 dma_clear_exit:
+  /* release locking semaphore */
+  mutex_unlock(&dma_ctl_p->dma_lock);
+
+  return retval;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_clear
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure, dma structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : clear dma channel
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+tsc_dma_clear(struct tsc_device *ifc,
+              struct tsc_ioctl_dma *dma_p)
+{
+  struct dma_ctl *dma_ctl_p;
+  int retval = 0;
+
+  if((dma_p->chan < 0) || (dma_p->chan >= DMA_CHAN_NUM))
+  {
+    return -EINVAL;
+  }
+  dma_ctl_p = ifc->dma_ctl[(int)dma_p->chan];
+  retval = dma_clear(dma_ctl_p);
   dma_p->state = (char)dma_ctl_p->state;
-  return( retval);
+  return retval;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -703,7 +751,7 @@ tsc_dma_move( struct tsc_device *ifc,
 	      struct tsc_ioctl_dma_req *dr_p)
 {
   struct dma_ctl *dma_ctl_p;
-  int retval;
+  int retval = 0;
   int chan;
   int pipe;
   int rdo, wro;
@@ -718,7 +766,6 @@ tsc_dma_move( struct tsc_device *ifc,
 	  dr_p->src_addr, dr_p->src_space,
 	  dr_p->size, dr_p->des_mode, dr_p->src_mode));
 
-  retval = 0;
   chan =  DMA_START_CHAN_GET(dr_p->start_mode);
   if(chan == DMA_CHAN_0)
   {
@@ -975,4 +1022,130 @@ tsc_dma_mode( struct tsc_device *ifc,
   dm_p->rd_mode = dma_ctl_p->rd_mode;
 
   return( 0);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_get_channel
+ * Prototype     : int
+ * Parameters    : ifc structure, dma control structure, fmc
+ * Return        : error/channel
+ *----------------------------------------------------------------------------
+ * Description   : get dma channel
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+dma_get_channel(struct tsc_device *ifc,
+                int fmc)
+{
+  struct dma_ctl *dma_ctl_p = NULL;
+  int channel = 0;
+
+  switch(fmc)
+  {
+    case 1:
+      /* Try channel 0 */
+      dma_ctl_p = ifc->dma_ctl[channel];
+      if (dma_alloc(dma_ctl_p) == 0)
+        break;
+      /* Try channel 1 */
+      channel++;
+      dma_ctl_p = ifc->dma_ctl[channel];
+      if (dma_alloc(dma_ctl_p) == 0)
+        break;
+      debugk(("FMC1 DMA channels are busy!\n"));
+      return -EBUSY;
+    case 2:
+      /* Try channel 2 */
+      channel = 2;
+      dma_ctl_p = ifc->dma_ctl[channel];
+      if (dma_alloc(dma_ctl_p) == 0)
+        break;
+      /* Try channel 3 */
+      channel++;
+      dma_ctl_p = ifc->dma_ctl[channel];
+      if (dma_alloc(dma_ctl_p) == 0)
+        break;
+      debugk(("FMC2 DMA channels are busy!\n"));
+      return -EBUSY;
+  }
+  return channel;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : dma_get_valid_status
+ * Prototype     : int
+ * Parameters    : channel
+ * Return        : valid status
+ *----------------------------------------------------------------------------
+ * Description   : get valid status
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+dma_get_valid_status(int channel)
+{
+  int valid_status = 0;
+
+  switch(channel)
+  {
+    case DMA_CHAN_0:
+      valid_status = (0x2 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD0 | DMA_STATUS_RUN_WR0;
+      break;
+    case DMA_CHAN_1:
+      valid_status = (0x2 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD1 | DMA_STATUS_RUN_WR1;
+      break;
+    case DMA_CHAN_2:
+      valid_status = (0x3 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD0 | DMA_STATUS_RUN_WR0;
+      break;
+    case DMA_CHAN_3:
+      valid_status = (0x3 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD1 | DMA_STATUS_RUN_WR1;
+      break;
+  }
+  return valid_status;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_transfer
+ * Prototype     : int
+ * Parameters    : ifc structure, dma request structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : do dma transfer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+tsc_dma_transfer(struct tsc_device *ifc,
+          struct tsc_ioctl_dma_req *dr_p)
+{
+  struct dma_ctl *dma_ctl_p = NULL;
+  int channel = 0;
+  int retval = 0;
+
+  if(dr_p == NULL)
+    return -EINVAL;
+
+  if(dr_p->fmc < 1 || dr_p->fmc > 2)
+    return -EINVAL;
+
+  channel = dma_get_channel(ifc, dr_p->fmc);
+  if(channel < 0)
+    return channel;
+  else
+    dma_ctl_p = ifc->dma_ctl[channel];
+
+  dr_p->start_mode = DMA_START_CHAN(channel);
+  if(!(dr_p->wait_mode & DMA_WAIT_INTR))
+    dr_p->wait_mode  = DMA_WAIT_INTR | DMA_WAIT_10MS | (5 << 4); // Timeout after 50 ms
+
+  retval = tsc_dma_move(ifc, dr_p);
+  if((retval == 0) && (dr_p->dma_status == dma_get_valid_status(channel)))
+    retval = dma_free(dma_ctl_p);
+  else
+  {
+    retval = dma_clear(dma_ctl_p);
+    retval |= dma_free(dma_ctl_p);
+  }
+  return retval;
 }

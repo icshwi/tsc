@@ -102,6 +102,7 @@ int  tsc_dma_mode(struct tsc_device *ifc, struct tsc_ioctl_dma_mode *dma_mode_p)
 int  tsc_dma_alloc(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
 int  tsc_dma_free(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
 int  tsc_dma_clear(struct tsc_device *ifc, struct tsc_ioctl_dma *dma_p);
+int  tsc_dma_transfer(struct tsc_device *ifc, struct tsc_ioctl_dma_req *dma_req_p);
 
 #endif /*  _H_DMALIB */
 

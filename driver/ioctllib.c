@@ -259,10 +259,10 @@ ioctl_rdwr( struct tsc_device *ifc,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 ioctl_dma( struct tsc_device *ifc,
-	   unsigned int cmd,
-	   unsigned long arg)
+           unsigned int cmd,
+           unsigned long arg)
 {
   int retval;
 
@@ -270,21 +270,23 @@ ioctl_dma( struct tsc_device *ifc,
   switch ( cmd)
   {
     case TSC_IOCTL_DMA_MOVE:
+    case TSC_IOCTL_DMA_TRANSFER:
     {
       struct tsc_ioctl_dma_req dma_req;
 
-      if( copy_from_user(&dma_req, (void *)arg, sizeof(dma_req)))
+      if(copy_from_user(&dma_req, (void *)arg, sizeof(dma_req)))
       {
-	return( -EFAULT);
+        return -EFAULT;
       }
-      retval = tsc_dma_move( ifc, &dma_req);
-      if( retval < 0)
+      if(cmd == TSC_IOCTL_DMA_TRANSFER) retval = tsc_dma_transfer(ifc, &dma_req);
+      else if(cmd == TSC_IOCTL_DMA_MOVE) retval = tsc_dma_move(ifc, &dma_req);
+      if(retval < 0)
       {
-	return( retval);
+        return retval;
       }
-      if( copy_to_user( (void *)arg, &dma_req, sizeof( dma_req)))
+      if(copy_to_user((void *)arg, &dma_req, sizeof(dma_req)))
       {
-	return -EFAULT;
+        return -EFAULT;
       }
       break;
     }
@@ -294,16 +296,16 @@ ioctl_dma( struct tsc_device *ifc,
 
       if( copy_from_user(&dma_req, (void *)arg, sizeof(dma_req)))
       {
-	return( -EFAULT);
+        return( -EFAULT);
       }
       retval = tsc_dma_wait( ifc, &dma_req);
       if( retval < 0)
       {
-	return( retval);
+        return( retval);
       }
       if( copy_to_user( (void *)arg, &dma_req, sizeof( dma_req)))
       {
-	return -EFAULT;
+        return -EFAULT;
       }
       break;
     }
@@ -313,16 +315,16 @@ ioctl_dma( struct tsc_device *ifc,
 
       if( copy_from_user(&dma_sts, (void *)arg, sizeof(dma_sts)))
       {
-	return( -EFAULT);
+        return( -EFAULT);
       }
       retval = tsc_dma_status( ifc, &dma_sts);
       if( retval < 0)
       {
-	return( retval);
+        return( retval);
       }
       if( copy_to_user( (void *)arg, &dma_sts, sizeof( dma_sts)))
       {
-	return -EFAULT;
+        return -EFAULT;
       }
       break;
     }
@@ -332,16 +334,16 @@ ioctl_dma( struct tsc_device *ifc,
 
       if( copy_from_user( &dma_mode, (void *)arg, sizeof(dma_mode)))
       {
-	return( -EFAULT);
+        return( -EFAULT);
       }
       retval = tsc_dma_mode( ifc, &dma_mode);
       if( retval < 0)
       {
-	return( retval);
+        return( retval);
       }
       if( copy_to_user( (void *)arg, &dma_mode, sizeof( dma_mode)))
       {
-	return -EFAULT;
+        return -EFAULT;
       }
       break;
     }
@@ -353,7 +355,7 @@ ioctl_dma( struct tsc_device *ifc,
 
       if( copy_from_user(&dma, (void *)arg, sizeof(dma)))
       {
-	return( -EFAULT);
+        return( -EFAULT);
       }
       if( cmd == TSC_IOCTL_DMA_ALLOC) retval = tsc_dma_alloc( ifc, &dma);
       else if( cmd == TSC_IOCTL_DMA_FREE) retval = tsc_dma_free( ifc, &dma);
@@ -361,11 +363,11 @@ ioctl_dma( struct tsc_device *ifc,
       else retval = -EINVAL;
       if( retval < 0)
       {
-	return( retval);
+        return( retval);
       }
       if( copy_to_user( (void *)arg, &dma, sizeof( dma)))
       {
-	return -EFAULT;
+        return -EFAULT;
       }
       break;
     }

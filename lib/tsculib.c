@@ -1297,6 +1297,23 @@ tsc_dma_clear(int fd, int chan)
 } 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_dma_transfer
+ * Prototype     : int
+ * Parameters    : pointer to dma  request data structure
+ * Return        : status of DMA operation
+ *----------------------------------------------------------------------------
+ * Description   : perform a DMA transfer
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+tsc_dma_transfer(int fd, struct tsc_ioctl_dma_req *dr_p)
+{
+  if(fd < 0) return(-EBADF);
+  return(ioctl(fd, TSC_IOCTL_DMA_TRANSFER, dr_p));
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_sflash_rdid
  * Prototype     : int
  * Parameters    : pointer to 4 byte string to hold sflash id

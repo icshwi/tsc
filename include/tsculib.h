@@ -81,6 +81,7 @@ int tsc_dma_mode(int fd, struct tsc_ioctl_dma_mode *dm_p);
 int tsc_dma_alloc(int fd, int chan);
 int tsc_dma_free(int fd, int chan);
 int tsc_dma_clear(int fd, int chan);
+int tsc_dma_transfer(int fd, struct tsc_ioctl_dma_req *dr_p);
 int tsc_sflash_rdid(int fd, char *id);
 int tsc_sflash_rdsr(int fd, char *sr);
 int tsc_sflash_wrsr(int fd, char *sr);
