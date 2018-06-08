@@ -74,7 +74,7 @@ tsc_dma_irq( struct  tsc_device *ifc,
   int idx;
 
   dma_ctl_p = (struct dma_ctl *)arg;
-  dma_ctl_p->state = DMA_STS_DONE;
+  dma_ctl_p->state = DMA_STATE_DONE;
   dma_ctl_p->status |= DMA_STATUS_DONE | (src << 16);
   idx = TSC_ALL_ITC_IACK_SRC(src);
   if( (idx == ITC_SRC_DMA_RD0_ERR) ||
@@ -109,7 +109,7 @@ tsc_dma2_irq( struct  tsc_device *ifc,
   int idx;
 
   dma_ctl_p = (struct dma_ctl *)arg;
-  dma_ctl_p->state = DMA_STS_DONE;
+  dma_ctl_p->state = DMA_STATE_DONE;
   dma_ctl_p->status |= DMA_STATUS_DONE | (src << 16);
   idx = TSC_ALL_ITC_IACK_SRC(src);
   if( (idx == ITC_SRC_DMA2_RD0_ERR) ||
@@ -188,7 +188,7 @@ dma_init( struct dma_ctl *dma_ctl_p)
   dma_ctl_p->rd_mode  = 0;
   mutex_init( &dma_ctl_p->dma_lock);
   sema_init( &dma_ctl_p->sem, 0);
-  dma_ctl_p->state = DMA_STS_IDLE;
+  dma_ctl_p->state = DMA_STATE_IDLE;
 
   return(0);
 }
@@ -212,12 +212,12 @@ dma_alloc( struct dma_ctl *dma_ctl_p)
   /* protect against concurrent access to queue control structure */
   mutex_lock( &dma_ctl_p->dma_lock);
 
-  if(dma_ctl_p->state != DMA_STS_IDLE)
+  if(dma_ctl_p->state != DMA_STATE_IDLE)
   {
     retval = -EBUSY;
     goto dma_alloc_exit;
   }
-  dma_ctl_p->state = DMA_STS_ALLOCATED;
+  dma_ctl_p->state = DMA_STATE_ALLOCATED;
 
 dma_alloc_exit:
    /* release locking semaphore */
@@ -271,17 +271,17 @@ dma_free(struct dma_ctl *dma_ctl_p)
   /* protect against concurrent access to queue control structure */
   mutex_lock(&dma_ctl_p->dma_lock);
 
-  if(dma_ctl_p->state == DMA_STS_IDLE)
+  if(dma_ctl_p->state == DMA_STATE_IDLE)
   {
     goto dma_free_exit;
   }
-  if((dma_ctl_p->state != DMA_STS_ALLOCATED) &&
-     (dma_ctl_p->state != DMA_STS_DONE))
+  if((dma_ctl_p->state != DMA_STATE_ALLOCATED) &&
+     (dma_ctl_p->state != DMA_STATE_DONE))
   {
     retval = -EPERM;
     goto dma_free_exit;
   }
-  dma_ctl_p->state = DMA_STS_IDLE;
+  dma_ctl_p->state = DMA_STATE_IDLE;
 
 dma_free_exit:
   /* release locking semaphore */
@@ -336,8 +336,8 @@ dma_clear(struct dma_ctl *dma_ctl_p)
   /* protect against concurrent access to queue control structure */
   mutex_lock(&dma_ctl_p->dma_lock);
 
-  if( ( dma_ctl_p->state != DMA_STS_STARTED) &&
-      ( dma_ctl_p->state != DMA_STS_WAITING)          )
+  if( ( dma_ctl_p->state != DMA_STATE_STARTED) &&
+      ( dma_ctl_p->state != DMA_STATE_WAITING)          )
   {
     retval = -EPERM;
     goto dma_clear_exit;
@@ -370,7 +370,7 @@ dma_clear(struct dma_ctl *dma_ctl_p)
     iowrite32( TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_RD_1_CSR);
     iowrite32( TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_WR_1_CSR);
   }
-  dma_ctl_p->state = DMA_STS_ALLOCATED;
+  dma_ctl_p->state = DMA_STATE_ALLOCATED;
 
 dma_clear_exit:
   /* release locking semaphore */
@@ -424,9 +424,9 @@ dma_wait( struct dma_ctl *dma_ctl_p,
   int retval;
 
   debugk(("in tsc_dma_wait() : mode = %x\n", mode));
-  if( dma_ctl_p->state != DMA_STS_STARTED)
+  if( dma_ctl_p->state != DMA_STATE_STARTED)
   {
-    if( dma_ctl_p->state == DMA_STS_DONE)
+    if( dma_ctl_p->state == DMA_STATE_DONE)
     {
       dma_ctl_p->status |= DMA_STATUS_ENDED;
       return( 0);
@@ -434,7 +434,7 @@ dma_wait( struct dma_ctl *dma_ctl_p,
     debugk(("tsc_dma_wait() : Bad state  %d\n", dma_ctl_p->state));
     return( -EPERM);
   }
-  dma_ctl_p->state = DMA_STS_WAITING;
+  dma_ctl_p->state = DMA_STATE_WAITING;
   tmo = ( mode & 0xf0) >> 4;
   if( tmo)
   {
@@ -460,13 +460,13 @@ dma_wait( struct dma_ctl *dma_ctl_p,
   if( retval)
   {
     debugk(("DMA wait timeout\n"));
-    dma_ctl_p->state = DMA_STS_STARTED;
+    dma_ctl_p->state = DMA_STATE_STARTED;
     dma_ctl_p->status |= DMA_STATUS_TMO;
   }
   else 
   {
     debugk(("DMA IRQ received -> %x [%x]\n", dma_ctl_p->status, dma_ctl_p->state));
-    dma_ctl_p->state = DMA_STS_DONE;
+    dma_ctl_p->state = DMA_STATE_DONE;
     dma_ctl_p->status |= DMA_STATUS_ENDED;
   }
   return(0);
@@ -805,8 +805,8 @@ tsc_dma_move( struct tsc_device *ifc,
     space_shm = DMA_SPACE_SHM2;
   }
   dma_ctl_p = ifc->dma_ctl[chan];
-  if( ( dma_ctl_p->state != DMA_STS_ALLOCATED) &&
-      ( dma_ctl_p->state != DMA_STS_DONE)          )
+  if( ( dma_ctl_p->state != DMA_STATE_ALLOCATED) &&
+      ( dma_ctl_p->state != DMA_STATE_DONE)          )
   {
     return( -EPERM);
   }
@@ -887,7 +887,7 @@ tsc_dma_move( struct tsc_device *ifc,
     iowrite32( ctl, ifc->csr_ptr + csr_wro - 4);
     iowrite32( wro, ifc->csr_ptr + csr_wro);
   }
-  dma_ctl_p->state = DMA_STS_STARTED;
+  dma_ctl_p->state = DMA_STATE_STARTED;
   if( dr_p->wait_mode & DMA_WAIT_INTR)
   {
     retval = dma_wait( dma_ctl_p, dr_p->wait_mode);
