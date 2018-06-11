@@ -1884,7 +1884,7 @@ tsc_i2c_write(int fd, uint dev,
 	       uint reg,
 	       uint data)
 {
-  if(dev & 0xe0000000)
+  if(dev & 0x80000000)
   {
     struct tsc_ioctl_i2c i2c;
 
