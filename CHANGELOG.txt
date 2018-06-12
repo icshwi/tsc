@@ -4,6 +4,10 @@
 * Changelog file                         *
 ******************************************
 
+*** Release 1.4.7 | 12.06.2018 ***
+
+- Minor buug correction
+
 *** Release 1.4.6 | 28.03.2018 ***
 
 - Cosmetic and bug correction on RSP1461 command
