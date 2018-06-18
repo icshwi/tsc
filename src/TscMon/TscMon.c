@@ -646,6 +646,9 @@ int main(int argc, char *argv[]){
 		else if (data == 0x73571410){
 			printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
 		}
+		else if (data == 0x73571411){
+			printf("     |  Driver IFC1411 Version %s             |\n", tsc_get_drv_version());
+		}
 		printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
 		printf("     +------------------------------------------+\n");
 	}
