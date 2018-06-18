@@ -1019,12 +1019,13 @@ tsc_adc3117( struct cli_cmd_para *c)
     }
     if( fmc == 2)
     {
-      device |= 0xa0000000;
+      //device |= 0xa0000000;
+    	device |= 0x1;
     }
-    else
-    {
-      device |= 0x80000000;
-    }
+    //else
+    //{
+    //  device |= 0x80000000;
+    //}
     status = tsc_i2c_read( device, 1, &ctl);
     if( (status & I2C_CTL_EXEC_MASK) == I2C_CTL_EXEC_ERR)
     {
