@@ -72,55 +72,40 @@ tsc_dma_irq( struct  tsc_device *ifc,
 {
   struct dma_ctl *dma_ctl_p;
   int idx;
+  int base;
 
   dma_ctl_p = (struct dma_ctl *)arg;
   dma_ctl_p->state = DMA_STATE_DONE;
   dma_ctl_p->status |= DMA_STATUS_DONE | (src << 16);
   idx = TSC_ALL_ITC_IACK_SRC(src);
-  if( (idx == ITC_SRC_DMA_RD0_ERR) ||
-      (idx == ITC_SRC_DMA_WR0_ERR) ||
-      (idx == ITC_SRC_DMA_RD1_ERR) ||
-      (idx == ITC_SRC_DMA_WR1_ERR)    )
+  base = TSC_ITC_IACK_BASE(src);
+
+  switch (dma_ctl_p->chan)
   {
-    dma_ctl_p->status |= DMA_STATUS_ERR;
+    case DMA_CHAN_0:
+    case DMA_CHAN_1:
+      if ((idx == ITC_SRC_DMA_RD0_ERR) ||
+          (idx == ITC_SRC_DMA_WR0_ERR) ||
+          (idx == ITC_SRC_DMA_RD1_ERR) ||
+          (idx == ITC_SRC_DMA_WR1_ERR))
+      {
+        dma_ctl_p->status |= DMA_STATUS_ERR;
+      }
+      break;
+    case DMA_CHAN_2:
+    case DMA_CHAN_3:
+      if ((idx == ITC_SRC_DMA2_RD0_ERR) ||
+          (idx == ITC_SRC_DMA2_WR0_ERR) ||
+          (idx == ITC_SRC_DMA2_RD1_ERR) ||
+          (idx == ITC_SRC_DMA2_WR1_ERR))
+      {
+        dma_ctl_p->status |= DMA_STATUS_ERR;
+      }
+      break;
   }
+
   debugk(("DMA #%d IRQ masking -> %08x [%x]\n", dma_ctl_p->chan, dma_ctl_p->irq, dma_ctl_p->status));
-  iowrite32( dma_ctl_p->irq, ifc->csr_ptr + TSC_CSR_IDMA_ITC_IMS);
-  up( &dma_ctl_p->sem);
-  return;
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : tsc_dma2_irq
- * Prototype     : void
- * Parameters    : pointer to tsc device control structure, source, argument
- * Return        : void
- *----------------------------------------------------------------------------
- * Description   : dma interrupt handler
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-void
-tsc_dma2_irq( struct  tsc_device *ifc,
-	      int src,
-	      void *arg)
-{
-  struct dma_ctl *dma_ctl_p;
-  int idx;
-
-  dma_ctl_p = (struct dma_ctl *)arg;
-  dma_ctl_p->state = DMA_STATE_DONE;
-  dma_ctl_p->status |= DMA_STATUS_DONE | (src << 16);
-  idx = TSC_ALL_ITC_IACK_SRC(src);
-  if( (idx == ITC_SRC_DMA2_RD0_ERR) ||
-      (idx == ITC_SRC_DMA2_WR0_ERR) ||
-      (idx == ITC_SRC_DMA2_RD1_ERR) ||
-      (idx == ITC_SRC_DMA2_WR1_ERR)    )
-  {
-    dma_ctl_p->status |= DMA_STATUS_ERR;
-  }
-  debugk(("DMA #%d IRQ masking -> %08x [%x]\n", dma_ctl_p->chan, dma_ctl_p->irq, dma_ctl_p->status));
-  iowrite32( dma_ctl_p->irq, ifc->csr_ptr + TSC_CSR_IDMA2_ITC_IMS);
+  iowrite32( dma_ctl_p->irq, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IMS);
   up( &dma_ctl_p->sem);
   return;
 }
@@ -144,10 +129,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD0_END | TSC_IDMA_ITC_IM_RD0_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR0_END | TSC_IDMA_ITC_IM_WR0_ERR;
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA_RD0_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA_RD0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA_WR0_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA_WR0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_RD0_END, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_RD0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_WR0_END, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_WR0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA_RD_0_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA_WR_0_CSR);
   }
@@ -166,10 +151,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD0_END | TSC_IDMA_ITC_IM_RD0_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR0_END | TSC_IDMA_ITC_IM_WR0_ERR;
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_END, tsc_dma2_irq, (void *)dma_ctl_p);
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_END, tsc_dma2_irq, (void *)dma_ctl_p);
-    tsc_irq_register( dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_END, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_END, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_RD_0_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_WR_0_CSR);
   }
@@ -177,10 +162,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD1_END | TSC_IDMA_ITC_IM_RD1_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR1_END | TSC_IDMA_ITC_IM_WR1_ERR;
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_END, tsc_dma2_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_END, tsc_dma2_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_ERR, tsc_dma2_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_END, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_END, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_ERR, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_RD_1_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_WR_1_CSR);
   }

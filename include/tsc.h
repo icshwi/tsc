@@ -566,9 +566,10 @@ static const int TSC_PCIE_MMUDAT_AM[0x40] = {
 #define TSC_ALL_ITC_CSR_CLEARIP         (1<<1)   /* Clear all pending interrupts       */
 #define TSC_ITC_CSR_AUTOIACK       (1<<2)   /* Enable auto IACK mechanism     */
 
-#define TSC_ITC_IACK_VEC(iack)            (iack&0xff)  /* extract vector from iack       */
-#define TSC_ALL_ITC_IACK_SRC(iack)         ((iack>>8)&0x3f)  /* extract source from iack      */
-#define TSC_ALL_ITC_IACK_CTL(iack)       ((iack>>12)&0x3)  /* extract controller from iack  */
+#define TSC_ITC_IACK_VEC(iack)            (iack&0xff)        /* extract vector from iack */
+#define TSC_ITC_IACK_BASE(iack)           ((iack>>2)&0x1c00) /* extract ITC base from iack */
+#define TSC_ALL_ITC_IACK_SRC(iack)        ((iack>>8)&0x3f)   /* extract source from iack */
+#define TSC_ALL_ITC_IACK_CTL(iack)        ((iack>>12)&0x3)   /* extract controller from iack */
 
 /*
  *  Interrupt Controller Mask Set/Clear(CSR + $84/$484/$884/$c84)

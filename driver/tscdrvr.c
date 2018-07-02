@@ -103,7 +103,7 @@ irqreturn_t tsc_irq(int irq, void *arg){
 	/* get interrupt source */
 	src  = ip & 0x7fff;
 	idx  = src >> 8;
-	base = ((ip >> 2) & 0x1c00);
+	base = TSC_ITC_IACK_BASE(src);
 	ip   = 1 << ((ip >> 8) & 0xf);
 
 	/* mask interrupt source */
