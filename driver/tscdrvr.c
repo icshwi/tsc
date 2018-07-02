@@ -88,37 +88,37 @@ static struct class *bridge_sysfs_class_central; /* Sysfs class */
  *
  *----------------------------------------------------------------------------*/
 
-irqreturn_t tsc_irq( int irq, void *arg){
+irqreturn_t tsc_irq(int irq, void *arg){
 	struct tsc_device *ifc;
 	register uint ip;
 	register uint base;
 	register uint src, idx;
 
 	ifc = (struct tsc_device *)arg;
-	debugk(( KERN_ALERT "tsc: entering tsc_irq( %x, %p)\n", irq, arg));
+	debugk((KERN_ALERT "tsc: entering tsc_irq( %x, %p)\n", irq, arg));
 
 	/* generate IACK cycle */
-	ip = ioread32(  ifc->csr_ptr + TSC_CSR_ILOC_ITC_IACK);
+	ip = ioread32(ifc->csr_ptr + TSC_CSR_ILOC_ITC_IACK);
 
 	/* get interrupt source */
 	src  = ip & 0x7fff;
 	idx  = src >> 8;
-	base = (( ip >> 2) & 0xc00);
-	ip   = 1 << ((ip>>8)&0xf);
+	base = ((ip >> 2) & 0x1c00);
+	ip   = 1 << ((ip >> 8) & 0xf);
 
 	/* mask interrupt source */
-	iowrite32( ip, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IMS);
+	iowrite32(ip, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IMS);
 
 	/* increment interrupt counter */
 	ifc->irq_tbl[idx].cnt += 1;
 
 	/* activates tasklet handling interrupts */
-	ifc->irq_tbl[idx].func( ifc, src, ifc->irq_tbl[idx].arg);
+	ifc->irq_tbl[idx].func(ifc, src, ifc->irq_tbl[idx].arg);
 
 	/* clear IP and restart interrupt scanning */
-	iowrite32( ip<<16, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IACK);
+	iowrite32(ip<<16, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IACK);
 
-	return( IRQ_HANDLED);
+	return IRQ_HANDLED;
 }
 
 /*----------------------------------------------------------------------------
