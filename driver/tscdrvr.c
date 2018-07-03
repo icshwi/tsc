@@ -90,7 +90,7 @@ static struct class *bridge_sysfs_class_central; /* Sysfs class */
 
 irqreturn_t tsc_irq(int irq, void *arg){
 	struct tsc_device *ifc;
-	register uint ip;
+	register uint ip, itc;
 	register uint base;
 	register uint src, idx;
 
@@ -102,7 +102,8 @@ irqreturn_t tsc_irq(int irq, void *arg){
 
 	/* get interrupt source */
 	src  = ip & 0x7fff;
-	idx  = src >> 8;
+	itc = TSC_ALL_ITC_IACK_ITC(src);
+	idx  = TSC_ALL_ITC_IACK_IP(src);
 	base = TSC_ITC_IACK_BASE(src);
 	ip   = 1 << ((ip >> 8) & 0xf);
 
@@ -110,10 +111,10 @@ irqreturn_t tsc_irq(int irq, void *arg){
 	iowrite32(ip, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IMS);
 
 	/* increment interrupt counter */
-	ifc->irq_tbl[idx].cnt += 1;
+	ifc->irq_tbl[itc][idx].cnt += 1;
 
 	/* activates tasklet handling interrupts */
-	ifc->irq_tbl[idx].func(ifc, src, ifc->irq_tbl[idx].arg);
+	ifc->irq_tbl[itc][idx].func(ifc, src, ifc->irq_tbl[itc][idx].arg);
 
 	/* clear IP and restart interrupt scanning */
 	iowrite32(ip<<16, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IACK);

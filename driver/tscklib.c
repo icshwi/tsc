@@ -172,16 +172,17 @@ tsc_dev_exit( struct tsc_device *ifc)
 int 
 tsc_irq_init( struct tsc_device *ifc)
 {
-  int retval, i, enable, agent_sw_offset;
+  int retval, i, ip, itc, enable, agent_sw_offset;
 
   retval = 0;
   debugk(( KERN_NOTICE "tsc : Entering tsc_irq_init( %p)\n", ifc));
 
   /* install default interrupt handlers */
-  ifc->irq_tbl = (struct tsc_irq_handler *)kmalloc( TSC_IRQ_NUM * sizeof(struct tsc_irq_handler), GFP_KERNEL);
-  for( i = 0; i < TSC_IRQ_NUM; i++)
+  for (itc = 0; itc < TSC_AGENT_SW_NUM; itc++)
   {
-    tsc_irq_unregister( ifc, i);
+    ifc->irq_tbl[itc] = (struct tsc_irq_handler *)kmalloc(8 * sizeof(struct tsc_irq_handler), GFP_KERNEL);
+    for (ip = 0; ip < 8; ip++)
+      tsc_irq_unregister( ifc, itc, ip);
   }
 
   /* initialize interrupt controllers */
@@ -223,9 +224,8 @@ tsc_irq_exit( struct tsc_device *ifc)
   }
 
   /* release data structures controlling interrupt handling */
-  if( ifc->irq_tbl)
-  {
-    kfree( ifc->irq_tbl);
+  for (i = 0; i < TSC_AGENT_SW_NUM; i++) {
+    kfree(ifc->irq_tbl[i]);
   }
   return;
 }
@@ -749,8 +749,8 @@ tsc_i2c_init( struct tsc_device *ifc)
   /* initialize I2C control structure */
   mutex_init( &ifc->i2c_ctl->i2c_lock);
   sema_init( &ifc->i2c_ctl->sem, 0);
-  tsc_irq_register( ifc, ITC_SRC_I2C_OK, tsc_i2c_irq, (void *)ifc->i2c_ctl);
-  tsc_irq_register( ifc, ITC_SRC_I2C_ERR, tsc_i2c_irq, (void *)ifc->i2c_ctl);
+  //tsc_irq_register( ifc, ITC_SRC_I2C_OK, tsc_i2c_irq, (void *)ifc->i2c_ctl);
+  //tsc_irq_register( ifc, ITC_SRC_I2C_ERR, tsc_i2c_irq, (void *)ifc->i2c_ctl);
 
   return( 0);
 }
@@ -770,8 +770,8 @@ tsc_i2c_exit( struct tsc_device *ifc)
 {
   if( ifc->i2c_ctl)
   {
-    tsc_irq_unregister( ifc, ITC_SRC_I2C_OK);
-    tsc_irq_unregister( ifc, ITC_SRC_I2C_ERR);
+    //tsc_irq_unregister( ifc, ITC_SRC_I2C_OK);
+    //tsc_irq_unregister( ifc, ITC_SRC_I2C_ERR);
     mutex_destroy( &ifc->i2c_ctl->i2c_lock);
     kfree( ifc->i2c_ctl);
   }

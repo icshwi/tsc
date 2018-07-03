@@ -59,25 +59,25 @@
  * Return        : error/success
  *----------------------------------------------------------------------------
  * Description   : register interrupt handler <func> associated to interrupt
- *                 source identifier <src>. Pointer <arg> is passed as argument
- *                 when <func> is executed on occurence of interrupt <src>
+ *                 source identifier <itc><ip>. Pointer <arg> is passed as argument
+ *                 when <func> is executed on occurence of interrupt <itc><ip>
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
 tsc_irq_register( struct tsc_device *ifc,
-		  int src,
+		  int itc, int ip,
 		  void (* func)( struct tsc_device*, int, void *),
 		  void *arg)
 {
-  if( ifc->irq_tbl[src].busy)
+  if( ifc->irq_tbl[itc][ip].busy)
   {
     return( -EBUSY);
   }
-  ifc->irq_tbl[src].func = func;
-  ifc->irq_tbl[src].arg = arg;
-  ifc->irq_tbl[src].cnt = 0;
-  ifc->irq_tbl[src].busy = 1;
+  ifc->irq_tbl[itc][ip].func = func;
+  ifc->irq_tbl[itc][ip].arg = arg;
+  ifc->irq_tbl[itc][ip].cnt = 0;
+  ifc->irq_tbl[itc][ip].busy = 1;
 
   return( 0);
 }
@@ -117,9 +117,9 @@ tsc_irq_spurious( struct tsc_device *p,
 
 int 
 tsc_irq_check_busy( struct tsc_device *ifc,
-		    int src)
+		    int itc, int ip)
 {
-  return( ifc->irq_tbl[src].busy);
+  return( ifc->irq_tbl[itc][ip].busy);
 }
 EXPORT_SYMBOL( tsc_irq_check_busy);
 
@@ -130,19 +130,19 @@ EXPORT_SYMBOL( tsc_irq_check_busy);
  *                 interrupt source identifier
  * Return        : void
  *----------------------------------------------------------------------------
- * Description   : unregister interrupt handler >func> associated to interrupt
- *                 source identifier <src>. 
+ * Description   : unregister interrupt handler <func> associated to interrupt
+ *                 source identifier <itc><ip>.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
 tsc_irq_unregister( struct tsc_device *ifc,
-		    int src)
+		    int itc, int ip)
 {
-  ifc->irq_tbl[src].func = tsc_irq_spurious;
-  ifc->irq_tbl[src].arg = NULL;
-  ifc->irq_tbl[src].cnt = 0;
-  ifc->irq_tbl[src].busy = 0;
+  ifc->irq_tbl[itc][ip].func = tsc_irq_spurious;
+  ifc->irq_tbl[itc][ip].arg = NULL;
+  ifc->irq_tbl[itc][ip].cnt = 0;
+  ifc->irq_tbl[itc][ip].busy = 0;
 }
 EXPORT_SYMBOL( tsc_irq_unregister);
 

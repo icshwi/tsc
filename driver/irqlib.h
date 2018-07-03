@@ -48,9 +48,9 @@
 #ifndef _H_IRQLIB
 #define _H_IRQLIB
 
-int tsc_irq_register( struct tsc_device *ifc, int src, void (* func)( struct tsc_device *, int, void *), void *arg);
-void tsc_irq_unregister( struct tsc_device *ifc, int src);
-int tsc_irq_check_busy( struct tsc_device *ifc, int src);
+int tsc_irq_register( struct tsc_device *ifc, int itc, int ip, void (* func)( struct tsc_device *, int, void *), void *arg);
+void tsc_irq_unregister( struct tsc_device *ifc, int itc, int ip);
+int tsc_irq_check_busy( struct tsc_device *ifc, int itc, int ip);
 void tsc_irq_spurious( struct tsc_device *p, int src, void *arg);
 int tsc_irq_mask( struct tsc_device *ifc, int op, int src);
 

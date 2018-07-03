@@ -207,11 +207,11 @@ struct tsc_ioctl_map_win
 #define ITC_CTL_ILOC                  0
 #define ITC_CTL_DMA                   2
 #define ITC_CTL_USR                   3
-#define ITC_CTL(src)       ((src>>4)&3) /* interrupt control id from interrupt source id */
+#define ITC_CTL(src)       ((src>>4)&7) /* interrupt control id from interrupt source id */
 
 #define ITC_IACK_VEC(iack)              (iack&0xff)  /* extract vector from iack register        */
 #define ITC_IACK_SRC(iack)         ((iack>>8)&0x3f)  /* extract source id from iack register     */
-#define ITC_IACK_CTL(iack)        ((iack>>12)&0x3)   /* extract controller id from iack register */
+#define ITC_IACK_CTL(iack)        ((iack>>12)&0x7)   /* extract controller id from iack register */
 
 
 #define TSC_IOCTL_RDWR             0x00060000

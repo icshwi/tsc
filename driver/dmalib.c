@@ -129,10 +129,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD0_END | TSC_IDMA_ITC_IM_RD0_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR0_END | TSC_IDMA_ITC_IM_WR0_ERR;
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_RD0_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_RD0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_WR0_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_WR0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_RD0_END), ITC_SRC_DMA_RD0_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_RD0_ERR), ITC_SRC_DMA_RD0_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_WR0_END), ITC_SRC_DMA_WR0_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_WR0_ERR), ITC_SRC_DMA_WR0_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA_RD_0_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA_WR_0_CSR);
   }
@@ -140,10 +140,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD1_END | TSC_IDMA_ITC_IM_RD1_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR1_END | TSC_IDMA_ITC_IM_WR1_ERR;
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_RD1_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_RD1_ERR, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_WR1_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA_WR1_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_RD1_END), ITC_SRC_DMA_RD1_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_RD1_ERR), ITC_SRC_DMA_RD1_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_WR1_END), ITC_SRC_DMA_WR1_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA_WR1_ERR), ITC_SRC_DMA_WR1_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA_RD_1_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA_WR_1_CSR);
   }
@@ -151,10 +151,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD0_END | TSC_IDMA_ITC_IM_RD0_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR0_END | TSC_IDMA_ITC_IM_WR0_ERR;
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR0_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_RD0_END), ITC_SRC_DMA2_RD0_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_RD0_ERR), ITC_SRC_DMA2_RD0_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_WR0_END), ITC_SRC_DMA2_WR0_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_WR0_ERR), ITC_SRC_DMA2_WR0_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_RD_0_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_WR_0_CSR);
   }
@@ -162,10 +162,10 @@ dma_init( struct dma_ctl *dma_ctl_p)
   {
     dma_ctl_p->irq  = TSC_IDMA_ITC_IM_RD1_END | TSC_IDMA_ITC_IM_RD1_ERR;
     dma_ctl_p->irq |= TSC_IDMA_ITC_IM_WR1_END | TSC_IDMA_ITC_IM_WR1_ERR;
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_RD1_ERR, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_END, tsc_dma_irq, (void *)dma_ctl_p);
-    tsc_irq_register(dma_ctl_p->ifc, ITC_SRC_DMA2_WR1_ERR, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_RD1_END), ITC_SRC_DMA2_RD1_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_RD1_ERR), ITC_SRC_DMA2_RD1_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_WR1_END), ITC_SRC_DMA2_WR1_END & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
+    tsc_irq_register(dma_ctl_p->ifc, ITC_CTL(ITC_SRC_DMA2_WR1_ERR), ITC_SRC_DMA2_WR1_ERR & 0xf, tsc_dma_irq, (void *)dma_ctl_p);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_RD_1_CSR);
     iowrite32(TSC_IDMA_CSR_ENA, dma_ctl_p->ifc->csr_ptr + TSC_CSR_IDMA2_WR_1_CSR);
   }
