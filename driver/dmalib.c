@@ -1129,8 +1129,9 @@ tsc_dma_transfer(struct tsc_device *ifc,
     retval = dma_free(dma_ctl_p);
   else
   {
-    retval = dma_clear(dma_ctl_p);
-    retval |= dma_free(dma_ctl_p);
+    dma_clear(dma_ctl_p);
+    dma_free(dma_ctl_p);
+    retval = -EIO;
   }
   return retval;
 }
