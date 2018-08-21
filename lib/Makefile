@@ -32,15 +32,15 @@ all: libtsc.a
 tsculib.o:tsculib.c  ../include/tscioctl.h
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tsculib.c
 clilib.o:clilib.c 
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c clilib.c
+	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c clilib.c
 mtca4rtmlib.o:mtca4rtmlib.c 
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c mtca4rtmlib.c
+	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c mtca4rtmlib.c
 ponmboxlib.o:ponmboxlib.c 
 	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c ponmboxlib.c
 tscextlib.o:tscextlib.c 
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tscextlib.c
+	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c tscextlib.c
 tstlib.o:tstlib.c	
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tstlib.c
+	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c tstlib.c
 libtsc.a:tsculib.o clilib.o tscextlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
 	$(AR) r libtsc.a tsculib.o clilib.o tscextlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
 	$(RANLIB) libtsc.a

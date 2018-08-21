@@ -180,7 +180,6 @@ U121 I/O expander I/O assignation
  * Description   : manipulation of rsp1461
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-static int init_rsp = 0;
 
 int tsc_rsp1461(struct cli_cmd_para *c) {
 	char *p;
@@ -195,12 +194,10 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	int sfp_rx_rate   = 0;
 	int ext_id        = 0;
 	int ext_state     = 0;
-	int ext_pin_state = 0;
 	int present       = 1;	// Init to "absent"
 	int data          = 0;
 	int direction     = 0;
 	rsp1461_led_t           led;
-	rsp1461_sfp_control_t   sfp_control_enum;
 	rsp1461_ext_pin_state_t ext_pin_state_enum;
 	uint8_t                 sfp_status;
 	char aa[] = "   ";
@@ -219,13 +216,6 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 	if (rsp1461_presence(tsc_fd)) {
 		return -1;
 	}
-
-	// Execute init automatically one time
-//	if (init_rsp == 0){
-//		init_rsp = 1;
-//		retval = rsp1461_init(tsc_fd);
-//		printf("Initialization done... \n");
-//	}
 
 	if(cnt--) {
 // --- INIT ---
@@ -440,7 +430,7 @@ int tsc_rsp1461(struct cli_cmd_para *c) {
 					}
 					else {
 						retval = rsp1461_sfp_status(tsc_fd, sfp_id, &sfp_status);
-						printf("sfp status: \n", sfp_id);
+						printf("sfp status: \n");
 						if(sfp_status & (SFP_PRESENT)){
 							printf("   Present:           no \n");
 							printf("   TX fault:          n/a \n");

@@ -66,7 +66,6 @@ void
 conf_show_static( void)
 {
   int d0;
-  int a24_base;
 
   tsc_csr_read(tsc_fd, 0x00, &d0);
   printf("   Static Options [0x%08x]\n", d0);

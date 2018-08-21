@@ -111,47 +111,54 @@ int tst_01(struct tst_ctl *tc){
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
-	time_t tm;
-	char *ct            = NULL;
-	// SMEM control & status register
-	unsigned int SMEM_DDR3_CSR[2] = {0x800, 0xc00};
+    ////////////////////////////////////////////////////////////////////////////////////
+    // ADJUST DEFAULT VALUE FOR CURRENT_DLY ACCORDING TO HARDWARE IMPLEMENTATION      //
+    unsigned int    CURRENT_DLY     = 256;	                                          //
+    // ADJUST DEFAULT STEP VALUE FOR INC / DEC VALUE                                  //
+    unsigned int    CURRENT_STEP    = 4;			                                  //
+    // ADJUSTE DEFAULT INIT DELAY													  //
+    unsigned int    DEFAULT_DELAY   = 0x40;                                           //
+    // MAX DELAY VALUE                                                                //
+    unsigned int    MAX             = 0x1ff;                                          //
+    ////////////////////////////////////////////////////////////////////////////////////
+
 	// IDEL adjustment register for both DDR3 memory
 	unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
 	// IDEL control register for both DDR3 memory
 	unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
+
+    time_t tm;
+    char *ct                        = NULL;
 	struct tsc_ioctl_map_win map_win;
-	unsigned int    DQ_NOK[16];
-	unsigned int    DQ_OK[16];
-	float  f0, f1, f2	    = 0.0;
+	int             DQ_NOK[16];
+	int             DQ_OK[16];
 	int             ppc             = 0;
-	unsigned int    retval          = 0;
+	float           f0, f1, f2		= 0.0;
+    int             retval          = 0;
+    int             tsc_fd          = -1;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
-	unsigned int    *buf_tx  		= NULL;	    // Locally buffer to send data to DDR3
-	unsigned int    *buf_rx  		= NULL;	    // Locally buffer to receive data from DDR3
-	unsigned int    *buf_tx_start    = NULL;
-	unsigned int    size   		    = 0x40;
+    unsigned int    *buf_tx  		= NULL;	    // Locally buffer to send data to DDR3
+    unsigned int    *buf_rx  		= NULL;	    // Locally buffer to receive data from DDR3
+    unsigned int    *buf_tx_start   = NULL;
+    unsigned int    size   		    = 0x40;
     unsigned int    offset 		    = 0x100000; // DDR3 offset memory
     int    d0, d1, d2	    = 0;
-    int    data             = 0;
-    int    cnt_value        = 0;
-    unsigned int    init_cnt_value_store[16]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int    data            = 0;
+    int    cnt_value       = 0;
+    unsigned int    memOrg          = 0;
+    unsigned int    mem             = 0x12;
+    unsigned int    init_delay_1[16]          = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned int    init_delay_2[16]          = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    temp_cnt_value_store[16]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    final_cnt_value_store[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    int    dq_path          = 0;
+    int    dq_path         = 0;
     unsigned int    r, rr	        = 0;
-    unsigned int    best             = 0;
-    unsigned int    worst            = 0;
-    unsigned int    location         = 0;
-    unsigned int    mem              = 0x12;
-    unsigned int    fd               = 0;
-    ////////////////////////////////////////////////////////////////////////////////////
-    // ADJUST DEFAULT VALUE FOR CURRENT_DLY ACCORDING TO HARDWARE IMPLEMENTATION      //
-    unsigned int    CURRENT_DLY     = 256;	   // Current delay value                 //
-    // ADJUST DEFAULT STEP VALUE FOR INC / DEC VALUE                                  //
-    unsigned int    CURRENT_STEP    = 4 /* 8 */;	   // Current step value          //
-    ////////////////////////////////////////////////////////////////////////////////////
-    unsigned int    MAX             = 0x1ff/*64*/;      // Max delay tap value
-    unsigned int    j, k, m, n      = 0;
+    unsigned int    best            = 0;
+    unsigned int    worst           = 0;
+    unsigned int    location        = 0;
+    int    vtc_read        = 0;
+    int    vtc_set         = 0;
+    unsigned int    j, k, m, n      = 0;	   // Loop increment
     unsigned int    start           = 0; 	   // Save the start index
     unsigned int    end	            = 0; 	   // Save the end index
     unsigned int    ok              = 0;	   // Count the number of passed test "1"
@@ -160,7 +167,9 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
     unsigned int    NOK             = 1;	   // Calibration is done or not
     unsigned int    pattern[32]     = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    ref_pattern[32] = {0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1};
+
     // 32 bits reference pattern for each DQ : 0101 1001 0011 0100 1011 0101 1001 0011
+
     unsigned int word0  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
     unsigned int word1  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
     unsigned int word2  = 0x0000ffff; // 0000 0000 0000 0000 1111 1111 1111 1111
@@ -178,7 +187,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
     unsigned int word14 = 0x00000000; // 0000 0000 0000 0000 0000 0000 0000 0000
     unsigned int word15 = 0xffffffff; // 1111 1111 1111 1111 1111 1111 1111 1111
 
-	fd = tc->fd;
+	tsc_fd = tc->fd;
 
 	tm = time(0);
 	ct = ctime(&tm);
@@ -186,17 +195,67 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 	TST_LOG( tc, (logline, "%s->Entering:%s\n", tst_id, ct));
 	TST_LOG( tc, (logline, "%s->Executing SMEM1 & SMEM2 calibration n", tst_id));
 
-	ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
+    ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
 
-    // If calibration of both ddr, loop twice
-    if(mem == 0x12){
-    	rr  = 2;
+    // Check if calibration is needed for mem1, mem2 or mem1 & mem2
+    if(mem == 0x1){
     	mem = 1;
-    }
-    // else loop only on the SMEM1 or SMEM2
-    else {
+    	memOrg = mem;
     	rr = 1;
     }
+    else if(mem == 0x2){
+    	mem = 2;
+    	memOrg = mem;
+    	rr = 1;
+    }
+    else if(mem == 0x12){
+    	mem = 1;
+    	memOrg = mem;
+    	rr = 2;
+    }
+
+    /* INITIAL READ */
+    /***************************************************************************/
+
+    // Loop on 2 SMEM
+    for (r = 0; r < rr; r++){
+		// Reset calibration register
+		data = 0;
+		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+
+		TST_LOG( tc, (logline, "Initial value for MEM%x : \n", mem));
+
+		// Loop on 16 DQ
+		for(j = 0; j < 16; j++){
+			// Store initial value of count of the IFSTA register
+			dq_path = (j << 12);
+			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
+			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Acquire current value of the register
+			vtc_set = (vtc_read | (1 << 28));							// Set value to disable VTC
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
+			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
+
+			// MEM1
+			if(r == 0) {
+				init_delay_1[j]         = cnt_value & 0x1ff;
+				TST_LOG( tc, (logline, "DQ[%02i] IFSTA register 0x%08x -> Initial delay 0x%03x \n", j, cnt_value, init_delay_1[j]));
+			}
+			// MEM2
+			else if (r == 1){
+				init_delay_2[j]         = cnt_value & 0x1ff;
+				TST_LOG( tc, (logline, "DQ[%02i] IFSTA register 0x%08x -> Initial delay 0x%03x \n", j, cnt_value, init_delay_2[j]));
+			}
+		}
+		mem++;
+    }
+    TST_LOG( tc, (logline, "\n"));
+
+    /* CALIBRATION */
+    /***************************************************************************/
+
+    mem = memOrg;
 
     // Global loop for DDR calibration
     for (r = 0; r < rr; r++){
@@ -206,7 +265,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 		buf_rx       = malloc(size);
 		buf_tx_start = buf_tx;
 
-		// Map DDR3 memory region --
+		// Map DDR3 memory region
 		buf_ddr = NULL;
 		memset(&map_win, sizeof(map_win), 0);
 		map_win.req.rem_addr   = offset;
@@ -230,7 +289,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 			return (-1);
 		}
 
-		buf_ddr = mmap(NULL, map_win.req.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, map_win.req.loc_addr);
+		buf_ddr = mmap(NULL, map_win.req.size, PROT_READ | PROT_WRITE, MAP_SHARED, tsc_fd, map_win.req.loc_addr);
 		if(buf_ddr == MAP_FAILED){
 			TST_LOG( tc, (logline, "Error MAP FAILED \n"));
 			return (-1);
@@ -302,18 +361,8 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 		TST_LOG( tc, (logline, "\n"));
 		TST_LOG( tc, (logline, "Calibration pattern   : 0101 1001 0011 0100 1011 0101 1001 0011 \n"));
 		TST_LOG( tc, (logline, "Default INC           : %d \n", CURRENT_STEP));
-		TST_LOG( tc, (logline, "Default CNT           : 0 \n"));
+		TST_LOG( tc, (logline, "Default CNT           : %02x \n", DEFAULT_DELAY));
 		TST_LOG( tc, (logline, "\n"));
-
-		//Reset memory calibration
-		// Only on the first memory due to the fact that reset impact both memory
-		// Calibration need to be done in the order : 1 -> 2
-		if(mem == 1){
-			data = 0x8000;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
-			data = 0x2080;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
-		}
 
 		// Reset calibration register
 		data = 0;
@@ -321,22 +370,21 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Pass the entire possible delay taps
-
-		TST_LOG( tc, (logline, "+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n"));
-		TST_LOG( tc, (logline, " Default delay :  "));
-		for(j = 0; j < MAX; j++){
+		TST_LOG( tc, (logline, "+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n"));
+		TST_LOG( tc, (logline, " Default delay     :  "));
+		for(j = DEFAULT_DELAY; j < MAX; j++){
 			if(j == (CURRENT_DLY / CURRENT_STEP)){
-				TST_LOG( tc, (logline, "*"));
+				printf("*");
 				break;
 			}
 			else{
-				TST_LOG( tc, (logline, "   "));
+				printf("   ");
 			}
 		}
-
 		TST_LOG( tc, (logline, "\n"));
-		TST_LOG( tc, (logline, " Delay value   : 00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 \n"));
-		TST_LOG( tc, (logline, "+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n"));
+		TST_LOG( tc, (logline, " Delay value [MSB] : 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 \n"));
+		TST_LOG( tc, (logline, " Delay value [LSB] : 40 44 48 4C 50 54 58 5C 60 64 68 6C 70 74 78 7C 80 84 88 8C 90 94 98 9C A0 A4 A8 AC B0 B4 B8 BC C0 C4 C8 CC D0 D4 D8 DC E0 E4 E8 EC F0 F4 F8 FC 00 04 08 0C 10 14 18 1C 20 24 28 2C 30 34 38 3F 40 44 48 4C 50 54 58 5C 60 64 68 6C 70 74 78 7C 80 84 88 8C 90 94 98 9C A0 A4 A8 AC B0 B4 B8 BC C0 C4 C8 CC D0 D4 D8 DC E0 E4 E8 EC F0 F4 F8 FC \n"));
+		TST_LOG( tc, (logline, "+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n"));
 
 		// Set IDEL to 0
 		data = 0;
@@ -346,18 +394,20 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 		for(j = 0; j < 16; j++){
 
 			// Store initial value of count of the IFSTA register
-			dq_path = j << 12;
+			dq_path = (j << 12);
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
-			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
-
-			init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
-			temp_cnt_value_store[j] = init_cnt_value_store[j];
+			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 				// Acquire current value of the register
+			vtc_set = (vtc_read | (1 << 28));								// Set value to disable VTC
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 				// Disable VTC
+			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 			// Read initial value of IFSTA register
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 				// Re-active active VTC
+			temp_cnt_value_store[j] = DEFAULT_DELAY;
 
 			if(j < 8){
-				TST_LOG( tc, (logline, " DQ[%02d] test   :", j + 8));
+				TST_LOG( tc, (logline, " DQ[%02d] test >>>>> :", j + 8));
 			}
 			else{
-				TST_LOG( tc, (logline, " DQ[%02d] test   :", j - 8));
+				TST_LOG( tc, (logline, " DQ[%02d] test >>>>> :", j - 8));
 			}
 
 			// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
@@ -367,7 +417,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 			ok    = 0;
 
 			// Add steps by steps for current DQ from initial count value to max
-			for(k = init_cnt_value_store[j]; k < MAX ; k = k + CURRENT_STEP){
+			for(k = DEFAULT_DELAY; k < MAX ; k = k + CURRENT_STEP){
 				// Fill DDR3 with test pattern
 				memcpy(buf_ddr, buf_tx, size);
 				// Get data from DDR3
@@ -386,7 +436,7 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 					ok++;
 				}
 				else{
-					TST_LOG( tc, (logline, "  N"));
+					TST_LOG( tc, (logline, "  -"));
 				}
 
 				// Increment only the tap delay when we are < MAX tap
@@ -414,11 +464,12 @@ if (ppc == 1) {
 						data = (1 << 31) | (0x1 << (j - 8));
 						tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
 
+
 						// Update new value of count
 						temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 					}
 }
-else{
+else {
 					// Compute new count value and write IFSTA
 					data = (temp_cnt_value_store[j] + CURRENT_STEP) << 16;
 					tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -431,16 +482,16 @@ else{
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 }
 				}
-		}
+			}
 
 			// If calibration failed set the default count value
 			if (ok == 0){
-				marker = init_cnt_value_store[j];
+				marker = DEFAULT_DELAY;
 			}
 			// Update the new count value with the median value
 			else {
 				// Compute the start window
-				start = (end - (ok * CURRENT_STEP)) + CURRENT_STEP/*1*/;
+				start = (end - (ok * CURRENT_STEP)) + CURRENT_STEP;
 
 				// Compute the average of the window
 				avg_x = (ok * CURRENT_STEP) / 2;
@@ -452,14 +503,42 @@ else{
 			// Update the array with the new count value
 			final_cnt_value_store[j] = marker;
 
-			// Trace new delay
-			TST_LOG( tc, (logline, "\n"));
-			TST_LOG( tc, (logline, " Final delay 0x%x:", marker));
-			for(n = init_cnt_value_store[j] ; n < marker; n = n + CURRENT_STEP){
-				TST_LOG( tc, (logline, "   "));
+			if(j < 8){
+				// Trace new delay
+				TST_LOG( tc, (logline, "\n"));
+				// MEM1
+				if(r == 0) {
+					TST_LOG( tc, (logline, " Init  delay 0x%03x :\n", init_delay_1[j + 8]));
+				}
+				// MEM 2
+				else if (r == 1){
+					TST_LOG( tc, (logline, " Init  delay 0x%03x :\n", init_delay_2[j + 8]));
+				}
+				TST_LOG( tc, (logline, " Final delay 0x%03x :", marker));
+				for(n = DEFAULT_DELAY ; n < marker; n = n + CURRENT_STEP){
+					TST_LOG( tc, (logline, "   "));
+				}
+				TST_LOG( tc, (logline, "  *"));
+				TST_LOG( tc, (logline, "\n"));
 			}
-			TST_LOG( tc, (logline, "  *"));
-			TST_LOG( tc, (logline, "\n"));
+			else{
+				// Trace new delay
+				TST_LOG( tc, (logline, "\n"));
+				// MEM1
+				if(r == 0) {
+					TST_LOG( tc, (logline, " Init  delay 0x%03x :\n", init_delay_1[j - 8]));
+				}
+				// MEM 2
+				else if (r == 1){
+					TST_LOG( tc, (logline, " Init  delay 0x%03x :\n", init_delay_2[j - 8]));
+				}
+				TST_LOG( tc, (logline, " Final delay 0x%03x :", marker));
+				for(n = DEFAULT_DELAY ; n < marker; n = n + CURRENT_STEP){
+					printf("   ");
+				}
+				TST_LOG( tc, (logline, "  *"));
+				TST_LOG( tc, (logline, "\n"));
+			}
 
 if (ppc == 1) {
 			if(j < 8){
@@ -481,7 +560,7 @@ if (ppc == 1) {
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
 			}
 }
-else{
+else {
 			// Compute new count value and write IFSTA
 			data = final_cnt_value_store[j] << 16;
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -502,12 +581,13 @@ else{
 
 			DQ_OK[j] = ok;
 
-			TST_LOG( tc, (logline, "+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n"));
+			TST_LOG( tc, (logline, "+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n"));
 
 			// Set IDEL and IFSTA to 0
 			data = 0;
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+
 		}
 
 		// Execution is finished OK or NOK
@@ -516,37 +596,28 @@ else{
 			TST_LOG( tc, (logline, "Calibration is not possible, error on line(s) : \n"));
 			for (m = 0; m < 16; m++){
 				if (DQ_NOK[m] == 1){
-		    		if (m < 8){
-		    			TST_LOG( tc, (logline, "DQ[%i] \n", m + 8));
-		    		}
-		    		else {
-		    			TST_LOG( tc, (logline, "DQ[%i] \n", m - 8));
-		    		}
-
-
+					TST_LOG( tc, (logline, "DQ[%i] \n", m));
 				}
 			}
-			retval = TST_STS_ERR;
 		}
 		else {
-			TST_LOG( tc, (logline, "Calibration done ! \n"));
-			retval = TST_STS_DONE;
-
 			// Search best case
 		    best = DQ_OK[0];
 
 		    for (m = 1 ;m < 16 ;m++) {
 		    	if ( DQ_OK[m] > best ) {
-		    		best = DQ_OK[m];
+		    		//best = DQ_OK[m];
 		    		if (m < 8){
+		    			best = DQ_OK[m + 8];
 		    			location = m + 8;
 		    		}
 		    		else {
+		    			best = DQ_OK[m - 8];
 		    			location = m - 8;
 		    		}
 		        }
 		    }
-			TST_LOG( tc, (logline, "Best case is %i for DQ[%i]\n", best, location));
+		    TST_LOG( tc, (logline, "Best calibration window size is %i for DQ[%02i] \n", best, location));
 
 			// Search worst case
 		    worst = DQ_OK[0];
@@ -555,15 +626,45 @@ else{
 		    	if ( DQ_OK[m] < worst ) {
 		    		worst = DQ_OK[m];
 		    		if (m < 8){
+		    			best = DQ_OK[m + 8];
 		    			location = m + 8;
 		    		}
 		    		else {
+		    			best = DQ_OK[m - 8];
 		    			location = m - 8;
 		    		}
 		        }
 		    }
-			TST_LOG( tc, (logline, "Worst case is %i for DQ[%i]\n", worst, location));
+		    TST_LOG( tc, (logline, "Worst calibration windows size is %i for DQ[%02i] \n", worst, location));
 		}
+
+		// Print initial and final
+
+		TST_LOG( tc, (logline, "\n"));
+		if (r == 0){ // MEM1
+			for (m = 0 ;m < 16 ;m++) {
+				if(m < 8){
+					TST_LOG( tc, (logline, "DQ[%02d] - Initial delay 0x%03x - Final delay 0x%03x \n", m, init_delay_1[m], final_cnt_value_store[m + 8]));
+				}
+				else{
+					TST_LOG( tc, (logline, "DQ[%02d] - Initial delay 0x%03x - Final delay 0x%03x \n", m, init_delay_1[m], final_cnt_value_store[m - 8]));
+				}
+			}
+		}
+		else if (r == 1){ // MEM2
+			for (m = 0 ;m < 16 ;m++) {
+				if(m < 8){
+					TST_LOG( tc, (logline, "DQ[%02d] - Initial delay 0x%03x - Final delay 0x%03x \n", m, init_delay_2[m], final_cnt_value_store[m + 8]));
+				}
+				else{
+					TST_LOG( tc, (logline, "DQ[%02d] - Initial delay 0x%03x - Final delay 0x%03x \n", m, init_delay_2[m], final_cnt_value_store[m - 8]));
+				}
+			}
+		}
+
+		TST_LOG( tc, (logline, "\n"));
+		TST_LOG( tc, (logline, "Calibration finished ! \n"));
+		TST_LOG( tc, (logline, "\n"));
 
 		// Set IDEL and IFSTA to 0
 		data = 0;
@@ -579,8 +680,53 @@ else{
 		free(buf_rx);
 
 		mem++;
-		TST_LOG( tc, (logline, "\n"));
     }
+
+    /* FINAL READ */
+    /***************************************************************************/
+
+    // Check if calibration is needed for mem1, mem2 or mem1 & mem2
+    mem = memOrg;
+
+    // Loop on SMEM
+    for (r = 0; r < rr; r++){
+    	// Reset calibration register
+    	data = 0;
+    	tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+    	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+
+    	TST_LOG( tc, (logline, "Final value for MEM%x : \n", mem));
+
+    	// Loop on 16 DQ
+    	for(j = 0; j < 16; j++){
+    		// Store initial value of count of the IFSTA register
+    		dq_path = (j << 12);
+    		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
+    		tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Acquire current value of the register
+    		vtc_set = (vtc_read | (1 << 28));							// Set value to disable VTC
+    		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
+    		tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
+    		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
+
+    		// MEM1
+   			if(r == 0) {
+   				TST_LOG( tc, (logline, "DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_1[j], cnt_value, cnt_value & 0x1ff));
+   			}
+   			// MEM2
+   			else if (r == 1){
+   				TST_LOG( tc, (logline, "DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_2[j], cnt_value, cnt_value & 0x1ff));
+   			}
+   		}
+
+    	// Set IDEL and IFSTA to 0
+    	data = 0;
+    	tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+    	tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+
+   		mem++;
+
+    }
+    TST_LOG( tc, (logline, "\n"));
 
 	tm = time(0);
 	ct = ctime(&tm);
