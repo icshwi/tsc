@@ -80,12 +80,24 @@ extern int tsc_fd;
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_ddr_idel_calib_start(int quiet){
+    ////////////////////////////////////////////////////////////////////////////////////
+    // ADJUST DEFAULT STEP VALUE FOR INC / DEC VALUE                                  //
+    unsigned int    CURRENT_STEP    = 4;			                                  //
+    // ADJUSTE DEFAULT INIT DELAY													  //
+    unsigned int    DEFAULT_DELAY   = 0x40;                                           //
+    // MAX DELAY VALUE                                                                //
+    unsigned int    MAX             = 0x1ff;                                          //
+    ////////////////////////////////////////////////////////////////////////////////////
+
+	// IDEL adjustment register for both DDR3 memory
+	unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
+	// IDEL control register for both DDR3 memory
+	unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
+
 	struct tsc_ioctl_map_win map_win;
-	char para_buf[32];
-	int  DQ_NOK[16];
-	int  DQ_OK[16];
-	int  ppc                        = 0;
-	float   f0, f1, f2	    		= 0.0;
+	int             DQ_NOK[16];
+	int             DQ_OK[16];
+	int             ppc             = 0;
     int             retval          = 0;
 	unsigned int    *buf_ddr 		= NULL;	    // Buffer mapped directly in DDR3 area
     unsigned int    *buf_tx  		= NULL;	    // Locally buffer to send data to DDR3
@@ -93,28 +105,20 @@ int tsc_ddr_idel_calib_start(int quiet){
     unsigned int    *buf_tx_start   = NULL;
     unsigned int    size   		    = 0x40;
     unsigned int    offset 		    = 0x100000; // DDR3 offset memory
-    unsigned int    d0, d1, d2	    = 0;
-    unsigned int    data            = 0;
-    unsigned int    init            = 0;
-    unsigned int    cnt_value  = 0;
-    unsigned int    init_cnt_value_store[16]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int             data            = 0;
+    int             cnt_value       = 0;
+    unsigned int    mem             = 0x12;
+    unsigned int    memOrg          = 0;
     unsigned int    temp_cnt_value_store[16]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    final_cnt_value_store[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    unsigned int    dq_path         = 0;
+    int             dq_path         = 0;
     unsigned int    r, rr	        = 0;
     unsigned int    best            = 0;
     unsigned int    worst           = 0;
     unsigned int    location        = 0;
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    // ADJUST DEFAULT VALUE FOR CURRENT_DLY ACCORDING TO HARDWARE IMPLEMENTATION      //
-    unsigned int    CURRENT_DLY     = 256;	   // Current delay value                 //
-    // ADJUST DEFAULT STEP VALUE FOR INC / DEC VALUE                                  //
-    unsigned int    CURRENT_STEP    = 4 /* 8 */;	   // Current step value          //
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    unsigned int    MAX             = 0x1ff/*64*/;      // Max delay tap value
-    unsigned int    j, k, m, n      = 0;
+    int             vtc_read        = 0;
+    int             vtc_set         = 0;
+    unsigned int    j, k, m         = 0;	   // Loop increment
     unsigned int    start           = 0; 	   // Save the start index
     unsigned int    end	            = 0; 	   // Save the end index
     unsigned int    ok              = 0;	   // Count the number of passed test "1"
@@ -128,50 +132,44 @@ int tsc_ddr_idel_calib_start(int quiet){
 
     unsigned int word0  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
     unsigned int word1  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
-
     unsigned int word2  = 0x0000ffff; // 0000 0000 0000 0000 1111 1111 1111 1111
     unsigned int word3  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
-
     unsigned int word4  = 0x00000000; // 0000 0000 0000 0000 0000 0000 0000 0000
     unsigned int word5  = 0xffffffff; // 1111 1111 1111 1111 1111 1111 1111 1111
-
     unsigned int word6  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
     unsigned int word7  = 0x00000000; // 0000 0000 0000 0000 0000 0000 0000 0000
-
     unsigned int word8  = 0x0000ffff; // 0000 0000 0000 0000 1111 1111 1111 1111
     unsigned int word9  = 0xffffffff; // 1111 1111 1111 1111 1111 1111 1111 1111
-
     unsigned int word10 = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
     unsigned int word11 = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
-
     unsigned int word12 = 0x0000ffff; // 0000 0000 0000 0000 1111 1111 1111 1111
     unsigned int word13 = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
-
     unsigned int word14 = 0x00000000; // 0000 0000 0000 0000 0000 0000 0000 0000
     unsigned int word15 = 0xffffffff; // 1111 1111 1111 1111 1111 1111 1111 1111
 
-    int mem = 0x12;
-
-    // SMEM control & status register
-    unsigned int SMEM_DDR3_CSR[2] = {0x800, 0xc00};
-
-    // IDEL adjustment register for both DDR3 memory
-    unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
-
-    // IDEL control register for both DDR3 memory
-    unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
-
     ppc = CheckByteOrder(); // Check endianness: 1-> ppc, 0-> x86
 
-    // If calibration of both ddr, loop twice
-    if(mem == 0x12){
-    	rr  = 2;
+    // Check if calibration is needed for mem1, mem2 or mem1 & mem2
+    if(mem == 0x1){
     	mem = 1;
-    }
-    // else loop only on the SMEM1 or SMEM2
-    else {
+    	memOrg = mem;
     	rr = 1;
     }
+    else if(mem == 0x2){
+    	mem = 2;
+    	memOrg = mem;
+    	rr = 1;
+    }
+    else if(mem == 0x12){
+    	mem = 1;
+    	memOrg = mem;
+    	rr = 2;
+    }
+
+    /* CALIBRATION */
+    /***************************************************************************/
+
+    mem = memOrg;
 
     // Global loop for DDR calibration
     for (r = 0; r < rr; r++){
@@ -181,7 +179,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 		buf_rx       = malloc(size);
 		buf_tx_start = buf_tx;
 
-		// Map DDR3 memory region --
+		// Map DDR3 memory region
 		buf_ddr = NULL;
 		memset(&map_win, sizeof(map_win), 0);
 		map_win.req.rem_addr   = offset;
@@ -191,27 +189,21 @@ int tsc_ddr_idel_calib_start(int quiet){
 
 		if ((mem - 1) == 0){
 			map_win.req.mode.space = MAP_SPACE_SHM1; // SHM #1
-			if (quiet == 0) {
-				printf("SMEM1 calibration\n");
-			}
 		}
 		else if((mem - 1) == 1){
 			map_win.req.mode.space = MAP_SPACE_SHM2; // SHM #2
-			if (quiet == 0) {
-				printf("SMEM2 calibration\n");
-			}
 		}
 
 		map_win.req.mode.flags = 0;
 		retval = tsc_map_alloc(&map_win);
 		if(retval < 0){
-			printf("Error in mapping SHM");
+			printf("Error in mapping SHM for DDR calibration");
 			return (-1);
 		}
 
 		buf_ddr = mmap(NULL, map_win.req.size, PROT_READ | PROT_WRITE, MAP_SHARED, tsc_fd, map_win.req.loc_addr);
 		if(buf_ddr == MAP_FAILED){
-			printf("Error MAP FAILED \n");
+			printf("Error MAP FAILED for DDR calibration \n");
 			return (-1);
 		}
 
@@ -250,16 +242,6 @@ int tsc_ddr_idel_calib_start(int quiet){
 
 		buf_tx = buf_tx_start;
 
-		//Reset memory calibration
-		// Only on the first memory due to the fact that reset impact both memory
-		// Calibration need to be done in the order : 1 -> 2
-		if(mem == 1){
-			data = 0x8000;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
-			data = 0x2080;
-			tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
-		}
-
 		// Reset calibration register
 		data = 0;
 		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -273,24 +255,15 @@ int tsc_ddr_idel_calib_start(int quiet){
 		for(j = 0; j < 16; j++){
 
 			// Store initial value of count of the IFSTA register
-			dq_path = j << 12;
+			dq_path = (j << 12);
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
-			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value);
+			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 				// Acquire current value of the register
+			vtc_set = (vtc_read | (1 << 28));								// Set value to disable VTC
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 				// Disable VTC
+			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 			// Read initial value of IFSTA register
+			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 				// Re-active active VTC
+			temp_cnt_value_store[j] = DEFAULT_DELAY;
 
-			init_cnt_value_store[j] = 0;/* cnt_value & 0xff;*/
-			temp_cnt_value_store[j] = init_cnt_value_store[j];
-/*
-			if(j < 8){
-				if (quiet == 0) {
-					printf(" DQ[%02d] ->", j + 8);
-				}
-			}
-			else{
-				if (quiet == 0) {
-					printf(" DQ[%02d] ->", j - 8);
-				}
-			}
-*/
 			// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
 			avg_x = 0;
 			start = 0;
@@ -298,7 +271,7 @@ int tsc_ddr_idel_calib_start(int quiet){
 			ok    = 0;
 
 			// Add steps by steps for current DQ from initial count value to max
-			for(k = init_cnt_value_store[j]; k < MAX ; k = k + CURRENT_STEP){
+			for(k = DEFAULT_DELAY; k < MAX ; k = k + CURRENT_STEP){
 				// Fill DDR3 with test pattern
 				memcpy(buf_ddr, buf_tx, size);
 				// Get data from DDR3
@@ -341,6 +314,7 @@ if (ppc == 1) {
 						data = (1 << 31) | (0x1 << (j - 8));
 						tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
 
+
 						// Update new value of count
 						temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 					}
@@ -358,16 +332,16 @@ else {
 					temp_cnt_value_store[j] = temp_cnt_value_store[j] + CURRENT_STEP;
 }
 				}
-		}
+			}
 
 			// If calibration failed set the default count value
 			if (ok == 0){
-				marker = init_cnt_value_store[j];
+				marker = DEFAULT_DELAY;
 			}
 			// Update the new count value with the median value
 			else {
 				// Compute the start window
-				start = (end - (ok * CURRENT_STEP)) + CURRENT_STEP/*1*/;
+				start = (end - (ok * CURRENT_STEP)) + CURRENT_STEP;
 
 				// Compute the average of the window
 				avg_x = (ok * CURRENT_STEP) / 2;
@@ -379,20 +353,7 @@ else {
 			// Update the array with the new count value
 			final_cnt_value_store[j] = marker;
 
-			// Trace new delay
-/*
-			if (quiet == 0) {
-				printf(" Delay 0x%x, %i steps", marker, ok);
-			}
-			for(n = init_cnt_value_store[j] ; n < marker; n = n + CURRENT_STEP){
-				printf("   ");
-			}
-			if (quiet == 0) {
-				printf("\n");
-			}
-*/
-
-if (ppc == 1){
+if (ppc == 1) {
 			if(j < 8){
 				// Compute new count value and write IFSTA
 				data = final_cnt_value_store[j] << 16;
@@ -401,7 +362,6 @@ if (ppc == 1){
 				// Load new count value
 				data = (1 << 31) | (0x1 << (j + 8));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-
 			}
 			else {
 				// Compute new count value and write IFSTA
@@ -411,10 +371,9 @@ if (ppc == 1){
 				// Load new count value
 				data = (1 << 31) | (0x1 << (j - 8));
 				tsc_csr_write(SMEM_DDR3_IDEL[mem - 1 ], &data);
-
 			}
 }
-else{
+else {
 			// Compute new count value and write IFSTA
 			data = final_cnt_value_store[j] << 16;
 			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
@@ -452,27 +411,23 @@ else{
 			}
 		}
 		else {
-			if (quiet == 0) {
-				printf("Done !  -> ");
-			}
-
 			// Search best case
 		    best = DQ_OK[0];
 
 		    for (m = 1 ;m < 16 ;m++) {
 		    	if ( DQ_OK[m] > best ) {
-		    		best = DQ_OK[m];
+		    		//best = DQ_OK[m];
 		    		if (m < 8){
+		    			best = DQ_OK[m + 8];
 		    			location = m + 8;
 		    		}
 		    		else {
+		    			best = DQ_OK[m - 8];
 		    			location = m - 8;
 		    		}
 		        }
 		    }
-		    if (quiet == 0) {
-		    	printf("best case DQ[%i], %i steps | ", location, best);
-		    }
+		    printf("MEM#%i Best calibration window size is %i for DQ[%02i] \n",r + 1, best, location);
 
 			// Search worst case
 		    worst = DQ_OK[0];
@@ -481,16 +436,16 @@ else{
 		    	if ( DQ_OK[m] < worst ) {
 		    		worst = DQ_OK[m];
 		    		if (m < 8){
+		    			best = DQ_OK[m + 8];
 		    			location = m + 8;
 		    		}
 		    		else {
+		    			best = DQ_OK[m - 8];
 		    			location = m - 8;
 		    		}
 		        }
 		    }
-		    if (quiet == 0) {
-		    	printf("worst case DQ[%i], %i steps\n", location, worst);
-		    }
+		    printf("MEM#%i Worst calibration windows size is %i for DQ[%02i] \n",r + 1,  worst, location);
 		}
 
 		// Set IDEL and IFSTA to 0
@@ -507,12 +462,8 @@ else{
 		free(buf_rx);
 
 		mem++;
-/*
-		if (quiet == 0) {
-			printf("\n");
-		}
-*/
     }
+
     return 0;
 }
 
@@ -586,7 +537,7 @@ int main(int argc, char *argv[]){
 	tdma_init(quiet);
 
 	// Launch automatically DDR3 calibration
-	tsc_ddr_idel_calib_start(quiet);
+tsc_ddr_idel_calib_start(quiet);
 
 	// Test how many arguments exist and their position
 	if(argc > 2){

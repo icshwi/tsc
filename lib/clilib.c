@@ -700,12 +700,8 @@ cli_history_find_str( struct cli_cmd_history *h,
   }
   else
   {
-    int n;
-
-    n =  h->cnt - h->size;
     for(i = h->size - 1;  i == h->wr_idx; i--)
     {
-      //printf("%d %s\n", n++, &h->bufline[i][0]);
       if( !strncmp( cmd,  &h->bufline[i][0], strlen(cmd)))
       {
 	return( &h->bufline[i][0]);
@@ -713,7 +709,6 @@ cli_history_find_str( struct cli_cmd_history *h,
     }
     for( i = h->wr_idx; i >= 0; i--)
     {
-      //printf("%4d %s\n", n++, &h->bufline[i][0]);
       if( !strncmp( cmd,  &h->bufline[i][0], strlen(cmd)))
       {
 	return( &h->bufline[i][0]);

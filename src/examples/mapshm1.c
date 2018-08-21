@@ -71,12 +71,14 @@ int main(int argc, char *argv[]){
 	retval = tsc_map_alloc(&map_win);
 	if(retval < 0){
 		printf("Error in mapping SHM1 \n");
+		return -1;
 	}
 
 	// Map in user space ressource
 	buf_ddr = mmap(NULL, map_win.req.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, map_win.req.loc_addr);
 	if(buf_ddr == MAP_FAILED){
 		printf("Error MAP FAILED \n");
+		return -1;
 	}
 
 	// Write / read SHM1 (DDR3 memory)
@@ -85,4 +87,6 @@ int main(int argc, char *argv[]){
 
 	// TSC exit
 	tsc_exit();
+
+	return 0;
 }

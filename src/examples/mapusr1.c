@@ -85,4 +85,6 @@ int main( int argc, char *argv[]){
 
 	// Exit TSC
 	tsc_exit();
+
+	return 0;
 }

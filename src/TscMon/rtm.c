@@ -24,10 +24,6 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef lint
-static char *rcsid = "$Id: rtm.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
-#endif
-
 #define DEBUGno
 #include <debug.h>
 #include <sys/types.h>
@@ -48,12 +44,6 @@ static char *rcsid = "$Id: rtm.c,v 1.0 2017/10/18 08:26:51 ioxos Exp $";
 #include "mtca4rtmlib.h"
 #include "TscMon.h"
 
-char *
-rtm_rcsid()
-{
-  return( rcsid);
-}
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : rtm_led
  * Prototype     : int
@@ -65,61 +55,49 @@ rtm_rcsid()
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-rtm_led( struct cli_cmd_para *c)
-{
-  int retval;
-  mtca4_rtm_led_id_t led_id;
-  mtca4_rtm_led_function_t led_function;
-  mtca4_rtm_led_on_duration_t led_on_duration;
+int rtm_led(struct cli_cmd_para *c){
+	mtca4_rtm_led_id_t led_id;
+	mtca4_rtm_led_function_t led_function;
+	mtca4_rtm_led_on_duration_t led_on_duration;
 
-  if ((c->cnt != 3))
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if ((c->cnt != 3)){
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  if (!strcasecmp(c->para[1], "red"))
-  {
-    led_id = MTCA4_RTM_RED_LED;
-  }
-  else if (!strcasecmp(c->para[1], "green"))
-  {
-    led_id = MTCA4_RTM_GREEN_LED;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if (!strcasecmp(c->para[1], "red")){
+		led_id = MTCA4_RTM_RED_LED;
+	}
+	else if (!strcasecmp(c->para[1], "green")){
+		led_id = MTCA4_RTM_GREEN_LED;
+	}
+	else{
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  if (!strcasecmp(c->para[2], "on"))
-  {
-    led_function = MTCA4_RTM_LED_ON;
-  }
-  else if (!strcasecmp(c->para[2], "off"))
-  {
-    led_function = MTCA4_RTM_LED_OFF;
-  }
-  else if (!strcasecmp(c->para[2], "slow_blink"))
-  {
-    led_function = MTCA4_RTM_LED_BLINK_500MS_OFF;
-    led_on_duration = MTCA4_RTM_LED_BLINK_500MS_ON;
-  }
-  else if (!strcasecmp(c->para[2], "fast_blink"))
-  {
-    led_function = MTCA4_RTM_LED_BLINK_100MS_OFF;
-    led_on_duration = MTCA4_RTM_LED_BLINK_100MS_ON;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if (!strcasecmp(c->para[2], "on")){
+		led_function = MTCA4_RTM_LED_ON;
+	}
+	else if (!strcasecmp(c->para[2], "off")){
+		led_function = MTCA4_RTM_LED_OFF;
+	}
+	else if (!strcasecmp(c->para[2], "slow_blink")){
+		led_function = MTCA4_RTM_LED_BLINK_500MS_OFF;
+		led_on_duration = MTCA4_RTM_LED_BLINK_500MS_ON;
+	}
+	else if (!strcasecmp(c->para[2], "fast_blink")){
+		led_function = MTCA4_RTM_LED_BLINK_100MS_OFF;
+		led_on_duration = MTCA4_RTM_LED_BLINK_100MS_ON;
+	}
+	else{
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  set_mtca4_rtm_led_state(led_id, led_function, led_on_duration);
+	set_mtca4_rtm_led_state(led_id, led_function, led_on_duration);
 
-  return CLI_OK;
+	return CLI_OK;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -133,35 +111,28 @@ rtm_led( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-rtm_eeprom( struct cli_cmd_para *c)
-{
-  int retval;
-  mtca4_rtm_eeprom_wp_t state;
+int rtm_eeprom(struct cli_cmd_para *c){
+	mtca4_rtm_eeprom_wp_t state;
 
-  if ((c->cnt != 2))
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if ((c->cnt != 2)){
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  if (!strcasecmp(c->para[1], "we"))
-  {
-    state = MTCA4_RTM_EEPROM_WRITE_ENABLED;
-  }
-  else if (!strcasecmp(c->para[1], "wp"))
-  {
-    state = MTCA4_RTM_EEPROM_WRITE_DISABLED;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if (!strcasecmp(c->para[1], "we")){
+		state = MTCA4_RTM_EEPROM_WRITE_ENABLED;
+	}
+	else if (!strcasecmp(c->para[1], "wp")){
+		state = MTCA4_RTM_EEPROM_WRITE_DISABLED;
+	}
+	else{
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  set_mtca4_rtm_eeprom_wp(state);
+	set_mtca4_rtm_eeprom_wp(state);
 
-  return CLI_OK;
+	return CLI_OK;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -175,35 +146,28 @@ rtm_eeprom( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-rtm_reset( struct cli_cmd_para *c)
-{
-  int retval;
-  mtca4_rtm_reset_t state;
+int rtm_reset(struct cli_cmd_para *c){
+	mtca4_rtm_reset_t state;
 
-  if ((c->cnt != 2))
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if ((c->cnt != 2)){
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  if (!strcasecmp(c->para[1], "on"))
-  {
-    state = MTCA4_RTM_RESET_ASSERTED;
-  }
-  else if (!strcasecmp(c->para[1], "off"))
-  {
-    state = MTCA4_RTM_RESET_DEASSERTED;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if (!strcasecmp(c->para[1], "on")){
+		state = MTCA4_RTM_RESET_ASSERTED;
+	}
+	else if (!strcasecmp(c->para[1], "off")){
+		state = MTCA4_RTM_RESET_DEASSERTED;
+	}
+	else{
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  set_mtca4_rtm_reset(state);
+	set_mtca4_rtm_reset(state);
 
-  return CLI_OK;
+	return CLI_OK;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -217,35 +181,28 @@ rtm_reset( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-rtm_zone3( struct cli_cmd_para *c)
-{
-  int retval;
-  mtca4_rtm_eeprom_wp_t state;
+int rtm_zone3(struct cli_cmd_para *c){
+	mtca4_rtm_eeprom_wp_t state;
 
-  if ((c->cnt != 2))
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if ((c->cnt != 2)){
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  if (!strcasecmp(c->para[1], "on"))
-  {
-    state = MTCA4_RTM_ZONE3_ENABLED;
-  }
-  else if (!strcasecmp(c->para[1], "off"))
-  {
-    state = MTCA4_RTM_ZONE3_DISABLED;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
+	if (!strcasecmp(c->para[1], "on")){
+		state = MTCA4_RTM_ZONE3_ENABLED;
+	}
+	else if (!strcasecmp(c->para[1], "off")){
+		state = MTCA4_RTM_ZONE3_DISABLED;
+	}
+	else{
+		tsc_print_usage(c);
+		return(CLI_ERR);
+	}
 
-  set_mtca4_rtm_zone3_enable(state);
+	set_mtca4_rtm_zone3_enable(state);
 
-  return CLI_OK;
+	return CLI_OK;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -259,43 +216,36 @@ rtm_zone3( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-tsc_rtm( struct cli_cmd_para *c)
-{
-  int cnt  = 0;
-  int i    = 0;
-  int data = 0;
+int tsc_rtm(struct cli_cmd_para *c){
+	int cnt  = 0;
+	int i    = 0;
+	int data = 0;
 
-  // Check if the board is a IFC14XX
-  tsc_pon_read(0x0, &data);
-  data &= 0xFFFFFF00;
-  if (data != 0x73571400) {
-	printf("Command available only on IFC14xx board\n");
-	return (CLI_ERR);
-  }
+	// Check if the board is a IFC14XX
+	tsc_pon_read(0x0, &data);
+	data &= 0xFFFFFF00;
+	if (data != 0x73571400) {
+		printf("Command available only on IFC14xx board\n");
+		return (CLI_ERR);
+	}
 
-  cnt = c->cnt;
-  i = 0;
-  if( cnt--)
-  {
-    if( !strcmp( "led", c->para[i]))
-    {
-      return( rtm_led( c));
-    }
-    else if( !strcmp( "reset", c->para[i]))
-    {
-      return( rtm_reset( c));
-    }
-    else if( !strcmp( "eeprom", c->para[i]))
-    {
-      return( rtm_eeprom( c));
-    }
-    else if( !strcmp( "zone3", c->para[i]))
-    {
-      return( rtm_zone3( c));
-    }
-  }
+	cnt = c->cnt;
+	i = 0;
+	if(cnt--){
+		if(!strcmp("led", c->para[i])){
+			return(rtm_led(c));
+		}
+		else if(!strcmp("reset", c->para[i])){
+			return(rtm_reset(c));
+		}
+		else if(!strcmp("eeprom", c->para[i])){
+			return(rtm_eeprom(c));
+		}
+		else if(!strcmp("zone3", c->para[i])){
+			return(rtm_zone3(c));
+		}
+	}
 
-  tsc_print_usage( c);
-  return( CLI_ERR);
+	tsc_print_usage(c);
+	return(CLI_ERR);
 }

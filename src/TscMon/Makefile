@@ -37,43 +37,43 @@ HFILES = $(INCDIR)/cli.h
 all : TscMon SmemCalibration
 
 rsp1461.o: rsp1461.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c rsp1461.c
+	$(CC) -Wall $(FLAGS) $(INC) -c rsp1461.c
 
 conf.o: conf.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c conf.c
+	$(CC) -Wall $(FLAGS) $(INC) -c conf.c
 
 ddr.o: ddr.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c ddr.c
+	$(CC) -Wall $(FLAGS) $(INC) -c ddr.c
 
 map.o: map.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c map.c
+	$(CC) -Wall $(FLAGS) $(INC) -c map.c
 
 mbox.o: mbox.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c mbox.c
+	$(CC)  $(FLAGS) $(INC) -c mbox.c
 
 rtm.o: rtm.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c rtm.c
+	$(CC) -Wall $(FLAGS) $(INC) -c rtm.c
 
 rdwr.o: rdwr.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c rdwr.c
 
 fifo.o: fifo.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c fifo.c
+	$(CC) -Wall $(FLAGS) $(INC) -c fifo.c
 
 script.o: script.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c script.c
+	$(CC) -Wall $(FLAGS) $(INC) -c script.c
 
 dma.o: dma.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c dma.c
 
 timer.o: timer.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c timer.c
+	$(CC) -Wall $(FLAGS) $(INC) -c timer.c
 
 semaphore.o: semaphore.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c semaphore.c
+	$(CC) -Wall $(FLAGS) $(INC) -c semaphore.c
 
 sflash.o: sflash.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c sflash.c
+	$(CC) -Wall $(FLAGS) $(INC) -c sflash.c
 
 buf.o: buf.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c buf.c
@@ -82,7 +82,7 @@ tst.o: tst.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c tst.c
 
 lmk.o: lmk.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c lmk.c
+	$(CC) -Wall $(FLAGS) $(INC) -c lmk.c
 
 i2c.o: i2c.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c i2c.c
@@ -100,16 +100,16 @@ acq1430.o: acq1430.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c acq1430.c
 
 alias.o: alias.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c alias.c
+	$(CC) -Wall $(FLAGS) $(INC) -c alias.c
 
 tdma.o: tdma.c cmdlist.h Makefile
 	$(CC) $(FLAGS) $(INC) -c tdma.c
 
 TscMon.o: TscMon.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c TscMon.c
+	$(CC) -Wall $(FLAGS) $(INC) -c TscMon.c
 
 TscMon:$(OFILES)  $(OLIB) $(LIBDIR)/libtsc.a
-	$(CC) $(LIB) -o TscMon $(OFILES) -ltsc -lrt -lm
+	$(CC) -Wall $(LIB) -o TscMon $(OFILES) -ltsc -lrt -lm
 
 SmemCalibration: SmemCalibration.c
 	$(CC) $(LIB) $(INC) -o SmemCalibration SmemCalibration.c -ltsc -lrt -lm

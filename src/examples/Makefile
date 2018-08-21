@@ -35,12 +35,12 @@ HFILES = $(INCDIR)/cli.h
 all : mapusr1 mapshm1 tscctl Ifc1211Pon
 
 mapusr1: mapusr1.c
-	$(CC) $(LIB) $(INC) -o mapusr1 mapusr1.c -ltsc -lrt -lm
+	$(CC) -Wall $(LIB) $(INC) -o mapusr1 mapusr1.c -ltsc -lrt -lm
 mapshm1: mapshm1.c
-	$(CC) $(LIB) $(INC) -o mapshm1 mapshm1.c -ltsc -lrt -lm	
+	$(CC) -Wall $(LIB) $(INC) -o mapshm1 mapshm1.c -ltsc -lrt -lm	
 tscctl: tscctl.c
-	$(CC) $(LIB) $(INC) -o tscctl tscctl.c -ltsc -lrt -lm
+	$(CC) -Wall $(LIB) $(INC) -o tscctl tscctl.c -ltsc -lrt -lm
 Ifc1211Pon: Ifc1211Pon.c
-	$(CC) $(LIB) $(INC) -o Ifc1211Pon Ifc1211Pon.c -ltsc -lrt -lm		
+	$(CC) -Wall $(LIB) $(INC) -o Ifc1211Pon Ifc1211Pon.c -ltsc -lrt -lm		
 clean:
 	$(RM) *.o *.a mapusr1 mapshm1 tscctl Ifc1211Pon
