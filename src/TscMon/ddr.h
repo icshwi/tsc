@@ -34,5 +34,5 @@ int checksum_sum1(void *buf, int size);
 int tsc_ddr_idel_reset(int mem);
 int tsc_ddr_idel_status(int mem);
 int tsc_ddr_idel_set(int mem, uint dq, uint step, char *pm);
-int tsc_ddr_idel_calib(int mem);
+int tsc_ddr_idel_calib(int mem, int quiet);
 #endif /* _H_DDR */

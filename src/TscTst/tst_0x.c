@@ -126,6 +126,8 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
 	unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
 	// IDEL control register for both DDR3 memory
 	unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
+	// SMEM control & status register
+	unsigned int SMEM_DDR3_CSR[2] = {0x800, 0xc00};
 
     time_t tm;
     char *ct                        = NULL;
@@ -213,6 +215,25 @@ int tst_shm_calibration(struct tst_ctl *tc, char *tst_id){
     	memOrg = mem;
     	rr = 2;
     }
+
+    /* Reset memory controller */
+    /***************************************************************************/
+	// Only on the first memory due to the fact that reset impact both memory
+	// Calibration need to be done in the order : 1 -> 2
+    // Don't modify the bit 7
+	if(mem == 1){
+		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		data = 0x8000 | (data & (1 << 7));
+		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+
+		usleep(20000);
+
+		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		data = 0x2000 | (data & (1 << 7));
+		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+
+		usleep(20000);
+	}
 
     /* INITIAL READ */
     /***************************************************************************/
