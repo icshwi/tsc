@@ -93,6 +93,8 @@ int tsc_ddr_idel_calib_start(int quiet){
 	unsigned int SMEM_DDR3_IFSTA[2] = {0x808, 0xc08};
 	// IDEL control register for both DDR3 memory
 	unsigned int SMEM_DDR3_IDEL[2] = {0x80c, 0xc0c};
+	// SMEM control & status register
+	unsigned int SMEM_DDR3_CSR[2] = {0x800, 0xc00};
 
 	struct tsc_ioctl_map_win map_win;
 	int             DQ_NOK[16];
@@ -115,7 +117,6 @@ int tsc_ddr_idel_calib_start(int quiet){
     unsigned int    r, rr	        = 0;
     unsigned int    best            = 0;
     unsigned int    worst           = 0;
-    unsigned int    location        = 0;
     int             vtc_read        = 0;
     int             vtc_set         = 0;
     unsigned int    j, k, m         = 0;	   // Loop increment
@@ -165,6 +166,25 @@ int tsc_ddr_idel_calib_start(int quiet){
     	memOrg = mem;
     	rr = 2;
     }
+
+    /* Reset memory controller */
+    /***************************************************************************/
+	// Only on the first memory due to the fact that reset impact both memory
+	// Calibration need to be done in the order : 1 -> 2
+    // Don't modify the bit 7
+	if(mem == 1){
+		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		data = 0x8000 | (data & (1 << 7));
+		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+
+		usleep(20000);
+
+		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		data = 0x2000 | (data & (1 << 7));
+		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+
+		usleep(20000);
+	}
 
     /* CALIBRATION */
     /***************************************************************************/
@@ -411,6 +431,9 @@ else {
 			}
 		}
 		else {
+
+			printf("DDR#%i calibration OK \n", rr + 1);
+
 			// Search best case
 		    best = DQ_OK[0];
 
@@ -419,15 +442,12 @@ else {
 		    		//best = DQ_OK[m];
 		    		if (m < 8){
 		    			best = DQ_OK[m + 8];
-		    			location = m + 8;
 		    		}
 		    		else {
 		    			best = DQ_OK[m - 8];
-		    			location = m - 8;
 		    		}
 		        }
 		    }
-		    printf("MEM#%i Best calibration window size is %i for DQ[%02i] \n",r + 1, best, location);
 
 			// Search worst case
 		    worst = DQ_OK[0];
@@ -437,15 +457,12 @@ else {
 		    		worst = DQ_OK[m];
 		    		if (m < 8){
 		    			best = DQ_OK[m + 8];
-		    			location = m + 8;
 		    		}
 		    		else {
 		    			best = DQ_OK[m - 8];
-		    			location = m - 8;
 		    		}
 		        }
 		    }
-		    printf("MEM#%i Worst calibration windows size is %i for DQ[%02i] \n",r + 1,  worst, location);
 		}
 
 		// Set IDEL and IFSTA to 0
@@ -539,7 +556,7 @@ int main(int argc, char *argv[]){
 	tdma_init(quiet);
 
 	// Launch automatically DDR3 calibration
-tsc_ddr_idel_calib_start(quiet);
+	tsc_ddr_idel_calib_start(quiet);
 
 	// Test how many arguments exist and their position
 	if(argc > 2){

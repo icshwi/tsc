@@ -138,8 +138,8 @@ int main(int argc, char * argv[]){
 		}
 	}
 
-// Check if calibration is needed for mem1, mem2 or mem1 & mem2
-if(mem == 0x1){
+	// Check if calibration is needed for mem1, mem2 or mem1 & mem2
+	if(mem == 0x1){
 		mem = 1;
 		memOrg = mem;
 		rr = 1;
@@ -155,6 +155,25 @@ if(mem == 0x1){
 		rr = 2;
 	}
 
+    /* Reset memory controller */
+    /***************************************************************************/
+	// Only on the first memory due to the fact that reset impact both memory
+	// Calibration need to be done in the order : 1 -> 2
+    // Don't modify the bit 7
+	if(mem == 1){
+		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		data = 0x8000 | (data & (1 << 7));
+		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+
+		usleep(20000);
+
+		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		data = 0x2000 | (data & (1 << 7));
+		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+
+		usleep(20000);
+	}
+
 	/* INITIAL READ */
 	/***************************************************************************/
 
@@ -164,9 +183,9 @@ if(mem == 0x1){
 		data = 0;
 		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-
+if (!quiet) {
 		printf("Initial value for MEM%x : \n", mem);
-
+}
 		// Loop on 16 DQ
 		for(j = 0; j < 16; j++){
 			// Store initial value of count of the IFSTA register
@@ -181,18 +200,23 @@ if(mem == 0x1){
 			// MEM1
 			if(r == 0) {
 				init_delay_1[j]         = cnt_value & 0x1ff;
+if (!quiet) {
 				printf("DQ[%02i] IFSTA register 0x%08x -> Initial delay 0x%03x \n", j, cnt_value, init_delay_1[j]);
+}
 			}
 			// MEM2
 			else if (r == 1){
 				init_delay_2[j]         = cnt_value & 0x1ff;
+if (!quiet) {
 				printf("DQ[%02i] IFSTA register 0x%08x -> Initial delay 0x%03x \n", j, cnt_value, init_delay_2[j]);
+}
 			}
 		}
 		mem++;
 	}
+if (!quiet) {
 	printf("\n");
-
+}
 	/* CALIBRATION */
 	/***************************************************************************/
 
@@ -216,11 +240,15 @@ if(mem == 0x1){
 
 		if ((mem - 1) == 0){
 			map_win.req.mode.space = MAP_SPACE_SHM1; // SHM #1
+if (!quiet) {
 			printf("Calibration of the SMEM1\n");
+}
 		}
 		else if((mem - 1) == 1){
 			map_win.req.mode.space = MAP_SPACE_SHM2; // SHM #2
+if (!quiet) {
 			printf("Calibration of the SMEM2\n");
+}
 		}
 
 		map_win.req.mode.flags = 0;
@@ -270,7 +298,7 @@ if(mem == 0x1){
 		*buf_tx = word15;
 
 		buf_tx = buf_tx_start;
-
+if (!quiet) {
 		// Acquire temperature and voltage of current system
 		d0 = 0x3000;
 		tsc_smon_write(tsc_fd, 0x41, &d0);
@@ -304,13 +332,14 @@ if(mem == 0x1){
 		printf("Default INC           : %d \n", CURRENT_STEP);
 		printf("Default CNT           : %02x \n", DEFAULT_DELAY);
 		printf("\n");
-
+}
 		// Reset calibration register
 		data = 0;
 		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 
 		// Pass the entire possible delay taps
+if (!quiet) {
 		printf("+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
 		printf(" Default delay     :  ");
 		for(j = DEFAULT_DELAY; j < MAX; j++){
@@ -326,7 +355,7 @@ if(mem == 0x1){
 		printf(" Delay value [MSB] : 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 01 \n");
 		printf(" Delay value [LSB] : 40 44 48 4C 50 54 58 5C 60 64 68 6C 70 74 78 7C 80 84 88 8C 90 94 98 9C A0 A4 A8 AC B0 B4 B8 BC C0 C4 C8 CC D0 D4 D8 DC E0 E4 E8 EC F0 F4 F8 FC 00 04 08 0C 10 14 18 1C 20 24 28 2C 30 34 38 3F 40 44 48 4C 50 54 58 5C 60 64 68 6C 70 74 78 7C 80 84 88 8C 90 94 98 9C A0 A4 A8 AC B0 B4 B8 BC C0 C4 C8 CC D0 D4 D8 DC E0 E4 E8 EC F0 F4 F8 FC \n");
 		printf("+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
-
+}
 		// Set IDEL to 0
 		data = 0;
 		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
@@ -344,13 +373,14 @@ if(mem == 0x1){
 			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read); 				// Re-active active VTC
 			temp_cnt_value_store[j] = DEFAULT_DELAY;
 
+if (!quiet) {
 			if(j < 8){
 				printf(" DQ[%02d] test >>>>> :", j + 8);
 			}
 			else{
 				printf(" DQ[%02d] test >>>>> :", j - 8);
 			}
-
+}
 			// Reset avg_x, start index, number of test passed "ok" and end value for each DQ
 			avg_x = 0;
 			start = 0;
@@ -371,13 +401,17 @@ if(mem == 0x1){
 
 				// Check data received with reference pattern
 				if (!memcmp(pattern, ref_pattern, 32 * sizeof(int))){
+if (!quiet) {
 					printf("  Y");
+}
 					end   = k;
 					NOK   = 0;
 					ok++;
 				}
 				else{
+if (!quiet) {
 					printf("  -");
+}
 				}
 
 				// Increment only the tap delay when we are < MAX tap
@@ -443,7 +477,7 @@ else {
 
 			// Update the array with the new count value
 			final_cnt_value_store[j] = marker;
-
+if (!quiet) {
 			if(j < 8){
 				// Trace new delay
 				printf("\n");
@@ -456,6 +490,7 @@ else {
 					printf(" Init  delay 0x%03x :\n", init_delay_2[j + 8]);
 				}
 				printf(" Final delay 0x%03x :", marker);
+
 				for(n = DEFAULT_DELAY ; n < marker; n = n + CURRENT_STEP){
 					printf("   ");
 				}
@@ -480,7 +515,7 @@ else {
 				printf("  *");
 				printf("\n");
 			}
-
+}
 if (ppc == 1) {
 			if(j < 8){
 				// Compute new count value and write IFSTA
@@ -521,9 +556,9 @@ else {
 			}
 
 			DQ_OK[j] = ok;
-
+if (!quiet) {
 			printf("+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+ \n");
-
+}
 			// Set IDEL and IFSTA to 0
 			data = 0;
 			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
@@ -532,7 +567,9 @@ else {
 		}
 
 		// Execution is finished OK or NOK
+if (!quiet) {
 		printf("\n");
+}
 		if (NOK == 1){
 			printf("Calibration is not possible, error on line(s) : \n");
 			for (m = 0; m < 16; m++){
@@ -558,8 +595,9 @@ else {
 					}
 				}
 			}
+if (!quiet) {
 			printf("Best calibration window size is %i for DQ[%02i] \n", best, location);
-
+}
 			// Search worst case
 			worst = DQ_OK[0];
 
@@ -576,11 +614,13 @@ else {
 					}
 				}
 			}
+if (!quiet) {
 			printf("Worst calibration windows size is %i for DQ[%02i] \n", worst, location);
+}
 		}
 
 		// Print initial and final
-
+if (!quiet) {
 		printf("\n");
 		if (r == 0){ // MEM1
 			for (m = 0 ;m < 16 ;m++) {
@@ -606,7 +646,7 @@ else {
 		printf("\n");
 		printf("Calibration finished ! \n");
 		printf("\n");
-
+}
 		// Set IDEL and IFSTA to 0
 		data = 0;
 		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
@@ -635,9 +675,9 @@ else {
 		data = 0;
 		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
 		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-
+if (!quiet) {
 		printf("Final value for MEM%x : \n", mem);
-
+}
 		// Loop on 16 DQ
 		for(j = 0; j < 16; j++){
 			// Store initial value of count of the IFSTA register
@@ -648,7 +688,7 @@ else {
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
 			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
 			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
-
+if (!quiet) {
 			// MEM1
 			if(r == 0) {
 				printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_1[j], cnt_value, cnt_value & 0x1ff);
@@ -657,6 +697,7 @@ else {
 			else if (r == 1){
 				printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_2[j], cnt_value, cnt_value & 0x1ff);
 			}
+}
 		}
 
 		// Set IDEL and IFSTA to 0
@@ -667,8 +708,9 @@ else {
 		mem++;
 
 	}
+if (!quiet) {
 	printf("\n");
-
+}
 	// TSC exit
 	tsc_exit(tsc_fd);
 
