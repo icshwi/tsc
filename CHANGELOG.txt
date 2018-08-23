@@ -4,9 +4,14 @@
 * Changelog file                         *
 ******************************************
 
+*** Release 1.4.8 | 23.08.2018 ***
+
+- Modify DDR calibration process
+- Add Traffic generator example
+
 *** Release 1.4.7 | 12.06.2018 ***
 
-- Minor buug correction
+- Minor bug correction
 
 *** Release 1.4.6 | 28.03.2018 ***
 
