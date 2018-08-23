@@ -32,7 +32,7 @@ LIB = -L $(LIBDIR)
 
 HFILES = $(INCDIR)/cli.h 
 
-all : mapusr1 mapshm1 tscctl Ifc1211Pon
+all : mapusr1 mapshm1 tscctl Ifc1211Pon traffic
 
 mapusr1: mapusr1.c
 	$(CC) -Wall $(LIB) $(INC) -o mapusr1 mapusr1.c -ltsc -lrt -lm
@@ -42,5 +42,7 @@ tscctl: tscctl.c
 	$(CC) -Wall $(LIB) $(INC) -o tscctl tscctl.c -ltsc -lrt -lm
 Ifc1211Pon: Ifc1211Pon.c
 	$(CC) -Wall $(LIB) $(INC) -o Ifc1211Pon Ifc1211Pon.c -ltsc -lrt -lm		
+traffic: traffic.c
+	$(CC) -Wall $(LIB) $(INC) -o traffic traffic.c -ltsc -lrt -lm
 clean:
-	$(RM) *.o *.a mapusr1 mapshm1 tscctl Ifc1211Pon
+	$(RM) *.o *.a mapusr1 mapshm1 tscctl Ifc1211Pon traffic
