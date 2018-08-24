@@ -58,6 +58,16 @@
 
 int flag = 0;
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : main
+ * Prototype     : void
+ * Parameters    : arc, argv
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : Signal handler for ctrl+c
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
 void INThandler(int sig){
 	printf("Exit application \n");
 	flag = 1;
@@ -69,7 +79,7 @@ void INThandler(int sig){
  * Parameters    : arc, argv
  * Return        : void
  *----------------------------------------------------------------------------
- * Description   : test shm mapping
+ * Description   : Traffic generator
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -276,6 +286,7 @@ int main(int argc, char *argv[]){
 		return(retval);
 	}
 
+	// Catch ctrl+c command signal to exit program
 	signal(SIGINT, INThandler);
 
 	// Generate test with sliding size and offset
