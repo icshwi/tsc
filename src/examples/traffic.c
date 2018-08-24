@@ -39,7 +39,6 @@
 #include <ctype.h>
 #include <time.h>
 #include <sys/ioctl.h>
-
 #include <cli.h>
 #include <tscioctl.h>
 #include <tsculib.h>
@@ -47,6 +46,7 @@
 #include <tscslvioctl.h>
 #include "tsctst.h"
 #include "tstlib.h"
+#include <signal.h>
 
 /*
  * Mapping
@@ -56,6 +56,12 @@
  * USR1&2  ---|0x100000 - 0x200000|--- @0x10000
  */
 
+int flag = 0;
+
+void INThandler(int sig){
+	printf("Exit application \n");
+	flag = 1;
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : main
@@ -69,21 +75,20 @@
 
 int main(int argc, char *argv[]){
 	struct tsc_ioctl_map_win map_loc_win;
-	char * uaddr        = NULL;
 	char * eaddr        = NULL;
-	int fd              = -1;
+	char * uaddr        = NULL;
 	int retval          = 0;
-	int offset          = 0;
 	int size            = 0;
+	int fd              = -1;
+	int offset          = 0;
 	int win_size        = 0;
 	int i               = 0;
 	int agent           = 0;
-	int loop            = 0;
+	int inc             = 0;
 
-	if (argc != 3) {
+	if (argc != 2) {
 		printf("Not enough parameters..\n");
-		printf("Usage: traffic <number of iteration> <agent>      \n");
-		printf("   <number of iteration> : from 1 to 2147483646   \n");
+		printf("Usage: traffic <agent>      \n");
 		printf("   <agent>               : 0 SRAM1                \n");
 		printf("                           1 SRAM2                \n");
 		printf("                           2 DDR1                 \n");
@@ -93,23 +98,9 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	if (sscanf(argv[1], "%i", &loop) != 1) {
+	if (sscanf(argv[1], "%i", &agent) != 1) {
 		printf("Bad value..\n");
-		printf("Usage: traffic <number of iteration> <agent>      \n");
-		printf("   <number of iteration> : from 1 to 2147483646   \n");
-		printf("   <agent>               : 0 SRAM1                \n");
-		printf("                           1 SRAM2                \n");
-		printf("                           2 DDR1                 \n");
-		printf("                           3 DDR2                 \n");
-		printf("                           4 USR1                 \n");
-		printf("                           5 USR2                 \n");
-		return -1;
-	}
-
-	if (sscanf(argv[2], "%i", &agent) != 1) {
-		printf("Bad value..\n");
-		printf("Usage: traffic <number of iteration> <agent>      \n");
-		printf("   <number of iteration> : from 1 to 2147483646   \n");
+		printf("Usage: traffic <agent>      \n");
 		printf("   <agent>               : 0 SRAM1                \n");
 		printf("                           1 SRAM2                \n");
 		printf("                           2 DDR1                 \n");
@@ -137,35 +128,12 @@ int main(int argc, char *argv[]){
 		return -1;
 	}
 
-	if (agent == 0) {
-		printf("iteration is %i traffic on agent SRAM1 \n", loop);
+	memset(&map_loc_win, sizeof(map_loc_win), 0);
+	map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
+	map_loc_win.req.mode.flags = 0;
 
-		// Map SRAM1
-		memset(&map_loc_win, sizeof(map_loc_win), 0);
-
-		offset   = 0x4000;
-		size     = 0x4000;
-		win_size = 0x10000;
-
-		map_loc_win.req.rem_addr   = offset;
-		map_loc_win.req.loc_addr   = 0;
-		map_loc_win.req.size       = win_size;
-		map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
-		map_loc_win.req.mode.space = MAP_SPACE_SHM1;
-		map_loc_win.req.mode.flags = 0;
-
-		retval = tsc_map_alloc(&map_loc_win);
-		if(retval < 0){
-			printf("Error in mapping memory \n");
-			tsc_exit();
-			return -1;
-		}
-	}
-	else if (agent == 1){
-		printf("iteration is %i traffic on agent SRAM2 \n", loop);
-
-		// Map SRAM2
-		memset(&map_loc_win, sizeof(map_loc_win), 0);
+	if (agent == 0) { // Map SRAM1
+		printf("Traffic on agent SRAM1 \n");
 
 		offset   = 0x4000;
 		size     = 0x4000;
@@ -174,33 +142,8 @@ int main(int argc, char *argv[]){
 		map_loc_win.req.rem_addr   = offset;
 		map_loc_win.req.loc_addr   = 0;
 		map_loc_win.req.size       = win_size;
-		map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
-		map_loc_win.req.mode.space = MAP_SPACE_SHM2;
-		map_loc_win.req.mode.flags = 0;
-
-		retval = tsc_map_alloc(&map_loc_win);
-		if(retval < 0){
-			printf("Error in mapping memory \n");
-			tsc_exit();
-			return -1;
-		}
-	}
-	else if (agent == 2){
-		printf("iteration is %i traffic on agent DDR1 \n", loop);
-
-		// Map SHM1
-		memset(&map_loc_win, sizeof(map_loc_win), 0);
-
-		offset   = 0x100000;
-		size     = 0x10000;
-		win_size = 0x100000;
-
-		map_loc_win.req.rem_addr   = offset;
-		map_loc_win.req.loc_addr   = 0;
-		map_loc_win.req.size       = win_size;
-		map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
 		map_loc_win.req.mode.space = MAP_SPACE_SHM1;
-		map_loc_win.req.mode.flags = 0;
+
 
 		retval = tsc_map_alloc(&map_loc_win);
 		if(retval < 0){
@@ -209,11 +152,27 @@ int main(int argc, char *argv[]){
 			return -1;
 		}
 	}
-	else if (agent == 3){
-		printf("iteration is %i traffic on agent DDR2 \n", loop);
+	else if (agent == 1){ // Map SRAM2
+		printf("Traffic on agent SRAM2 \n");
 
-		// Map SHM2
-		memset(&map_loc_win, sizeof(map_loc_win), 0);
+		offset   = 0x4000;
+		size     = 0x4000;
+		win_size = 0x10000;
+
+		map_loc_win.req.rem_addr   = offset;
+		map_loc_win.req.loc_addr   = 0;
+		map_loc_win.req.size       = win_size;
+		map_loc_win.req.mode.space = MAP_SPACE_SHM2;
+
+		retval = tsc_map_alloc(&map_loc_win);
+		if(retval < 0){
+			printf("Error in mapping memory \n");
+			tsc_exit();
+			return -1;
+		}
+	}
+	else if (agent == 2){ // Map SHM1
+		printf("Traffic on agent DDR1 \n");
 
 		offset   = 0x100000;
 		size     = 0x10000;
@@ -222,9 +181,7 @@ int main(int argc, char *argv[]){
 		map_loc_win.req.rem_addr   = offset;
 		map_loc_win.req.loc_addr   = 0;
 		map_loc_win.req.size       = win_size;
-		map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
-		map_loc_win.req.mode.space = MAP_SPACE_SHM2;
-		map_loc_win.req.mode.flags = 0;
+		map_loc_win.req.mode.space = MAP_SPACE_SHM1;
 
 		retval = tsc_map_alloc(&map_loc_win);
 		if(retval < 0){
@@ -233,22 +190,36 @@ int main(int argc, char *argv[]){
 			return -1;
 		}
 	}
-	else if (agent == 4){
-		printf("iteration is %i traffic on agent USR1 \n", loop);
+	else if (agent == 3){ // Map SHM2
+		printf("Traffic on agent DDR2 \n");
 
-		// Map USR1
-		memset(&map_loc_win, sizeof(map_loc_win), 0);
-
-		offset = 0x100000;
-		size   = 0x10000;
+		offset   = 0x100000;
+		size     = 0x10000;
 		win_size = 0x100000;
 
 		map_loc_win.req.rem_addr   = offset;
 		map_loc_win.req.loc_addr   = 0;
 		map_loc_win.req.size       = win_size;
-		map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
+		map_loc_win.req.mode.space = MAP_SPACE_SHM2;
+
+		retval = tsc_map_alloc(&map_loc_win);
+		if(retval < 0){
+			printf("Error in mapping memory \n");
+			tsc_exit();
+			return -1;
+		}
+	}
+	else if (agent == 4){ // Map USR1
+		printf("Traffic on agent USR1 \n");
+
+		offset   = 0x100000;
+		size     = 0x10000;
+		win_size = 0x100000;
+
+		map_loc_win.req.rem_addr   = offset;
+		map_loc_win.req.loc_addr   = 0;
+		map_loc_win.req.size       = win_size;
 		map_loc_win.req.mode.space = MAP_SPACE_USR1;
-		map_loc_win.req.mode.flags = 0;
 
 		retval = tsc_map_alloc(&map_loc_win);
 		if(retval < 0){
@@ -257,22 +228,17 @@ int main(int argc, char *argv[]){
 			return -1;
 		}
 	}
-	else if (agent == 5){
-		printf("iteration is %i traffic on agent USR2 \n", loop);
+	else if (agent == 5){ // Map USR2
+		printf("Traffic on agent USR2 \n");
 
-		// Map USR2
-		memset(&map_loc_win, sizeof(map_loc_win), 0);
-
-		offset = 0x100000;
-		size   = 0x10000;
+		offset   = 0x100000;
+		size     = 0x10000;
 		win_size = 0x100000;
 
 		map_loc_win.req.rem_addr   = offset;
 		map_loc_win.req.loc_addr   = 0;
 		map_loc_win.req.size       = win_size;
-		map_loc_win.req.mode.sg_id = MAP_ID_MAS_PCIE_MEM;
 		map_loc_win.req.mode.space = MAP_SPACE_USR2;
-		map_loc_win.req.mode.flags = 0;
 
 		retval = tsc_map_alloc(&map_loc_win);
 		if(retval < 0){
@@ -283,8 +249,7 @@ int main(int argc, char *argv[]){
 	}
 	else {
 		printf("Bad value..\n");
-		printf("Usage: traffic <number of iteration> <agent>      \n");
-		printf("   <number of iteration> : from 1 to 2147483646   \n");
+		printf("Usage: traffic <agent>      \n");
 		printf("   <agent>               : 0 SRAM1                \n");
 		printf("                           1 SRAM2                \n");
 		printf("                           2 DDR1                 \n");
@@ -311,22 +276,42 @@ int main(int argc, char *argv[]){
 		return(retval);
 	}
 
-	// Generate test with sliding size and offset
-	for(i = 0 ; i < loop; i++){
+	signal(SIGINT, INThandler);
 
-		// Write into agent : 0..4..8..c
-		tst_cpu_fill(uaddr, size, 1, offset, 4);
+	// Generate test with sliding size and offset
+	while (1){
+		if (flag == 1){
+			break;
+		}
+		// Write into agent
+		if (agent == 0){ tst_cpu_fill(uaddr, size, 1, offset, 1); }
+		else if (agent == 1){ tst_cpu_fill(uaddr, size, 1, offset, 2); }
+		else if (agent == 2){ tst_cpu_fill(uaddr, size, 1, offset, 3); }
+		else if (agent == 3){ tst_cpu_fill(uaddr, size, 1, offset, 4); }
+		else if (agent == 4){ tst_cpu_fill(uaddr, size, 1, offset, 5); }
+		else if (agent == 5){ tst_cpu_fill(uaddr, size, 1, offset, 6); }
 
 		// Check for errors in pattern
-		eaddr = tst_cpu_check(uaddr, size, 1, offset, 4);
+		if (agent == 0){ eaddr = tst_cpu_check(uaddr, size, 1, offset, 1); }
+		else if (agent == 1){ eaddr = tst_cpu_check(uaddr, size, 1, offset, 2); }
+		else if (agent == 2){ eaddr = tst_cpu_check(uaddr, size, 1, offset, 3); }
+		else if (agent == 3){ eaddr = tst_cpu_check(uaddr, size, 1, offset, 4); }
+		else if (agent == 4){ eaddr = tst_cpu_check(uaddr, size, 1, offset, 5); }
+		else if (agent == 5){ eaddr = tst_cpu_check(uaddr, size, 1, offset, 6); }
 		if(eaddr){
 			printf("->Error in pattern at iteration %i \n", i);
 			retval = -1;
 			break;
 		}
 		else {
-			printf("#%i OK \n", i);
+			if (agent == 0){ printf("Iteration #%i - Agent SRAM1 - OK \n", inc);; }
+			else if (agent == 1){ printf("Iteration #%i - Agent  SRAM2 - OK \n", inc);; }
+			else if (agent == 2){ printf("Iteration #%i - Agent  DDR1 - OK \n", inc);; }
+			else if (agent == 3){ printf("Iteration #%i - Agent  DDR2 - OK \n", inc);; }
+			else if (agent == 4){ printf("Iteration #%i - Agent  USR1 - OK \n", inc);; }
+			else if (agent == 5){ printf("Iteration #%i - Agent  USR2 - OK \n", inc);; }
 		}
+		inc++;
 	}
 
 	retval = munmap(uaddr, size);
