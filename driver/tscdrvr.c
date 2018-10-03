@@ -170,7 +170,7 @@ static long tsc_ioctl( struct file *filp, unsigned int cmd, unsigned long arg){
 	struct tsc_device *ifc;
 	int retval;
 
-	debugk(( KERN_ALERT "tsc: entering tsc_ioctl( %p, %x, %lx)\n", filp, cmd, arg));
+	//debugk(( KERN_ALERT "tsc: entering tsc_ioctl( %p, %x, %lx)\n", filp, cmd, arg));
 	ifc = ( struct tsc_device *)filp->private_data;
 
 	retval = 0;
@@ -269,7 +269,7 @@ static int tsc_mmap( struct file *filp, struct vm_area_struct *vma){
 
 	size   = vma->vm_end - vma->vm_start;
 	off    = vma->vm_pgoff << PAGE_SHIFT;
-	//printk( KERN_ALERT "ifc: entering tsc_mmap( %p, %p, %lx [%lx])\n", filp, vma,  off, size);
+	debugk(( KERN_ALERT "ifc: entering tsc_mmap( %p, %p, %lx [%lx])\n", filp, vma,  off, size));
 	if( (off & 0xc00000000) == 0xc00000000)
 	{
 	  vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
