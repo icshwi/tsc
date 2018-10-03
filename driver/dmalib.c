@@ -409,17 +409,24 @@ dma_wait( struct dma_ctl *dma_ctl_p,
   int retval;
 
   debugk(("in tsc_dma_wait() : mode = %x\n", mode));
+  /* protect against concurrent access to queue control structure */
+  mutex_lock(&dma_ctl_p->dma_lock);
   if( dma_ctl_p->state != DMA_STATE_STARTED)
   {
     if( dma_ctl_p->state == DMA_STATE_DONE)
     {
       dma_ctl_p->status |= DMA_STATUS_ENDED;
+      mutex_unlock(&dma_ctl_p->dma_lock);
       return( 0);
     }
     debugk(("tsc_dma_wait() : Bad state  %d\n", dma_ctl_p->state));
+    mutex_unlock(&dma_ctl_p->dma_lock);
     return( -EPERM);
   }
   dma_ctl_p->state = DMA_STATE_WAITING;
+  /* release locking semaphore */
+  mutex_unlock(&dma_ctl_p->dma_lock);
+
   tmo = ( mode & 0xf0) >> 4;
   if( tmo)
   {
@@ -442,6 +449,9 @@ dma_wait( struct dma_ctl *dma_ctl_p,
   {
     retval = down_interruptible( &dma_ctl_p->sem);
   }
+
+  /* protect against concurrent access to queue control structure */
+  mutex_lock(&dma_ctl_p->dma_lock);
   if( retval)
   {
     debugk(("DMA wait timeout\n"));
@@ -454,6 +464,9 @@ dma_wait( struct dma_ctl *dma_ctl_p,
     dma_ctl_p->state = DMA_STATE_DONE;
     dma_ctl_p->status |= DMA_STATUS_ENDED;
   }
+  /* release locking semaphore */
+  mutex_unlock(&dma_ctl_p->dma_lock);
+
   return(0);
 }
 
@@ -790,9 +803,12 @@ tsc_dma_move( struct tsc_device *ifc,
     space_shm = DMA_SPACE_SHM2;
   }
   dma_ctl_p = ifc->dma_ctl[chan];
+  /* protect against concurrent access to queue control structure */
+  mutex_lock(&dma_ctl_p->dma_lock);
   if( ( dma_ctl_p->state != DMA_STATE_ALLOCATED) &&
       ( dma_ctl_p->state != DMA_STATE_DONE)          )
   {
+    mutex_unlock(&dma_ctl_p->dma_lock);
     return( -EPERM);
   }
   irq = dma_ctl_p->irq;
@@ -800,6 +816,7 @@ tsc_dma_move( struct tsc_device *ifc,
   {
     if( ( dr_p->des_space & DMA_SPACE_MASK) ==  space_shm)
     {
+      mutex_unlock(&dma_ctl_p->dma_lock);
       return( -EINVAL);
     }
     else
@@ -873,6 +890,9 @@ tsc_dma_move( struct tsc_device *ifc,
     iowrite32( wro, ifc->csr_ptr + csr_wro);
   }
   dma_ctl_p->state = DMA_STATE_STARTED;
+  /* release locking semaphore */
+  mutex_unlock(&dma_ctl_p->dma_lock);
+
   if( dr_p->wait_mode & DMA_WAIT_INTR)
   {
     retval = dma_wait( dma_ctl_p, dr_p->wait_mode);
