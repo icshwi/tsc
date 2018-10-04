@@ -834,7 +834,7 @@ tsc_csr_op( struct tsc_device *ifc,
     case TSC_IOCTL_CSR_WR:
     case TSC_IOCTL_CSR_WRm:
     {
-      if( csr_op->operation == TSC_IOCTL_CSR_RDm)
+      if( csr_op->operation == TSC_IOCTL_CSR_WRm)
       {
         tmp = ioread32( ifc->csr_ptr + csr_op->offset);
         tmp &= ~csr_op->mask;
@@ -881,7 +881,7 @@ tsc_csr_op( struct tsc_device *ifc,
     case TSC_IOCTL_CSR_ANDm:
     {
       tmp = ioread32( ifc->csr_ptr + csr_op->offset);
-      if( csr_op->operation == TSC_IOCTL_CSR_XORm)
+      if( csr_op->operation == TSC_IOCTL_CSR_ANDm)
       {
 	csr_op->data = (csr_op->data & tmp) & csr_op->mask;
         tmp &= ~csr_op->mask;
