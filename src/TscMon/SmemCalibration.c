@@ -161,15 +161,15 @@ int main(int argc, char * argv[]){
 	// Calibration need to be done in the order : 1 -> 2
     // Don't modify the bit 7
 	if(mem == 1){
-		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_read(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 		data = 0x8000 | (data & (1 << 7));
-		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 
 		usleep(20000);
 
-		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_read(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 		data = 0x2000 | (data & (1 << 7));
-		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 
 		usleep(20000);
 	}
@@ -181,8 +181,8 @@ int main(int argc, char * argv[]){
 	for (r = 0; r < rr; r++){
 		// Reset calibration register
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 if (!quiet) {
 		printf("Initial value for MEM%x : \n", mem);
 }
@@ -190,12 +190,12 @@ if (!quiet) {
 		for(j = 0; j < 16; j++){
 			// Store initial value of count of the IFSTA register
 			dq_path = (j << 12);
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
-			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Acquire current value of the register
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &dq_path);
+			tsc_csr_read(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Acquire current value of the register
 			vtc_set = (vtc_read | (1 << 28));							// Set value to disable VTC
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
-			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
+			tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
 
 			// MEM1
 			if(r == 0) {
@@ -673,8 +673,8 @@ if (!quiet) {
 	for (r = 0; r < rr; r++){
 		// Reset calibration register
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
 if (!quiet) {
 		printf("Final value for MEM%x : \n", mem);
 }
@@ -682,12 +682,12 @@ if (!quiet) {
 		for(j = 0; j < 16; j++){
 			// Store initial value of count of the IFSTA register
 			dq_path = (j << 12);
-			tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &dq_path);
-			tsc_csr_read(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Acquire current value of the register
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &dq_path);
+			tsc_csr_read(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Acquire current value of the register
 			vtc_set = (vtc_read | (1 << 28));							// Set value to disable VTC
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
-			tsc_csr_read(SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
-			tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_set); 			// Disable VTC
+			tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value); 		// Read initial value of IFSTA register
+			tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read); 			// Re-active active VTC
 if (!quiet) {
 			// MEM1
 			if(r == 0) {
@@ -702,8 +702,8 @@ if (!quiet) {
 
 		// Set IDEL and IFSTA to 0
 		data = 0;
-		tsc_csr_write(SMEM_DDR3_IDEL[mem - 1], &data);
-		tsc_csr_write(SMEM_DDR3_IFSTA[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
 
 		mem++;
 

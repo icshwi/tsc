@@ -173,15 +173,15 @@ int tsc_ddr_idel_calib_start(int quiet){
 	// Calibration need to be done in the order : 1 -> 2
     // Don't modify the bit 7
 	if(mem == 1){
-		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_read(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 		data = 0x8000 | (data & (1 << 7));
-		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 
 		usleep(20000);
 
-		tsc_csr_read(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_read(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 		data = 0x2000 | (data & (1 << 7));
-		tsc_csr_write(SMEM_DDR3_CSR[mem - 1], &data);
+		tsc_csr_write(tsc_fd, SMEM_DDR3_CSR[mem - 1], &data);
 
 		usleep(20000);
 	}

@@ -44,17 +44,8 @@
 #include "mtca4rtmlib.h"
 #include "TscMon.h"
 
-<<<<<<< HEAD
 extern int tsc_fd;
 
-char *
-rtm_rcsid()
-{
-  return( rcsid);
-}
-
-=======
->>>>>>> 97f16a8... Cosmetic, add -Wall compilation flag to clean [XP]
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : rtm_led
  * Prototype     : int
@@ -66,63 +57,6 @@ rtm_rcsid()
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-<<<<<<< HEAD
-int 
-rtm_led( struct cli_cmd_para *c)
-{
-  int retval;
-  mtca4_rtm_led_id_t led_id;
-  mtca4_rtm_led_function_t led_function;
-  mtca4_rtm_led_on_duration_t led_on_duration;
-
-  if ((c->cnt != 3))
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
-
-  if (!strcasecmp(c->para[1], "red"))
-  {
-    led_id = MTCA4_RTM_RED_LED;
-  }
-  else if (!strcasecmp(c->para[1], "green"))
-  {
-    led_id = MTCA4_RTM_GREEN_LED;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
-
-  if (!strcasecmp(c->para[2], "on"))
-  {
-    led_function = MTCA4_RTM_LED_ON;
-  }
-  else if (!strcasecmp(c->para[2], "off"))
-  {
-    led_function = MTCA4_RTM_LED_OFF;
-  }
-  else if (!strcasecmp(c->para[2], "slow_blink"))
-  {
-    led_function = MTCA4_RTM_LED_BLINK_500MS_OFF;
-    led_on_duration = MTCA4_RTM_LED_BLINK_500MS_ON;
-  }
-  else if (!strcasecmp(c->para[2], "fast_blink"))
-  {
-    led_function = MTCA4_RTM_LED_BLINK_100MS_OFF;
-    led_on_duration = MTCA4_RTM_LED_BLINK_100MS_ON;
-  }
-  else
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
-
-  set_mtca4_rtm_led_state(tsc_fd, led_id, led_function, led_on_duration);
-
-  return CLI_OK;
-=======
 int rtm_led(struct cli_cmd_para *c){
 	mtca4_rtm_led_id_t led_id;
 	mtca4_rtm_led_function_t led_function;
@@ -163,10 +97,9 @@ int rtm_led(struct cli_cmd_para *c){
 		return(CLI_ERR);
 	}
 
-	set_mtca4_rtm_led_state(led_id, led_function, led_on_duration);
+	set_mtca4_rtm_led_state(tsc_fd, led_id, led_function, led_on_duration);
 
 	return CLI_OK;
->>>>>>> 97f16a8... Cosmetic, add -Wall compilation flag to clean [XP]
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -199,11 +132,7 @@ int rtm_eeprom(struct cli_cmd_para *c){
 		return(CLI_ERR);
 	}
 
-<<<<<<< HEAD
-  set_mtca4_rtm_eeprom_wp(tsc_fd, state);
-=======
-	set_mtca4_rtm_eeprom_wp(state);
->>>>>>> 97f16a8... Cosmetic, add -Wall compilation flag to clean [XP]
+	set_mtca4_rtm_eeprom_wp(tsc_fd, state);
 
 	return CLI_OK;
 }
@@ -273,11 +202,7 @@ int rtm_zone3(struct cli_cmd_para *c){
 		return(CLI_ERR);
 	}
 
-<<<<<<< HEAD
-  set_mtca4_rtm_zone3_enable(tsc_fd, state);
-=======
-	set_mtca4_rtm_zone3_enable(state);
->>>>>>> 97f16a8... Cosmetic, add -Wall compilation flag to clean [XP]
+	set_mtca4_rtm_zone3_enable(tsc_fd, state);
 
 	return CLI_OK;
 }
@@ -293,54 +218,13 @@ int rtm_zone3(struct cli_cmd_para *c){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-<<<<<<< HEAD
-int 
-tsc_rtm( struct cli_cmd_para *c)
-{
-  int cnt  = 0;
-  int i    = 0;
-  int data = 0;
-
-  // Check if the board is a IFC14XX
-  tsc_pon_read(tsc_fd, 0x0, &data);
-  data &= 0xFFFFFF00;
-  if (data != 0x73571400) {
-	printf("Command available only on IFC14xx board\n");
-	return (CLI_ERR);
-  }
-
-  cnt = c->cnt;
-  i = 0;
-  if( cnt--)
-  {
-    if( !strcmp( "led", c->para[i]))
-    {
-      return( rtm_led( c));
-    }
-    else if( !strcmp( "reset", c->para[i]))
-    {
-      return( rtm_reset( c));
-    }
-    else if( !strcmp( "eeprom", c->para[i]))
-    {
-      return( rtm_eeprom( c));
-    }
-    else if( !strcmp( "zone3", c->para[i]))
-    {
-      return( rtm_zone3( c));
-    }
-  }
-
-  tsc_print_usage( c);
-  return( CLI_ERR);
-=======
 int tsc_rtm(struct cli_cmd_para *c){
 	int cnt  = 0;
 	int i    = 0;
 	int data = 0;
 
 	// Check if the board is a IFC14XX
-	tsc_pon_read(0x0, &data);
+	tsc_pon_read(tsc_fd, 0x0, &data);
 	data &= 0xFFFFFF00;
 	if (data != 0x73571400) {
 		printf("Command available only on IFC14xx board\n");
@@ -366,5 +250,4 @@ int tsc_rtm(struct cli_cmd_para *c){
 
 	tsc_print_usage(c);
 	return(CLI_ERR);
->>>>>>> 97f16a8... Cosmetic, add -Wall compilation flag to clean [XP]
 }
