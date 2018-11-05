@@ -260,17 +260,17 @@ ioctl_rdwr( struct tsc_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int
-ioctl_dma( struct tsc_device *ifc,
+ioctl_dma(struct tsc_device *ifc,
            unsigned int cmd,
            unsigned long arg)
 {
-  int retval;
+  int retval = 0;
 
-  retval = 0;
-  switch ( cmd)
+  switch(cmd)
   {
     case TSC_IOCTL_DMA_MOVE:
     case TSC_IOCTL_DMA_TRANSFER:
+    case TSC_IOCTL_DMA_WAIT:
     {
       struct tsc_ioctl_dma_req dma_req;
 
@@ -280,32 +280,13 @@ ioctl_dma( struct tsc_device *ifc,
       }
       if(cmd == TSC_IOCTL_DMA_TRANSFER) retval = tsc_dma_transfer(ifc, &dma_req);
       else if(cmd == TSC_IOCTL_DMA_MOVE) retval = tsc_dma_move(ifc, &dma_req);
-      if(retval < 0)
+      else if(cmd == TSC_IOCTL_DMA_WAIT) retval = tsc_dma_wait(ifc, &dma_req);
+      if(copy_to_user((void *)arg, &dma_req, sizeof(dma_req)) || (retval < 0))
       {
-        return retval;
-      }
-      if(copy_to_user((void *)arg, &dma_req, sizeof(dma_req)))
-      {
-        return -EFAULT;
-      }
-      break;
-    }
-    case TSC_IOCTL_DMA_WAIT:
-    {
-      struct tsc_ioctl_dma_req dma_req;
-
-      if( copy_from_user(&dma_req, (void *)arg, sizeof(dma_req)))
-      {
-        return( -EFAULT);
-      }
-      retval = tsc_dma_wait( ifc, &dma_req);
-      if( retval < 0)
-      {
-        return( retval);
-      }
-      if( copy_to_user( (void *)arg, &dma_req, sizeof( dma_req)))
-      {
-        return -EFAULT;
+        if(retval < 0)
+          return retval;
+        else
+          return -EFAULT;
       }
       break;
     }
@@ -313,18 +294,17 @@ ioctl_dma( struct tsc_device *ifc,
     {
       struct tsc_ioctl_dma_sts dma_sts;
 
-      if( copy_from_user(&dma_sts, (void *)arg, sizeof(dma_sts)))
-      {
-        return( -EFAULT);
-      }
-      retval = tsc_dma_status( ifc, &dma_sts);
-      if( retval < 0)
-      {
-        return( retval);
-      }
-      if( copy_to_user( (void *)arg, &dma_sts, sizeof( dma_sts)))
+      if(copy_from_user(&dma_sts, (void *)arg, sizeof(dma_sts)))
       {
         return -EFAULT;
+      }
+      retval = tsc_dma_status(ifc, &dma_sts);
+      if(copy_to_user((void *)arg, &dma_sts, sizeof(dma_sts)) || (retval < 0))
+      {
+        if(retval < 0)
+          return retval;
+        else
+          return -EFAULT;
       }
       break;
     }
@@ -332,18 +312,17 @@ ioctl_dma( struct tsc_device *ifc,
     {
       struct tsc_ioctl_dma_mode dma_mode;
 
-      if( copy_from_user( &dma_mode, (void *)arg, sizeof(dma_mode)))
-      {
-        return( -EFAULT);
-      }
-      retval = tsc_dma_mode( ifc, &dma_mode);
-      if( retval < 0)
-      {
-        return( retval);
-      }
-      if( copy_to_user( (void *)arg, &dma_mode, sizeof( dma_mode)))
+      if(copy_from_user(&dma_mode, (void *)arg, sizeof(dma_mode)))
       {
         return -EFAULT;
+      }
+      retval = tsc_dma_mode(ifc, &dma_mode);
+      if(copy_to_user((void *)arg, &dma_mode, sizeof(dma_mode)) || (retval < 0))
+      {
+        if(retval < 0)
+          return retval;
+        else
+          return -EFAULT;
       }
       break;
     }
@@ -353,30 +332,28 @@ ioctl_dma( struct tsc_device *ifc,
     {
       struct tsc_ioctl_dma dma;
 
-      if( copy_from_user(&dma, (void *)arg, sizeof(dma)))
+      if(copy_from_user(&dma, (void *)arg, sizeof(dma)))
       {
         return( -EFAULT);
       }
-      if( cmd == TSC_IOCTL_DMA_ALLOC) retval = tsc_dma_alloc( ifc, &dma);
-      else if( cmd == TSC_IOCTL_DMA_FREE) retval = tsc_dma_free( ifc, &dma);
-      else if( cmd == TSC_IOCTL_DMA_CLEAR) retval = tsc_dma_clear( ifc, &dma);
-      else retval = -EINVAL;
-      if( retval < 0)
+      if(cmd == TSC_IOCTL_DMA_ALLOC) retval = tsc_dma_alloc(ifc, &dma);
+      else if(cmd == TSC_IOCTL_DMA_FREE) retval = tsc_dma_free(ifc, &dma);
+      else if(cmd == TSC_IOCTL_DMA_CLEAR) retval = tsc_dma_clear(ifc, &dma);
+      if(copy_to_user((void *)arg, &dma, sizeof(dma)) || (retval < 0))
       {
-        return( retval);
-      }
-      if( copy_to_user( (void *)arg, &dma, sizeof( dma)))
-      {
-        return -EFAULT;
+        if(retval < 0)
+          return retval;
+        else
+          return -EFAULT;
       }
       break;
     }
     default:
     {
-      return( -EINVAL);
+      return -EINVAL;
     }
   }
-  return( retval);
+  return retval;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
