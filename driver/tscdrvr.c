@@ -99,6 +99,8 @@ irqreturn_t tsc_irq(int irq, void *arg){
 
 	/* generate IACK cycle */
 	ip = ioread32(ifc->csr_ptr + TSC_CSR_ILOC_ITC_IACK);
+	if (ip == 0x0)
+		return IRQ_NONE;
 
 	/* get interrupt source */
 	src  = ip & 0x7fff;
@@ -114,7 +116,8 @@ irqreturn_t tsc_irq(int irq, void *arg){
 	ifc->irq_tbl[itc][idx].cnt += 1;
 
 	/* activates tasklet handling interrupts */
-	ifc->irq_tbl[itc][idx].func(ifc, src, ifc->irq_tbl[itc][idx].arg);
+	if (ifc->irq_tbl[itc][idx].func)
+		ifc->irq_tbl[itc][idx].func(ifc, src, ifc->irq_tbl[itc][idx].arg);
 
 	/* clear IP and restart interrupt scanning */
 	iowrite32(ip<<16, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IACK);
