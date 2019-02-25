@@ -1078,39 +1078,6 @@ dma_get_channel(struct tsc_device *ifc,
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : dma_get_valid_status
- * Prototype     : int
- * Parameters    : channel
- * Return        : valid status
- *----------------------------------------------------------------------------
- * Description   : get valid status
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-dma_get_valid_status(int channel)
-{
-  int valid_status = 0;
-
-  switch(channel)
-  {
-    case DMA_CHAN_0:
-      valid_status = (0x2 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD0 | DMA_STATUS_RUN_WR0;
-      break;
-    case DMA_CHAN_1:
-      valid_status = (0x2 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD1 | DMA_STATUS_RUN_WR1;
-      break;
-    case DMA_CHAN_2:
-      valid_status = (0x3 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD0 | DMA_STATUS_RUN_WR0;
-      break;
-    case DMA_CHAN_3:
-      valid_status = (0x3 << 28) | DMA_STATUS_DONE | DMA_STATUS_ENDED | DMA_STATUS_RUN_RD1 | DMA_STATUS_RUN_WR1;
-      break;
-  }
-  return valid_status;
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_dma_transfer
  * Prototype     : int
  * Parameters    : ifc structure, dma request structure
@@ -1145,7 +1112,7 @@ tsc_dma_transfer(struct tsc_device *ifc,
     dr_p->wait_mode  = DMA_WAIT_INTR | DMA_WAIT_10MS | (5 << 4); // Timeout after 50 ms
 
   retval = tsc_dma_move(ifc, dr_p);
-  if((retval == 0) && (dr_p->dma_status == dma_get_valid_status(channel)))
+  if(retval == 0)
     retval = dma_free(dma_ctl_p);
   else
   {
