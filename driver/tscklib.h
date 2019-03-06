@@ -73,6 +73,7 @@ int tsc_i2c_init( struct tsc_device *ifc);
 void tsc_i2c_exit( struct tsc_device *ifc);
 int tsc_semaphore_release(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore);
 int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaphore);
+int tsc_user_irq_init(struct tsc_device *ifc);
 
 #include "irqlib.h"
 #include "maplib.h"
@@ -84,5 +85,6 @@ int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaph
 #include "fifolib.h"
 #include "i2clib.h"
 #include "semaphorelib.h"
+#include "userirqlib.h"
 
 #endif /*  _H_TSCKLIB */

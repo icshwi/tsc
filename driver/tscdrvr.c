@@ -94,6 +94,12 @@ irqreturn_t tsc_irq(int irq, void *arg){
 	register uint base;
 	register uint src, idx;
 
+	if (arg == NULL)
+	{
+		printk("tsc: %s: Invalid argument\n", __func__);
+		return IRQ_NONE;
+	}
+
 	ifc = (struct tsc_device *)arg;
 	debugk((KERN_ALERT "tsc: entering tsc_irq( %x, %p)\n", irq, arg));
 
@@ -111,6 +117,15 @@ irqreturn_t tsc_irq(int irq, void *arg){
 
 	/* mask interrupt source */
 	iowrite32(ip, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IMS);
+
+	if (idx > 7)
+	{
+		printk("tsc: %s: irq %d will not be handled, irq 0-7 are supported\n",
+			__func__, idx);
+		/* clear IP and restart interrupt scanning */
+		iowrite32(ip<<16, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IACK);
+		return IRQ_NONE;
+	}
 
 	/* increment interrupt counter */
 	ifc->irq_tbl[itc][idx].cnt += 1;
@@ -169,87 +184,92 @@ static int tsc_open( struct inode *inode, struct file *filp){
  *
  *----------------------------------------------------------------------------*/
 
-static long tsc_ioctl( struct file *filp, unsigned int cmd, unsigned long arg){
+static long tsc_ioctl(struct file *filp, unsigned int cmd, unsigned long arg){
 	struct tsc_device *ifc;
 	int retval;
 
 	//debugk(( KERN_ALERT "tsc: entering tsc_ioctl( %p, %x, %lx)\n", filp, cmd, arg));
-	ifc = ( struct tsc_device *)filp->private_data;
+	ifc = (struct tsc_device *)filp->private_data;
 
 	retval = 0;
-	switch ( cmd &  TSC_IOCTL_OP_MASK){
-    	case TSC_IOCTL_ID:{
-    		if( cmd == TSC_IOCTL_ID_NAME){
-				if( copy_to_user( (void *)arg, TSC_NAME_CENTRAL, strlen(TSC_NAME_CENTRAL))){
+	switch (cmd &  TSC_IOCTL_OP_MASK)
+	{
+		case TSC_IOCTL_ID:{
+			if(cmd == TSC_IOCTL_ID_NAME){
+				if(copy_to_user((void *)arg, TSC_NAME_CENTRAL, strlen(TSC_NAME_CENTRAL))){
 					retval = -EFAULT;
+				}
     			}
-    		}
-    		else if( cmd == TSC_IOCTL_ID_VERSION){
-    			if( copy_to_user( (void *)arg, DRIVER_VERSION, strlen( DRIVER_VERSION))){
-    				retval = -EFAULT;
+			else if(cmd == TSC_IOCTL_ID_VERSION){
+				if(copy_to_user((void *)arg, DRIVER_VERSION, strlen( DRIVER_VERSION))){
+					retval = -EFAULT;
+				}
     			}
-    		}
-    		else if( cmd == TSC_IOCTL_ID_VENDOR){
-    			if( copy_to_user( (void *)arg, &ifc->pdev->vendor, sizeof( short))){
-    				retval = -EFAULT;
-    			}
-    		}
-    		else if( cmd == TSC_IOCTL_ID_DEVICE){
-    			if( copy_to_user( (void *)arg, &ifc->pdev->device, sizeof( short))){
-    				retval = -EFAULT;
-    			}
-    		}
-    		else{
+			else if(cmd == TSC_IOCTL_ID_VENDOR){
+				if(copy_to_user((void *)arg, &ifc->pdev->vendor, sizeof(short))){
+					retval = -EFAULT;
+				}
+			}
+			else if(cmd == TSC_IOCTL_ID_DEVICE){
+				if( copy_to_user((void *)arg, &ifc->pdev->device, sizeof(short))){
+					retval = -EFAULT;
+				}
+			}
+			else{
+				retval = -EINVAL;
+			}
+			break;
+		}
+		case TSC_IOCTL_CSR:{
+			retval = ioctl_csr(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_MAP:{
+			retval = ioctl_map(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_RDWR:{
+			retval = ioctl_rdwr(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_DMA:{
+			retval = ioctl_dma(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_KBUF:{
+			retval = ioctl_kbuf(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_SFLASH:{
+			retval = ioctl_sflash(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_TIMER:{
+			retval = ioctl_timer(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_FIFO:{
+			retval = ioctl_fifo(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_I2C:{
+			retval = ioctl_i2c(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_SEMAPHORE:{
+			retval = ioctl_semaphore(ifc, cmd, arg);
+			break;
+		}
+		case TSC_IOCTL_USER:{
+			retval = ioctl_user_irq(ifc, cmd, arg);
+			break;
+		}
+		default:{
     			retval = -EINVAL;
     		}
-    		break;
-    	}
-    	case TSC_IOCTL_CSR:{
-    		retval = ioctl_csr( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_MAP:{
-    		retval = ioctl_map( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_RDWR:{
-    		retval = ioctl_rdwr( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_DMA:{
-    		retval = ioctl_dma( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_KBUF:{
-    		retval = ioctl_kbuf( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_SFLASH:{
-    		retval = ioctl_sflash( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_TIMER:{
-    		retval = ioctl_timer( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_FIFO:{
-    		retval = ioctl_fifo( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_I2C:{
-    		retval = ioctl_i2c( ifc, cmd, arg);
-    		break;
-    	}
-    	case TSC_IOCTL_SEMAPHORE:{
-    		retval = ioctl_semaphore( ifc, cmd, arg);
-    		break;
-    	}
-    	default:{
-    		retval = -EINVAL;
-    	}
 	}
 
-	return( retval);
+	return retval;
 }
 
 /*----------------------------------------------------------------------------

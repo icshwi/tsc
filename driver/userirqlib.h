@@ -1,16 +1,16 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : ioctllib.h
- *    author   : JFG, XP
- *    company  : IOxOS
- *    creation : july 30,2015
+ *    filename : userirqlib.h
+ *    author   : Oliver Talevski
+ *    company  : ESS
+ *    creation : Jan 17,2019
  *
  *----------------------------------------------------------------------------
  *  Description
  *
  *    This file contains the declarations of all exported functions define in
- *    ioctllib.c
+ *    userlib.c
  *
  *----------------------------------------------------------------------------
  *
@@ -42,23 +42,22 @@
  *    You should have received a copy of the GNU General Public License
  *    along with this program; if not, write to the Free Software
  *    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *  
+ *
  *=============================< end file header >============================*/
 
+#ifndef _H_USERIRQLIB
+#define _H_USERIRQLIB
 
-#ifndef _H_IOCTLLIB
-#define _H_IOCTLLIB
+struct user_irq_ctl
+{
+	struct tsc_device *ifc;                    /* IFC device */
+	struct semaphore user_irq_sem[8];          /* semaphore to synchronize with interrputs */
+};
 
-int  ioctl_csr(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_map(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_rdwr(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_dma(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_kbuf(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_sflash(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_timer(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_fifo(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_i2c(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_semaphore(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
-int  ioctl_user_irq(struct tsc_device *ifc, unsigned int cmd, unsigned long arg);
+void tsc_user_irq(struct tsc_device *ifc, int src, void *arg);
+void user_irq_init(struct user_irq_ctl *user_ctl_p);
+int tsc_user_irq_wait(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_p);
+int tsc_user_irq_subscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_p);
 
-#endif /*  _H_IOCTLLIB */
+#endif /*  _H_USERIRQLIB */
+

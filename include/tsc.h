@@ -838,7 +838,7 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_IDMA_ITC_IM_RD0_ERR          (1<<1)  /* Read engine #0 error              */
 #define TSC_IDMA_ITC_IM_RD0              (3<<0)  /* Read engine #0                    */
 #define TSC_IDMA_ITC_IM_RD1_END          (1<<2)  /* Read engine #1 ended              */
-#define TSC_IDMA_ITC_IM_RD1_ERR          (2<<3)  /* Read engine #1 error              */
+#define TSC_IDMA_ITC_IM_RD1_ERR          (1<<3)  /* Read engine #1 error              */
 #define TSC_IDMA_ITC_IM_RD1              (3<<2)  /* Read engine #1                    */
 #define TSC_IDMA_ITC_IM_WR0_END          (1<<4)  /* Write engine #0 ended             */
 #define TSC_IDMA_ITC_IM_WR0_ERR          (1<<5)  /* Write engine #0 error             */
@@ -938,6 +938,33 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 
 #define TSC_IDMA_DES7_       (1<<0)  /*       */
 
+/*
+ *  USER interrupt source
+ */
+#define TSC_ITC_SRC_USER1_0      0x40
+#define TSC_ITC_SRC_USER1_1      0x41
+#define TSC_ITC_SRC_USER1_2      0x42
+#define TSC_ITC_SRC_USER1_3      0x43
+#define TSC_ITC_SRC_USER1_4      0x44
+#define TSC_ITC_SRC_USER1_5      0x45
+#define TSC_ITC_SRC_USER1_6      0x46
+#define TSC_ITC_SRC_USER1_7      0x47
+
+/*
+ *  USER interrupt MASK (CSR + $1088/1488)
+ */
+#define TSC_USER_ITC_IM_0          (1<<0)  /* User interrupt 0 */
+#define TSC_USER_ITC_IM_1          (1<<1)  /* User interrupt 1 */
+#define TSC_USER_ITC_IM_2          (1<<2)  /* User interrupt 2 */
+#define TSC_USER_ITC_IM_3          (1<<3)  /* User interrupt 3 */
+#define TSC_USER_ITC_IM_4          (1<<4)  /* User interrupt 4 */
+#define TSC_USER_ITC_IM_5          (1<<5)  /* User interrupt 5 */
+#define TSC_USER_ITC_IM_6          (1<<6)  /* User interrupt 6 */
+#define TSC_USER_ITC_IM_7          (1<<7)  /* User interrupt 7 */
+
+/*
+ *  FIFO CTL
+ */
 #define TSC_FIFO_CTL_WCNT_MAX	              255  /* FIFO word counter maximum       */
 #define TSC_FIFO_CTL_WCNT_MASK	        0x000000ff  /* FIFO word counter mask       */
 #define TSC_FIFO_CTL_WCNT(x)	          (x&0xff)  /* FIFO word counter            */

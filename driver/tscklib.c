@@ -117,6 +117,9 @@ tsc_dev_init( struct tsc_device *ifc)
   /* initialize data structures controlling the I2C controller */
   retval = tsc_i2c_init( ifc);
 
+  /* initialize data structures controlling USER */
+  retval = tsc_user_irq_init(ifc);
+
   return( retval);
 }
 
@@ -1053,3 +1056,28 @@ int tsc_semaphore_get(struct tsc_device *ifc, struct tsc_ioctl_semaphore *semaph
 	ret = semaphore_get(semaphore->idx, ifc->shm_ctl[0]->sram_ptr, semaphore->tag);
 	return(retval | ret);
 }
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_user_irq_init
+ * Prototype     : int
+ * Parameters    : pointer to tsc device control structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : initialize user irq control structure
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int tsc_user_irq_init(struct tsc_device *ifc)
+{
+	ifc->user_irq_ctl = kzalloc(sizeof(struct user_irq_ctl), GFP_KERNEL);
+	if(!ifc->user_irq_ctl)
+	{
+		return -ENOMEM;
+	}
+	/* initialize USER irq control structure */
+	ifc->user_irq_ctl->ifc = ifc;
+	user_irq_init(ifc->user_irq_ctl);
+
+	return 0;
+}
+

@@ -105,6 +105,8 @@ int tsc_i2c_reset(uint dev);
 int tsc_semaphore_status(int fd, uint *sts);
 int tsc_semaphore_release(int fd, uint idx, uint tag);
 int tsc_semaphore_get(int fd, uint idx, uint tag);
+int tsc_user_irq_wait(int fd, struct tsc_ioctl_user_irq *user_irq_p);
+int tsc_user_irq_subscribe(int fd, struct tsc_ioctl_user_irq *user_irq_p);
 int rsp1461_init(int fd);
 int rsp1461_presence(int fd);
 int rsp1461_extension_presence(int fd, int *present);

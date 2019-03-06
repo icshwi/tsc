@@ -823,3 +823,34 @@ int ioctl_semaphore(struct tsc_device *ifc, unsigned int cmd, unsigned long arg)
 
 	return(retval);
 }
+
+int ioctl_user_irq(struct tsc_device *ifc, unsigned int cmd, unsigned long arg)
+{
+	int retval = 0;
+
+	switch(cmd)
+	{
+		case TSC_IOCTL_USER_WAIT:
+		case TSC_IOCTL_USER_SUBSCRIBE:
+		{
+			struct tsc_ioctl_user_irq user_irq;
+
+			if(copy_from_user(&user_irq, (void *)arg, sizeof(user_irq)))
+				return -EFAULT;
+
+			if(cmd == TSC_IOCTL_USER_WAIT) retval = tsc_user_irq_wait(ifc, &user_irq);
+			else if(cmd == TSC_IOCTL_USER_SUBSCRIBE) retval = tsc_user_irq_subscribe(ifc, &user_irq);
+
+			if(copy_to_user((void *)arg, &user_irq, sizeof(user_irq)) || (retval < 0))
+			{
+				if(retval < 0)
+					return retval;
+				else
+					return -EFAULT;
+			}
+			break;
+		}
+	}
+	return retval;
+}
+

@@ -213,6 +213,13 @@ struct tsc_ioctl_map_win
 #define ITC_IACK_SRC(iack)         ((iack>>8)&0x7f)  /* extract source id from iack register     */
 #define ITC_IACK_CTL(iack)        ((iack>>12)&0x7)   /* extract controller id from iack register */
 
+#define IRQ_WAIT_INTR     0x01
+#define IRQ_WAIT_1MS      0x02
+#define IRQ_WAIT_10MS     0x04
+#define IRQ_WAIT_100MS    0x06
+#define IRQ_WAIT_1S       0x08
+#define IRQ_WAIT_10S      0x0a
+#define IRQ_WAIT_100S     0x0c
 
 #define TSC_IOCTL_RDWR             0x00060000
 #define TSC_IOCTL_RDWR_READ        (TSC_IOCTL_RDWR | 0x01)
@@ -560,4 +567,14 @@ typedef enum {
 	SFP_TX_HIGH_RATE   = 0x04
 	} rsp1461_sfp_control_t;
 
+#define TSC_IOCTL_USER              0x000f0000
+#define TSC_IOCTL_USER_WAIT         (TSC_IOCTL_USER | 0x1)
+#define TSC_IOCTL_USER_SUBSCRIBE    (TSC_IOCTL_USER | 0x2)
+
+struct tsc_ioctl_user_irq
+{
+	int irq;
+	int mask;
+	int wait_mode;
+};
 #endif /*  _H_TSCIOCTL */

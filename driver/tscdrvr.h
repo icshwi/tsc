@@ -79,6 +79,7 @@ struct tsc_device
   struct i2c_ctl *i2c_ctl;                                   /* control structure for I2C access */
   struct map_ctl *map_slv_pci1_pmem;                         /* slave map PCI1_PMEM BAR0/1 */
   struct map_ctl *map_slv_pci1_mem;                          /* slave map PCI1_MEM BAR2 */
+  struct user_irq_ctl *user_irq_ctl;                         /* control structure for USER interrupts */
 };
 
 struct tsc_irq_handler

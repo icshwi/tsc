@@ -46,7 +46,7 @@
 
 obj-m := tsc.o pon.o 
 tsc-objs := tscdrvr.o ioctllib.o tscklib.o maplib.o irqlib.o mapmaslib.o  rdwrlib.o sflashlib.o \
-	dmalib.o timerlib.o fifolib.o i2clib.o semaphorelib.o
+	dmalib.o timerlib.o fifolib.o i2clib.o semaphorelib.o userirqlib.o
 pon-objs := pondrvr.o
 
 ifeq ($(ARCH),powerpc)
