@@ -58,6 +58,7 @@ void tsc_user_irq(struct tsc_device *ifc, int src, void *arg);
 void user_irq_init(struct user_irq_ctl *user_ctl_p);
 int tsc_user_irq_wait(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_p);
 int tsc_user_irq_subscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_p);
+int tsc_user_irq_unsubscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_p);
 
 #endif /*  _H_USERIRQLIB */
 

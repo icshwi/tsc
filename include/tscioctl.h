@@ -570,6 +570,7 @@ typedef enum {
 #define TSC_IOCTL_USER              0x000f0000
 #define TSC_IOCTL_USER_WAIT         (TSC_IOCTL_USER | 0x1)
 #define TSC_IOCTL_USER_SUBSCRIBE    (TSC_IOCTL_USER | 0x2)
+#define TSC_IOCTL_USER_UNSUBSCRIBE  (TSC_IOCTL_USER | 0x3)
 
 struct tsc_ioctl_user_irq
 {

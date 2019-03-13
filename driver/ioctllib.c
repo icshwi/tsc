@@ -832,6 +832,7 @@ int ioctl_user_irq(struct tsc_device *ifc, unsigned int cmd, unsigned long arg)
 	{
 		case TSC_IOCTL_USER_WAIT:
 		case TSC_IOCTL_USER_SUBSCRIBE:
+		case TSC_IOCTL_USER_UNSUBSCRIBE:
 		{
 			struct tsc_ioctl_user_irq user_irq;
 
@@ -840,6 +841,7 @@ int ioctl_user_irq(struct tsc_device *ifc, unsigned int cmd, unsigned long arg)
 
 			if(cmd == TSC_IOCTL_USER_WAIT) retval = tsc_user_irq_wait(ifc, &user_irq);
 			else if(cmd == TSC_IOCTL_USER_SUBSCRIBE) retval = tsc_user_irq_subscribe(ifc, &user_irq);
+			else if(cmd == TSC_IOCTL_USER_UNSUBSCRIBE) retval = tsc_user_irq_unsubscribe(ifc, &user_irq);
 
 			if(copy_to_user((void *)arg, &user_irq, sizeof(user_irq)) || (retval < 0))
 			{

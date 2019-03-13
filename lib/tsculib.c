@@ -2065,6 +2065,24 @@ int tsc_user_irq_subscribe(int fd, struct tsc_ioctl_user_irq *user_irq_p)
 	return retval;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_user_irq_unsubscribe
+ * Prototype     : int
+ * Parameters    : USER irq ioctl structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : user irq unsubscribe
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int tsc_user_irq_unsubscribe(int fd, struct tsc_ioctl_user_irq *user_irq_p)
+{
+	int retval = 0;
+
+	if(fd < 0) return -EBADF;
+	retval = ioctl(fd, TSC_IOCTL_USER_UNSUBSCRIBE, user_irq_p);
+	return retval;
+}
+
 /*
 User I2C devices
  -----------------------------------------------------------------------------

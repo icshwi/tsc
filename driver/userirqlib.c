@@ -198,3 +198,37 @@ int tsc_user_irq_subscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *us
 	return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_user_irq_unsubscribe
+ * Prototype     : int
+ * Parameters    : pointer to user irq control structure
+ * Return        : error/success
+ *----------------------------------------------------------------------------
+ * Description   : user interrupt unsubscribe
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+int tsc_user_irq_unsubscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_irq_p)
+{
+	int agent_sw_offset = 0, irq = 0;
+	struct user_irq_ctl *user_irq_ctl_p;
+
+	if (user_irq_p == NULL)
+		return -EINVAL;
+
+	user_irq_ctl_p = ifc->user_irq_ctl;
+
+	for (irq = 0; irq < 8; irq++)
+	{
+		if (user_irq_p->mask & (1 << irq))
+			sema_init(&user_irq_ctl_p->user_irq_sem[irq], 0);
+	}
+
+	/* User irq are on agent sw 4, XUSER1 */
+	agent_sw_offset = TSC_CSR_AGENT_SW_OFFSET * 4;
+
+	/* Unmask interrupt */
+	iowrite32(user_irq_p->mask, ifc->csr_ptr + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_IMS_OFFSET + agent_sw_offset);
+
+	return 0;
+}
+
