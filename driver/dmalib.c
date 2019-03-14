@@ -1032,7 +1032,7 @@ tsc_dma_mode( struct tsc_device *ifc,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_get_channel
  * Prototype     : int
- * Parameters    : ifc structure, dma control structure, fmc
+ * Parameters    : ifc structure, dma control structure
  * Return        : error/channel
  *----------------------------------------------------------------------------
  * Description   : get dma channel
@@ -1041,12 +1041,25 @@ tsc_dma_mode( struct tsc_device *ifc,
 
 int
 dma_get_channel(struct tsc_device *ifc,
-                int fmc)
+                struct tsc_ioctl_dma_req *dr_p)
 {
   struct dma_ctl *dma_ctl_p = NULL;
   int channel = 0;
+  int smem = 0;
 
-  switch(fmc)
+  if (dr_p->src_space == DMA_SPACE_SHM2 ||
+      dr_p->des_space == DMA_SPACE_SHM2 ||
+      dr_p->src_space == DMA_SPACE_USR2 ||
+      dr_p->des_space == DMA_SPACE_USR2)
+  {
+    smem = 2;
+  }
+  else
+  {
+    smem = 1;
+  }
+
+  switch(smem)
   {
     case 1:
       /* Try channel 0 */
@@ -1058,7 +1071,7 @@ dma_get_channel(struct tsc_device *ifc,
       dma_ctl_p = ifc->dma_ctl[channel];
       if (dma_alloc(dma_ctl_p) == 0)
         break;
-      debugk(("FMC1 DMA channels are busy!\n"));
+      debugk(("SMEM1 DMA channels are busy!\n"));
       return -EBUSY;
     case 2:
       /* Try channel 2 */
@@ -1071,7 +1084,7 @@ dma_get_channel(struct tsc_device *ifc,
       dma_ctl_p = ifc->dma_ctl[channel];
       if (dma_alloc(dma_ctl_p) == 0)
         break;
-      debugk(("FMC2 DMA channels are busy!\n"));
+      debugk(("SMEM2 DMA channels are busy!\n"));
       return -EBUSY;
   }
   return channel;
@@ -1098,10 +1111,7 @@ tsc_dma_transfer(struct tsc_device *ifc,
   if(dr_p == NULL)
     return -EINVAL;
 
-  if(dr_p->fmc < 1 || dr_p->fmc > 2)
-    return -EINVAL;
-
-  channel = dma_get_channel(ifc, dr_p->fmc);
+  channel = dma_get_channel(ifc, dr_p);
   if(channel < 0)
     return channel;
   else
@@ -1109,7 +1119,7 @@ tsc_dma_transfer(struct tsc_device *ifc,
 
   dr_p->start_mode = DMA_START_CHAN(channel);
   if(!(dr_p->wait_mode & DMA_WAIT_INTR))
-    dr_p->wait_mode  = DMA_WAIT_INTR | DMA_WAIT_10MS | (5 << 4); // Timeout after 50 ms
+    dr_p->wait_mode = DMA_WAIT_INTR | DMA_WAIT_10MS | (5 << 4); // Timeout after 50 ms
 
   retval = tsc_dma_move(ifc, dr_p);
   if(retval == 0)

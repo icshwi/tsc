@@ -302,7 +302,6 @@ struct tsc_ioctl_dma_req
   unsigned char src_space; unsigned char src_mode; unsigned char des_space; unsigned char des_mode;
   unsigned char start_mode; unsigned char end_mode; unsigned char intr_mode; unsigned char wait_mode;
   uint dma_status;
-  uint fmc;
 };
 
 struct tsc_ioctl_dma_mode
