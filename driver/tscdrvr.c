@@ -77,6 +77,13 @@ static struct pci_driver tsc_driver_central = {
 
 static struct class *bridge_sysfs_class_central; /* Sysfs class */
 
+static char *central_devnode(struct device *dev, umode_t *mode)
+{
+	if (mode)
+		*mode = 0666;
+	return NULL;
+}
+
 /*----------------------------------------------------------------------------
  * Function name : tsc_irq
  * Prototype     : irqreturn_t
@@ -602,6 +609,7 @@ static int tsc_initialization(void){
 			tsc_remove(tsc.ifc_central[count].pdev);
 	}
 	else {
+		bridge_sysfs_class_central->devnode = central_devnode;
 		for(count = 0; count < tsc.nr_devs; count++) {
 			snprintf(name_device, 32, "%s%d", name_central, count);
 			device_create(bridge_sysfs_class_central, NULL, MKDEV(major, count), NULL, name_device);
