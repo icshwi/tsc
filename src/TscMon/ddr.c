@@ -368,7 +368,7 @@ if (!quiet) {
 
 		// Map DDR3 memory region
 		buf_ddr = NULL;
-		memset(&map_win, sizeof(map_win), 0);
+		memset(&map_win, 0, sizeof(map_win));
 		map_win.req.rem_addr   = offset;
 		map_win.req.loc_addr   = 0;
 		map_win.req.size       = size;

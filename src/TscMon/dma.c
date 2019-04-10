@@ -144,173 +144,173 @@ dma_mode( int chan)
   mode.op = DMA_MODE_GET;
   tsc_dma_mode(tsc_fd, &mode);
 
-  printf("setting source mode (DMA WR engine) : %04x\n", (unsigned short)mode.wr_mode);
+  printf("setting source mode (DMA WR engine) : %04x\n", (unsigned short)mode.mode);
 
   yn = 'n';
-  if( mode.wr_mode & DMA_MODE_CACHE_ENA) yn = 'y';
+  if( mode.mode & DMA_MODE_CACHE_ENA) yn = 'y';
   sprintf(prompt, "enable caching [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.wr_mode |= DMA_MODE_CACHE_ENA;
+       mode.mode |= DMA_MODE_CACHE_ENA;
     }
     else
     {
-      mode.wr_mode &= ~DMA_MODE_CACHE_ENA;
+      mode.mode &= ~DMA_MODE_CACHE_ENA;
     }
   }
 
   yn = 'n';
-  if( mode.wr_mode & DMA_MODE_SNOOP) yn = 'y';
+  if( mode.mode & DMA_MODE_SNOOP) yn = 'y';
   sprintf(prompt, "enable PCIe target snooping [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.wr_mode |= DMA_MODE_SNOOP;
+       mode.mode |= DMA_MODE_SNOOP;
     }
     else
     {
-      mode.wr_mode &= ~DMA_MODE_SNOOP;
+      mode.mode &= ~DMA_MODE_SNOOP;
     }
   }
 
   yn = 'n';
-  if( mode.wr_mode & DMA_MODE_RELAX) yn = 'y';
+  if( mode.mode & DMA_MODE_RELAX) yn = 'y';
   sprintf(prompt, "enable PCIe relax ordering [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.wr_mode |= DMA_MODE_RELAX;
+       mode.mode |= DMA_MODE_RELAX;
     }
     else
     {
-      mode.wr_mode &= ~DMA_MODE_RELAX;
+      mode.mode &= ~DMA_MODE_RELAX;
     }
   }
 
   yn = 'n';
-  if( mode.wr_mode & DMA_MODE_ADD_NO_INC) yn = 'y';
+  if( mode.mode & DMA_MODE_ADD_NO_INC) yn = 'y';
   sprintf(prompt, "Dont increment source address [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.wr_mode |= DMA_MODE_ADD_NO_INC;
+       mode.mode |= DMA_MODE_ADD_NO_INC;
     }
     else
     {
-      mode.wr_mode &= ~DMA_MODE_ADD_NO_INC;
+      mode.mode &= ~DMA_MODE_ADD_NO_INC;
     }
   }
 
   yn = 'n';
-  if( mode.wr_mode & DMA_MODE_ADD_NO_UPD) yn = 'y';
+  if( mode.mode & DMA_MODE_ADD_NO_UPD) yn = 'y';
   sprintf(prompt, "Keep last source address [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.wr_mode |= DMA_MODE_ADD_NO_UPD;
+       mode.mode |= DMA_MODE_ADD_NO_UPD;
     }
     else
     {
-      mode.wr_mode &= ~DMA_MODE_ADD_NO_UPD;
+      mode.mode &= ~DMA_MODE_ADD_NO_UPD;
     }
   }
 
-  data = (mode.wr_mode >> 12)&3;
+  data = (mode.mode >> 12)&3;
   sprintf(prompt, "maximum read request [%d] -> ", data);
   set_para_dec( prompt, &data);
-  mode.wr_mode &= ~DMA_MODE_RD_REQ_MASK;
-  mode.wr_mode |= (short)DMA_MODE_RD_REQ(data);
-  printf("mode = %04x\n", (unsigned short)mode.wr_mode);
+  mode.mode &= ~DMA_MODE_RD_REQ_MASK;
+  mode.mode |= (short)DMA_MODE_RD_REQ(data);
+  printf("mode = %04x\n", (unsigned short)mode.mode);
 
-  printf("setting destination mode (DMA RD engine) : %04x\n", (unsigned short)mode.rd_mode);
+  printf("setting destination mode (DMA RD engine) : %04x\n", (unsigned short)mode.mode);
 
   yn = 'n';
-  if( mode.rd_mode & DMA_MODE_CACHE_ENA) yn = 'y';
+  if( mode.mode & DMA_MODE_CACHE_ENA) yn = 'y';
   sprintf(prompt, "enable caching [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.rd_mode |= DMA_MODE_CACHE_ENA;
+       mode.mode |= DMA_MODE_CACHE_ENA;
     }
     else
     {
-      mode.rd_mode &= ~DMA_MODE_CACHE_ENA;
+      mode.mode &= ~DMA_MODE_CACHE_ENA;
     }
   }
 
   yn = 'n';
-  if( mode.rd_mode & DMA_MODE_SNOOP) yn = 'y';
+  if( mode.mode & DMA_MODE_SNOOP) yn = 'y';
   sprintf(prompt, "enable PCIe target snooping [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.rd_mode |= DMA_MODE_SNOOP;
+       mode.mode |= DMA_MODE_SNOOP;
     }
     else
     {
-      mode.rd_mode &= ~DMA_MODE_SNOOP;
+      mode.mode &= ~DMA_MODE_SNOOP;
     }
   }
 
   yn = 'n';
-  if( mode.rd_mode & DMA_MODE_RELAX) yn = 'y';
+  if( mode.mode & DMA_MODE_RELAX) yn = 'y';
   sprintf(prompt, "enable PCIe relax ordering [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.rd_mode |= DMA_MODE_RELAX;
+       mode.mode |= DMA_MODE_RELAX;
     }
     else
     {
-      mode.rd_mode &= ~DMA_MODE_RELAX;
+      mode.mode &= ~DMA_MODE_RELAX;
     }
   }
 
   yn = 'n';
-  if( mode.rd_mode & DMA_MODE_ADD_NO_INC) yn = 'y';
+  if( mode.mode & DMA_MODE_ADD_NO_INC) yn = 'y';
   sprintf(prompt, "Dont increment source address [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.rd_mode |= DMA_MODE_ADD_NO_INC;
+       mode.mode |= DMA_MODE_ADD_NO_INC;
     }
     else
     {
-      mode.rd_mode &= ~DMA_MODE_ADD_NO_INC;
+      mode.mode &= ~DMA_MODE_ADD_NO_INC;
     }
   }
 
   yn = 'n';
-  if( mode.rd_mode & DMA_MODE_ADD_NO_UPD) yn = 'y';
+  if( mode.mode & DMA_MODE_ADD_NO_UPD) yn = 'y';
   sprintf(prompt, "Keep last source address [%c] -> ", yn);
   if( !set_para_char( prompt, &yn))
   {
     if( yn == 'y')
     {
-       mode.rd_mode |= DMA_MODE_ADD_NO_UPD;
+       mode.mode |= DMA_MODE_ADD_NO_UPD;
     }
     else
     {
-      mode.rd_mode &= ~DMA_MODE_ADD_NO_UPD;
+      mode.mode &= ~DMA_MODE_ADD_NO_UPD;
     }
   }
 
-  data = (mode.rd_mode >> 12)&3;
+  data = (mode.mode >> 12)&3;
   sprintf(prompt, "maximum write post [%d] -> ", data);
   set_para_dec( prompt, &data);
-  mode.rd_mode &= ~DMA_MODE_WR_POST_MASK;
-  mode.rd_mode |= (short)DMA_MODE_WR_POST(data);
-  printf("mode = %04x\n", (unsigned short)mode.rd_mode);
+  mode.mode &= ~DMA_MODE_WR_POST_MASK;
+  mode.mode |= (short)DMA_MODE_WR_POST(data);
+  printf("mode = %04x\n", (unsigned short)mode.mode);
   mode.chan = chan;
   mode.op = DMA_MODE_SET;
   tsc_dma_mode(tsc_fd, &mode);

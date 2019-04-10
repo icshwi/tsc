@@ -303,42 +303,6 @@ print_out_rtm_info(mbox_info_t *info)
   printf("  RTM zone 3 interface designator: %08x\n", info->rtm_zone3_interface_designator);
 }
 
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : mbox_payload_sensor
- * Prototype     : int
- * Parameters    : pointer to command parameter list
- * Return        : int
- *
- *----------------------------------------------------------------------------
- * Description   : perform payload sensor-related operations
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int mbox_payload_sensor( struct cli_cmd_para *c)
-{
-  if (c->cnt < 2)
-  {
-    tsc_print_usage( c);
-    return( CLI_ERR);
-  }
-
-  if( !strcmp( "show", c->para[1]))
-  {
-    return( mbox_payload_sensor_show( c));
-  }
-  else if( !strcmp( "create", c->para[1]))
-  {
-    return( mbox_payload_sensor_create( c));
-  }
-  else if( !strcmp( "set", c->para[1]))
-  {
-    return( mbox_payload_sensor_set( c));
-  }
-  tsc_print_usage( c);
-  return( CLI_ERR);
-}
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : mbox_payload_sensor_show
  * Prototype     : int
@@ -550,6 +514,40 @@ int mbox_payload_sensor_set( struct cli_cmd_para *c)
   return CLI_OK;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : mbox_payload_sensor
+ * Prototype     : int
+ * Parameters    : pointer to command parameter list
+ * Return        : int
+ *
+ *----------------------------------------------------------------------------
+ * Description   : perform payload sensor-related operations
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int mbox_payload_sensor( struct cli_cmd_para *c)
+{
+  if (c->cnt < 2)
+  {
+    tsc_print_usage( c);
+    return( CLI_ERR);
+  }
+
+  if( !strcmp( "show", c->para[1]))
+  {
+    return( mbox_payload_sensor_show( c));
+  }
+  else if( !strcmp( "create", c->para[1]))
+  {
+    return( mbox_payload_sensor_create( c));
+  }
+  else if( !strcmp( "set", c->para[1]))
+  {
+    return( mbox_payload_sensor_set( c));
+  }
+  tsc_print_usage( c);
+  return( CLI_ERR);
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_mbox

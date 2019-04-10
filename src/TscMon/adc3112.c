@@ -1737,7 +1737,7 @@ adc3112_calib_config( int fmc,
 
 
 int
-adc3112_calib_restore( fmc)
+adc3112_calib_restore( int fmc)
 {
   /* ADS5409_01 exit calibration mode */
   adc3112_spi_write( fmc, ADC_ADS01_CMD, 0xe, 0xaaa8);
