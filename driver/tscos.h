@@ -55,3 +55,4 @@
 #include <linux/interrupt.h>
 #include <linux/poll.h>
 #include <linux/init.h>          // modules
+#include <linux/pagemap.h>

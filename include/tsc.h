@@ -36,14 +36,15 @@
 /*
  *  Define the number of each that the TSC supports.
  */
-#define TSC_MAX_MASTER	             64	 /* Max Master Windows                   */
-#define TSC_MAX_SLAVE	             64  /* Max Slave Windows                    */
-#define TSC_MAX_DMA		      2	 /* Max DMA Controllers                          */
-#define TSC_MAX_MAILBOX		      4	 /* Max Mail Box registers                   */
-#define TSC_MAX_SEMAPHORE              8	 /* Max Semaphores                   */
-#define TSC_MAX_EVENT                 16	 /* Max Event Queues                 */
-#define TSC_IRQ_NUM                   64  /* number of interrupt sources         */
-#define TSC_AGENT_SW_NUM               6  /* number agent switches               */
+#define TSC_MAX_MASTER               64  /* Max Master Windows                   */
+#define TSC_MAX_SLAVE                64  /* Max Slave Windows                    */
+#define TSC_MAX_DMA                   2  /* Max DMA Controllers                  */
+#define TSC_MAX_DMA_LEN        0x700000  /* Max DMA size 7MB                     */
+#define TSC_MAX_MAILBOX               4  /* Max Mail Box registers               */
+#define TSC_MAX_SEMAPHORE             8  /* Max Semaphores                       */
+#define TSC_MAX_EVENT                16  /* Max Event Queues                     */
+#define TSC_IRQ_NUM                  64  /* number of interrupt sources          */
+#define TSC_AGENT_SW_NUM              6  /* number agent switches                */
 
 #define TSC_IRQ_CTL_ILOC                0  /*  ILOC controler IRQ base           */
 #define TSC_IRQ_CTL_IDMA               32  /*  IDMA controler IRQ base           */
@@ -880,15 +881,18 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_IDMA_DES0_DMAERR              (1<<3)  /* Continue with next on error   */
 #define TSC_IDMA_DES0_SNOOP               (1<<4)  /* Enable snooping (PCIe)        */
 #define TSC_IDMA_DES0_RELAX               (1<<5)  /* Enable relax ordering (PCIe)  */
+#define TSC_IDMA_DES0_SMEM_ADD_NORMAL     (0<<8)  /* Normal Update                 */
+#define TSC_IDMA_DES0_SMEM_ADD_NONE       (1<<8)  /* No Update, use current        */
+#define TSC_IDMA_DES0_SMEM_ADD_ADD        (2<<8)  /* Add Update, current + SMEM ADD*/
 #define TSC_IDMA_DES0_TRIGOUT_NO         (0<<10)  /* dont't generate trig out      */
 #define TSC_IDMA_DES0_TRIGOUT_START      (2<<10)  /* generate trig out at start    */
 #define TSC_IDMA_DES0_TRIGOUT_END        (3<<10)  /* generate trig out at end      */
 #define TSC_IDMA_DES0_UPDATE_TIME        (2<<12)  /* update status with nsec time  */
 #define TSC_IDMA_DES0_UPDATE_WCNT        (3<<12)  /* update status with word cnt   */
 #define TSC_IDMA_DES0_INTR_DIS           (0<<14)  /* Don't generate interrupt      */
-#define TSC_IDMA_DES0_INTR_START         (1<<14)  /* Generate interrupt at start   */
+#define TSC_IDMA_DES0_INTR_ERR           (1<<14)  /* Generate interrupt at start   */
 #define TSC_IDMA_DES0_INTR_END           (2<<14)  /* Generate interrupt at end     */
-#define TSC_IDMA_DES0_INTR_ERR           (3<<14)  /* Generate interrupt on error   */
+#define TSC_IDMA_DES0_INTR_ERR_END       (3<<14)  /* Generate interrupt on error   */
 #define TSC_IDMA_DES0_ADDBND_4k          (0<<16)  /* 4 KBytes address boundary     */
 #define TSC_IDMA_DES0_ADDBND_2k          (1<<16)  /* 2 KBytes address boundary     */
 #define TSC_IDMA_DES0_ADDBND_1k          (2<<16)  /* 1 KBytes address boundary     */

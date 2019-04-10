@@ -48,13 +48,13 @@
 #ifndef _H_DMALIB
 #define _H_DMALIB
 
-#define DMA_CTRL_NUM    2        /* number of DMA controllers         */
-#define DMA_CHAIN_NUM  32        /* max number of descriptor in chain */
+#define DMA_CTRL_NUM    2              /* number of DMA controllers          */
+#define DMA_CHAIN_NUM   1856           /* max number of descriptor in chain  */
 
-#define DMA_DESC_OFFSET  0x3000        /* max number of descriptor in chain */
-#define DMA_DESC_SIZE     0x800        /* max size for desc chain (2*32*32) */
-#define DMA_RING_OFFSET  0x1000        /* offset in SHM for ring buffer     */
-#define DMA_RING_SIZE    0x1000        /* ring size 4k                      */
+#define DMA_DESC_OFFSET  0x3000        /* max number of descriptor in chain  */
+#define DMA_DESC_SIZE    0xE800        /* max size for desc chain (1856*32)  */
+#define DMA_RING_OFFSET  0x1000        /* offset in SHM for ring buffer      */
+#define DMA_RING_SIZE    0x1000        /* ring size 4k                       */
 
 #define DMA_STS_IDLE          0x00
 #define DMA_STS_ALLOCATED     0x01
@@ -86,11 +86,12 @@ struct dma_ctl
   uint ring_offset;              /* PCI base address of SHM allocated to DMA ring buffer            */
   struct mutex dma_lock;         /* mutex to lock DMA access                     */
   struct semaphore sem;           /* semaphore to synchronize with DMA interrputs  */
-  struct dma_desc rd_desc;
-  struct dma_desc wr_desc;
+  struct dma_desc dma_desc;
   int status;                    /* DMA transfer status                                             */
   int irq;                       /* IRQs associated to the DMA channel                              */
-  short rd_mode; short wr_mode;  /* DMA default mode                                                */
+  short mode;                    /* DMA default mode                                                */
+  struct sg_table *sgt;          /* DMA scatter gather table                                        */
+  enum dma_data_direction dir;   /* DMA direction, DMA_TO_DEVICE/DMA_FROM_DEVICE                    */
 };
 
 void tsc_dma_irq(struct tsc_device *ifc, int src, void *dma_ctl_p);

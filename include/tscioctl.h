@@ -307,7 +307,7 @@ struct tsc_ioctl_dma_req
 struct tsc_ioctl_dma_mode
 {
   short rsv; char op; char chan;
-  short rd_mode; short wr_mode;
+  short mode;
 };
 
 struct tsc_ioctl_dma
