@@ -683,26 +683,34 @@ tsc_shm_exit( struct tsc_device *ifc,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int 
-tsc_dma_init( struct tsc_device *ifc)
+tsc_dma_init(struct tsc_device *ifc)
 {
   int chan;
 
-  for( chan = 0; chan < DMA_CHAN_NUM; chan++)
+  for(chan = 0; chan < DMA_CHAN_NUM; chan++)
   {
-    ifc->dma_ctl[chan] = kzalloc( sizeof( struct dma_ctl), GFP_KERNEL);
-    if( !ifc->dma_ctl[chan])
+    ifc->dma_ctl[chan] = kzalloc(sizeof(struct dma_ctl), GFP_KERNEL);
+    if(!ifc->dma_ctl[chan])
     {
-      return(-ENOMEM);
+      return -ENOMEM;
     }
+
+    ifc->dma_ctl[chan]->sgt = kzalloc(sizeof(struct sg_table), GFP_KERNEL);
+    if(!ifc->dma_ctl[chan]->sgt)
+    {
+      printk("Error: kzalloc scatter gather table\n");
+      return -ENOMEM;
+    }
+
     /* initialize DMA control structure */
     ifc->dma_ctl[chan]->chan = chan;
     ifc->dma_ctl[chan]->ifc = ifc;
     ifc->dma_ctl[chan]->desc_ptr = ifc->shm_ctl[chan/2]->sram_ptr + DMA_DESC_OFFSET + ((chan%2)*DMA_DESC_SIZE);
     ifc->dma_ctl[chan]->desc_offset = DMA_DESC_OFFSET + ((chan%2)*DMA_DESC_SIZE);
     ifc->dma_ctl[chan]->ring_offset = DMA_RING_OFFSET + ((chan%2)*DMA_RING_SIZE);
-    dma_init( ifc->dma_ctl[chan]);
+    dma_init(ifc->dma_ctl[chan]);
   }
-  return( 0);
+  return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -716,16 +724,18 @@ tsc_dma_init( struct tsc_device *ifc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void 
-tsc_dma_exit( struct tsc_device *ifc)
+tsc_dma_exit(struct tsc_device *ifc)
 {
   int chan;
 
-  for( chan = 0; chan < DMA_CHAN_NUM; chan++)
+  for(chan = 0; chan < DMA_CHAN_NUM; chan++)
   {
-    if( ifc->dma_ctl[chan])
+    if(ifc->dma_ctl[chan])
     {
-      mutex_destroy( &ifc->dma_ctl[chan]->dma_lock);
-      kfree( ifc->dma_ctl[chan]);
+      mutex_destroy(&ifc->dma_ctl[chan]->dma_lock);
+      if(ifc->dma_ctl[chan]->sgt)
+        kfree(ifc->dma_ctl[chan]->sgt);
+      kfree(ifc->dma_ctl[chan]);
     }
   }
   return;

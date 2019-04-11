@@ -108,7 +108,6 @@ tsc_dma_irq( struct  tsc_device *ifc,
   {
     dma_unmap_sg(&ifc->pdev->dev, dma_ctl_p->sgt->sgl, dma_ctl_p->sgt->nents, dma_ctl_p->dir);
     sg_free_table(dma_ctl_p->sgt);
-    kfree(dma_ctl_p->sgt);
   }
 
   debugk(("DMA #%d IRQ masking -> %08x [%x]\n", dma_ctl_p->chan, dma_ctl_p->irq, dma_ctl_p->status));
@@ -181,7 +180,7 @@ dma_init( struct dma_ctl *dma_ctl_p)
   sema_init( &dma_ctl_p->sem, 0);
   dma_ctl_p->state = DMA_STATE_IDLE;
 
-  return(0);
+  return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -779,21 +778,12 @@ dma_sg_setup(struct tsc_device *ifc,
     return -ENOMEM;
   }
 
-  dma_ctl_p->sgt = kzalloc(sizeof(*dma_ctl_p->sgt), GFP_KERNEL);
-  if(!dma_ctl_p->sgt)
-  {
-    printk("Error: kzalloc scatter gather table\n");
-    kfree(pages);
-    return -ENOMEM;
-  }
-
   got_pages = get_user_pages_fast(pci_addr, nr_pages, dma_ctl_p->dir == DMA_FROM_DEVICE, pages);
   if(got_pages != nr_pages)
   {
     printk("Error: not all pages were pinned\n");
     if(got_pages > 0)
       release_pages(pages, got_pages, 0);
-    kfree(dma_ctl_p->sgt);
     kfree(pages);
     return (got_pages < 0) ? got_pages : -EFAULT;
   }
@@ -802,7 +792,6 @@ dma_sg_setup(struct tsc_device *ifc,
   {
     printk("Error: alloc scatter gather table from pages\n");
     release_pages(pages, got_pages, 0);
-    kfree(dma_ctl_p->sgt);
     kfree(pages);
     return -ENOMEM;
   }
@@ -813,7 +802,6 @@ dma_sg_setup(struct tsc_device *ifc,
     printk("Error: DMA map scatter gather\n");
     sg_free_table(dma_ctl_p->sgt);
     release_pages(pages, got_pages, 0);
-    kfree(dma_ctl_p->sgt);
     kfree(pages);
     return -EFAULT;
   }
@@ -824,7 +812,6 @@ dma_sg_setup(struct tsc_device *ifc,
     dma_unmap_sg(&ifc->pdev->dev, dma_ctl_p->sgt->sgl, dma_ctl_p->sgt->nents, dma_ctl_p->dir);
     sg_free_table(dma_ctl_p->sgt);
     release_pages(pages, got_pages, 0);
-    kfree(dma_ctl_p->sgt);
     kfree(pages);
     return -ENOMEM;
   }
