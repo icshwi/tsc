@@ -63,7 +63,11 @@ struct shm_ctl
 
 struct tsc_device
 {
+  struct list_head list;                                     /* device list entry struct */
+  uint32_t slot;                                             /* pcie slot number */
   struct pci_dev *pdev;
+  struct cdev cdev;
+  dev_t dev_id;
   struct device *dev_ctl;                                    /* tsc control device */
   struct mutex mutex_ctl;                                    /* Mutex for locking control device */
   void __iomem *csr_ptr;                                     /* Base Address of device registers */
@@ -88,14 +92,6 @@ struct tsc_irq_handler
   void *arg;                                            /* pointer to be passed when handler is executed */
   int cnt;                                              /* interrupt counter                             */
   int busy;                                             /* busy flag                                     */
-};
-
-struct tsc
-{
-  struct cdev cdev;
-  dev_t dev_id;
-  struct tsc_device *ifc_central;
-  int nr_devs;
 };
 
 #define TSC_COUNT                   64       /* Maximum number of TSC devices    */
