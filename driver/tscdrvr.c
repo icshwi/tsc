@@ -51,7 +51,7 @@
 #define DBGno
 #include "debug.h"
 
-#define DRIVER_VERSION "3.4.1"
+#define DRIVER_VERSION "3.5.0"
 
 LIST_HEAD(tsc_devlist);             /**< List of device context structs for available devices. */
 DEFINE_MUTEX(tsc_devlist_lock);     /**< Lock that serializes access to the list of available devices. */
