@@ -48,7 +48,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-char TscMon_version[] = "3.00";
+char TscMon_version[] = "3.5.1";
 char TscMon_official_release[] = "1.4.8";
 
 int tsc_cmd_exec( struct cli_cmd_list *, struct cli_cmd_para *);
@@ -484,6 +484,19 @@ else {
     return 0;
 }
 
+void usage()
+{
+	printf("TscMon usage:\n");
+	printf("Run a script with filename <scriptname> on card in pcie slot <slotnr>:\ntscmon s<slotnr> @<scriptname>\n");
+	printf("Calibrate DDR and power on FMC's and exit:\ntscmon e\n");
+	printf("Run TscMon in quiet mode:\ntscmon q\n\n");
+	printf("q\t\t- Quiet mode, reduces prints\n");
+	printf("s<slotnr>\t- PCIe slot number\n");
+	printf("e\t\t- Exit TscMon after DDR calibration and power on FMC's\n");
+	printf("@<scriptname>\t- Script mode\n");
+	printf("h\t\t- Help, prints this (also -h and --help)\n\n");
+}
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : main
  * Prototype     : int
@@ -498,6 +511,7 @@ else {
 int main(int argc, char *argv[]){
 	struct cli_cmd_history *h;
 	struct winsize winsize;
+	char *script = NULL;
 	int iex     = 0;
 	int retval  = 0;
 	int cmd_cnt = 0;
@@ -510,22 +524,41 @@ int main(int argc, char *argv[]){
 	int data    = 0;
 	int ret     = 0;
 	int quiet   = 0;
+	int exit    = 0;
+	int slot    = 0;
+	int i       = 0;
+	int ppc     = 0;
 
-	// Test if TscMon is started in quiet mode
-	if (argc > 1){
-		if (argv[1][0] == 'q') {
+	ppc = CheckByteOrder();
+
+	while (i < argc) {
+		if (!strncmp(argv[i], "q", 1)) {
 			quiet = 1;
 		}
-		else {
-			quiet = 0;
+		else if (!strncmp(argv[i], "e", 1)) {
+			exit = 1;
 		}
+		else if (!strncmp(argv[i], "@", 1)) {
+			script = &argv[i][1];
+		}
+		else if (!strncmp(argv[i], "s", 1)) {
+			if (!ppc)
+				slot = (int)strtol(&argv[i][1], NULL, 10);
+		}
+		else if (!strncmp(argv[i], "h", 1)  ||
+			 !strncmp(argv[i], "-h", 2) ||
+			 !strncmp(argv[i], "--help", 6)) {
+			usage();
+			return 0;
+		}
+		i++;
 	}
 
-	/* TscMon is only aware of first IFC */
-	tsc_fd = tsc_init(0);
+	tsc_fd = tsc_init(slot);
 	if(tsc_fd < 0){
 		printf("Cannot find interface\n");
-		exit( -1);
+		usage();
+		return -1;
 	}
 
 	retval = tsc_csr_read(tsc_fd, 0x18, &tsc_sign);
@@ -558,29 +591,21 @@ int main(int argc, char *argv[]){
 	// Launch automatically DDR3 calibration
 	tsc_ddr_idel_calib_start(quiet);
 
-	// Test how many arguments exist and their position
-	if(argc > 2){
-		struct cli_cmd_para script_para;
-
-		/* check for script execution */
-		if(argv[2][0] == '@') {
-			cli_cmd_parse( &argv[2][1], &script_para);
-			iex = tsc_script( &argv[2][1], &script_para);
-			if( iex == 2){
-				goto TscMon_exit;
-			}
+	if (exit) {
+		if (ppc) {
+		//Enable FMCs and exit. DDR already calibrated
+			data = 0xC0000000;
+			tsc_pon_write(tsc_fd, 0xC, &data);
 		}
+		goto TscMon_exit;
 	}
-	else if(argc > 1){
-		struct cli_cmd_para script_para;
 
-		/* check for script execution */
-		if(argv[1][0] == '@') {
-			cli_cmd_parse( &argv[1][1], &script_para);
-			iex = tsc_script( &argv[1][1], &script_para);
-			if( iex == 2){
-				goto TscMon_exit;
-			}
+	if (script) {
+		struct cli_cmd_para script_para;
+		cli_cmd_parse(script, &script_para);
+		iex = tsc_script(script, &script_para);
+		if( iex == 2){
+			goto TscMon_exit;
 		}
 	}
 
@@ -605,7 +630,7 @@ int main(int argc, char *argv[]){
 		else if(tsc_get_device_id() == 0x1001){
 			printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
 		}
-		printf("     |  Version %s - %s %s     |\n", TscMon_version, __DATE__, __TIME__);
+		printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
 		printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
 		printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
 
@@ -614,10 +639,10 @@ int main(int argc, char *argv[]){
 			printf("     |  Driver IFC1211 Version %s             |\n", tsc_get_drv_version());
 		}
 		else if (data == 0x73571410){
-			printf("     |  Driver IFC1410 Version %s             |\n", tsc_get_drv_version());
+			printf("     |  Driver IFC1410 Version %s            |\n", tsc_get_drv_version());
 		}
 		else if (data == 0x73571411){
-			printf("     |  Driver IFC1411 Version %s             |\n", tsc_get_drv_version());
+			printf("     |  Driver IFC1411 Version %s            |\n", tsc_get_drv_version());
 		}
 		printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
 		printf("     +------------------------------------------+\n");
@@ -743,7 +768,7 @@ TscMon_exit:
   	/* restore previous terminal setting */
   	tcsetattr( 0, TCSANOW, &termios_old);
 	tsc_exit(tsc_fd);
-  	exit(0);
+	return 0;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
