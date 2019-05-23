@@ -64,7 +64,7 @@ struct shm_ctl
 struct tsc_device
 {
   struct list_head list;                                     /* device list entry struct */
-  uint32_t slot;                                             /* pcie slot number */
+  uint32_t card;                                             /* card number in system */
   struct pci_dev *pdev;
   struct cdev cdev;
   dev_t dev_id;

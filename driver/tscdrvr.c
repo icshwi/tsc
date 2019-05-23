@@ -398,24 +398,18 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 		pci_read_config_dword(bus_dev, pci_pcie_cap(bus_dev) + PCI_EXP_SLTCAP, &slotcap);
 		slotno = (slotcap >> 19) & 0x1FFF;
 		snprintf(device_name, 32, "%s%d", name_central, slotno);
-		ifc->slot = slotno;
+		ifc->card = slotno;
 		debugk((KERN_INFO "%s: %s%d\n", device_name_central, name_central, slotno));
 		debugk((KERN_INFO "%s: device in physical PCIe slot #%d\n", device_name_central, slotno));
 	}
 	else {
-		/* Construct device name based on the PCI signature. */
-		snprintf(device_name, 32, "%s%04x:%02x:%02x.%d", name_central,
-								 pci_domain_nr(pdev->bus),
-								 pdev->bus->number,
-								 PCI_SLOT(pdev->devfn),
-								 PCI_FUNC(pdev->devfn));
-		ifc->slot = 0;
-		debugk((KERN_INFO "%s: %s%04x:%02x:%02x.%d\n", device_name_central, name_central,
-							  pci_domain_nr(pdev->bus),
-							  pdev->bus->number,
-							  PCI_SLOT(pdev->devfn),
-							  PCI_FUNC(pdev->devfn)));
+		/* Construct device name starting from 0 */
+		static uint32_t card = 0;
+		ifc->card = card;
+		snprintf(device_name, 32, "%s%d", name_central, ifc->card);
+		debugk((KERN_INFO "%s: %s%d\n", device_name_central, name_central, ifc->card));
 		debugk((KERN_INFO "%s: device not in a PCIe slot\n", device_name_central));
+		card++;
 	}
 
 	/* Enable the device */
@@ -538,10 +532,7 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	list_add_tail(&ifc->list, &tsc_devlist);
 	mutex_unlock(&tsc_devlist_lock);
 
-	if (ifc->slot)
-		printk(KERN_INFO "%s: device added in slot %d\n", device_name_central, ifc->slot);
-	else
-		printk(KERN_INFO "%s: device added\n", device_name_central);
+	printk(KERN_INFO "%s: device %d added\n", device_name_central, ifc->card);
 	return retval;
 
 tsc_probe_err_request_irq:
@@ -605,10 +596,7 @@ static void tsc_remove( struct pci_dev *pdev){
 	kfree(ifc);
 	mutex_unlock(&tsc_devlist_lock);
 
-	if (ifc->slot)
-		printk(KERN_INFO "%s: device removed from slot %d\n", device_name_central, ifc->slot);
-	else
-		printk(KERN_INFO "%s: device removed\n", device_name_central);
+	printk(KERN_INFO "%s: device %d removed\n", device_name_central, ifc->card);
 }
 
 /*----------------------------------------------------------------------------
