@@ -46,7 +46,7 @@
 
 #define TSC_IOCTL_ID             0x00000000
 #define TSC_IOCTL_ID_NAME        (TSC_IOCTL_ID | 0x01)
-#define TSC_IOCTL_ID_VERSION     (TSC_IOCTL_ID | 0x02)
+#define TSC_IOCTL_ID_VERSION     (TSC_IOCTL_ID | 0x05)
 #define TSC_IOCTL_ID_VENDOR      (TSC_IOCTL_ID | 0x03)
 #define TSC_IOCTL_ID_DEVICE      (TSC_IOCTL_ID | 0x04)
 
