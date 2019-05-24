@@ -343,6 +343,7 @@ struct tsc_ioctl_dma_sts
 #define DMA_MODE_ADD_MASK                0x6
 #define DMA_MODE_GET                     0x0
 #define DMA_MODE_SET                     0x1
+#define DMA_MODE_SG                      0x8
 
 #define DMA_SPACE_PCIE       0x00 // Over PCIe EP 0
 #define DMA_SPACE_PCIE1      0x01 // Over PCIe EP 1

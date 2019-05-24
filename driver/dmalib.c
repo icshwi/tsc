@@ -1089,7 +1089,8 @@ tsc_dma_move(struct tsc_device *ifc,
   }
   irq = dma_ctl_p->irq;
 
-  if(use_scatter_gather(dr_p, space_shm, &write))
+  if(use_scatter_gather(dr_p, space_shm, &write) &&
+    (dma_ctl_p->mode & DMA_MODE_SG))
   {
     retval = dma_move_sg(ifc, dma_ctl_p, dr_p, chan, csr_rdo, csr_wro,
                          sts_rdo, sts_wro, irq, csr_itc_imc, space_shm, write);
