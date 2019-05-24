@@ -630,6 +630,9 @@ int main(int argc, char *argv[]){
 		else if(tsc_get_device_id() == 0x1001){
 			printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
 		}
+		else if(tsc_get_device_id() == 0x1002){
+			printf("     |  TscMon - %s %04x diagnostic tool   |\n", "CENTRAL", tsc_get_device_id());
+		}
 		printf("     |  Version %s - %s %s    |\n", TscMon_version, __DATE__, __TIME__);
 		printf("     |  FPGA Built %s %02d 20%02d %02d:%02d:%02d         |\n", month[mm], dd, yy, hh, mn, ss);
 		printf("     |  FPGA Sign  %08x                     |\n", tsc_sign);
@@ -643,6 +646,9 @@ int main(int argc, char *argv[]){
 		}
 		else if (data == 0x73571411){
 			printf("     |  Driver IFC1411 Version %s            |\n", tsc_get_drv_version());
+		}
+		else {
+			printf("     |  Driver IFC14xx Version %s            |\n", tsc_get_drv_version());
 		}
 		printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
 		printf("     +------------------------------------------+\n");
