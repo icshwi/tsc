@@ -239,7 +239,7 @@ tsc_get_device_id()
 int
 tsc_init(uint32_t card)
 {
-  char device_name[32];
+  char device_name[64];
   int fd;
 
   sprintf(device_name, "%s%d", "/dev/bus/bridge/tsc_ctl_central", card);

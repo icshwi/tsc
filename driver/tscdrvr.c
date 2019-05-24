@@ -376,7 +376,7 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 	uint32_t slotcap, slotno;
 	struct pci_dev *bus_dev;
 	char name_central[32] = "bus/bridge/tsc_ctl_central";
-	char device_name[32];
+	char device_name[64];
 
 	debugk((KERN_DEBUG "%s: entering tsc_probe( %p, %p)\n", device_name_central, pdev, id));
 
