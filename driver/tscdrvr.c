@@ -485,9 +485,9 @@ static int tsc_probe( struct pci_dev *pdev, const struct pci_device_id *id){
 				MAJOR(ifc->dev_id), MINOR(ifc->dev_id)));
 
 	/* Setup dma operation. */
-	if (dma_set_mask(&ifc->pdev->dev, DMA_BIT_MASK(64))) {
+	if (dma_set_mask_and_coherent(&ifc->pdev->dev, DMA_BIT_MASK(64))) {
 		printk(KERN_ALERT "%s: unable to set DMA(64) mask\n", device_name_central);
-		if (dma_set_mask(&ifc->pdev->dev, DMA_BIT_MASK(32))) {
+		if (dma_set_mask_and_coherent(&ifc->pdev->dev, DMA_BIT_MASK(32))) {
 			printk(KERN_ERR "%s: unable to set DMA(32) mask\n", device_name_central);
 			retval = -EFAULT;
 			goto tsc_probe_err_dma_mask;
