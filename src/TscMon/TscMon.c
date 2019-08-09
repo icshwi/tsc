@@ -589,7 +589,11 @@ int main(int argc, char *argv[]){
 	tdma_init(quiet);
 
 	// Launch automatically DDR3 calibration
-	tsc_ddr_idel_calib_start(quiet);
+	// ICSHWI-2991 - Workaroud for the issue: only perform the 
+	//               calibration on PPC
+	if (ppc) 
+		tsc_ddr_idel_calib_start(quiet);
+
 
 	if (exit) {
 		if (ppc) {
