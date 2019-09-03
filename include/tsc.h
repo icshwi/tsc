@@ -41,7 +41,8 @@
 #define TSC_MAX_MASTER               64  /* Max Master Windows                   */
 #define TSC_MAX_SLAVE                64  /* Max Slave Windows                    */
 #define TSC_MAX_DMA                   2  /* Max DMA Controllers                  */
-#define TSC_MAX_DMA_LEN        0x700000  /* Max DMA size 7MB                     */
+#define TSC_MAX_DMA_LEN        0xF00000  /* Max DMA size 15MB                    */
+#define TSC_MAX_SG_DMA_LEN     0x700000  /* Max scatter-gather DMA size 7MB      */
 #define TSC_MAX_MAILBOX               4  /* Max Mail Box registers               */
 #define TSC_MAX_SEMAPHORE             8  /* Max Semaphores                       */
 #define TSC_MAX_EVENT                16  /* Max Event Queues                     */
