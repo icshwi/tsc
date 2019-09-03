@@ -845,6 +845,12 @@ dma_move_consistent(struct tsc_device *ifc,
   int rdo, wro;
   uint shm_offset;
 
+  if(dr_p->size == 0 || dr_p->size > TSC_MAX_DMA_LEN)
+  {
+    printk("Error: DMA size\n");
+    return -EINVAL;
+  }
+
   if((dr_p->src_space & DMA_SPACE_MASK) ==  space_shm)
   {
     if((dr_p->des_space & DMA_SPACE_MASK) ==  space_shm)
@@ -939,7 +945,7 @@ dma_move_sg(struct tsc_device *ifc,
   int retval = 0;
   int status, csr, ctl;
 
-  if(dr_p->size == 0 || dr_p->size > TSC_MAX_DMA_LEN)
+  if(dr_p->size == 0 || dr_p->size > TSC_MAX_SG_DMA_LEN)
   {
     printk("Error: DMA size\n");
     return -EINVAL;
