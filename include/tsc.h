@@ -969,23 +969,137 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_USER_ITC_IM_6          (1<<6)  /* User interrupt 6 */
 #define TSC_USER_ITC_IM_7          (1<<7)  /* User interrupt 7 */
 
-/*
- *  FIFO CTL
- */
-#define TSC_FIFO_CTL_WCNT_MAX	              255  /* FIFO word counter maximum       */
-#define TSC_FIFO_CTL_WCNT_MASK	        0x000000ff  /* FIFO word counter mask       */
-#define TSC_FIFO_CTL_WCNT(x)	          (x&0xff)  /* FIFO word counter            */
-#define TSC_FIFO_CTL_WRPT_MASK	        0x0000ff00  /* FIFO write pointer mask      */
-#define TSC_FIFO_CTL_WRPT(x)	     ((x>>8)&0xff)  /* FIFO write pointer           */
-#define TSC_FIFO_CTL_RDPT_MASK	        0x00ff0000  /* FIFO read pointer mask       */
-#define TSC_FIFO_CTL_RDPT(x)	    ((x>>16)&0xff)  /* FIFO read pointer            */
-#define TSC_FIFO_CTL_NOEMPTY	           (1<<24)  /* FIFO not empty               */
-#define TSC_FIFO_CTL_FULL	            	(1<<25)  /* FIFO full                    */
-#define TSC_FIFO_CTL_MBX	                (1<<26)  /* FIFO mailbox mode            */
-#define TSC_FIFO_CTL_ERRF	           		(1<<27)  /* FIFO error                   */
-#define TSC_FIFO_CTL_RESET	           		(1<<28)  /* FIFO reset                   */
-#define TSC_FIFO_CTL_REA	                   (1<<29)  /* FIFO read enable             */
-#define TSC_FIFO_CTL_WEA	                   (1<<30)  /* FIFO write enable            */
-#define TSC_FIFO_CTL_ENA	                   (1<<31)  /* FIFO enable                  */
 
-#endif	/* _H_TSC */
+/*
+ * AXI-4 Bridge Definition
+ */
+#define TSC_CSR_AXI4_CFG                0x1800
+#define TSC_CSR_AXI4_SIGN               0x1804
+#define TSC_CSR_AXI4_CTL                0x1808
+#define TSC_CSR_AXI4_RDRQ               0x180C
+#define TSC_CSR_AXI4_PAYLOAD            0x1810
+#define TSC_CSR_AXI4_EFUSE              0x1814
+#define TSC_CSR_AXI4_TOP_SIGN           0x1818
+#define TSC_CSR_AXI4_TOP_IMPL           0x181C
+#define TSC_CSR_AXI4_MMU_ADD            0x1820
+#define TSC_CSR_AXI4_MUU_DAT            0x1824
+#define TSC_CSR_AXI4_USR_ACC_SIGN       0x1828
+#define TSC_CSR_AXI4_RWT_0              0x182C
+#define TSC_CSR_AXI4_RWT_1              0x1830
+#define TSC_CSR_AXI4_TOSCA2B_SIGN       0x1834
+#define TSC_CSR_AXI4_SLV_ADD_DEC_L      0x1838
+#define TSC_CSR_AXI4_SLV_ADD_DEC_H      0x183C
+#define TSC_CSR_AXIL_CTL                0x1840
+#define TSC_CSR_AXIL_ADD                0x1844
+#define TSC_CSR_AXIL_DAT                0x1848
+#define TSC_CSR_AXIL_DAT_BS             0x184C
+#define TSC_CSR_AXI4_ITC_IACK           0x1880
+#define TSC_CSR_AXI4_ITC_CSR            0x1884
+#define TSC_CSR_AXI4_ITC_IMC            0x1888
+#define TSC_CSR_AXI4_ITC_IMS            0x188C
+#define TSC_CSR_AXI4_IHC_CTL            0x1890
+#define TSC_CSR_AXI4_IHC_STA            0x1894
+#define TSC_CSR_AXI4_IHC_IMSK_0         0x1898
+#define TSC_CSR_AXI4_IHC_IMSK_1         0x189C
+#define TSC_CSR_AXI4_MAS_ERR_AW_0       0x1900
+#define TSC_CSR_AXI4_MAS_ERR_AW_1       0x1904
+#define TSC_CSR_AXI4_MAS_ERR_AW_2       0x1908
+#define TSC_CSR_AXI4_MAS_ERR_AW_3       0x190C
+#define TSC_CSR_AXI4_MAS_ERR_TW_0       0x1940
+#define TSC_CSR_AXI4_MAS_ERR_TW_1       0x1944
+#define TSC_CSR_AXI4_MAS_ERR_TW_2       0x1948
+#define TSC_CSR_AXI4_MAS_ERR_TW_3       0x194C
+#define TSC_CSR_AXI4_MAS_ERR_TW_4       0x1950
+#define TSC_CSR_AXI4_MAS_ERR_TW_5       0x1954
+#define TSC_CSR_AXI4_SLV_ERR_AW_0       0x1980
+#define TSC_CSR_AXI4_SLV_ERR_AW_1       0x1984
+#define TSC_CSR_AXI4_SLV_ERR_AW_2       0x1988
+#define TSC_CSR_AXI4_SLV_ERR_AR_0       0x19C0
+#define TSC_CSR_AXI4_SLV_ERR_AR_1       0x19C4
+#define TSC_CSR_AXI4_SLV_ERR_AR_2       0x19C9
+
+/* AXI-4 MMU (used by the AXI-4 Slave) */
+#define TSC_AXI4_MMU_PG_NUM                    1024 /* number of pages                            */
+#define TSC_AXI4_MMU_PG_64K              0x00010000 /* page size 64 KBytes                        */
+#define TSC_AXI4_MMU_PG_4M               0x00400000 /* page size  4 MBytes                        */
+#define TSC_AXI4_MMU_PG_64M              0x04000000 /* page size 64 MBytes                        */
+
+/* AXI-4 MMU Specific bits (used by the AXI-4 Master) */
+#define TSC_AXI4_MMUDAT_PG_ENA               (1<<0) /* Enable page                                */
+#define TSC_AXI4_MMUDAT_WR_ENA               (1<<1) /* Enable write                               */
+#define TSC_AXI4_MMUDAT_SN                   (1<<5) /* AXI-4 Single Narrow                        */
+#define TSC_AXI4_MMUDAT_BT                   (1<<7) /* AXI-4 Burst Type (INCR or FIXED)           */
+#define TSC_AXI4_MMUDAT_PROT_0               (1<<8) /* AXI-4 PROT[0]                              */
+#define TSC_AXI4_MMUDAT_PROT_1_INV           (1<<9) /* AXI-4 PROT[1] inverted                     */
+#define TSC_AXI4_MMUDAT_PROT_2              (1<<10) /* AXI-4 PROT[2]                              */
+#define TSC_AXI4_MMUDAT_BS                  (1<<11) /* AXI-4 Burst Size (256 or 16 beats)         */
+
+/* AXI-4 IDMA Descriptor Specific bits (used by the AXI-4 Master) */
+#define TSC_IDMA_DES0_AXI4_BT               (1<<27) /* AXI-4 Burst Type (INCR or FIXED)           */
+#define TSC_IDMA_DES1_AXI4_PROT_0           (1<<28) /* AXI-4 PROT[0]                              */
+#define TSC_IDMA_DES1_AXI4_PROT_1_INV       (1<<29) /* AXI-4 PROT[1] inverted                     */
+#define TSC_IDMA_DES1_AXI4_PROT_2           (1<<30) /* AXI-4 PROT[2]                              */
+#define TSC_IDMA_DES1_AXI4_BS               (1<<31) /* AXI-4 Burst Size (256 or 16 beats)         */
+#define TSC_IDMA_DES1_AXI4_TYPE_MASK      (0xf<<28) /* AXI-4 Type Mask                            */
+
+/* AXI-4 Configuration Register */
+#define TSC_AXI4_CFG_CSW_NODE_MASK           (7<<4) /* AXI-4 Bridge Agent Number                  */
+#define TSC_AXI4_CFG_AXIL_SLAVE              (1<<3) /* AXI-4 Lite Slave Controller Present        */
+#define TSC_AXI4_CFG_AXIL_MASTER             (1<<2) /* AXI-4 Lite Master Controller Present       */
+#define TSC_AXI4_CFG_AXI_SLAVE               (1<<1) /* AXI-4 Slave Controller Present             */
+#define TSC_AXI4_CFG_AXI_MASTER              (1<<0) /* AXI-4 Master Controller Present            */
+
+/* AXI-4 Signature Register */
+#define TSC_AXI4_SIGN                        0x4134 /* AXI-4 Bridge Signature                     */
+
+/* AXI-4 Control Register */
+#define TSC_AXI4_CTL_MAS_ERR_AW             (1<<31) /* Master Error on AXI-4 Write Side           */
+#define TSC_AXI4_CTL_MAS_ERR_TW             (1<<31) /* Master Error on TOSCA Write Side           */
+#define TSC_AXI4_CTL_SLV_ERR_AW             (1<<31) /* Slave  Error on AXI-4 Write Side           */
+#define TSC_AXI4_CTL_SLV_ERR_AR             (1<<31) /* Slave  Error on AXI-4 Read Side            */
+#define TSC_AXI4_CTL_ARB_WPOST_ENA           (1<<5) /* Enable Arbiter for Write Posted Requests   */
+#define TSC_AXI4_CTL_ARB_RDRQ_ENA            (1<<4) /* Enable Arbiter for Read Requests           */
+#define TSC_AXI4_CTL_SLV_WND(x)               (x&7) /* Slave Window Size                          */
+
+/* AXI-4 Slave Window Size */
+#define TSC_AXI4_SLV_WND_4M                       0 /*   4 MByte =   64 pages * 64 KByte          */
+#define TSC_AXI4_SLV_WND_16M                      1 /*  16 MByte =  256 pages * 64 KByte          */
+#define TSC_AXI4_SLV_WND_64M                      2 /*  64 MByte = 1024 pages * 64 KByte          */
+#define TSC_AXI4_SLV_WND_256M                     3 /* 256 MByte =   64 pages *  4 MByte          */
+#define TSC_AXI4_SLV_WND_512M                     4 /* 512 MByte =  128 pages *  4 MByte          */
+#define TSC_AXI4_SLV_WND_1G                       5 /*   1 GByte =  256 pages *  4 MByte          */
+#define TSC_AXI4_SLV_WND_4G                       6 /*   4 GByte = 1024 pages *  4 MByte          */
+#define TSC_AXI4_SLV_WND_64G                      7 /*  64 GByte = 1024 pages * 64 MByte          */
+
+/* AXI-4 Slave Address Decoder */
+#define TSC_AXI4_SLV_ADD_DEC_L(x)   ((x>>21)&0x7ff) /* Slave Address Decoder                      */
+#define TSC_AXI4_SLV_ADD_DEC_MODE            (1<<1) /* Slave Address Decoder Mode                 */
+#define TSC_AXI4_SLV_ADD_DEC_ENA             (1<<0) /* Slave Address Decoder Enable               */
+
+/* AXI-4 Lite Control Register */
+#define TSC_AXIL_CTL_GO                     (1<<31) /* Go bit                                     */
+#define TSC_AXIL_CTL_BUSY                   (1<<31) /* Busy bit                                   */
+#define TSC_AXIL_CTL_RnW                    (1<<30) /* Read Not Write bit                         */
+#define TSC_AXIL_CTL_TIMEOUT                (1<<29) /* Timeout flag                               */
+#define TSC_AXIL_CTL_ERROR                  (1<<28) /* Error flag                                 */
+#define TSC_AXIL_CTL_WSTRB(x)         ((x&0xf)<<24) /* Write Strobe                               */
+#define TSC_AXIL_CTL_WSTRB_MASK          0x0f000000 /* Write Strobe Mask                          */
+#define TSC_AXIL_CTL_ADDR(x)           (x&0xffffff) /* Address                                    */
+#define TSC_AXIL_CTL_ADDR_MASK           0x00ffffff /* Address Mask                               */
+
+/* AXI-4 Lite Address Register */
+#define TSC_AXIL_ADD_ADDR(x)         (x&0xff000000) /* Address                                    */
+#define TSC_AXIL_ADD_ADDR_MASK           0xFF000000 /* Address Mask                               */
+#define TSC_AXIL_ADD_PROT(x)                  (x&7) /* PROT Bits                                  */
+#define TSC_AXIL_ADD_PROT_MASK           0x00000007 /* PROT Bits Mask                             */
+
+/* AXI-4 Bridge Mode */
+#define TSC_AXI4_MODE_SN                     (1<<5) /* AXI-4 Single Narrow Mode                   */
+#define TSC_AXI4_MODE_BT                     (1<<7) /* AXI-4 Burst Type                           */
+#define TSC_AXI4_MODE_PROT_0                 (1<<8) /* AXI-4 PROT[0]                              */
+#define TSC_AXI4_MODE_PROT_1_INV             (1<<9) /* AXI-4 /PROT[1]                             */
+#define TSC_AXI4_MODE_PROT_2                (1<<10) /* AXI-4 PROT[2]                              */
+#define TSC_AXI4_MODE_BS                    (1<<11) /* AXI-4 Burst Size                           */
+#define TSC_AXI4_MODE_MASK                    0xFA0 /* AXI-4 Mode Mask                            */
+
+#endif /* _H_TSC */

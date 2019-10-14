@@ -30,89 +30,30 @@ LIBDIR = ../../lib
 INC = -I $(INCDIR)
 LIB = -L $(LIBDIR)
 
-OFILES = TscMon.o script.o rdwr.o conf.o map.o mbox.o rtm.o dma.o timer.o sflash.o buf.o tst.o semaphore.o fifo.o lmk.o ddr.o i2c.o adc3110.o adc3117.o adc3112.o acq1430.o alias.o tdma.o rsp1461.o
+CFLAGS	:= -MMD -MP -Wall $(INC)
 
-HFILES = $(INCDIR)/cli.h 
+CFILES	:= TscMon.c script.c rdwr.c conf.c map.c mbox.c amc.c rtm.c dma.c 
+CFILES	+= timer.c sflash.c buf.c tst.c semaphore.c fifo.c lmk.c 
+CFILES	+= ddr.c i2c.c adc3110.c adc3117.c adc3112.c acq1430.c alias.c 
+CFILES	+= tdma.c rsp1461.c rdt1465.c rcc1466.c gscope.c
+
+OFILES	:= $(CFILES:.c=.o)
+
 
 all : TscMon SmemCalibration
 
-rsp1461.o: rsp1461.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c rsp1461.c
+%o: %c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-conf.o: conf.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c conf.c
+-include $(CFILES:.c=.d)
 
-ddr.o: ddr.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c ddr.c
+TscMon: $(OFILES) $(LIBDIR)/libtsc.a 
+	$(CC) $(LIB) -o $@ $(OFILES) -ltsc -lrt -lm -ladc
 
-map.o: map.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c map.c
+SmemCalibration: SmemCalibration.o $(LIBDIR)/libtsc.a 
+	$(CC) $(LIB) -o $@ $< -ltsc -lrt -lm
 
-mbox.o: mbox.c cmdlist.h Makefile
-	$(CC)  $(FLAGS) $(INC) -c mbox.c
-
-rtm.o: rtm.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c rtm.c
-
-rdwr.o: rdwr.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c rdwr.c
-
-fifo.o: fifo.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c fifo.c
-
-script.o: script.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c script.c
-
-dma.o: dma.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c dma.c
-
-timer.o: timer.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c timer.c
-
-semaphore.o: semaphore.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c semaphore.c
-
-sflash.o: sflash.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c sflash.c
-
-buf.o: buf.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c buf.c
-
-tst.o: tst.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c tst.c
-
-lmk.o: lmk.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c lmk.c
-
-i2c.o: i2c.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c i2c.c
-
-adc3110.o: adc3110.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c adc3110.c
-
-adc3112.o: adc3112.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c adc3112.c
-
-adc3117.o: adc3117.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c adc3117.c
-
-acq1430.o: acq1430.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c acq1430.c
-
-alias.o: alias.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c alias.c
-
-tdma.o: tdma.c cmdlist.h Makefile
-	$(CC) $(FLAGS) $(INC) -c tdma.c
-
-TscMon.o: TscMon.c cmdlist.h Makefile
-	$(CC) -Wall $(FLAGS) $(INC) -c TscMon.c
-
-TscMon:$(OFILES)  $(OLIB) $(LIBDIR)/libtsc.a
-	$(CC) -Wall $(LIB) -o TscMon $(OFILES) -ltsc -lrt -lm
-
-SmemCalibration: SmemCalibration.c
-	$(CC) $(LIB) $(INC) -o SmemCalibration SmemCalibration.c -ltsc -lrt -lm
-
+.PHONY: clean
 clean:
-	$(RM) *.o *.a SmemCalibration TscMon
+	$(RM) *.d *.o *.a SmemCalibration TscMon
+

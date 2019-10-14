@@ -27,27 +27,31 @@
 INCDIRS = -I ../include 
 RANLIB = ranlib
 
-all: libtsc.a
+CFLAGS		:= -MP -MMD -Wall $(INCDIRS) $(EXTRAFLAGS)
 
-tsculib.o:tsculib.c  ../include/tscioctl.h
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c tsculib.c
-clilib.o:clilib.c 
-	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c clilib.c
-mtca4rtmlib.o:mtca4rtmlib.c 
-	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c mtca4rtmlib.c
-ponmboxlib.o:ponmboxlib.c 
-	$(CC) $(INCDIRS) $(EXTRAFLAGS) -c ponmboxlib.c
-tscextlib.o:tscextlib.c 
-	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c tscextlib.c
-tstlib.o:tstlib.c	
-	$(CC) -Wall $(INCDIRS) $(EXTRAFLAGS) -c tstlib.c
-libtsc.a:tsculib.o clilib.o tscextlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
-	$(AR) r libtsc.a tsculib.o clilib.o tscextlib.o tstlib.o ponmboxlib.o mtca4rtmlib.o
-	$(RANLIB) libtsc.a
+SRCS_LIB_TSC	:= tsculib.c clilib.c tscextlib.c tstlib.c ponmboxlib.c \
+		   mtca4amclib.c mtca4rtmlib.c pca9539lib.c rsp1461lib.c \
+		   rdt1465lib.c rcc1466lib.c
+SRCS_LIB_ADC	:= adc3112lib.c fscope3112lib.c adc3110lib.c gscope3110lib.c 
 
-tsculib.c: ../include/tsculib.h
-clilib.c: ../include/cli.h
-tstlib.c: ../include/tstlib.h
+OBJS_LIB_TSC	:= $(SRCS_LIB_TSC:.c=.o)
+OBJS_LIB_ADC	:= $(SRCS_LIB_ADC:.c=.o)
+
+all: libtsc.a libadc.a
+
+libtsc.a: $(OBJS_LIB_TSC)
+	$(AR) r $@ $^
+	$(RANLIB) $@ 
+
+libadc.a: $(OBJS_LIB_ADC)
+	$(AR) r $@ $^ 
+	$(RANLIB) $@ 
+
+%o: %c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+-include $(SRCS_LIB_TSC:.c=.d)
+-include $(SRCS_LIB_ADC:.c=.d)
 
 clean:
-	$(RM) *.o *.a
+	$(RM) *.o *.d *.a

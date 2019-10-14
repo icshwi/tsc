@@ -74,6 +74,8 @@ char *adc3110_msg[] =
   "ADC3110 operations",
   "adc3110.<x> <dev> read <reg>",
   "adc3110.<x> <dev> write <reg> <data>",
+  "adc3110.<x> <dev> init [<mode>]",
+  "adc3110.<x> <dev> calib",
   "adc3110.<x> <dev> acqfif <offset> <size>",
   "adc3110.<x> <dev> check <offset> <size>",
   "adc3110.<x> <dev> acq<size> h:<file_his> d:<file_dat> t:<trig> s:<smem> c:<csr> a:<last_addr> ",
@@ -86,9 +88,9 @@ char *adc3110_msg[] =
   "         <dev>      = lmk, ads01, ads23, ads45, ads67",
   "         <reg>      = register",
   "         <data>     = data",
+  "         <mode>     = initialization mode",
   "         <offset>   = offset of data buffer",
   "         <size>     = size of data buffer",
-
   "         <file_his> = histogram filename",
   "         <file_dat> = raw data filename",
 0};
@@ -116,14 +118,18 @@ char *adc3112_msg[] =
   "         <data> = data",
 0};
 
-char *adc3117_msg[] = 
+char *adc3117_msg[] =
 {
   "ADC3117 operations",
-  "adc3117.<x> <dev> read <reg>",
-  "adc3117.<x> <dev> write <reg> <data>",
-  "adc3117.<x> <dev> acq ",
-  "adc3117.<x> <dev> save o:<offset> s:<size> h:<file_his> d:<file_dat>",
-  "adc3117.<x> <dev> temp",
+  "adc3117.<x> <dev>  read <reg>",
+  "adc3117.<x> <dev>  write <reg> <data>",
+  "adc3117.<x> adc<y> acq",
+  "adc3117.<x> adc<y> set <sw_n> <sw_p> <gain> <dig_offset> <dac_offset>",
+  "adc3117.<x> dac<y> set <dac_val> {<pot_val>}",
+  "adc3117.<x> rate   set <val>",
+  "adc3117.<x> vcal   set <val>",
+  "adc3117.<x> adc<y> save o:<offset> s:<size> h:<file_his> d:<file_dat>",
+  "adc3117.<x> tmp102 show",
   "adc3117.<x> eeprom sign set",
   "adc3117.<x> eeprom sign def b:<board> s:<serial> v:<ver> r:<rev>",
   "adc3117.<x> eeprom dump",
@@ -131,17 +137,50 @@ char *adc3117_msg[] =
   "adc3117.<x> eeprom vref store",
   "adc3117.<x> eeprom vref load",
   "adc3117.<x> eeprom vref write <filename>",
-  "adc3117.<x> eeprom vref read <filename>",
-  "   where <x>    = index",
-  "         <dev>  = ads01, ads23, ads1, ads2, dac, xra01, xra23, xratrig, lmk, sy",
+  "adc3117.<x> eeprom vref read  <filename>",
+  "adc3117.<x> eeprom corr show",
+  "adc3117.<x> eeprom corr store",
+  "adc3117.<x> eeprom corr load",
+  "adc3117.<x> eeprom corr write <filename>",
+  "adc3117.<x> eeprom corr read  <filename>",
+  "adc3117.<x> eeprom fru  write <filename>",
+  "adc3117.<x> eeprom fru  read  <filename>",
+  "   where <x>    = fmc number (1 or 2)",
+  "         <y>    = device number (0-19 for adc, 0-1 for dac)",
+  "         <dev>  = adc0 - adc19, dac0, dac1, vref_var, mmcm, tmp102, eeprom, rate, vcal",
   "         <reg>  = register",
   "         <data> = data",
+0};
+
+char *amc_msg[] = 
+{
+  "MTCA.4 AMC operations",
+  "amc rtm_clk_in <state>",
+  "   where <state> = on, off",
+  "   (enable/disable CLK_IN output to RTM)",
+  "",
+  "amc rtm_tclk_in <state>",
+  "   where <state> = on, off",
+  "   (enable/disable TCLK_IN output to RTM)",
+  "",
+  "amc rtm_clk_out <state>",
+  "   where <state> = on, off",
+  "   (enable/disable CLK_OUT input from RTM)",
 0};
 
 char *ci_msg[] =
 {
   "Compare with mask the content of IFC PON register with data",
   "ci <offset> <data> <mask>",
+  "   where <offset> = address offset in hexadecimal",
+  "         <data>   = data to be compared in hexadecimal",
+  "         <mask>   = mask to apply in hexadecimal",
+0};
+
+char *cl_msg[] =
+{
+  "Compare with mask the content of AXI-4 Lite register with data",
+  "cl <offset> <data> <mask>",
   "   where <offset> = address offset in hexadecimal",
   "         <data>   = data to be compared in hexadecimal",
   "         <mask>   = mask to apply in hexadecimal",
@@ -168,6 +207,18 @@ char *conf_msg[] =
   "                    pcie",
   "                    msi",
   "                    smon",
+0};
+
+char *ca_msg[] =
+{
+  "Compare with mask the content of a location in AXI-4 space with data",
+  "ca.<ds> <offset> <data> <mask>",
+  "     where <ds>    = b,s,w -> data size: 1,2,4",
+  "          <offset> = address offset in hexadecimal",
+  "          <data>   = data to be compared in hexadecimal",
+  "          <mask>   = mask to apply in hexadecimal",
+  " ",
+  "AXI-4 space is not always available !",
 0};
 
 char *cp_msg[] = 
@@ -215,6 +266,17 @@ char *cu_msg[] =
   "          <mask>   = mask to apply in hexadecimal",
 0};
 
+char *da_msg[] =
+{ "Display content of AXI-4 space",
+  "da.<ds><sw> <start>[..<end>]",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <sw>    = s       -> display swapped data",
+  "         <start> = start offset in hexadecimal",
+  "         <end>   = end offset in hexadecimal (default = <start> + 0x40)",
+  " ",
+  "AXI-4 space is not always available !",
+0};
+
 char *dc_msg[] = 
 { "  display content of a set of TSC PCI CFG registers",
   "  dc <start>[..<end>]",
@@ -257,6 +319,13 @@ char *dk_msg[] =
   "         <sw>    = s       -> display swapped data",
   "         <start> = start offset in hexadecimal",
   "         <end>   = end offset in hexadecimal (default = <start> + 0x40)",
+0};
+
+char *dl_msg[] = 
+{ "display content of AXI-4 Lite registers",
+  "dl <start>[..<end>]",
+  "   where <start> = offset in hexadecimal of first register",
+  "          <end>  = offset in hexadecimal of last register",
 0};
 
 char *dm_msg[] = 
@@ -327,6 +396,17 @@ char *du_msg[] =
   "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
 0};
 
+char *fa_msg[] =
+{ "Fill AXI-4 space with data",
+  "fa.<ds> <start>..<end> <data>",
+  "   where <ds>    = b,s,w,l -> data size: 1,2,4,8",
+  "         <start> = start address in hexadecimal",
+  "         <end>   = end address in hexadecimal (default = <start> + 0x40)",
+  "         <data>  = data in hexadecimal",
+  " ",
+  "AXI-4 space is not always available !",
+0};
+
 char *fifo_msg[] =
 {
   "Perform operation on communication FIFOs",
@@ -395,6 +475,44 @@ char *fu_msg[] =
   "         <data>  = data in hexadecimal",
 0};
 
+char *gscope_msg[]   = 
+{
+  "Perform Generic Scope operation",
+  "gscope identify",
+  "gscope.<x> acq trig <mode>",
+  "         <x>        = fmc identifier (1 or 2)",
+  "         <mode>     = man, gpio, adc",
+  "if <mode> is adc the synthax is",
+  "gscope.<x> acq trig adc.<offset>.<hyst> <chan> <type> <dir> [<sign>]",
+  "         <offset>   = the level the signal needs to exceed to trigger the acquisition",
+  "         <hyst>     = hysteresis value",
+  "         <chan>     = the channel which will trigger the acquisition",
+  "         <type>     = lvl or edge",
+  "         <dir>      = above/below the level or rising/falling edge (up/down)",
+  "         <sign>     = signed or unsigned offset (signed per default)",
+  "gscope.<x> acq arm [<prop> <sync> <mode> <trig>]",
+  "         <x>        = fmc identifier (1 or 2) or 3 for a double arm",
+  "         <prop>     = pre trigger proportion of data ([0;7] out of 8, 4 per default)",
+  "         <sync>     = master or slave (master per default)",
+  "                      if <x> is 3, fmc 1 will be the <sync> and fmc 2 the opposite",
+  "         <mode>     = continuous (cont) or single (sgl) acquisition (sgl per default)",
+  "         <trig>     = trigger mode: normal or auto (normal per default)",
+  "gscope acq status",
+  "gscope.<x> acq abo",
+  "         <x>        = fmc identifier (1 or 2) or 3 for the two at the same time",
+  "gscope init smem <chanset> <base> <size>",
+  "         <chanset>  = list of enabled channels",
+  "         <base>     = first buffer base adress",
+  "         <size>     = size of the buffers",
+  "gscope save <chanset> <filename> [<size>]",
+  "         <chanset>  = list of the channels",
+  "         <filename> = generic name of the file",
+  "         parameters: %c = channel",
+  "                     %d = date",
+  "                     %t = time",
+  "         <size>     = size of the file",
+0};
+
 char *help_msg[]   = 
 {
   "Display list of commands or syntax of command <cmd>",
@@ -433,6 +551,19 @@ char *kbuf_msg[] =
   "   where <id>     = buffer identifier [0->7]",
   "         <size>   = buffer size",
   "         <offset> = requested address offset (optional)",
+0};
+
+char *la_msg[]     = 
+{ 
+  "Read/write loop from/to AXI-4 space",
+  "la.<ds> <offset> <data> [l:<loop>]",
+  "   where <ds>     = b, s, w, l [data size 1, 2, 4, 8]",
+  "         <offset> = PCI address offset in hexadecimal",
+  "         <data>   = data in hexadecimal [write cycle]",
+  "         <loop>   = loop count (0 -> infinite)",
+  "         If s is appended to <ds>, byte swapping if performed",
+  " ",
+  "AXI-4 space is not always available !",
 0};
 
 char *lmk_msg[]   = 
@@ -507,6 +638,16 @@ char *mbox_msg[] =
   "  mbox payload_sensor set <name> <value>",
 0};
 
+char *pa_msg[] =
+{ "Read/write data from/to AXI-4 space",
+  "  pa.<ds> <offset> [<data>]",
+  "     where <ds>     = b,s,w,l -> data size: 1,2,4,8",
+  "           <offset> = address offset in hexadecimal",
+  "           <data>   = data in hexadecimal [write cycle]",
+  " ",
+  "AXI-4 space is not always available !",
+0};
+
 char *pc_msg[] = 
 { "Read/write data from/to PCI CFG register",
   "  pc <offset> [<data>]",
@@ -527,6 +668,13 @@ char *pk_msg[] =
   "     where <idx>    = buffer index [0 -> 7]",
   "           <ds>     = b,s,w,l -> data size: 1,2,4,8",
   "           <offset> = address offset in hexadecimal",
+  "           <data>   = data in hexadecimal [write cycle]",
+0};
+
+char *pl_msg[] =
+{ "Read/write data from/to AXI-4 Lite register",
+  "  pl <offset> [<data>]",
+  "     where <offset> = register address in hexadecimal",
   "           <data>   = data in hexadecimal [write cycle]",
 0};
 
@@ -607,6 +755,56 @@ char *rsp1461_msg[] =
   "            id      = fpga0, fpga1, fpga2, fpga3, eth0, eth1, eth2",
 0};
 
+char *rdt1465_msg[] =
+{ "rdt1465 control command",
+  "   rdt1465 init",
+  "",
+  "   rdt1465 analog <control>",
+  "     where control = on, off",
+  "",
+  "   rdt1465 gpio_out <control>",
+  "     where control = on, off",
+  "",
+  "   rdt1465 red_led <control>",
+  "     where control = on, off",
+  "",
+  "   rdt1465 extension present",
+  "",
+  "   rdt1465 extension status",
+  "",
+  "   rdt1465 extension <control> <pin>",
+  "      where control = 0 -> low, 1 -> high, 2 -> z",
+  "            pin     = 0 to 11",
+  "",
+  "   rdt1465 extension get <pin>",
+  "      where pin = 0 to 11",
+  "",
+0};
+
+char *rcc1466_msg[] =
+{ "rcc1466 control command",
+  "   rcc1466 init",
+  "",
+  "   rcc1466 extension present",
+  "",
+  "   rcc1466 led on <id>",
+  "      where id = 0 -> LED123_GREEN, 1 -> LED123_RED, 2 -> LED124_GREEN, 3 -> LED124_RED",
+  "                 4 -> LED125_GREEN, 5 -> LED125_RED, 6 -> LED126_GREEN, 7 -> LED126_RED",
+  "",
+  "   rcc1466 led off <id>",
+  "      where id = 0 -> LED123_GREEN, 1 -> LED123_RED, 2 -> LED124_GREEN, 3 -> LED124_RED",
+  "                 4 -> LED125_GREEN, 5 -> LED125_RED, 6 -> LED126_GREEN, 7 -> LED126_RED",
+  "",
+  "   rcc1466 sfp status <id>",
+  "      where id = fpga0, fpga1, fpga2, fpga3, eth0, all",
+  "",
+  "   rcc1466 sfp control <enable> <rx_rate> <tx_rate> <id>",
+  "      where enable  = enable, disable",
+  "            rx_rate = low, high",
+  "            tx_rate = low, high",
+  "            id      = fpga0, fpga1, fpga2, fpga3, eth0",
+0};
+
 char *rtm_msg[] = 
 {
   "MTCA.4 RTM operations",
@@ -650,6 +848,19 @@ char *sflash_msg[]=
   "sflash dump <off> <len>",
   "sflash load <off> <file>",
   "sflash dynopt",
+0};
+
+char *ta_msg[]  = 
+{
+  "Perform read/write test in AXI-4 space",
+  "ta.<ds> <start>..<end> <data> [<loop>]",
+  "   where <ds>    = b, s, w, l [data size 1, 2, 4, 8]",
+  "         <start> = address offset in hexadecimal of first  location",
+  "         <end>   = address offset in hexadecimal of last location",
+  "         <data>  = data in hexadecimal",
+  "         <loop>  = number of loop",
+  " ",
+  "AXI-4 space is not always available !",
 0};
 
 char *tdma_msg[] = 
@@ -767,101 +978,122 @@ char *tu_msg[]  =
   "         <loop>  = number of loop",
 0};
 
+char *wait_msg[] =
+{
+  "Wait until a character is entered",
+  "wait [<tmo>]",
+  "   where <tmo> = timeout in sec",
+0};
+
 struct cli_cmd_list cmd_list[] =
 {
-  { "acq1430"   , tsc_acq1430,      acq1430_msg	, 0},
-  { "adc3110"   , tsc_adc3110,      adc3110_msg	, 0},
-  { "adc3112"   , tsc_adc3112,      adc3112_msg	, 0},
-  { "adc3117"   , tsc_adc3117,      adc3117_msg	, 0},
+  { "acq1430"   , tsc_acq1430,      acq1430_msg   , 0},
+  { "adc3110"   , tsc_adc3110,      adc3110_msg   , 0},
+  { "adc3112"   , tsc_adc3112,      adc3112_msg   , 0},
+  { "adc3117"   , tsc_adc3117,      adc3117_msg   , 0},
   { "alias"     , tsc_alias,        alias_msg     , 0},
-  { "ci"     	, tsc_rdwr_cr,      ci_msg     	  , 0},
-  { "cmp"     	, tsc_rdwr_cmp,     cmp_msg       , 0},
-  { "conf"   	, tsc_conf_show,    conf_msg      , 0},
-  { "cp1"     	, tsc_rdwr_cx,      cp_msg     	  , 0},
-  { "cp2"     	, tsc_rdwr_cx,      cp_msg     	  , 0},
-  { "cr"     	, tsc_rdwr_cr,      cr_msg     	  , 0},
-  { "cs1"     	, tsc_rdwr_cx,      cs_msg     	  , 0},
-  { "cs2"     	, tsc_rdwr_cx,      cs_msg     	  , 0},
-  { "cs"     	, tsc_rdwr_cx,      cs_msg     	  , 0},
-  { "cu1"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
-  { "cu2"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
-  { "cu"     	, tsc_rdwr_cx,      cu_msg     	  , 0},
-  { "dc"     	, tsc_rdwr_dr,      dc_msg     	  , 0},
-  { "di"     	, tsc_rdwr_dr,      di_msg     	  , 0},
-  { "dk"     	, tsc_rdwr_dx,      dk_msg     	  , 0},
-  { "dma"     	, tsc_dma    ,      dma_msg       , 0},
-  { "dm"     	, tsc_rdwr_dx,      dm_msg     	  , 0},
-  { "dp1"     	, tsc_rdwr_dx,      dp_msg     	  , 0},
-  { "dp2"     	, tsc_rdwr_dx,      dp_msg     	  , 0},
-  { "dr"     	, tsc_rdwr_dr,      dr_msg     	  , 0},
-  { "ds1"     	, tsc_rdwr_dx,      ds_msg     	  , 0},
-  { "ds2"     	, tsc_rdwr_dx,      ds_msg     	  , 0},
-  { "ds"     	, tsc_rdwr_dx,      ds_msg     	  , 0},
-  { "du1"     	, tsc_rdwr_dx,      du_msg     	  , 0},
-  { "du2"     	, tsc_rdwr_dx,      du_msg     	  , 0},
-  { "du"     	, tsc_rdwr_dx,      du_msg     	  , 0},
-  { "fifo"   	, tsc_fifo,         fifo_msg      , 0},
-  { "fk"     	, tsc_rdwr_fx,      fk_msg     	  , 0},
-  { "fp1"     	, tsc_rdwr_fx,      fp_msg     	  , 0},
-  { "fp2"     	, tsc_rdwr_fx,      fp_msg     	  , 0},
-  { "fm"     	, tsc_rdwr_fx,      fm_msg     	  , 0},
-  { "fs1"     	, tsc_rdwr_fx,      fs_msg     	  , 0},
-  { "fs2"     	, tsc_rdwr_fx,      fs_msg     	  , 0},
-  { "fs"     	, tsc_rdwr_fx,      fs_msg     	  , 0},
-  { "fu"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
-  { "fu1"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
-  { "fu2"     	, tsc_rdwr_fx,      fu_msg     	  , 0},
-  { "help"   	, tsc_func_help,    help_msg   	  , 0},
+  { "amc"       , tsc_amc,          amc_msg       , 0},
+  { "ci"        , tsc_rdwr_cr,      ci_msg        , 0},
+  { "cl"        , tsc_rdwr_cr,      cl_msg        , 0},
+  { "cmp"       , tsc_rdwr_cmp,     cmp_msg       , 0},
+  { "conf"      , tsc_conf_show,    conf_msg      , 0},
+  { "ca"        , tsc_rdwr_cx,      ca_msg        , 0},
+  { "cp1"       , tsc_rdwr_cx,      cp_msg        , 0},
+  { "cp2"       , tsc_rdwr_cx,      cp_msg        , 0},
+  { "cr"        , tsc_rdwr_cr,      cr_msg        , 0},
+  { "cs1"       , tsc_rdwr_cx,      cs_msg        , 0},
+  { "cs2"       , tsc_rdwr_cx,      cs_msg        , 0},
+  { "cs"        , tsc_rdwr_cx,      cs_msg        , 0},
+  { "cu1"       , tsc_rdwr_cx,      cu_msg        , 0},
+  { "cu2"       , tsc_rdwr_cx,      cu_msg        , 0},
+  { "cu"        , tsc_rdwr_cx,      cu_msg        , 0},
+  { "da"        , tsc_rdwr_dx,      da_msg        , 0},
+  { "dc"        , tsc_rdwr_dr,      dc_msg        , 0},
+  { "di"        , tsc_rdwr_dr,      di_msg        , 0},
+  { "dk"        , tsc_rdwr_dx,      dk_msg        , 0},
+  { "dl"        , tsc_rdwr_dr,      dl_msg        , 0},
+  { "dma"       , tsc_dma    ,      dma_msg       , 0},
+  { "dm"        , tsc_rdwr_dx,      dm_msg        , 0},
+  { "dp1"       , tsc_rdwr_dx,      dp_msg        , 0},
+  { "dp2"       , tsc_rdwr_dx,      dp_msg        , 0},
+  { "dr"        , tsc_rdwr_dr,      dr_msg        , 0},
+  { "ds1"       , tsc_rdwr_dx,      ds_msg        , 0},
+  { "ds2"       , tsc_rdwr_dx,      ds_msg        , 0},
+  { "ds"        , tsc_rdwr_dx,      ds_msg        , 0},
+  { "du1"       , tsc_rdwr_dx,      du_msg        , 0},
+  { "du2"       , tsc_rdwr_dx,      du_msg        , 0},
+  { "du"        , tsc_rdwr_dx,      du_msg        , 0},
+  { "fa"        , tsc_rdwr_fx,      fa_msg        , 0},
+  { "fifo"      , tsc_fifo,         fifo_msg      , 0},
+  { "fk"        , tsc_rdwr_fx,      fk_msg        , 0},
+  { "fp1"       , tsc_rdwr_fx,      fp_msg        , 0},
+  { "fp2"       , tsc_rdwr_fx,      fp_msg        , 0},
+  { "fm"        , tsc_rdwr_fx,      fm_msg        , 0},
+  { "fs1"       , tsc_rdwr_fx,      fs_msg        , 0},
+  { "fs2"       , tsc_rdwr_fx,      fs_msg        , 0},
+  { "fs"        , tsc_rdwr_fx,      fs_msg        , 0},
+  { "fu"        , tsc_rdwr_fx,      fu_msg        , 0},
+  { "fu1"       , tsc_rdwr_fx,      fu_msg        , 0},
+  { "fu2"       , tsc_rdwr_fx,      fu_msg        , 0},
+  { "gscope"    , tsc_gscope,       gscope_msg    , 0},
+  { "help"      , tsc_func_help,    help_msg      , 0},
   { "his"       , tsc_func_history, history_msg   , 0},
-  { "i2c"    	, tsc_i2c,          i2c_msg       , 0},
-  { "kbuf"    	, tsc_kbuf,         kbuf_msg  	  , 0},
-  { "lmk"    	, tsc_lmk,          lmk_msg    	  , 0},
-  { "lp1"    	, tsc_rdwr_lx,      lp_msg     	  , 0},
-  { "lp2"    	, tsc_rdwr_lx,      lp_msg     	  , 0},
-  { "ls1"    	, tsc_rdwr_lx,      ls_msg     	  , 0},
-  { "ls2"    	, tsc_rdwr_lx,      ls_msg     	  , 0},
-  { "ls"     	, tsc_rdwr_lx,      ls_msg     	  , 0},
-  { "lu2"    	, tsc_rdwr_lx,      lu_msg     	  , 0},
-  { "lu1"    	, tsc_rdwr_lx,      lu_msg     	  , 0},
-  { "lu"     	, tsc_rdwr_lx,      lu_msg     	  , 0},
-  { "map"    	, tsc_map,          map_msg    	  , 0},
+  { "i2c"       , tsc_i2c,          i2c_msg       , 0},
+  { "kbuf"      , tsc_kbuf,         kbuf_msg      , 0},
+  { "la"        , tsc_rdwr_lx,      la_msg        , 0},
+  { "lmk"       , tsc_lmk,          lmk_msg       , 0},
+  { "lp1"       , tsc_rdwr_lx,      lp_msg        , 0},
+  { "lp2"       , tsc_rdwr_lx,      lp_msg        , 0},
+  { "ls1"       , tsc_rdwr_lx,      ls_msg        , 0},
+  { "ls2"       , tsc_rdwr_lx,      ls_msg        , 0},
+  { "ls"        , tsc_rdwr_lx,      ls_msg        , 0},
+  { "lu2"       , tsc_rdwr_lx,      lu_msg        , 0},
+  { "lu1"       , tsc_rdwr_lx,      lu_msg        , 0},
+  { "lu"        , tsc_rdwr_lx,      lu_msg        , 0},
+  { "map"       , tsc_map,          map_msg       , 0},
   { "mbox"      , tsc_mbox,         mbox_msg      , 0},
-  { "pc"     	, tsc_rdwr_pr,      pc_msg     	  , 0},
-  { "pi"     	, tsc_rdwr_pr,      pi_msg     	  , 0},
-  { "pk"     	, tsc_rdwr_px,      pk_msg     	  , 0},
-  { "pm"     	, tsc_rdwr_px,      pm_msg     	  , 0},
-  { "pp1"     	, tsc_rdwr_px,      pp_msg     	  , 0},
-  { "pp2"     	, tsc_rdwr_px,      pp_msg     	  , 0},
-  { "pr"     	, tsc_rdwr_pr,      pr_msg     	  , 0},
-  { "ps1"     	, tsc_rdwr_px,      ps_msg     	  , 0},
-  { "ps2"     	, tsc_rdwr_px,      ps_msg     	  , 0},
-  { "ps"     	, tsc_rdwr_px,      ps_msg     	  , 0},
-  { "pu1"     	, tsc_rdwr_px,      pu_msg     	  , 0},
-  { "pu2"     	, tsc_rdwr_px,      pu_msg     	  , 0},
-  { "pu"     	, tsc_rdwr_px,      pu_msg     	  , 0},
-  { "rsp1461"  	, tsc_rsp1461,      rsp1461_msg	  , 0},
+  { "pa"        , tsc_rdwr_px,      pa_msg        , 0},
+  { "pc"        , tsc_rdwr_pr,      pc_msg        , 0},
+  { "pi"        , tsc_rdwr_pr,      pi_msg        , 0},
+  { "pk"        , tsc_rdwr_px,      pk_msg        , 0},
+  { "pl"        , tsc_rdwr_pr,      pl_msg        , 0},
+  { "pm"        , tsc_rdwr_px,      pm_msg        , 0},
+  { "pp1"       , tsc_rdwr_px,      pp_msg        , 0},
+  { "pp2"       , tsc_rdwr_px,      pp_msg        , 0},
+  { "pr"        , tsc_rdwr_pr,      pr_msg        , 0},
+  { "ps1"       , tsc_rdwr_px,      ps_msg        , 0},
+  { "ps2"       , tsc_rdwr_px,      ps_msg        , 0},
+  { "ps"        , tsc_rdwr_px,      ps_msg        , 0},
+  { "pu1"       , tsc_rdwr_px,      pu_msg        , 0},
+  { "pu2"       , tsc_rdwr_px,      pu_msg        , 0},
+  { "pu"        , tsc_rdwr_px,      pu_msg        , 0},
+  { "rsp1461"   , tsc_rsp1461,      rsp1461_msg   , 0},
+  { "rdt1465"   , tsc_rdt1465,      rdt1465_msg   , 0},
+  { "rcc1466"   , tsc_rcc1466,      rcc1466_msg   , 0},
   { "rtm"       , tsc_rtm,          rtm_msg       , 0},
   { "semaphore" , tsc_semaphore,    semaphore_msg , 0},
-  //{ "sflash" 	, tsc_sflash,       sflash_msg 	  , 0},
-  { "set" 	    , tsc_set_device,   set_device_msg, 0},
-  { "smem"    	, tsc_ddr,          ddr_msg 	  , 0},
-  { "tdma"     	, tsc_tdma,         tdma_msg      , 0},
-  { "timer"  	, tsc_timer,        timer_msg  	  , 0},
-  { "tinit"  	, tsc_tinit,        tinit_msg  	  , 0},
-  { "tkill"  	, tsc_tkill,        tkill_msg  	  , 0},
-  { "tlist"  	, tsc_tlist,        tlist_msg  	  , 0},
-  { "tstatus"	, tsc_tstatus,      tstatus_msg	  , 0},
-  { "tstart" 	, tsc_tstart,       tstart_msg 	  , 0},
-  { "tstop"  	, tsc_tstop,        tstop_msg  	  , 0},
-  { "tset"   	, tsc_tset,         tset_msg   	  , 0},
-  { "tp1"     	, tsc_rdwr_tx,      tp_msg     	  , 0},
-  { "tp2"     	, tsc_rdwr_tx,      tp_msg     	  , 0},
-  { "ts1"     	, tsc_rdwr_tx,      ts_msg     	  , 0},
-  { "ts2"     	, tsc_rdwr_tx,      ts_msg     	  , 0},
-  { "ts"     	, tsc_rdwr_tx,      ts_msg     	  , 0},
-  { "tu1"     	, tsc_rdwr_tx,      tu_msg     	  , 0},
-  { "tu2"     	, tsc_rdwr_tx,      tu_msg     	  , 0},
-  { "tu"     	, tsc_rdwr_tx,      tu_msg     	  , 0},
-  { "twait"  	, tsc_twait,        twait_msg  	  , 0},
+  //{ "sflash"  , tsc_sflash,       sflash_msg    , 0},
+  { "set"       , tsc_set_device,   set_device_msg, 0},
+  { "smem"      , tsc_ddr,          ddr_msg       , 0},
+  { "ta"        , tsc_rdwr_tx,      ta_msg        , 0},
+  { "tdma"      , tsc_tdma,         tdma_msg      , 0},
+  { "timer"     , tsc_timer,        timer_msg     , 0},
+  { "tinit"     , tsc_tinit,        tinit_msg     , 0},
+  { "tkill"     , tsc_tkill,        tkill_msg     , 0},
+  { "tlist"     , tsc_tlist,        tlist_msg     , 0},
+  { "tstatus"   , tsc_tstatus,      tstatus_msg   , 0},
+  { "tstart"    , tsc_tstart,       tstart_msg    , 0},
+  { "tstop"     , tsc_tstop,        tstop_msg     , 0},
+  { "tset"      , tsc_tset,         tset_msg      , 0},
+  { "tp1"       , tsc_rdwr_tx,      tp_msg        , 0},
+  { "tp2"       , tsc_rdwr_tx,      tp_msg        , 0},
+  { "ts1"       , tsc_rdwr_tx,      ts_msg        , 0},
+  { "ts2"       , tsc_rdwr_tx,      ts_msg        , 0},
+  { "ts"        , tsc_rdwr_tx,      ts_msg        , 0},
+  { "tu1"       , tsc_rdwr_tx,      tu_msg        , 0},
+  { "tu2"       , tsc_rdwr_tx,      tu_msg        , 0},
+  { "tu"        , tsc_rdwr_tx,      tu_msg        , 0},
+  { "twait"     , tsc_twait,        twait_msg     , 0},
+  { "wait"      , tsc_wait,         wait_msg      , 0},
   { (char *)0,} 
 };

@@ -36,6 +36,7 @@
 #include <cli.h>
 #include <tscioctl.h>
 #include <tsculib.h>
+#include <rsp1461lib.h>
 #include <aio.h>
 #include <errno.h>
 #include <ctype.h>

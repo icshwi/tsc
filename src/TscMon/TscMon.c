@@ -65,6 +65,8 @@ int script_exit = 0;
 int tsc_sign;
 int tsc_date;
 
+int tsc_has_axi_master = 0;
+
 static char *month[16] ={ NULL,"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",NULL,NULL};
 
 int tsc_fd;
@@ -515,6 +517,7 @@ int main(int argc, char *argv[]){
 	int iex     = 0;
 	int retval  = 0;
 	int cmd_cnt = 0;
+        int cap     = 0;
 	int mm      = 0;
 	int dd      = 0;
 	int yy      = 0;
@@ -573,6 +576,12 @@ int main(int argc, char *argv[]){
 	mm = (tsc_date>>23) & 0xf;
 	dd = (tsc_date>>27) & 0x1f;
 
+  /* Detect AXI-4 */
+  if (tsc_axi_get_cap(&cap) == 1)
+  {
+    tsc_has_axi_master = ((cap & TSC_AXI4_CFG_AXI_MASTER)!=0 ? 1 : 0);
+  }
+
 	/* configure the terminal in canonical mode with echo */
 	ioctl( 0, TIOCGWINSZ, &winsize);
 	tcgetattr( 0, &termios_old);
@@ -593,7 +602,6 @@ int main(int argc, char *argv[]){
 	//               calibration on PPC
 	if (ppc) 
 		tsc_ddr_idel_calib_start(quiet);
-
 
 	if (exit) {
 		if (ppc) {

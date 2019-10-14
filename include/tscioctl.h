@@ -328,8 +328,25 @@ struct tsc_ioctl_dma_sts
   uint wr_cnt;
 };
 
+struct tsc_ioctl_dma_time
+{
+  struct tsc_ioctl_dma dma;
+  uint start_time[2];
+  uint wr_time[2];
+  uint rd_time[2];
+  uint end_time[2];
+};
+
+/* AXI-4 Specific DMA Modes */
+#define DMA_MODE_AXI4_PROT_0          0x4000  /* AXI-4 Privileged Mode                    */
+#define DMA_MODE_AXI4_PROT_1_INV       0x800  /* AXI-4 Secure Mode                        */
+#define DMA_MODE_AXI4_PROT_2           0x400  /* AXI-4 Data / Instruction Access Type     */
+#define DMA_MODE_AXI4_BS                0x80  /* AXI-4 Burst Size (256 QW=0 or 16 QWs=1)  */
+#define DMA_MODE_AXI4_BT                0x40  /* AXI-4 Burst Type (INCR=0   or FIXED=1)   */
+#define DMA_MODE_AXI4_MASK            0x4CC0
+
 #define DMA_MODE_CACHE_ENA            0x8000
-#define DMA_MODE_WR_POST_MASK         0x3000  
+#define DMA_MODE_WR_POST_MASK         0x3000
 #define DMA_MODE_WR_POST(x)      ((x<<12)&DMA_MODE_WR_POST_MASK)
 #define DMA_MODE_RD_REQ_MASK          0x3000
 #define DMA_MODE_RD_REQ(x)       ((x<<12)&DMA_MODE_RD_REQ_MASK)
@@ -351,9 +368,11 @@ struct tsc_ioctl_dma_sts
 #define DMA_SPACE_SHM2       0x03
 #define DMA_SPACE_USR        0x04
 #define DMA_SPACE_USR2       0x05
+#define DMA_SPACE_AXI4       0x06 /* AXI-4 Bridge */
 #define DMA_SPACE_KBUF       0x08 // Over PCIe EP 0
 #define DMA_SPACE_KBUF1      0x09 // Over PCIe EP 1
 #define DMA_SPACE_MASK       0x07
+#define DMA_SPACE_DIRECT     0x10
 
 #define DMA_START_PIPE_NO    0x00
 #define DMA_START_PIPE       0x01
@@ -386,10 +405,10 @@ struct tsc_ioctl_dma_sts
 #define DMA_PCIE_RR2      0x10  /* 2 outstanding read request */
 #define DMA_PCIE_RR3      0x20  /* 3 outstanding read request */
 
-#define DMA_SIZE_PKT_128  0x00000000 
-#define DMA_SIZE_PKT_256  0x40000000 
-#define DMA_SIZE_PKT_512  0x80000000 
-#define DMA_SIZE_PKT_1K   0xc0000000 
+#define DMA_SIZE_PKT_128  0x00000000
+#define DMA_SIZE_PKT_256  0x40000000
+#define DMA_SIZE_PKT_512  0x80000000
+#define DMA_SIZE_PKT_1K   0xc0000000
 
 #define DMA_STATE_IDLE          0x00
 #define DMA_STATE_ALLOCATED     0x01
@@ -527,7 +546,7 @@ struct tsc_ioctl_semaphore
   uint tag;
   uint *location;
 };
-
+/*
 typedef enum {
 	RSP1461_EXT_PIN_LOW,
 	RSP1461_EXT_PIN_HIGH,
@@ -566,7 +585,7 @@ typedef enum {
 	SFP_RX_HIGH_RATE   = 0x02,
 	SFP_TX_HIGH_RATE   = 0x04
 	} rsp1461_sfp_control_t;
-
+*/
 #define TSC_IOCTL_USER              0x000f0000
 #define TSC_IOCTL_USER_WAIT         (TSC_IOCTL_USER | 0x1)
 #define TSC_IOCTL_USER_SUBSCRIBE    (TSC_IOCTL_USER | 0x2)

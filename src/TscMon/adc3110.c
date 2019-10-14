@@ -45,6 +45,8 @@ static char *rcsid = "$Id: adc3110.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #include "../../include/tscextlib.h"
 #include <tscioctl.h>
 #include <tsculib.h>
+#include <adc3110lib.h>
+#include <lmk04906.h>
 
 #define BUS_SPI 1
 #define BUS_I2C 2
@@ -94,14 +96,15 @@ struct tsc_adc3110_devices
 }
 adc3110_devices[] =
 {
-  { "lmk",  0x02000000, -1, BUS_SBC},
-  { "ads01", 0x01000000, 0, BUS_SBC},
-  { "ads23", 0x01010000, 1, BUS_SBC},
-  { "ads45", 0x01020000, 2, BUS_SBC},
-  { "ads67", 0x01030000, 3, BUS_SBC},
-  { "tmp102",0x01040048, 0, BUS_I2C},
-  { "eeprom",0x40010050, 1, BUS_I2C},
-  { NULL, 0}
+		{ "lmk",  0x02000000, -1, BUS_SBC},
+		{ "ads01", 0x01000000, 0, BUS_SBC},
+		{ "ads23", 0x01010000, 1, BUS_SBC},
+		{ "ads45", 0x01020000, 2, BUS_SBC},
+		{ "ads67", 0x01030000, 3, BUS_SBC},
+		{ "ads07", 0x00000000, 7, BUS_SBC},
+		{ "tmp102",0x01040048, 0, BUS_I2C},
+		{ "eeprom",0x40010050, 1, BUS_I2C},
+		{ NULL, 0}
 };
 
 int adc3110_init_flag = 0;
@@ -918,6 +921,21 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
   return(0);
 }
 
+int tsc_adc3110_gpio_trig(struct cli_cmd_para *c){
+	int fmc;
+	char *p;
+	fmc = strtoul( c->ext, &p, 16);
+	return adc3110_gpio_trig(tsc_fd, fmc);
+}
+
+int tsc_adc3110_reset(struct cli_cmd_para *c){
+	int fmc;
+	char *p;
+	fmc = strtoul( c->ext, &p, 16);
+	adc3110_reset(tsc_fd, fmc);
+	return 0;
+}
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_adc3110
  * Prototype     : int
@@ -936,6 +954,14 @@ tsc_adc3110( struct cli_cmd_para *c)
   char *p;
 
   adc3110_init();
+
+	if(!strcmp("gpio", c->para[0])){
+		return tsc_adc3110_gpio_trig(c);
+	}
+
+	if(!strcmp("reset", c->para[0])){
+		return tsc_adc3110_reset(c);
+	}
 
   if( c->cnt < 2)
   {
@@ -1264,6 +1290,44 @@ tsc_adc3110( struct cli_cmd_para *c)
       } 
     }
   }
+	else if( !strcmp( "init", c->para[1]))
+	{
+		if(add->bus != BUS_SBC)
+		{
+			printf("wrong device name\n");
+			printf("usage: adc3110.<fmc> ads<ij> %s <mode>\n", c->para[1]);
+			printf("       where <dev> = ads<ij> or lmk\n");
+			return(-1);
+		}
+		printf("Executing adc3110.%s, %s, %s\n", c->ext, c->para[0], c->para[1]);
+		if( !strncmp( "lmk", c->para[0], 3))
+		{
+			printf("Calling adc3110_lmk_init() for 250 MHz internal clock\n");
+			adc3110_lmk_init(tsc_fd, fmc, adc3110_lmk_intref_250M);
+			return(0);
+		}
+		if( !strncmp( "ads", c->para[0], 3))
+		{
+			printf("Calling adc3110_ads42lb69_init() for all channels\n");
+			adc3110_ads42lb69_init(tsc_fd, fmc, ADC3110_CHAN_SET_ALL); /* init all channels */
+			return(0);
+		}
+	}
+	else if( !strcmp( "calib", c->para[1]))
+	{
+		if( !strncmp( "ads", c->para[0], 3))
+		{
+			int idelay;
+
+			if( c->cnt < 3)
+			{
+				printf("Calling adc3110_set_idelay() with default for all channels\n");
+				idelay = -1;
+				adc3110_calib_set_idelay(tsc_fd, fmc, -1, idelay);
+			}
+			return(0);
+		}
+	}
   else if( !strcmp( "acqfif", c->para[1]) ||
 	   !strcmp( "check",  c->para[1])    )
   {

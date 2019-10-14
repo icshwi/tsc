@@ -37,6 +37,7 @@
 #include "adc3112.h"
 #include "adc3117.h"
 #include "alias.h"
+#include "amc.h"
 #include "buf.h"
 #include "conf.h"   
 #include "ddr.h"
@@ -48,12 +49,15 @@
 #include "mbox.h"
 #include "rdwr.h"
 #include "rsp1461.h"
+#include "rdt1465.h"
+#include "rcc1466.h"
 #include "rtm.h"
 #include "script.h"   
 #include "semaphore.h"
 #include "sflash.h"
 #include "timer.h"
 #include "tst.h"
+#include "gscope.h"
 
 int tsc_print_usage(struct cli_cmd_para *c);
 int tsc_ddr_idel_calib_start(int quiet);

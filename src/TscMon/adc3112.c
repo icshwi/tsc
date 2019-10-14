@@ -44,6 +44,9 @@ static char *rcsid = "$Id: adc3112.c,v 1.10 2016/01/15 10:21:19 ioxos Exp $";
 #include "../../include/tscextlib.h"
 #include <tscioctl.h>
 #include <tsculib.h>
+#include <adc3112lib.h>
+#include <fscope3112lib.h>
+#include <lmk04803.h>
 
 #define BUS_SPI   0x01
 #define BUS_I2C   0x02
@@ -78,13 +81,6 @@ static char *rcsid = "$Id: adc3112.c,v 1.10 2016/01/15 10:21:19 ioxos Exp $";
 #define ADC_NUM_SAMPLES       0x8000                /* 32k samples */
 #define ADC_SAMPLE_SIZE       sizeof(short)
 
-#define CAL_ALL_BIT  0x8000
-//#define CAL_STEP_NUM 40
-#define CAL_STEP_GAP 8
-#define CAL_STEP_NUM 512/CAL_STEP_GAP
-#define CAL_BIT_NUM  16
-//#define CAL_STEP_WIDTH  78.125
-#define CAL_STEP_WIDTH  8.0
 #define NUM_FMC 2
 #define ADC_NUM_CHAN 4
 #define ADC_OFF_CHAN_0  0x00000
@@ -117,12 +113,12 @@ adc3112_devices[] =
   { "ads2",    0x01010000, 1, BUS_SPI|BUS_READ|BUS_WRITE},
   { "ads",     0x00000000, -1, 0},
   { "ads0123", 0x00000000, -1, 0},
-  { "xra01",   0x01020000, 2, BUS_SPI|BUS_WRITE},
-  { "xra23",   0x01030000, 3, BUS_SPI|BUS_WRITE},
+  { "xra01",   0x01020000, 2, BUS_SPI|BUS_WRITE|BUS_READ},
+  { "xra23",   0x01030000, 3, BUS_SPI|BUS_WRITE|BUS_READ},
   { "lmk",     0x02000000, 0, BUS_SPI|BUS_READ|BUS_WRITE},
   { "sy",      0x02010000, 0, BUS_SPI|BUS_WRITE},
   { "dac",     0x03000000, 0, BUS_SPI|BUS_WRITE},
-  { "xratrig", 0x03010000, 0, BUS_SPI|BUS_WRITE},
+  { "xratrig", 0x03010000, 0, BUS_SPI|BUS_WRITE|BUS_READ},
   { "tmp102",  0x01040048, 0, BUS_I2C},
   { "eeprom",  0x01010051, 1, BUS_I2C},
   { NULL, 0}
@@ -166,25 +162,6 @@ struct adc3112_acq_res
   } chan[ADC_NUM_CHAN];
 };
 
-struct adc3112_calib_ctl
-{
-  int reg_ttim_cal;
-  int reg_acq_csr; 
-  int reg_adc_serial; 
-  struct adc3112_calib_chan
-  {
-    int chan;
-    int delay;
-    int ttim[CAL_BIT_NUM];
-    int err_cnt[CAL_BIT_NUM][CAL_STEP_NUM+1];
-    int cal_res[CAL_STEP_NUM+1];
-    int delta[CAL_BIT_NUM];
-    int hold_time;
-    int set_time;
-    char *data_buf;
-  } chan[ADC_NUM_CHAN];
-} adc3112_calib_ctl[NUM_FMC];
-
 struct adc3112_itl_ctl
 {
   int reg_itl_gain;
@@ -200,7 +177,6 @@ struct adc3112_itl_ctl
 } adc3112_itl_ctl[NUM_FMC];
 
 int adc3112_init_flag[NUM_FMC] = {0,0};
-int adc3112_verbose_flag = 0;
 struct cli_cmd_history adc3112_history;
 char adc3112_prompt[32];
 struct tsc_ioctl_map_win adc3112_mas_map;
@@ -217,81 +193,6 @@ char *
 adc3112_rcsid()
 {
   return( rcsid);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_spi_read
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_spi_read( int fmc,
-		  int cmd,
-	 	  int reg)
-{
-  int tmo, data, csr;
-
-  csr = adc3112_reg[FMC_IDX(fmc)].serial;
-  cmd |=  0x80000000 | reg;
-  tmo = 1000;
-  //printf("adc3112_spi_read( %x, %x, %x) csr = %x\n", fmc, cmd, reg, csr);
-  tscext_csr_wr(tsc_fd, csr, cmd);
-  while( --tmo)
-  {
-    if( !(tscext_csr_rd(tsc_fd, csr) & 0x80000000)) break;
-  }
-  data = tscext_csr_rd(tsc_fd, csr + 4);
-  //printf("cmd = %08x - data = %08x\n", cmd, data);
-  if( !tmo)
-  {
-    printf("adc3112_spi_read() : cmd = %08x -> timeout...\n", cmd);
-    return(-1);
-  }
-
-  return( data);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_spi_write
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_spi_write( int fmc,
-		   int cmd,
-		   int reg,
-		   int data)
-{
-  int tmo, csr;
-
-  csr = adc3112_reg[FMC_IDX(fmc)].serial;
-  cmd |= 0xc0000000 | reg;
-  //printf("adc3112_spi_write( %x, %x, %x, %x) csr = %x\n", fmc, cmd, reg, data, csr);
-  tscext_csr_wr(tsc_fd, csr + 4, data);          /* load data */
-  tscext_csr_rd(tsc_fd, csr+4);                  /* flush data */
-  tscext_csr_wr(tsc_fd, csr, cmd);               /* write data */
-  tmo = 1000;
-  while( --tmo)
-  {
-    if( !(tscext_csr_rd(tsc_fd, csr) & 0x80000000)) break; /* check end of write cycle */
-  }
-  if( !tmo)
-  {
-    printf("adc3112_spi_write() : cmd = %08x  -> timeout...\n", cmd);
-    return(-1);
-  }
-
-  return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -332,16 +233,16 @@ adc3112_init( int fmc)
       adc3112_reg[fmc_idx].gain = ADC_REG_GAIN_A;
       adc3112_reg[fmc_idx].ttim = ADC_REG_TTIM_A;
     }
-    bzero( &adc3112_calib_ctl[fmc_idx], sizeof(struct adc3112_calib_ctl));
+   // bzero( &adc3112_calib_ctl[fmc_idx], sizeof(struct adc3112_calib_ctl));
     bzero( &adc3112_itl_ctl[fmc_idx], sizeof(struct adc3112_itl_ctl));
 
     /* set FMC#1 ADS01 to 4 wire SPI */
     printf("set FMC#%d ADS01 to 4 wire SPI\n", fmc);
-    adc3112_spi_write( fmc, ADC_ADS01_CMD, 0, 0x8000);
+    adc3112_spi_write(tsc_fd, fmc, ADC_ADS01_CMD, 0, 0x8000);
 
     /* set FMC#1 ADS23 to 4 wire SPI */
     printf("set FMC#%d ADS23 to 4 wire SPI\n", fmc);
-    adc3112_spi_write( fmc, ADC_ADS23_CMD, 0, 0x8000);
+    adc3112_spi_write(tsc_fd, fmc, ADC_ADS23_CMD, 0, 0x8000);
 
   }
 
@@ -1319,236 +1220,6 @@ adc3112_itl_buf( struct cli_cmd_para *c,
 }
 
 
-/*
- *
- * ADC calibration
- *
- */
-
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_init
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_init( struct adc3112_calib_ctl *cc,
-		    int reg_ttim_cal,
-		    int reg_acq_csr,
-		    int reg_adc_serial,
-		    char *data_buf)
-
-{
-  int bit, step, chan;
-  int reg_gain;
-
-  cc->reg_ttim_cal = reg_ttim_cal;
-  cc->reg_acq_csr = reg_acq_csr;
-  cc->reg_adc_serial = reg_adc_serial;
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-  {
-    cc->chan[chan].chan = chan;
-    cc->chan[chan].delay = 0;
-    for( bit = 0; bit < CAL_BIT_NUM; bit++)
-    {
-      cc->chan[chan].ttim[bit] = 0;
-      for( step = 0; step < CAL_STEP_NUM; step++)
-      {
-        cc->chan[chan].err_cnt[bit][step] = 0;
-      }
-    }
-    cc->chan[chan].data_buf = data_buf + ADC_OFF_CHAN_1*chan;
-    /* reset ADC gain to default value */
-    reg_gain = reg_ttim_cal - 0x10 + (4*chan);
-    tscext_csr_wr(tsc_fd, reg_gain, 0x4000);
-  }
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_get_ttim
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_get_ttim( struct adc3112_calib_ctl *cc,
-			 int chan)
-{
-  int bit, data;
-
-  for( bit = 0; bit < 12; bit++)
-  {
-    data = (bit<<20) | (chan << 26);
-    tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-    cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-  }
-  data = (0xc00000) | (chan << 26);
-  tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-  cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_set_default
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_set_default( struct adc3112_calib_ctl *cc,
-			   int chan)
-{
-  int data;
-
-  /* load default delay */
-  data = 0x40000000 | (chan << 26);
-  tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data); 
-  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-  cc->chan[chan].delay = 0;
-  /* update ttim array */
-  adc3112_calib_get_ttim( cc, chan);
-
-  return(0);
-}
-
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_inc_delay
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_inc_delay( struct adc3112_calib_ctl *cc,
-			 int set,
-			 int chan)
-{
-  int bit, data;
-  int ustep;
-
-  if( cc->chan[chan].delay >= (CAL_STEP_NUM/2))
-  {
-    return(-1);
-  }
-  if( set & CAL_ALL_BIT)
-  {
-    //data = 0xa0f00000 | (chan << 26);
-    //tscext_csr_wr( cc->reg_ttim_cal, data); 
-    cc->chan[chan].delay += 1;
-    for( bit = 0; bit < 12; bit++)
-    {
-      data = 0xa0000000 | (bit<<20) | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-    }
-    data = 0xa0c00000 | (chan << 26);
-    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-    cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-  }
-  else
-  {
-    //printf("in adc3112_calib_dec_delay( %x, %d)\n", set, chan);
-    for( bit = 0; bit < 12; bit++)
-    {
-      if( set & (1<<bit))
-      {
-	//printf("increment bit %d\n", bit);
-	data = 0xa0000000 | (bit<<20) | (chan << 26);
-	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-      }
-    }
-    if( set & 0x1000)
-    {
-      //printf("decrement bit 12\n");
-      data = 0xa0c00000 | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-    }
-  }
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_dec_delay
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_dec_delay( struct adc3112_calib_ctl *cc,
-			 int set,
-			 int chan)
-{
-  int bit, data;
-  int ustep;
-
-  if( cc->chan[chan].delay <= -(CAL_STEP_NUM/2))
-  {
-    return(-1);
-  }
-  if( set & CAL_ALL_BIT)
-  {
-    //data = 0x80f00000 | (chan << 26);
-    //tscext_csr_wr( cc->reg_ttim_cal, data); 
-    cc->chan[chan].delay -= 1;
-    for( bit = 0; bit < 12; bit++)
-    {
-      data = 0x80000000 | (bit<<20) | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-    }
-    data = 0x80c00000 | (chan << 26);
-    for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-    cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-  }
-  else
-  {
-    //printf("in adc3112_calib_dec_delay( %x, %d)\n", set, chan);
-    for( bit = 0; bit < 12; bit++)
-    {
-      if( set & (1<<bit))
-      {
-	//printf("decrement bit %d\n", bit);
-	data = 0x80000000 | (bit<<20) | (chan << 26);
-	for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-	cc->chan[chan].ttim[bit+4] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-      }
-    }
-    if( set & 0x1000)
-    {
-      //printf("decrement bit 12\n");
-      data = 0x80c00000 | (chan << 26);
-      for( ustep = 0; ustep < CAL_STEP_GAP; ustep++) tscext_csr_wr(tsc_fd, cc->reg_ttim_cal, data);
-      cc->chan[chan].ttim[0] =  tscext_csr_rd(tsc_fd, cc->reg_ttim_cal);
-    }
-  }
-  return(0);
-}
-
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3112_ads_read
  * Prototype     : void
@@ -1621,531 +1292,66 @@ adc3112_ads_write( int csr,
   return(0);
 }
 
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_data_check
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+char adc_buf[ADC3112_CHAN_NUM][FSCOPE3112_ACQ_SIZE];
 
-unsigned short
-adc3112_calib_data_check( struct adc3112_calib_ctl *cc,
-			  int chan,
-			  unsigned short cmp0,
-			  unsigned short cmp1)
-{
-  unsigned short res, tmp, dat0, dat1;
-  int i, bit;
-  char *p;
-
-  res = 0;
-  if( !(chan & 1)) /* hardware add 1 to data for chan 0 and 2 */
-  {
-    cmp0 += 0x10;
-    cmp1 += 0x10;
-  }
-  for( bit = 0; bit < CAL_BIT_NUM; bit++)
-  {
-    cc->chan[chan].err_cnt[bit][(CAL_STEP_NUM/2) +  cc->chan[chan].delay] = 0;
-  }
-  p = cc->chan[chan].data_buf;
-  //dat0 = (unsigned short)tsc_swap_16(*(short *)&p[2]);
-  //dat1 = (unsigned short)tsc_swap_16(*(short *)&p[0]);
-  //printf("chan %d compare : %04x : %04x - %04x : %04x\n", chan, cmp1, cmp0, dat1, dat0);
-  for( i = 0; i < (ADC_NUM_SAMPLES*ADC_SAMPLE_SIZE); i += sizeof(int))
-  {
-    dat0 = (unsigned short)tsc_swap_16(*(short *)&p[i+2]);
-    dat1 = (unsigned short)tsc_swap_16(*(short *)&p[i]);
-    tmp = cmp0 ^ dat0;
-    res |= tmp;
-    for( bit = 0; bit < CAL_BIT_NUM; bit++)
-    {
-      if( tmp & (1<<bit))
-      {
-        cc->chan[chan].err_cnt[bit][(CAL_STEP_NUM/2) +  cc->chan[chan].delay] += 1;
-      }
-    }
-    tmp = cmp1 ^ dat1;
-    res |= tmp;
-    for( bit = 0; bit < CAL_BIT_NUM; bit++)
-    {
-      if( tmp & (1<<bit))
-      {
-        cc->chan[chan].err_cnt[bit][(CAL_STEP_NUM/2) +  cc->chan[chan].delay] += 1;
-      }
-    }
-  }
-  return( res);
-}
-
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_config
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_config( int fmc,
-		      uint mode)
-{
-  int data;
-
-  /* ADS5409_01 DAQ calibration with 0x555/0xAAA */
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0xe, 0x0000);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0xf, 0x0000);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x1, 0x0000);
-
-  data = 0x8000 | ((mode & 0xfff00000) >> 18);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3c, data);
-  data = ((mode & 0xfff0) >> 2);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3d, data);
-  data = ((mode & 0xfff00000) >> 18);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3e, data);
-
-  /* ADS5409_23 DAQ calibration with 0x555/0xAAA */
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0xe, 0x0000);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0xf, 0x0000);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x1, 0x0000);
-
-  data = 0x8000 | ((mode & 0xfff00000) >> 18);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3c, data);
-  data = ((mode & 0xfff0) >> 2);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3d, data);
-  data = ((mode & 0xfff00000) >> 18);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3e, data);
-
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_restore
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-
-int
-adc3112_calib_restore( int fmc)
-{
-  /* ADS5409_01 exit calibration mode */
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0xe, 0xaaa8);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0xf, 0xa000);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x1, 0x0002);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3c, 0);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3d, 0);
-  adc3112_spi_write( fmc, ADC_ADS01_CMD, 0x3e, 0);
-
-  /* ADS5409_23 exit calibration mode */
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0xe, 0xaaa8);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0xf, 0xa000);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x1, 0x0002);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3c, 0);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3d, 0);
-  adc3112_spi_write( fmc, ADC_ADS23_CMD, 0x3e, 0);
-
-  return(0);
-}
-
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_trig
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
+void
 adc3112_calib_trig( struct adc3112_calib_ctl *cc,
 		    uint mode)
 {
-  int i, chan;
+  int chan;
   unsigned short calib_res[4];
   unsigned short cmp0, sync0;
   unsigned short cmp1, sync1;
-  char *p;
+
 
   cmp0 = (unsigned short)((mode&0xfff00000)>>16);
   cmp1 = (unsigned short)(mode&0xfff0);
   sync0 = (unsigned short)((mode&0x10000)>>16);
   sync1 = (unsigned short)(mode&1);
 
-  /* clear data buffers for chan 0 -> 3 */
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  /* clear acquisition buffer */
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
   {
-    p = cc->chan[chan].data_buf;
-    for( i = 0; i < (ADC_NUM_SAMPLES*ADC_SAMPLE_SIZE); i += sizeof(int))
-    {
-      *(int *)&p[i] = 0;
-    }
+    fscope3112_acq_clear(tsc_fd, cc->fmc, chan);
   }
 
-  /* start data acquisition */
-  adc3112_trig_acq( cc->reg_acq_csr, 0);
+  /* arm data acquisition in auto trig mode */
+  fscope3112_acq_arm(tsc_fd, cc->fmc, FSCOPE3112_TRIG_MODE_AUTO, 0, 0);
+
+  /* load raw data from acquisition buffers to local buffers */
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
+  {
+    fscope3112_acq_load(tsc_fd, cc->fmc, chan, adc_buf[chan], FSCOPE3112_ACQ_SIZE);
+  }
+#define JFGno
 #ifdef JFG
   /* display data buffers for cha 0 -> 3 */
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
   {
-    p = cc->chan[chan].data_buf;
+    char *p;
+    int i;
+    p = adc_buf[chan];
     for( i = 0; i < 0x10; i += sizeof(int))
     {
-      if( !(i & 0xf)) printf("\n%1d -> %03x : ", chan, i);
+      if( !(i & 0xf)) printf("\n%03x : ", i);
       printf("%04x %04x ", (unsigned short)tsc_swap_16(*(short *)&p[i+2]), (unsigned short)tsc_swap_16(*(short *)&p[i]));
     }
   }
   printf("\n");
 #endif
-
-  calib_res[0] = adc3112_calib_data_check( cc, 0, cmp0|sync0, cmp1|sync1);
+  /* Check acquired data */
+  calib_res[0] = adc3112_calib_data_check( cc, 0, cmp0|sync0, cmp1|sync1, (char *)adc_buf[0]);
   cc->chan[0].cal_res[(CAL_STEP_NUM/2) + cc->chan[0].delay] = calib_res[0];
-  calib_res[1] = adc3112_calib_data_check( cc, 1, cmp1|sync0, cmp0|sync1);
+  calib_res[1] = adc3112_calib_data_check( cc, 1, cmp1|sync0, cmp0|sync1, (char *)adc_buf[1]);
   cc->chan[1].cal_res[(CAL_STEP_NUM/2) + cc->chan[1].delay] = calib_res[1];
-  calib_res[2] = adc3112_calib_data_check( cc, 2, cmp0|sync0, cmp1|sync1);
+  calib_res[2] = adc3112_calib_data_check( cc, 2, cmp0|sync0, cmp1|sync1, (char *)adc_buf[2]);
   cc->chan[2].cal_res[(CAL_STEP_NUM/2) + cc->chan[2].delay] = calib_res[2];
-  calib_res[3] = adc3112_calib_data_check( cc, 3, cmp1|sync0, cmp0|sync1);
+  calib_res[3] = adc3112_calib_data_check( cc, 3, cmp1|sync0, cmp0|sync1, (char *)adc_buf[3]);
   cc->chan[3].cal_res[(CAL_STEP_NUM/2) + cc->chan[3].delay] = calib_res[3];
-    
-  //printf("data checking : %5d : %04x %04x %04x %04x\n", (CAL_STEP_NUM/2) + cc->chan[0].delay, calib_res[0], calib_res[1], calib_res[2], calib_res[3]);
-
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_show_res
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-void
-print_short_to_bin( short data)
-{
-  int i;
-
-  for( i = 15; i >= 4; i--)
-  {
-    if( data & (1<<i)) printf("X");
-    else printf("0");
-  }
-    if( data & 1) printf(" X : ");
-    else printf(" 0 : ");
 
   return;
 }
-int
-adc3112_calib_show_res( struct adc3112_calib_ctl *cc)
-{
-  int step;
 
-  if( adc3112_verbose_flag) printf("delay         CH0              CH1              CH2              CH3\n");
-  for( step = 0; step < (CAL_STEP_NUM+1); step++)
-  {
-    if( adc3112_verbose_flag) 
-    {
-      printf("%5d : ", (step - (CAL_STEP_NUM/2))*CAL_STEP_GAP); 
-      print_short_to_bin( cc->chan[0].cal_res[step]);
-      print_short_to_bin( cc->chan[1].cal_res[step]);
-      print_short_to_bin( cc->chan[2].cal_res[step]);
-      print_short_to_bin( cc->chan[3].cal_res[step]);
-      printf("\n");
-    }
-  }
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_show_err_cnt
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_show_err_cnt( struct adc3112_calib_ctl *cc,
-			    int chan)
-{
-  int step;
-  int bit;
-  int min[CAL_BIT_NUM], max[CAL_BIT_NUM];
-
-  for( bit = 0; bit < CAL_BIT_NUM; bit++)
-  {
-    min[bit] = -1;
-    max[bit] = -1;
-  }
-  if( adc3112_verbose_flag) printf("\n Delay   D11  D10  D9   D8   D7   D6   D5   D4   D3   D2   D1   D0  SYNC\n");
-  for( step = 0; step < (CAL_STEP_NUM+1); step++)
-  {
-    if( adc3112_verbose_flag)  printf("%5d :", (step - (CAL_STEP_NUM/2))*CAL_STEP_GAP); 
-    for( bit = 0; bit < 12; bit++)
-    {
-      if( (cc->chan[chan].err_cnt[15-bit][step] == 0) && (min[15-bit] == -1))
-      {
-	min[15-bit] = step;
-      }
-      if( (cc->chan[chan].err_cnt[15-bit][step] != 0) && (min[15-bit] != -1) && (max[15-bit] == -1))
-      {
-	max[15-bit] = step - 1;;
-      }
-      if( cc->chan[chan].err_cnt[15-bit][step] == ADC_NUM_SAMPLES)
-      {
-        if( adc3112_verbose_flag) printf(" XXXX");
-      } 
-      else
-      {
-        if( adc3112_verbose_flag) printf(" %04x", cc->chan[chan].err_cnt[15-bit][step]);
-      }
-    }
-    if( cc->chan[chan].err_cnt[0][step] == ADC_NUM_SAMPLES)
-    {
-      if( adc3112_verbose_flag) printf(" XXXX\n");
-    }
-    else 
-    { 
-      if( adc3112_verbose_flag) printf(" %04x\n", cc->chan[chan].err_cnt[0][step]);
-    }
-  }
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_show_min_max
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc,
-			    int chan)
-{
-  int step;
-  int bit;
-  int min[CAL_BIT_NUM], max[CAL_BIT_NUM], first[CAL_BIT_NUM];
-
-  for( bit = 0; bit < CAL_BIT_NUM; bit++)
-  {
-    min[bit] = -32;
-    max[bit] = 32;
-    first[bit] = 0;
-  }
-
-  for( bit = 0; bit < 12; bit++)
-  {
-    for( step = 0; step < (CAL_STEP_NUM/2); step++)
-    {
-      if( cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] == 0)
-      {
-	first[15-bit] = step;
-	break;
-      }
-#ifdef JFG
-      if( cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) - step] == 0)
-      {
-	first[15-bit] = -step;
-	break;
-      }
-#endif
-    }
-  }
-  for( step = 0; step < (CAL_STEP_NUM/2); step++)
-  {
-#ifdef JFG
-    if( cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] == 0)
-    {
-      first[0] = step;
-      break;
-    }
-#endif
-    if( cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) - step] == 0)
-    {
-      first[0] = -step;
-      printf("SYNC: first = %d\n", first[0]);
-      break;
-    }
-  }
-  for( bit = 0; bit < 12; bit++)
-  {
-    for( step = first[15-bit]; step < (CAL_STEP_NUM/2); step++)
-    {
-      if( (cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] != 0) && (max[15-bit] == 32))
-      {
-	max[15-bit] = step;
-      }
-    }
-  }
-  for( step = first[0]; step < (CAL_STEP_NUM/2); step++)
-  {
-    if( (cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] != 0) && (max[0] == 32))
-    {
-      max[0] = step;
-    }
-  }
-  for( bit = 0; bit < 12; bit++)
-  {
-    for( step = first[15-bit]; step > -(CAL_STEP_NUM/2); step--)
-    {
-      if( (cc->chan[chan].err_cnt[15-bit][(CAL_STEP_NUM/2) + step] != 0) && (min[15-bit] == -32))
-      {
-	min[15-bit] = step;
-      }
-    }
-  }
-  for( step = first[0]; step > -(CAL_STEP_NUM/2); step--)
-  {
-    if( (cc->chan[chan].err_cnt[0][(CAL_STEP_NUM/2) + step] != 0) && (min[0] == -32))
-    {
-      min[0] = step;
-    }
-  }
-
-  if( adc3112_verbose_flag) printf(" MAX  :");
-  cc->chan[chan].hold_time =  max[15];
-  for( bit = 0; bit < 12; bit++)
-  {
-    if( max[15-bit] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[15-bit]; 
-    if( adc3112_verbose_flag) printf(" %3d ", max[15-bit]*CAL_STEP_GAP);
-  }
-  if( adc3112_verbose_flag) printf(" %3d\n", max[0]*CAL_STEP_GAP);
-  if( max[0] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[0]; 
-  cc->chan[chan].hold_time =   (cc->chan[chan].hold_time - 1)*CAL_STEP_WIDTH*CAL_STEP_GAP;
-
-  if( adc3112_verbose_flag) printf(" MEAN :");
-  for( bit = 0; bit < 12; bit++)
-  {
-    cc->chan[chan].delta[15-bit] =  (max[15-bit] + min[15-bit])/2;
-    if( adc3112_verbose_flag) printf(" %3d ", cc->chan[chan].delta[15-bit]*CAL_STEP_GAP);
-  }
-  cc->chan[chan].delta[0] = (max[0] + min[0])/2; 
-  if( adc3112_verbose_flag) printf(" %3d\n", cc->chan[chan].delta[0]*CAL_STEP_GAP);
-
-  if( adc3112_verbose_flag) printf(" MIN  :");
-  cc->chan[chan].set_time =  min[15];
-  for( bit = 0; bit < 12; bit++)
-  {
-    if( min[15-bit] > cc->chan[chan].set_time) cc->chan[chan].set_time = min[15-bit]; 
-    if( adc3112_verbose_flag) printf(" %3d ", min[15-bit]*CAL_STEP_GAP);
-  }
-  if( adc3112_verbose_flag) printf(" %3d\n", min[0]*CAL_STEP_GAP);
-  if( min[0] > cc->chan[chan].set_time) cc->chan[chan].set_time = min[0];
-  cc->chan[chan].set_time =   (cc->chan[chan].set_time - 1)*CAL_STEP_WIDTH*CAL_STEP_GAP;
-
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_adjust_delay
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_adjust_delay( struct adc3112_calib_ctl *cc,
-			    int chan)
-{
-  int step, bit;
-
-  if( adc3112_verbose_flag) printf("IODelay #%d :", chan);
-  for( bit = 0; bit < 12; bit++)
-  {
-    if( adc3112_verbose_flag) printf(" %03x",  (cc->chan[chan].ttim[15-bit] >> 8) & 0xfff);
-  }
-  if( adc3112_verbose_flag) printf(" %03x\n",  (cc->chan[chan].ttim[0] >> 8) & 0xfff);
-
-  if( adc3112_verbose_flag) printf("           :");
-  for( bit = 0; bit < 12; bit++)
-  {
-    if( adc3112_verbose_flag) printf(" %3d",  cc->chan[chan].delta[15-bit]);
-    if( cc->chan[chan].delta[bit+4] < 0)
-    {
-      for( step = 0; step < -cc->chan[chan].delta[bit+4]; step++)
-      {
-	adc3112_calib_dec_delay( cc, 1<<bit, chan);
-      }
-    }
-    if( cc->chan[chan].delta[bit+4] > 0)
-    {
-      for( step = 0; step < cc->chan[chan].delta[bit+4]; step++)
-      {
-	adc3112_calib_inc_delay( cc, 1<<bit, chan);
-      }
-    }
-  }
-  if( adc3112_verbose_flag) printf(" %3d\n",  cc->chan[chan].delta[0]);
-  if( cc->chan[chan].delta[0] < 0)
-  {
-    for( step = 0; step < -cc->chan[chan].delta[0]; step++)
-    {
-      adc3112_calib_dec_delay( cc, 1<<12, chan);
-    }
-  }
-  if( cc->chan[chan].delta[0] > 0)
-  {
-    for( step = 0; step < cc->chan[chan].delta[0]; step++)
-    {
-      adc3112_calib_inc_delay( cc, 1<<12, chan);
-    }
-  }
-
-  if( adc3112_verbose_flag) printf("           :");
-  for( bit = 0; bit < 12; bit++)
-  {
-    if( adc3112_verbose_flag) printf(" %03x",  (cc->chan[chan].ttim[15-bit] >> 8) & 0xfff);
-  }
-  if( adc3112_verbose_flag) printf(" %03x\n",  (cc->chan[chan].ttim[0] >> 8) & 0xfff);
-  return(0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3112_calib_reset_delay
- * Prototype     : 
- * Parameters    : 
- * Return        : 
- *----------------------------------------------------------------------------
- * Description   : 
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3112_calib_reset_delay( struct adc3112_calib_ctl *cc)
-{
-  int bit, chan;
-
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-  {
-    for( bit = 0; bit < CAL_BIT_NUM; bit++)
-    {
-      cc->chan[chan].delta[bit] = 0;
-    }
-  }
-  return(0);
-}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3112_calib
@@ -2163,163 +1369,97 @@ adc3112_calib( struct cli_cmd_para *c,
 	       int fmc,
 	       int size)
 {
-  char *adc_buf;
-  int chan;
-  int step;
-  uint mode;
-  char *p;
-  int i, cnt;
-  int reset;
+  int mode, chan, step;
+  struct adc3112_calib_ctl *cc;
 
-  printf("Performing %s calibration\n", c->para[0]);
-  adc_buf = adc3112_map_usr( &adc3112_mas_map, 0x100000, 0x100000, fmc);
-  if( fmc == 2)
-  {
-    adc3112_calib_init( &adc3112_calib_ctl[1], ADC_REG_TTIM_B, ACQ_REG_BASE_B, ADC_REG_SERIAL_B, adc_buf);
-  }
-  else 
-  {
-    adc3112_calib_init( &adc3112_calib_ctl[0], ADC_REG_TTIM_A, ACQ_REG_BASE_A, ADC_REG_SERIAL_A, adc_buf);
-  }
-  mode = 0x5551aaa0;
-  cnt = c->cnt - 2;
-  reset = 0;
-  adc3112_verbose_flag = 0;
-  i = 2;
-  while( cnt--)
-  {
-    p =  c->para[i++];
-    if( p[0] == 'd')
-    {
-      sscanf( p, "d:%x", &mode);
-    }
-    if( p[0] == 'r')
-    {
-      reset = 1;
-    }
-    if( p[0] == 'v')
-    {
-      adc3112_verbose_flag = 1;
-    }
-  }
-  if( c->cnt > 2)
-  {
-    sscanf( c->para[2], "d:%x", &mode);
-  }
+  /* initialize FSCPE acquisition logic */
+  fscope3112_acq_init(tsc_fd);
+
+  printf("Performing ADC3112 calibration\n");
+  mode = 0xa5a15a50;
+  cc = ( struct adc3112_calib_ctl *)malloc( sizeof( struct adc3112_calib_ctl));
+
+  /* initialize calibration control structure */
+  adc3112_calib_init(tsc_fd, cc, fmc);
+
   printf("Configure ADS with calibration value %08x\n", mode);
-  adc3112_calib_config( fmc, mode);
+  adc3112_calib_config(tsc_fd, fmc, mode);
 
   printf("Setting default values for all channels\n");
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  printf("Adjust time delay to zero\n");
+  adc3112_calib_reset_delta( cc);                    /* delta = 0 */
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
   {
-    adc3112_calib_set_default( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
+    adc3112_calib_set_default(tsc_fd, cc, chan);              /* TTIM = default */
+    adc3112_calib_adjust_delay(tsc_fd, cc, chan);             /* TTIM = TTIM + delta */
   }
-  if( reset)
-  {
-    printf("Adjust time delay to zero\n");
-    adc3112_calib_reset_delay( &adc3112_calib_ctl[FMC_IDX(fmc)]);
-  }
-  else 
-  {
-    printf("\nAdjust time delay to mean\n");
-    for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-    {
-      adc3112_calib_adjust_delay( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-    }
-  }
-  printf("Trig calibration with default delay\n");
-  adc3112_calib_trig( &adc3112_calib_ctl[FMC_IDX(fmc)], mode);
+  printf("Trig calibration with zero delay\n");
+  adc3112_calib_trig( cc, mode);                       /* Perform calibration */
 
   printf("Incrementing time delay...\n");
   for( step = 0; step < (CAL_STEP_NUM/2); step++)
   {
-    for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+    for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
     {
-      adc3112_calib_inc_delay( &adc3112_calib_ctl[FMC_IDX(fmc)], CAL_ALL_BIT, chan);
+      adc3112_calib_inc_delay(tsc_fd, cc, CAL_ALL_BIT, chan); /* TTIM++ */
     }
-    printf("Start calibration with delay %d\r", adc3112_calib_ctl[FMC_IDX(fmc)].chan[0].delay);
+    printf("Start calibration with delay %d\r", cc->chan[0].delay);
     fflush( stdout);
-    adc3112_calib_trig( &adc3112_calib_ctl[FMC_IDX(fmc)], mode);
+    adc3112_calib_trig(cc, mode);                     /* Perform calibration */
   }
 
-  printf("\nSetting default values for all channels\n");
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  printf("\nAdjust time delay to mean \n");
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
   {
-    adc3112_calib_set_default( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-  }
-  if( reset)
-  {
-    printf("Adjust time delay to zero\n");
-    adc3112_calib_reset_delay( &adc3112_calib_ctl[FMC_IDX(fmc)]);
-  }
-  else 
-  {
-    printf("\nAdjust time delay to mean\n");
-    for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-    {
-      adc3112_calib_adjust_delay( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-    }
+    adc3112_calib_set_default(tsc_fd, cc, chan);              /* TTIM = default */
+    adc3112_calib_adjust_delay(tsc_fd, cc, chan);             /* TTIM = TTIM + delta */
   }
 
   printf("Decrementing time delay...\n");
   for( step = 0; step < (CAL_STEP_NUM/2); step++)
   {
-    for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+    for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
     {
-      adc3112_calib_dec_delay( &adc3112_calib_ctl[FMC_IDX(fmc)], CAL_ALL_BIT, chan);
+      adc3112_calib_dec_delay(tsc_fd, cc, CAL_ALL_BIT, chan); /* TTIM-- */
     }
-    printf("Start calibration with delay %d\r", adc3112_calib_ctl[FMC_IDX(fmc)].chan[0].delay);
+    printf("Start calibration with delay %d\r", cc->chan[0].delay);
     fflush( stdout);
-    adc3112_calib_trig( &adc3112_calib_ctl[FMC_IDX(fmc)], mode);
-  }
-
-  printf("Calibration results:\n");
-  adc3112_calib_show_res( &adc3112_calib_ctl[FMC_IDX(fmc)]);
-
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-  {
-    adc3112_calib_show_err_cnt( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-    adc3112_calib_show_min_max( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
+    adc3112_calib_trig(cc, mode);                     /* Perform calibration */
   }
 
   printf("\nSetting default values for all channels\n");
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
   {
-    adc3112_calib_set_default( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
+    adc3112_calib_set_default(tsc_fd, cc, chan);              /* TTIM = default */
   }
-  if( reset)
-  {
-    printf("Adjust time delay to zero\n");
-    adc3112_calib_reset_delay( &adc3112_calib_ctl[FMC_IDX(fmc)]);
-  }
-  else 
-  {
-    printf("\nAdjust time delay to mean\n");
-    for( chan = 0; chan < ADC_NUM_CHAN; chan++)
-    {
-      adc3112_calib_adjust_delay( &adc3112_calib_ctl[FMC_IDX(fmc)], chan);
-    }
-  }
+  printf("Calibration results:\n");
+  adc3112_calib_show_res(cc);
 
-  printf("Trig calibration with adjusted delay\n");
-  adc3112_calib_trig( &adc3112_calib_ctl[FMC_IDX(fmc)], mode);
-
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
+  {
+    adc3112_calib_show_err_cnt(cc, chan);
+    adc3112_calib_show_min_max(cc, chan);              /* delta = (max-min)/2 */
+  }
   printf("+----+--------------+--------------+\n");
   printf("| CH | SETUP [psec] |  HOLD [psec] |\n");
   printf("+----+--------------+--------------+\n");
-  for( chan = 0; chan < ADC_NUM_CHAN; chan++)
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
   {
-    printf("| %2d |     %5d    |     %5d    |\n", chan, adc3112_calib_ctl[FMC_IDX(fmc)].chan[chan].set_time, adc3112_calib_ctl[FMC_IDX(fmc)].chan[chan].hold_time);
+    printf("| %2d |     %5d    |     %5d    |\n", chan, cc->chan[chan].set_time, cc->chan[chan].hold_time);
   }
   printf("+----+--------------+--------------+\n");
-  printf("Restore ADC configuration\n");
-  adc3112_calib_restore( fmc);
 
-  adc3112_unmap_usr( &adc3112_mas_map, adc_buf);
+  printf("\nAdjust time delay to mean\n");
+  for( chan = 0; chan < ADC3112_CHAN_NUM; chan++)
+  {
+    adc3112_calib_adjust_delay(tsc_fd, cc, chan);             /* TTIM = TTIM + delta */
+  }
+
+  printf("Restore ADC configuration\n");
+  adc3112_calib_restore(tsc_fd, fmc);
 
   return(0);
 }
-
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3112_itl_init
@@ -2727,7 +1867,7 @@ tsc_adc3112( struct cli_cmd_para *c)
     if( add->bus & BUS_SPI)
     {
       tsc_timer_read(tsc_fd, &utmi);
-      data = adc3112_spi_read( fmc, add->cmd, reg);
+      data = adc3112_spi_read(tsc_fd, fmc, add->cmd, reg);
       if( data < 0)
       {
 	return( -1);
@@ -2765,7 +1905,7 @@ tsc_adc3112( struct cli_cmd_para *c)
     if( add->bus & BUS_SPI)
     {
       tsc_timer_read(tsc_fd, &utmi);
-      if( adc3112_spi_write( fmc, add->cmd, reg, data) < 0)
+      if( adc3112_spi_write(tsc_fd, fmc, add->cmd, reg, data) < 0)
       {
 	return( -1);
       }
@@ -3003,13 +2143,13 @@ tsc_adc3112( struct cli_cmd_para *c)
       if( !strncmp( "enable", c->para[2], 3))
       {
         /* XRA1404 OCR    ADC_ENABLE = 1  -> ADS5409 ENABLE = '1' + ITL enabled */
-	adc3112_spi_write( fmc, ADC_XRATRIG_CMD, 0x2, 0xc0);
-	adc3112_spi_write( fmc, ADC_XRATRIG_CMD, 0xc, 0x03);
+	adc3112_spi_write(tsc_fd, fmc, ADC_XRATRIG_CMD, 0x2, 0xc0);
+	adc3112_spi_write(tsc_fd, fmc, ADC_XRATRIG_CMD, 0xc, 0x03);
       }
       if( !strncmp( "disable", c->para[2], 3))
       {
         /* XRA1404 OCR    ADC_ENABLE = 0  -> ADS5409 ENABLE = '0'   ITL disabled */
-	adc3112_spi_write( fmc, ADC_XRATRIG_CMD, 0x2, 0x40);
+	adc3112_spi_write(tsc_fd, fmc, ADC_XRATRIG_CMD, 0x2, 0x40);
       }
       if( !strncmp( "reset", c->para[2], 5))
       {

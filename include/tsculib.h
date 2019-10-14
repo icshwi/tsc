@@ -46,6 +46,9 @@ int tsc_smon_write(int fd, int idx, int *data_p);  /* write to ARTIX7 SMON regis
 int tsc_smon_read(int fd, int idx, int *data_p);   /* read from ARTIX7 SMON register     */
 int tsc_pon_write(int fd, int idx, int *data_p);   /* write to PMON register             */
 int tsc_pon_read(int fd, int idx, int *data_p);    /* read from PON register             */
+int tsc_axi_get_cap(int *cap);
+int tsc_axil_write( int idx, int wstrb, int prot, int * data_p);
+int tsc_axil_read( int idx, int prot, int * data_p);
 int tsc_pciep_write(int fd, int idx, int *data_p); /* write to ARTIX7 PCIEP register     */
 int tsc_pciep_read(int fd, int idx, int *data_p);  /* read from ARTIX7 PCIEP register    */
 uint64_t tsc_swap_64(uint64_t);
@@ -108,13 +111,4 @@ int tsc_semaphore_get(int fd, uint idx, uint tag);
 int tsc_user_irq_wait(int fd, struct tsc_ioctl_user_irq *user_irq_p);
 int tsc_user_irq_subscribe(int fd, struct tsc_ioctl_user_irq *user_irq_p);
 int tsc_user_irq_unsubscribe(int fd, struct tsc_ioctl_user_irq *user_irq_p);
-int rsp1461_init(int fd);
-int rsp1461_presence(int fd);
-int rsp1461_extension_presence(int fd, int *present);
-int rsp1461_extension_set_pin_state(int fd, int index, rsp1461_ext_pin_state_t state);
-int rsp1461_extension_get_pin_state(int fd, int index, int *state, int *direction);
-int rsp1461_led_turn_on(int fd, rsp1461_led_t led_id);
-int rsp1461_led_turn_off(int fd, rsp1461_led_t led_id);
-int rsp1461_sfp_status(int fd, rsp1461_sfp_id_t id, uint8_t *status);
-int rsp1461_sfp_control(int fd, rsp1461_sfp_id_t id, int sfp_enable, int sfp_rate);
 #endif /*  _H_TSCULIB */
