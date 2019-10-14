@@ -969,10 +969,26 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_USER_ITC_IM_6          (1<<6)  /* User interrupt 6 */
 #define TSC_USER_ITC_IM_7          (1<<7)  /* User interrupt 7 */
 
+#define TSC_FIFO_CTL_WCNT_MAX               255  /* FIFO word counter maximum    */
+#define TSC_FIFO_CTL_WCNT_MASK       0x000000ff  /* FIFO word counter mask       */
+#define TSC_FIFO_CTL_WCNT(x)           (x&0xff)  /* FIFO word counter            */
+#define TSC_FIFO_CTL_WRPT_MASK       0x0000ff00  /* FIFO write pointer mask      */
+#define TSC_FIFO_CTL_WRPT(x)      ((x>>8)&0xff)  /* FIFO write pointer           */
+#define TSC_FIFO_CTL_RDPT_MASK       0x00ff0000  /* FIFO read pointer mask       */
+#define TSC_FIFO_CTL_RDPT(x)     ((x>>16)&0xff)  /* FIFO read pointer            */
+#define TSC_FIFO_CTL_NOEMPTY            (1<<24)  /* FIFO not empty               */
+#define TSC_FIFO_CTL_FULL               (1<<25)  /* FIFO full                    */
+#define TSC_FIFO_CTL_MBX                (1<<26)  /* FIFO mailbox mode            */
+#define TSC_FIFO_CTL_ERRF               (1<<27)  /* FIFO error                   */
+#define TSC_FIFO_CTL_RESET              (1<<28)  /* FIFO reset                   */
+#define TSC_FIFO_CTL_REA                (1<<29)  /* FIFO read enable             */
+#define TSC_FIFO_CTL_WEA                (1<<30)  /* FIFO write enable            */
+#define TSC_FIFO_CTL_ENA                (1<<31)  /* FIFO enable                  */
 
 /*
  * AXI-4 Bridge Definition
  */
+
 #define TSC_CSR_AXI4_CFG                0x1800
 #define TSC_CSR_AXI4_SIGN               0x1804
 #define TSC_CSR_AXI4_CTL                0x1808
