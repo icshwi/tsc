@@ -96,7 +96,7 @@ install: $(BINS)
 clean:
 	@$(RM) $(SMEMCA_OBJS) $(TSCMON_OBJS) $(ADCLIB_OBJS) $(TSCLIB_OBJS)
 
-distclean:
+distclean: clean
 	@$(RM) $(BINS)
 	@$(RM) -r $(DESTDIR)
 
