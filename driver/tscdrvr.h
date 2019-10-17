@@ -3,9 +3,10 @@
  *  
  *    filename : tscdrvr.h
  *    author   : JFG, XP
+ *               Jeong Han Lee
  *    company  : IOxOS
  *    creation : june 30,2008
- *
+ *    modified : Thursday, October 17 20:39:01 CEST 2019
  *----------------------------------------------------------------------------
  *  Description
  *
@@ -14,6 +15,7 @@
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
+ *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -48,7 +50,7 @@
 #ifndef _TSCDRVR
 #define _TSCDRVR
 
-#include "../include/tscioctl.h"
+#include "tscioctl.h"
 
 #define TSC_SHM_NUM  2                       /* number of SHM agents */
 #define TSC_SHM1_IDX 0                       /* index of SHM1 agent  */
@@ -64,43 +66,43 @@ struct shm_ctl
 struct tsc_device
 {
   struct list_head list;                                     /* device list entry struct */
-  uint32_t card;                                             /* card number in system */
+  uint32_t card;                                             /* card number in system    */
   struct pci_dev *pdev;
   struct cdev cdev;
   dev_t dev_id;
-  struct device *dev_ctl;                                    /* tsc control device */
-  struct mutex mutex_ctl;                                    /* Mutex for locking control device */
-  void __iomem *csr_ptr;                                     /* Base Address of device registers */
-  void __iomem *pon_ptr;                                     /* Base Address of PON registers */
-  struct tsc_irq_handler *irq_tbl[TSC_AGENT_SW_NUM];         /* Interrupt handler table, max [8][16] */
-  struct mutex csr_lock;                                     /* Mutex for locking control device */
-  struct map_ctl *map_mas_pci_pmem;                          /* master map PCI_PMEM BAR0/1 */
-  struct map_ctl *map_mas_pci_mem;                           /* master map PCI_MEM BAR2 */
-  struct shm_ctl *shm_ctl[TSC_SHM_NUM];                      /* control structure for SHM */
-  struct rdwr_ctl *rdwr_ctl;                                 /* control structure for RDWR access */
-  struct sflash_ctl *sflash_ctl;                             /* control structure for SPI FLASH */
-  struct dma_ctl *dma_ctl[DMA_CHAN_NUM];                     /* control structure for DMA controller */
-  struct i2c_ctl *i2c_ctl;                                   /* control structure for I2C access */
-  struct map_ctl *map_slv_pci1_pmem;                         /* slave map PCI1_PMEM BAR0/1 */
-  struct map_ctl *map_slv_pci1_mem;                          /* slave map PCI1_MEM BAR2 */
+  struct device *dev_ctl;                                    /* tsc control device                    */
+  struct mutex mutex_ctl;                                    /* Mutex for locking control device      */
+  void __iomem *csr_ptr;                                     /* Base Address of device registers      */
+  void __iomem *pon_ptr;                                     /* Base Address of PON registers         */
+  struct tsc_irq_handler *irq_tbl[TSC_AGENT_SW_NUM];         /* Interrupt handler table, max [8][16]  */
+  struct mutex csr_lock;                                     /* Mutex for locking control device      */
+  struct map_ctl *map_mas_pci_pmem;                          /* master map PCI_PMEM BAR0/1            */
+  struct map_ctl *map_mas_pci_mem;                           /* master map PCI_MEM BAR2               */
+  struct shm_ctl *shm_ctl[TSC_SHM_NUM];                      /* control structure for SHM             */
+  struct rdwr_ctl *rdwr_ctl;                                 /* control structure for RDWR access     */
+  struct sflash_ctl *sflash_ctl;                             /* control structure for SPI FLASH       */
+  struct dma_ctl *dma_ctl[DMA_CHAN_NUM];                     /* control structure for DMA controller  */
+  struct i2c_ctl *i2c_ctl;                                   /* control structure for I2C access      */
+  struct map_ctl *map_slv_pci1_pmem;                         /* slave map PCI1_PMEM BAR0/1            */
+  struct map_ctl *map_slv_pci1_mem;                          /* slave map PCI1_MEM BAR2               */
   struct user_irq_ctl *user_irq_ctl;                         /* control structure for USER interrupts */
 };
 
 struct tsc_irq_handler
 {
   void (* func)( struct tsc_device *, int, void *); /* pointer to interrupt handler                  */
-  void *arg;                                            /* pointer to be passed when handler is executed */
-  int cnt;                                              /* interrupt counter                             */
-  int busy;                                             /* busy flag                                     */
+  void *arg;                                        /* pointer to be passed when handler is executed */
+  int cnt;                                          /* interrupt counter                             */
+  int busy;                                         /* busy flag                                     */
 };
 
-#define TSC_COUNT                   64       /* Maximum number of TSC devices    */
-#define TSC_NAME           "tsc"         /* Name of the tsc device           */
-#define TSC_NAME_CENTRAL   "tsc_central" /* Name of the tsc central device   */
+#define TSC_COUNT                   64       /* Maximum number of TSC devices        */
+#define TSC_NAME           "tsc"             /* Name of the tsc device               */
+#define TSC_NAME_CENTRAL   "tsc_central"     /* Name of the tsc central device       */
 #define TSC_MINOR_START              0       /* First minor number                   */
 #define TSC_IRQ_NUM                 64       /* Number of interrupt source (4*16)    */
 
-#include "../include/tsc.h"
+#include "tsc.h"
 #include "ioctllib.h"
 #include "tscklib.h"
 

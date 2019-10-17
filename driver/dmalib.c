@@ -3,10 +3,11 @@
  *  
  *    filename : dmalib.c
  *    author   : JFG, XP
+ *               Jeong Han Lee
  *    company  : IOxOS
  *    creation : Sept 27,2015
- *    version  : 0.0.1
- *
+ *    version  : 0.0.2
+ *    modified : Thursday, October 17 20:05:35 CEST 2019
  *----------------------------------------------------------------------------
  *  Description
  *
@@ -16,6 +17,7 @@
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
+ *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -46,8 +48,11 @@
  *  
  *=============================< end file header >============================*/
 
+#include <linux/version.h>
+
 #include "tscos.h"
 #include "tscdrvr.h"
+
 
 #define DBGno
 #include "debug.h"
@@ -782,8 +787,13 @@ dma_sg_setup(struct tsc_device *ifc,
   if(got_pages != nr_pages)
   {
     printk("Error: not all pages were pinned\n");
-    if(got_pages > 0)
+    if(got_pages > 0) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+      release_pages(pages, got_pages);
+#else
       release_pages(pages, got_pages, 0);
+#endif
+    }
     kfree(pages);
     return (got_pages < 0) ? got_pages : -EFAULT;
   }
@@ -791,7 +801,11 @@ dma_sg_setup(struct tsc_device *ifc,
   if(sg_alloc_table_from_pages(dma_ctl_p->sgt, pages, nr_pages, pci_offset, dr_p->size, GFP_KERNEL))
   {
     printk("Error: alloc scatter gather table from pages\n");
-    release_pages(pages, got_pages, 0);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+      release_pages(pages, got_pages);
+#else
+      release_pages(pages, got_pages, 0);
+#endif
     kfree(pages);
     return -ENOMEM;
   }
@@ -801,7 +815,11 @@ dma_sg_setup(struct tsc_device *ifc,
   {
     printk("Error: DMA map scatter gather\n");
     sg_free_table(dma_ctl_p->sgt);
-    release_pages(pages, got_pages, 0);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+      release_pages(pages, got_pages);
+#else
+      release_pages(pages, got_pages, 0);
+#endif
     kfree(pages);
     return -EFAULT;
   }
@@ -811,7 +829,11 @@ dma_sg_setup(struct tsc_device *ifc,
     printk("Error: no mem for dma descriptors\n");
     dma_unmap_sg(&ifc->pdev->dev, dma_ctl_p->sgt->sgl, dma_ctl_p->sgt->nents, dma_ctl_p->dir);
     sg_free_table(dma_ctl_p->sgt);
-    release_pages(pages, got_pages, 0);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+      release_pages(pages, got_pages);
+#else
+      release_pages(pages, got_pages, 0);
+#endif  
     kfree(pages);
     return -ENOMEM;
   }
@@ -824,8 +846,11 @@ dma_sg_setup(struct tsc_device *ifc,
     dma_set_sg_desc(dma_ctl_p, dev_addr + dev_offset, hw_address, hw_len, space, mode, sg_count, i);
     dev_offset += hw_len;
   }
-
-  release_pages(pages, got_pages, 0);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+      release_pages(pages, got_pages);
+#else
+      release_pages(pages, got_pages, 0);
+#endif
   kfree(pages);
   return 0;
 }

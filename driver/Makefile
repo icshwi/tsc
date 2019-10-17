@@ -3,9 +3,10 @@
 #  
 #    filename : Makefile
 #    author   : JFG, XP
+#               Jeong Han Lee
 #    company  : IOxOS
 #    creation : November 1,2016
-#
+#    modified : Thursday, October 17 20:05:35 CEST 2019
 #----------------------------------------------------------------------------
 #  Description
 #
@@ -14,6 +15,7 @@
 #----------------------------------------------------------------------------
 #
 #  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
+#  Copyright (C) 2019  European Spallation Source ERIC
 #
 #    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
 #    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -44,31 +46,27 @@
 # 
 #=============================< end file header >============================
 
-obj-m := tsc.o pon.o 
-tsc-objs := tscdrvr.o ioctllib.o tscklib.o maplib.o irqlib.o mapmaslib.o  rdwrlib.o sflashlib.o \
-	dmalib.o timerlib.o fifolib.o i2clib.o semaphorelib.o userirqlib.o
-pon-objs := pondrvr.o
 
-ifeq ($(ARCH),powerpc)
-# JFG platform
-#	KERNELDIR = /T2080IFC_2.0/linux/build/
-# XP platform
-	#KERNELDIR = /data/T2081/rootfs_2080_1.9/lib/modules/3.12.37-rt51+g43cecda/build/
-	#KERNELDIR = /data/QorIQ-SDK-V2.0-20160527-yocto/build_t2080rdb-64b/tmp/work/t2080rdb_64b-fsl-linux/linux-qoriq/4.1-r0/build/
-	#KERNELDIR = /data/QorIQ-SDK-V2.0-20160527-yocto/build_t2080rdb-64b/tmp/work/t2080rdb_64b-fsl-linux/linux-qoriq/4.1-r0/build/
-	KERNELDIR =  /data/QorIQ-SDK-V2.0-20160527-yocto/build_ifc1211/tmp/work/ifc1211-fsl-linux/linux-qoriq/4.1-r0/build/
+ifneq ($(KERNELRELEASE),)
+
+obj-m := tsc.o pon.o 
+tsc-y := tscdrvr.o ioctllib.o tscklib.o maplib.o irqlib.o mapmaslib.o  rdwrlib.o sflashlib.o \
+	    dmalib.o timerlib.o fifolib.o i2clib.o semaphorelib.o userirqlib.o
+pon-y := pondrvr.o
+
+ccflags-y := -I$(src)/../include
 else
-	KERNELDIR ?= /lib/modules/$(shell uname -r)/build
-endif
-EXTRA_CFLAGS := $(ADD_CFLAGS)
+
+KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
-default:
-ifeq ($(ARCH),powerpc)
-	$(MAKE) -I . ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE)  -C $(KERNELDIR) M=$(PWD) modules
-else
-	$(MAKE) -I . -C $(KERNELDIR) M=$(PWD) modules
+
+all: modules
+
+modules modules_install clean:
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) $@
+
+.PHONY: all modules modules_install clean
+
 endif
-clean:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
-	@rm -f Module.symvers
-	$(RM) *.o *.ko *.mod.c
+
+
