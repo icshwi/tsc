@@ -28,6 +28,25 @@ make install
 make install DESTDIR=~/bin
 ```
 
+### Cross Compling TscMon and SmemCalibration
+
+* Set the cross compling tools and build
+```
+unset LD_LIBRARY_PATH
+source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux
+make
+```
+
+* Check the binaries are for PowerPC64
+```
+readelf -h {TscMon,SmemCalibration} |grep Machine
+  Machine:                           PowerPC64
+  Machine:                           PowerPC64
+```
+
+
+
 ## Shared User Libraries
 
 With this buidling system, we don't support the shared user libraries. Please use e3 module instead or ESS Linux distribution. 
+

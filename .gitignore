@@ -10,5 +10,6 @@
 **/TscMon
 **/.tmp_versions/
 *~
+**/.tmp_*.ver
 
 
