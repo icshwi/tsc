@@ -34,13 +34,13 @@ typedef enum {
 	RDT1465_EXT_PIN_Z
 	} rdt1465_ext_pin_state_t;
 
-int rdt1465_init(void);
-void rdt1465_dbg(void);
+int rdt1465_init(int fd);
+void rdt1465_dbg(int fd);
 int rdt1465_presence(int fd);
-int rdt1465_analog_enable(uint enable);
-int rdt1465_gpio_output_enable(uint enable);
-int rdt1465_red_led_enable(uint enable);
-int rdt1465_extension_presence(uint *present);
-int rdt1465_extension_set_pin_state(uint ext_pin_index, rdt1465_ext_pin_state_t state);
-int rdt1465_extension_get_pin_state(uint ext_pin_index, uint *state, uint *direction);
+int rdt1465_analog_enable(int fd, uint enable);
+int rdt1465_gpio_output_enable(int fd, uint enable);
+int rdt1465_red_led_enable(int fd, uint enable);
+int rdt1465_extension_presence(int fd, uint *present);
+int rdt1465_extension_set_pin_state(int fd, uint ext_pin_index, rdt1465_ext_pin_state_t state);
+int rdt1465_extension_get_pin_state(int fd, uint ext_pin_index, uint *state, uint *direction);
 #endif /*  _H_RDT1465LIB */

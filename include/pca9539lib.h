@@ -61,30 +61,35 @@ typedef enum {
 
 
 int pca9539_set_port_direction(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
   pca9539_port_direction_t direction);
 
 int pca9539_get_port_direction(
+  int fd, 
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
   pca9539_port_direction_t *direction);
 
 int pca9539_set_port_state(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
   uint state);
 
 int pca9539_get_port_state(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
   uint *state);
 
 int pca9539_set_pin_direction(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -92,6 +97,7 @@ int pca9539_set_pin_direction(
   pca9539_pin_direction_t direction);
 
 int pca9539_get_pin_direction(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -99,6 +105,7 @@ int pca9539_get_pin_direction(
   pca9539_pin_direction_t *direction);
 
 int pca9539_set_pin_state(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -106,6 +113,7 @@ int pca9539_set_pin_state(
   uint state);
 
 int pca9539_get_pin_state(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -113,7 +121,7 @@ int pca9539_get_pin_state(
   uint *state);
 
 
-int pca9539_read(uint i2c_bus, uint device_address, uint reg, uint *data);
+int pca9539_read(int fd, uint i2c_bus, uint device_address, uint reg, uint *data);
 
 
 #endif /*  _H_PCA9539LIB */

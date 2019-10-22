@@ -44,6 +44,8 @@
 #include "mtca4amclib.h"
 #include "TscMon.h"
 
+extern int tsc_fd;
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : amc_rtm_clk_in
  * Prototype     : int
@@ -74,7 +76,7 @@ int amc_rtm_clk_in(struct cli_cmd_para *c){
 		return(CLI_ERR);
 	}
 
-	set_mtca4_rtm_clk_in_enable(state);
+	set_mtca4_rtm_clk_in_enable(tsc_fd, state);
 
 	return CLI_OK;
 }
@@ -109,7 +111,7 @@ int amc_rtm_tclk_in(struct cli_cmd_para *c){
 		return(CLI_ERR);
 	}
 
-	set_mtca4_rtm_tclk_in_enable(state);
+	set_mtca4_rtm_tclk_in_enable(tsc_fd, state);
 
 	return CLI_OK;
 }
@@ -144,7 +146,7 @@ int amc_rtm_clk_out(struct cli_cmd_para *c){
 		return(CLI_ERR);
 	}
 
-	set_mtca4_rtm_clk_out_enable(state);
+	set_mtca4_rtm_clk_out_enable(tsc_fd, state);
 
 	return CLI_OK;
 }

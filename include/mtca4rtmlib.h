@@ -67,7 +67,6 @@ typedef enum {
   MTCA4_RTM_ZONE3_DISABLED
 } mtca4_rtm_zone3_enable_t;
 
-
 unsigned char set_mtca4_rtm_led_state(
   int fd,
   mtca4_rtm_led_id_t id,

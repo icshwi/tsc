@@ -34,8 +34,6 @@
 #define CMD_SET_RTM_TCLK_IN_ENABLE                0x07
 #define CMD_SET_RTM_CLK_OUT_ENABLE                0x08
 
-extern int tsc_fd;
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : set_mtca4_rtm_clk_in_enable
  * Prototype     : mtca4_rtm_clk_in_enable_t
@@ -47,10 +45,12 @@ extern int tsc_fd;
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char set_mtca4_rtm_clk_in_enable(
+  int fd,
   mtca4_rtm_clk_in_enable_t state)
 {
-  mbox_info_t *mbox = get_mbox_info(tsc_fd);
+  mbox_info_t *mbox = get_mbox_info(fd);
   unsigned char status = send_mbox_service_request(
+                           fd,
                            mbox,
                            CMD_SET_RTM_CLK_IN_ENABLE,
                            1,
@@ -70,10 +70,12 @@ unsigned char set_mtca4_rtm_clk_in_enable(
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char set_mtca4_rtm_tclk_in_enable(
+  int fd,
   mtca4_rtm_tclk_in_enable_t state)
 {
-  mbox_info_t *mbox = get_mbox_info(tsc_fd);
+  mbox_info_t *mbox = get_mbox_info(fd);
   unsigned char status = send_mbox_service_request(
+                           fd,
                            mbox,
                            CMD_SET_RTM_TCLK_IN_ENABLE,
                            1,
@@ -93,10 +95,12 @@ unsigned char set_mtca4_rtm_tclk_in_enable(
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 unsigned char set_mtca4_rtm_clk_out_enable(
+  int fd,
   mtca4_rtm_clk_out_enable_t state)
 {
-  mbox_info_t *mbox = get_mbox_info(tsc_fd);
+  mbox_info_t *mbox = get_mbox_info(fd);
   unsigned char status = send_mbox_service_request(
+                           fd,
                            mbox,
                            CMD_SET_RTM_CLK_OUT_ENABLE,
                            1,

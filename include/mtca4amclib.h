@@ -45,12 +45,15 @@ typedef enum {
 
 
 unsigned char set_mtca4_rtm_clk_in_enable(
+  int fd,
   mtca4_rtm_clk_in_enable_t state);
 
 unsigned char set_mtca4_rtm_tclk_in_enable(
+  int fd,
   mtca4_rtm_tclk_in_enable_t state);
 
 unsigned char set_mtca4_rtm_clk_out_enable(
+  int fd,
   mtca4_rtm_clk_out_enable_t state);
 
 #endif

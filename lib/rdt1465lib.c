@@ -170,19 +170,19 @@ int rdt1465_presence(int fd) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_init_u112(void)
+int rdt1465_init_u112(int fd)
 {
 	int retval = 0;
-	retval  = pca9539_set_port_state(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, 0xff);
-	retval |= pca9539_set_port_state(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_1, 0xff);
-	retval |= pca9539_set_port_direction(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, U112_PORT_0_DIRECTIONS);
-	retval |= pca9539_set_port_direction(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_1, U112_PORT_1_DIRECTIONS);
+	retval  = pca9539_set_port_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, 0xff);
+	retval |= pca9539_set_port_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_1, 0xff);
+	retval |= pca9539_set_port_direction(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, U112_PORT_0_DIRECTIONS);
+	retval |= pca9539_set_port_direction(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_1, U112_PORT_1_DIRECTIONS);
 	return retval;
 }
 
 
-int rdt1465_init(void){
-	return rdt1465_init_u112();
+int rdt1465_init(int fd){
+	return rdt1465_init_u112(fd);
 }
 
 
@@ -196,16 +196,16 @@ int rdt1465_init(void){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void rdt1465_dbg(void)
+void rdt1465_dbg(int fd)
 {
         uint data;
-        pca9539_read(CF_I2C_BUS, U112_I2C_ADDRESS, 0, &data);
+        pca9539_read(fd, CF_I2C_BUS, U112_I2C_ADDRESS, 0, &data);
         printf("reg 0 (in 0):  0x%02x\n", data);
-        pca9539_read(CF_I2C_BUS, U112_I2C_ADDRESS, 1, &data);
+        pca9539_read(fd, CF_I2C_BUS, U112_I2C_ADDRESS, 1, &data);
         printf("reg 1 (in 1):  0x%02x\n", data);
-        pca9539_read(CF_I2C_BUS, U112_I2C_ADDRESS, 6, &data);
+        pca9539_read(fd, CF_I2C_BUS, U112_I2C_ADDRESS, 6, &data);
         printf("reg 6 (dir 0): 0x%02x\n", data);
-        pca9539_read(CF_I2C_BUS, U112_I2C_ADDRESS, 7, &data);
+        pca9539_read(fd, CF_I2C_BUS, U112_I2C_ADDRESS, 7, &data);
         printf("reg 7 (dir 1): 0x%02x\n", data);
 }
 
@@ -219,10 +219,10 @@ void rdt1465_dbg(void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_analog_enable(uint enable)
+int rdt1465_analog_enable(int fd, uint enable)
 {
         enable = enable ? 0 : 1;
-        return pca9539_set_pin_state(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, PORT_0_PIN_RS_RELAY_EN, enable);
+        return pca9539_set_pin_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, PORT_0_PIN_RS_RELAY_EN, enable);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -235,10 +235,10 @@ int rdt1465_analog_enable(uint enable)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_gpio_output_enable(uint enable)
+int rdt1465_gpio_output_enable(int fd, uint enable)
 {
         enable = enable ? 0 : 1;
-        return pca9539_set_pin_state(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, PORT_0_PIN_SMA_GPIO_OE_N, enable);
+        return pca9539_set_pin_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, PORT_0_PIN_SMA_GPIO_OE_N, enable);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -251,10 +251,10 @@ int rdt1465_gpio_output_enable(uint enable)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_red_led_enable(uint enable)
+int rdt1465_red_led_enable(int fd, uint enable)
 {
         enable = enable ? 0 : 1;
-        return pca9539_set_pin_state(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_1, PORT_1_PIN_FP_LED2B_K, enable);
+        return pca9539_set_pin_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_1, PORT_1_PIN_FP_LED2B_K, enable);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -267,8 +267,8 @@ int rdt1465_red_led_enable(uint enable)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_extension_presence(uint *present) {
-        return pca9539_get_pin_state(CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, PORT_0_PIN_EXT_PRESENT_N, present);
+int rdt1465_extension_presence(int fd, uint *present) {
+        return pca9539_get_pin_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, PCA9539_PORT_0, PORT_0_PIN_EXT_PRESENT_N, present);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -281,7 +281,7 @@ int rdt1465_extension_presence(uint *present) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_extension_set_pin_state(uint ext_pin_index, rdt1465_ext_pin_state_t state)
+int rdt1465_extension_set_pin_state(int fd, uint ext_pin_index, rdt1465_ext_pin_state_t state)
 {
   uint gpio_index = 0;
   uint port = 0;
@@ -293,12 +293,12 @@ int rdt1465_extension_set_pin_state(uint ext_pin_index, rdt1465_ext_pin_state_t 
 
   if (state == RDT1465_EXT_PIN_Z)
   {
-    retval = pca9539_set_pin_direction(CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, PCA9539_INPUT_PIN);
+    retval = pca9539_set_pin_direction(fd, CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, PCA9539_INPUT_PIN);
   }
   else
   {
-    retval  = pca9539_set_pin_state(CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, state);
-    retval |= pca9539_set_pin_direction(CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, PCA9539_OUTPUT_PIN);
+    retval  = pca9539_set_pin_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, state);
+    retval |= pca9539_set_pin_direction(fd, CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, PCA9539_OUTPUT_PIN);
   }
 
   return retval;
@@ -314,7 +314,7 @@ int rdt1465_extension_set_pin_state(uint ext_pin_index, rdt1465_ext_pin_state_t 
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rdt1465_extension_get_pin_state(uint ext_pin_index, uint *state, uint *direction) {
+int rdt1465_extension_get_pin_state(int fd, uint ext_pin_index, uint *state, uint *direction) {
   uint gpio_index = 0;
   uint port = 0;
   int retval = 0;
@@ -323,8 +323,8 @@ int rdt1465_extension_get_pin_state(uint ext_pin_index, uint *state, uint *direc
   port = (ext_pin_index > 6) ? 0 : 1;
   gpio_index = ext_pin_to_gpio_index[ext_pin_index];
 
-  retval  = pca9539_get_pin_state(CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, state);
-  retval |= pca9539_get_pin_direction(CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, direction);
+  retval  = pca9539_get_pin_state(fd, CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, state);
+  retval |= pca9539_get_pin_direction(fd, CF_I2C_BUS, U112_I2C_ADDRESS, port, gpio_index, direction);
   return retval;
 }
 

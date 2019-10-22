@@ -45,10 +45,9 @@
 /* private functions prototypes */
 
 int pca9539_device(uint i2c_bus, uint device_address);
-int pca9539_write(uint i2c_bus, uint device_address, uint reg, uint data);
+int pca9539_write(int fd, uint i2c_bus, uint device_address, uint reg, uint data);
 uint pca9539_set_bit(uint value, uint bit_index, uint bit_state);
 
-extern int tsc_fd;
 
 /**********************************************************************/
 
@@ -67,55 +66,59 @@ int pca9539_device(uint i2c_bus, uint device_address)
 }
 
 
-int pca9539_read(uint i2c_bus, uint device_address, uint reg, uint *data)
+int pca9539_read(int fd, uint i2c_bus, uint device_address, uint reg, uint *data)
 {
   int device = pca9539_device(i2c_bus, device_address);
-  return tsc_i2c_read(tsc_fd, device, reg, data);
+  return tsc_i2c_read(fd, device, reg, data);
 }
 
 
-int pca9539_write(uint i2c_bus, uint device_address, uint reg, uint data)
+int pca9539_write(int fd, uint i2c_bus, uint device_address, uint reg, uint data)
 {
   int device = pca9539_device(i2c_bus, device_address);
-  return tsc_i2c_write(tsc_fd, device, reg, data);
+  return tsc_i2c_write(fd, device, reg, data);
 }
 
 
 int pca9539_set_port_direction(
+      int fd,
       uint i2c_bus,
       uint device_address,
       pca9539_port_t port,
       pca9539_port_direction_t direction)
 {
-  return pca9539_write(i2c_bus, device_address, PCA9539_REG_CONFIGURATION_PORT_0 + port, direction);
+  return pca9539_write(fd, i2c_bus, device_address, PCA9539_REG_CONFIGURATION_PORT_0 + port, direction);
 }
 
 int pca9539_get_port_direction(
+      int fd, 
       uint i2c_bus,
       uint device_address,
       pca9539_port_t port,
       pca9539_port_direction_t *direction)
 {
-  return pca9539_read(i2c_bus, device_address, PCA9539_REG_CONFIGURATION_PORT_0 + port, direction);
+  return pca9539_read(fd, i2c_bus, device_address, PCA9539_REG_CONFIGURATION_PORT_0 + port, direction);
 }
 
 int pca9539_set_port_state(
+      int fd,
       uint i2c_bus,
       uint device_address,
       pca9539_port_t port,
       uint state)
 {
-  return pca9539_write(i2c_bus, device_address, PCA9539_REG_OUTPUT_PORT_0 + port, state);
+  return pca9539_write(fd, i2c_bus, device_address, PCA9539_REG_OUTPUT_PORT_0 + port, state);
 }
 
 
 int pca9539_get_port_state(
+      int fd,
       uint i2c_bus,
       uint device_address,
       pca9539_port_t port,
       uint *state)
 {
-  return pca9539_read(i2c_bus, device_address, PCA9539_REG_INPUT_PORT_0 + port, state);
+  return pca9539_read(fd, i2c_bus, device_address, PCA9539_REG_INPUT_PORT_0 + port, state);
 }
 
 
@@ -129,6 +132,7 @@ uint pca9539_set_bit(uint value, uint bit_index, uint bit_state)
 
 
 int pca9539_set_pin_direction(
+  int fd,  
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -140,14 +144,15 @@ int pca9539_set_pin_direction(
 
   if (pin > 7) return 1;
 
-  retval = pca9539_get_port_direction(i2c_bus, device_address, port, &port_direction);
+  retval = pca9539_get_port_direction(fd, i2c_bus, device_address, port, &port_direction);
   port_direction = pca9539_set_bit(port_direction, pin, direction);
-  retval = pca9539_set_port_direction(i2c_bus, device_address, port, port_direction);
+  retval = pca9539_set_port_direction(fd, i2c_bus, device_address, port, port_direction);
   return retval;
 }
 
 
 int pca9539_get_pin_direction(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -159,13 +164,14 @@ int pca9539_get_pin_direction(
 
   if (pin > 7) return 1;
 
-  retval = pca9539_get_port_direction(i2c_bus, device_address, port, &port_direction);
+  retval = pca9539_get_port_direction(fd, i2c_bus, device_address, port, &port_direction);
   (*direction) = (port_direction >> pin) & 0x01;
   return retval;
 }
 
 
 int pca9539_set_pin_state(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -177,14 +183,15 @@ int pca9539_set_pin_state(
 
   if (pin > 7) return 1;
 
-  retval = pca9539_get_port_state(i2c_bus, device_address, port, &port_state);
+  retval = pca9539_get_port_state(fd, i2c_bus, device_address, port, &port_state);
   port_state = pca9539_set_bit(port_state, pin, state);
-  retval = pca9539_set_port_state(i2c_bus, device_address, port, port_state);
+  retval = pca9539_set_port_state(fd, i2c_bus, device_address, port, port_state);
   return retval;
 }
 
 
 int pca9539_get_pin_state(
+  int fd,
   uint i2c_bus,
   uint device_address,
   pca9539_port_t port,
@@ -196,7 +203,7 @@ int pca9539_get_pin_state(
 
   if (pin > 7) return 1;
 
-  retval = pca9539_get_port_state(i2c_bus, device_address, port, &port_state);
+  retval = pca9539_get_port_state(fd, i2c_bus, device_address, port, &port_state);
   (*state) = (port_state >> pin) & 0x01;
   return retval;
 }

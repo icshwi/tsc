@@ -83,24 +83,24 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 	if(cnt--) {
 // --- INIT ---
 		if(((!strcmp("init", c->para[0]))) && (c->cnt == 1)){
-			retval = rdt1465_init();
+			retval = rdt1465_init(tsc_fd);
 			printf("Initialization done... \n");
 			return retval;
 		}
 
 // --- DBG ---
 		if(((!strcmp("dbg", c->para[0]))) && (c->cnt == 1)){
-			rdt1465_dbg();
+			rdt1465_dbg(tsc_fd);
 			return 0;
 		}
 
 // --- ANALOG ---
 		else if(((!strcmp("analog", c->para[0]))) && (c->cnt == 2)){
 			if(!strcmp("on", c->para[1])){
-				return rdt1465_analog_enable(1);
+				return rdt1465_analog_enable(tsc_fd, 1);
 			}
 			else if(!strcmp("off", c->para[1])){
-				return rdt1465_analog_enable(0);
+				return rdt1465_analog_enable(tsc_fd, 0);
 			}
 			else{
 				tsc_print_usage(c);
@@ -111,10 +111,10 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 // --- GPIO ---
 		else if(((!strcmp("gpio_out", c->para[0]))) && (c->cnt == 2)){
 			if(!strcmp("on", c->para[1])){
-				return rdt1465_gpio_output_enable(1);
+				return rdt1465_gpio_output_enable(tsc_fd, 1);
 			}
 			else if(!strcmp("off", c->para[1])){
-				return rdt1465_gpio_output_enable(0);
+				return rdt1465_gpio_output_enable(tsc_fd, 0);
 			}
 			else{
 				tsc_print_usage(c);
@@ -125,10 +125,10 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 // --- RED LED ---
 		else if(((!strcmp("red_led", c->para[0]))) && (c->cnt == 2)){
 			if(!strcmp("on", c->para[1])){
-				return rdt1465_red_led_enable(1);
+				return rdt1465_red_led_enable(tsc_fd, 1);
 			}
 			else if(!strcmp("off", c->para[1])){
-				return rdt1465_red_led_enable(0);
+				return rdt1465_red_led_enable(tsc_fd, 0);
 			}
 			else{
 				tsc_print_usage(c);
@@ -141,7 +141,7 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 
 			// Present
 			if((!strcmp("present", c->para[1])) && (c->cnt == 2)){
-				retval = rdt1465_extension_presence(&present);
+				retval = rdt1465_extension_presence(tsc_fd, &present);
 				if (present){
 					printf("NO \n");
 				}
@@ -153,7 +153,7 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 			// Status
 			if((!strcmp("status", c->para[1])) && (c->cnt == 2)){
 				// Check if extension board is present
-				retval = rdt1465_extension_presence(&present);
+				retval = rdt1465_extension_presence(tsc_fd, &present);
 				if (present){
 					printf("No extension board \n");
 					return -1;
@@ -163,7 +163,7 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 					printf(" --------------------------  \n");
 					printf("| I/O  | direction | state | \n");
 					for (i = 0; i < 12; i++){
-						retval = rdt1465_extension_get_pin_state(i, &ext_state, &direction);
+						retval = rdt1465_extension_get_pin_state(tsc_fd, i, &ext_state, &direction);
 						printf("|------+-----------+-------| \n");
 						if(direction == 1){
 							printf("| [%2d] | in        | %x     | \n", i, ext_state);
@@ -188,7 +188,7 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 				}
 				// Get
 				if(!strcmp("get", c->para[1])){
-					retval = rdt1465_extension_get_pin_state(ext_id, &ext_state, &direction);
+					retval = rdt1465_extension_get_pin_state(tsc_fd, ext_id, &ext_state, &direction);
 					printf("%x \n", ext_state);
 					return retval;
 				}
@@ -209,7 +209,7 @@ int tsc_rdt1465(struct cli_cmd_para *c) {
 						return(-1);
 					}
 				}
-				retval = rdt1465_extension_set_pin_state(ext_id, ext_pin_state_enum);
+				retval = rdt1465_extension_set_pin_state(tsc_fd, ext_id, ext_pin_state_enum);
 				return retval;
 			}
 			return(0);
