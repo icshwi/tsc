@@ -1,14 +1,73 @@
-
-## Cross Compiling
+Cross Compiling Kernel Modules (tsc.ko and pon.ko)
+===
 
 Mostly we don't need to do cc these kernel modules with cc toolchain. However, just in case if one needs it....
 
-(WIP)
+# How to do
+
+
+* Souce the toolchain environment
+```
+$ unset LD_LIBRARY_PATH
+$ source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux
+```
+* Generate the kernel headers according to the target arch
 
 ```
-unset LD_LIBRARY_PATH
-source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux
-make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.67-ifc14xx/source/  modules
+$ cd /opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/source
+$ sudo bash -c "source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux && make silentoldconfig scripts"
+```
+* Build the kernel modules
+
+```
+$ cd -
+$ KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.67-ifc14xx/source/ LDFLAGS="" make
+make -C /opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/source/ M=/home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver modules
+make[1]: Entering directory '/opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/build'
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/tscdrvr.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/ioctllib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/tscklib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/maplib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/irqlib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/mapmaslib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/rdwrlib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/sflashlib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/dmalib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/timerlib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/fifolib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/i2clib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/semaphorelib.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/userirqlib.o
+  LD [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/tsc.o
+  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/pondrvr.o
+  LD [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/pon.o
+  Building modules, stage 2.
+  MODPOST 2 modules
+  CC      /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/pon.mod.o
+  LD [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/pon.ko
+  CC      /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/tsc.mod.o
+  LD [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/tsc.ko
+make[1]: Leaving directory '/opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/build'
+```
+
+* Check the kernel modules
+
+```
+$ readelf -h *.ko  |grep Machine
+  Machine:                           PowerPC64
+  Machine:                           PowerPC64
+$ ls *.ko
+pon.ko  tsc.ko
+```
+
+
+# How NOT to do...
+
+
+```
+$ unset LD_LIBRARY_PATH
+$ source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux
+$ make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.67-ifc14xx/source/  modules
 make -C /opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/source/ M=/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver modules
 make[1]: Entering directory '/opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/build'
   CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscdrvr.o
@@ -30,35 +89,3 @@ make: *** [Makefile:66: modules] Error 2
 
 ```
 
-
-```
-unset LD_LIBRARY_PATH
-
-source /opt/cct/2.6-4.14/environment-setup-corei7-64-poky-linux 
-make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.92-cct/source/ modules
-jhlee@qweak: driver (generic_scope)$ make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.92-cct/source/ modules
-make -C /opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/source/ M=/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver modules
-make[1]: Entering directory '/opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/build'
-Makefile:960: "Cannot use CONFIG_STACK_VALIDATION=y, please install libelf-dev, libelf-devel or elfutils-libelf-devel"
-  CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscdrvr.o
-In file included from ./arch/x86/include/asm/realmode.h:15,
-                 from ./arch/x86/include/asm/acpi.h:33,
-                 from ./arch/x86/include/asm/fixmap.h:29,
-                 from ./arch/x86/include/asm/apic.h:10,
-                 from ./arch/x86/include/asm/smp.h:13,
-                 from ./include/linux/smp.h:64,
-                 from ./include/linux/percpu.h:7,
-                 from ./include/linux/hrtimer.h:22,
-                 from ./include/linux/sched.h:20,
-                 from /home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscos.h:47,
-                 from /home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscdrvr.c:48:
-./arch/x86/include/asm/io.h:44:10: fatal error: asm/early_ioremap.h: No such file or directory
- #include <asm/early_ioremap.h>
-          ^~~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-make[2]: *** [scripts/Makefile.build:327: /home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscdrvr.o] Error 1
-make[1]: *** [Makefile:1532: _module_/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver] Error 2
-make[1]: Leaving directory '/opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/build'
-make: *** [Makefile:66: modules] Error 2
-
-```
