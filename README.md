@@ -9,6 +9,9 @@ make modules
 make modules install
 ```
 
+### Cross Compiling kernel drivers
+Please look at README.md in the driver path
+
 ## TscMon and SmemCalibration
 
 Stand-alone TscMon and SmemCalibration executables (not shared library)
