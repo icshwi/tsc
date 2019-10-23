@@ -5,6 +5,7 @@ Mostly we don't need to do cc these kernel modules with cc toolchain. However, j
 
 # How to do
 
+## ifc14xx 
 
 * Souce the toolchain environment
 ```
@@ -59,6 +60,70 @@ $ readelf -h *.ko  |grep Machine
 $ ls *.ko
 pon.ko  tsc.ko
 ```
+
+## cct (not working)
+
+* Souce the toolchain environment
+```
+$ unset LD_LIBRARY_PATH
+$ source /opt/cct/2.6-4.14/environment-setup-corei7-64-poky-linux 
+```
+* Generate the kernel headers according to the target arch
+
+```
+$ cd /opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/source
+$ sudo bash -c "source /opt/cct/2.6-4.14/environment-setup-corei7-64-poky-linux && make silentoldconfig scripts"
+  HOSTCC  scripts/basic/fixdep
+  HOSTCC  scripts/basic/bin2c
+  HOSTCC  scripts/kconfig/conf.o
+  SHIPPED scripts/kconfig/zconf.tab.c
+  SHIPPED scripts/kconfig/zconf.lex.c
+  HOSTCC  scripts/kconfig/zconf.tab.o
+  HOSTLD  scripts/kconfig/conf
+scripts/kconfig/conf  --silentoldconfig Kconfig
+  WRAP    arch/x86/include/generated/asm/clkdev.h
+  WRAP    arch/x86/include/generated/asm/dma-contiguous.h
+  WRAP    arch/x86/include/generated/asm/early_ioremap.h
+  WRAP    arch/x86/include/generated/asm/mcs_spinlock.h
+  WRAP    arch/x86/include/generated/asm/mm-arch-hooks.h
+  CC      scripts/mod/empty.o
+  HOSTCC  scripts/mod/mk_elfconfig
+  MKELF   scripts/mod/elfconfig.h
+  HOSTCC  scripts/mod/modpost.o
+  CC      scripts/mod/devicetable-offsets.s
+  CHK     scripts/mod/devicetable-offsets.h
+  UPD     scripts/mod/devicetable-offsets.h
+  HOSTCC  scripts/mod/file2alias.o
+  HOSTCC  scripts/mod/sumversion.o
+  HOSTLD  scripts/mod/modpost
+  HOSTCC  scripts/kallsyms
+  HOSTCC  scripts/conmakehash
+  HOSTCC  scripts/recordmcount
+  HOSTCC  scripts/sortextable
+
+```
+* Build the kernel modules
+
+```
+$ cd -
+$ KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.92-cct/source/  LDFLAGS="" make
+make -C /opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/source/ M=/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver modules
+make[1]: Entering directory '/opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/build'
+make[2]: *** No rule to make target '/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscdrvr.o', needed by '/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tsc.o'.  Stop.
+make[1]: *** [Makefile:1532: _module_/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver] Error 2
+make[1]: Leaving directory '/opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/build'
+make: *** [Makefile:66: modules] Error 2
+
+```
+
+* Check the kernel modules
+
+```
+$ readelf -h *.ko  |grep Machine
+$ ls *.ko
+pon.ko  tsc.ko
+```
+
 
 
 # How NOT to do...
