@@ -28,7 +28,7 @@ scripts/kconfig/conf  --silentoldconfig Kconfig
 
 ```
 $ cd -
-$ KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.67-ifc14xx/source/ LDFLAGS="" make
+$ KERNEL_SRC=${SDKTARGETSYSROOT}/lib/modules/4.14.67-ifc14xx/source/ LDFLAGS="" make
 make -C /opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/source/ M=/home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver modules
 make[1]: Entering directory '/opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/build'
   CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsclib/driver/tscdrvr.o
@@ -162,7 +162,7 @@ scripts/kconfig/conf  --silentoldconfig Kconfig
 
 ```
 $ cd -
-$ KERNELDIR=${SDKTARGETSYSROOT}/lib/modules/4.14.92-cct/source/  LDFLAGS="" make
+$ KERNEL_SRC=${SDKTARGETSYSROOT}/lib/modules/4.14.92-cct/source/  LDFLAGS="" make
 make -C /opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/source/ M=/home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver modules
 make[1]: Entering directory '/opt/cct/2.6-4.14/sysroots/corei7-64-poky-linux/lib/modules/4.14.92-cct/build'
   CC [M]  /home/jhlee/e3-7.0.3/e3-tsclib/tsc-dev/driver/tscdrvr.o
