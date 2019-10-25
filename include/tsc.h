@@ -27,7 +27,7 @@
 #ifndef _H_TSC
 #define _H_TSC
 
-#define TSC_VERSION "3.5.5"
+#define TSC_VERSION "4.0.0"
 
 #define	PCI_VENDOR_ID_IOXOS               0x7357   /* IOXOS PCI VENDOR ID         */
 #define	PCI_DEVICE_ID_IOXOS_TSC_IO        0x1000   /* TSC PCI DEVICE ID IO        */
