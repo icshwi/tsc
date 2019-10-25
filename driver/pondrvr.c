@@ -54,13 +54,14 @@
  *
  *=============================< end file header >============================*/
 
+#include "tsc.h"
 #include "tscos.h"
 
 #define DBG
 
 #include "debug.h"
 
-#define DRIVER_VERSION "1.00"
+#define DRIVER_VERSION TSC_VERSION
 #define PONTSC_COUNT 1
 #define PONTSC_NAME "pontsc"
 
