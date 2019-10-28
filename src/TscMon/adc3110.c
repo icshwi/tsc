@@ -955,14 +955,6 @@ tsc_adc3110( struct cli_cmd_para *c)
 
   adc3110_init();
 
-	if(!strcmp("gpio", c->para[0])){
-		return tsc_adc3110_gpio_trig(c);
-	}
-
-	if(!strcmp("reset", c->para[0])){
-		return tsc_adc3110_reset(c);
-	}
-
   if( c->cnt < 2)
   {
     printf("adc3110 command needs more arguments\n");
@@ -975,6 +967,14 @@ tsc_adc3110( struct cli_cmd_para *c)
       add++;
     }
     return(-1);
+  }
+ 
+  if(!strcmp("gpio", c->para[0])){
+      return tsc_adc3110_gpio_trig(c);
+  }
+
+  if(!strcmp("reset", c->para[0])){
+      return tsc_adc3110_reset(c);
   }
 
   if( !strcmp( "save", c->para[1]))
