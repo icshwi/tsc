@@ -949,8 +949,9 @@ int tsc_adc3110_reset(struct cli_cmd_para *c){
 int 
 tsc_adc3110( struct cli_cmd_para *c)
 {
+
   struct tsc_adc3110_devices *add;
-  uint cmd, data, reg, fmc, tmo;
+  uint cmd, data, reg, fmc, tmo, id;
   char *p;
 
   adc3110_init();
@@ -967,6 +968,38 @@ tsc_adc3110( struct cli_cmd_para *c)
       add++;
     }
     return(-1);
+  }
+ 
+  /* rosselliot [2019-10-28] Check for adc3110 in FMC */
+  if( c->ext) 
+  {
+    fmc = strtoul( c->ext, &p, 16);
+    if(( fmc < 1) || ( fmc > 2))
+    {
+      printf("bad FMC index : %d\n", fmc);
+      return( -1);
+    }
+    else 
+    {
+      if(fmc == 1)
+      {
+          id = tscext_csr_rd(tsc_fd, ADC_BASE_A);
+          if((id & 0xffff0000) != 0x31100000)
+          {
+              printf("no ADC3110 installed on FMC#1 [%08x] !!\n", id);
+              return(-1);
+          }
+      }
+      if(fmc == 2)
+      {
+          id = tscext_csr_rd(tsc_fd, ADC_BASE_B);
+          if((id & 0xffff0000) != 0x31100000)
+          {
+              printf("no ADC3110 installed on FMC#2 [%08x] !!\n", id);
+              return(-1);
+          }
+      }      
+    }
   }
  
   if(!strcmp("gpio", c->para[0])){
@@ -1014,7 +1047,7 @@ tsc_adc3110( struct cli_cmd_para *c)
         return( -1);
       }
     }
-
+    
     if(  c->para[0][0] != '-')
     {
       if(  c->para[0][0] == '?')
@@ -1053,7 +1086,7 @@ tsc_adc3110( struct cli_cmd_para *c)
       shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
       if( fmc == 2)
       {
-	shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
+	    shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
       }
       //shm_mas_map_win.req.mode.space = MAP_SPACE_USR1;
       shm_mas_map_win.req.rem_addr = offset;
