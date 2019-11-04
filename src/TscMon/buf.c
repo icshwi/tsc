@@ -209,7 +209,7 @@ kbuf_show( struct cli_cmd_para *c)
     {
       if( tsc_kbuf_ctl[i].kbuf_p)
       {
-	printf("| %d | %08llx | %08x |\n", 
+	printf("| %d | %08lx | %08x |\n", 
 	       i, tsc_kbuf_ctl[i].kbuf_p->b_base, tsc_kbuf_ctl[i].kbuf_p->size);
       }
     }
@@ -218,7 +218,7 @@ kbuf_show( struct cli_cmd_para *c)
   {
     if( tsc_kbuf_ctl[idx].kbuf_p )
     {
-      printf("| %d | %08llx | %08x |\n", 
+      printf("| %d | %08lx | %08x |\n", 
 	     idx, tsc_kbuf_ctl[idx].kbuf_p->b_base, tsc_kbuf_ctl[idx].kbuf_p->size);
     }
   }
@@ -538,7 +538,7 @@ kbuf_unmap( struct cli_cmd_para *c)
     {
       if( tsc_kbuf_ctl[i].map_p)
       {
-        printf("Unmappins kernel buffer %d : %08llx\n", i, tsc_kbuf_ctl[i].kbuf_p->b_base);
+        printf("Unmappins kernel buffer %d : %08lx\n", i, tsc_kbuf_ctl[i].kbuf_p->b_base);
         tsc_map_free(tsc_fd, tsc_kbuf_ctl[i].map_p);
 	free( tsc_kbuf_ctl[i].map_p);
         tsc_kbuf_ctl[i].map_p = NULL;
@@ -549,7 +549,7 @@ kbuf_unmap( struct cli_cmd_para *c)
   {
     if( tsc_kbuf_ctl[idx].map_p )
     {
-      printf("Unmapping kernel buffer %d : %08llx\n", idx, tsc_kbuf_ctl[idx].kbuf_p->b_base);
+      printf("Unmapping kernel buffer %d : %08lx\n", idx, tsc_kbuf_ctl[idx].kbuf_p->b_base);
       tsc_map_free(tsc_fd, tsc_kbuf_ctl[idx].map_p);
       free( tsc_kbuf_ctl[idx].map_p);
       tsc_kbuf_ctl[idx].map_p = NULL;

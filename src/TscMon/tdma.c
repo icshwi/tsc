@@ -109,10 +109,10 @@ tsc_tdma_move( int chan,
   int fd;
   char *tdma_ptr;
   volatile int *reg_p;
-  int i, csr_base;
+  int csr_base;
   int tmo;
 
-  printf("TDMA#%02x : moving data from %llx -> %llx [%x]\n", chan, src_addr, des_addr, size);
+  printf("TDMA#%02x : moving data from %lx -> %lx [%x]\n", chan, src_addr, des_addr, size);
   fd = open("/dev/ioxos/tdma_ctl", O_RDWR);
 
   if( fd < 0)
@@ -132,15 +132,15 @@ tsc_tdma_move( int chan,
   if(chan&4) tdma_ptr += 0x300;
   //printf("TDMA registers mapped at address %p [%08x]\n", tdma_ptr, *tdma_ptr);
 
-  *(int *)&tdma_ptr[0x100] = 0;                                      /* reset mode register */
-  *(int *)&tdma_ptr[0x104] = 0x9b;                                   /* clear status register */
-  *(int *)&tdma_ptr[0x110] = 0x50000 | (int)(src_addr >> 32) & 0xff; /* set SATR            */
-  *(int *)&tdma_ptr[0x114] = (int)(src_addr & 0xffffffff);           /* set SAR             */
-  *(int *)&tdma_ptr[0x118] = 0x50000 | (int)(des_addr >> 32) & 0xff; /* set SATR            */
-  *(int *)&tdma_ptr[0x11c] = (int)(des_addr & 0xffffffff);           /* set SAR             */
-  *(int *)&tdma_ptr[0x120] = size & 0x3ffffff;                       /* set BCR             */
-  *(int *)&tdma_ptr[0x100] = mode;                                   /* start DMA           */
-  *(int *)&tdma_ptr[0x100];                                          /* flush write access  */
+  *(int *)&tdma_ptr[0x100] = 0;                                        /* reset mode register */
+  *(int *)&tdma_ptr[0x104] = 0x9b;                                     /* clear status register */
+  *(int *)&tdma_ptr[0x110] = 0x50000 | ((int)(src_addr >> 32) & 0xff); /* set SATR            */
+  *(int *)&tdma_ptr[0x114] = (int)(src_addr & 0xffffffff);             /* set SAR             */
+  *(int *)&tdma_ptr[0x118] = 0x50000 | ((int)(des_addr >> 32) & 0xff); /* set SATR            */
+  *(int *)&tdma_ptr[0x11c] = (int)(des_addr & 0xffffffff);             /* set SAR             */
+  *(int *)&tdma_ptr[0x120] = size & 0x3ffffff;                         /* set BCR             */
+  *(int *)&tdma_ptr[0x100] = mode;                                     /* start DMA           */
+  tmo = *(int *)&tdma_ptr[0x100];                                      /* flush write access  */
   usleep(1000);
   reg_p = (volatile int *)&tdma_ptr[0x104];
   tmo = size;
@@ -178,7 +178,7 @@ tsc_tdma_status( int chan)
 {
   int fd;
   char *tdma_ptr;
-  int i, csr_base;
+  int csr_base;
   int sts;
 
   fd = open("/dev/ioxos/tdma_ctl", O_RDWR);
@@ -285,7 +285,6 @@ tsc_tdma( struct cli_cmd_para *c)
   }
   if( !strncmp( "start", c->para[0], 5))
   {
-    uint para;
     uint64_t des_addr, src_addr;
     int size, mode;
     char sp, idx;
@@ -296,7 +295,7 @@ tsc_tdma( struct cli_cmd_para *c)
       return( TSC_ERR);
     }
 
-    npara = sscanf( c->para[1], "%llx:%c%c", &tmp, &sp, &idx);
+    npara = sscanf( c->para[1], "%lx:%c%c", &tmp, &sp, &idx);
     if( npara > 0)
     {
       des_addr = (uint64_t)tmp;
@@ -305,19 +304,19 @@ tsc_tdma( struct cli_cmd_para *c)
         if( sp == 'm')
         {
           if( idx == 'm') des_addr += mas_mem_map_ctl.win_base;
-	  if( idx == 'p') des_addr += mas_pmem_map_ctl.win_base;
-	}
-	if( sp == 'k')
-	{
-	  if( (idx >= '0') && ( idx < '8'))
-	  {
-	    idx -= '0';
-	    if( tsc_kbuf_ctl[idx].kbuf_p)
-	    {
-              des_addr += tsc_kbuf_ctl[idx].kbuf_p->b_base;
+	      if( idx == 'p') des_addr += mas_pmem_map_ctl.win_base;
 	    }
-	  }
-	}
+	    if( sp == 'k')
+	    {
+	      if( (idx >= '0') && ( idx < '8'))
+	      {
+	        idx -= '0';
+	        if( tsc_kbuf_ctl[(int)idx].kbuf_p)
+	        {
+              des_addr += tsc_kbuf_ctl[(int)idx].kbuf_p->b_base;
+	        }
+	      }
+	    }
       }
     }
     else
@@ -326,7 +325,7 @@ tsc_tdma( struct cli_cmd_para *c)
       return( TSC_ERR);
     }
 
-    npara = sscanf( c->para[2], "%llx:%c%c", &tmp, &sp, &idx);
+    npara = sscanf( c->para[2], "%lx:%c%c", &tmp, &sp, &idx);
     if( npara > 0)
     {
       src_addr = (uint64_t)tmp;
@@ -335,19 +334,19 @@ tsc_tdma( struct cli_cmd_para *c)
         if( sp == 'm')
         {
           if( idx == 'm') src_addr += mas_mem_map_ctl.win_base;
-	  if( idx == 'p') src_addr += mas_pmem_map_ctl.win_base;
-	}
-	if( sp == 'k')
-	{
-	  if( (idx >= '0') && ( idx < '8'))
-	  {
-	    idx -= '0';
-	    if( tsc_kbuf_ctl[idx].kbuf_p)
-	    {
-              src_addr += tsc_kbuf_ctl[idx].kbuf_p->b_base;
-	    }
-	  }
-	}
+    	  if( idx == 'p') src_addr += mas_pmem_map_ctl.win_base;
+    	}
+  	    if( sp == 'k')
+  	    {
+  	      if( (idx >= '0') && ( idx < '8'))
+  	      {
+  	        idx -= '0';
+  	        if( tsc_kbuf_ctl[(int)idx].kbuf_p)
+  	        {
+              src_addr += tsc_kbuf_ctl[(int)idx].kbuf_p->b_base;
+  	        }
+  	      }
+  	    }
       }
     }
     else

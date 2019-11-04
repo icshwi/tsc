@@ -858,7 +858,7 @@ tsc_read_sgl(int fd, uint64_t rem_addr,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_shm_write(int fd, uint shm_addr, char *buf, int len, int ds, int swap, int mem){
-	struct tsc_ioctl_rdwr rdwr;
+        struct tsc_ioctl_rdwr rdwr = { .rem_addr=0, .buf="", .len=0, .m={.ads='\0', .space='\0', .swap='\0', .am='\0'}};
 	int retval;
 
 	if(len < 0) return(-EINVAL);
@@ -896,7 +896,7 @@ int tsc_shm_write(int fd, uint shm_addr, char *buf, int len, int ds, int swap, i
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_shm_read(int fd, uint shm_addr, char *buf, int len, int ds, int swap, int mem){
-	struct tsc_ioctl_rdwr rdwr;
+        struct tsc_ioctl_rdwr rdwr = { .rem_addr=0, .buf="", .len=0, .m={.ads='\0', .space='\0', .swap='\0', .am='\0'}};
 	int retval;
 
 	if(len < 0) return(-EINVAL);
@@ -934,7 +934,7 @@ int tsc_shm_read(int fd, uint shm_addr, char *buf, int len, int ds, int swap, in
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_usr_write(int fd, uint usr_addr, char *buf, int len, int ds, int swap, int mem){
-	struct tsc_ioctl_rdwr rdwr;
+        struct tsc_ioctl_rdwr rdwr = { .rem_addr=0, .buf="", .len=0, .m={.ads='\0', .space='\0', .swap='\0', .am='\0'}};
 	int retval;
 
 	if(len < 0) return(-EINVAL);
@@ -972,7 +972,7 @@ int tsc_usr_write(int fd, uint usr_addr, char *buf, int len, int ds, int swap, i
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_usr_read(int fd, uint usr_addr, char *buf, int len, int ds, int swap, int mem){
-	struct tsc_ioctl_rdwr rdwr;
+        struct tsc_ioctl_rdwr rdwr = { .rem_addr=0, .buf="", .len=0, .m={.ads='\0', .space='\0', .swap='\0', .am='\0'}};
 	int retval;
 
 	if(len < 0) return(-EINVAL);

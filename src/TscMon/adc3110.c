@@ -641,7 +641,8 @@ adc3110_calib_idelay( struct cli_cmd_para *c,
 		      int fmc)
 {
   struct tsc_ioctl_map_win adc_mas_map_usr[5];
-  char *adc_buf1[5], *adc_buf2[5], *p;
+  char *adc_buf1[5], *adc_buf2[5];
+  /* char *p; */
   int csr_base[5], idelay, idelay_base;
   int i, n;
   int res[5][2][64];
@@ -1672,10 +1673,6 @@ tsc_adc3110( struct cli_cmd_para *c)
   }
   else if( !strncmp( "calidel", c->para[1], 3))
   {
-    int size;
-    int check;
-    int retval;
-
     if( (add->idx < 0) || (add->bus != BUS_SBC))
     {
       printf("wrong device name\n");
@@ -1684,11 +1681,11 @@ tsc_adc3110( struct cli_cmd_para *c)
     }
     if( add->idx == 15)
     {
-      retval = adc3110_calib_idelay( c, -1, fmc);
+      adc3110_calib_idelay( c, -1, fmc);
     }
     else
     {
-      retval = adc3110_calib_idelay( c, add->idx, fmc);
+      adc3110_calib_idelay( c, add->idx, fmc);
     }
     return(0);
   }
@@ -1968,21 +1965,21 @@ tsc_adc3110( struct cli_cmd_para *c)
       tm = time(0);
       strftime( ct, 10, "%d%m%Y", gmtime(&tm));
       printf("current date : %s\n", ct);
-
-      strncpy( &adc3110_sign.board_name[0], " ADC3111", 8);
-      strncpy( &adc3110_sign.serial[0], "0000", 4);
-      strncpy( &adc3110_sign.version[0], "00000001", 8);
-      strncpy( &adc3110_sign.revision[0], "A0", 2);
-      strncpy( &adc3110_sign.test_date[0], ct, 8);
-      strncpy( &adc3110_sign.calib_date[0], ct, 8);
-      strncpy( &adc3110_sign.offset_adc[0][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[1][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[2][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[3][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[4][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[5][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[6][0], "00000000", 8);
-      strncpy( &adc3110_sign.offset_adc[7][0], "00000000", 8);
+      /* rosselliot [2019-10-28]: we are storing individual characters, not NUL-terminated strings, so use memcpy instead of strncpy */
+      memcpy(&adc3110_sign.board_name[0],    " ADC3111", 8);
+      memcpy(&adc3110_sign.serial[0],        "0000",     4);
+      memcpy(&adc3110_sign.version[0],       "00000001", 8);
+      memcpy(&adc3110_sign.revision[0],      "A0",       2);
+      memcpy(&adc3110_sign.test_date[0],     ct,         8);
+      memcpy(&adc3110_sign.calib_date[0],    ct,         8);
+      memcpy(&adc3110_sign.offset_adc[0][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[1][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[2][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[3][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[4][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[5][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[6][0], "00000000", 8);
+      memcpy(&adc3110_sign.offset_adc[7][0], "00000000", 8);
 
       cnt = c->cnt - 3;
       i = 3;

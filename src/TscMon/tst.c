@@ -255,18 +255,19 @@ int tsc_tinit( struct cli_cmd_para *c)
     return( TST_ERR);
   }
   strcpy( cfg_filename, cfg_default);
-  if(  cfg_filename)
-  {
-    FILE *cfg_file;
+  /* if(  cfg_filename) { */
+  
+  FILE *cfg_file;
 
-    cfg_file = fopen( cfg_filename, "w");
-    if(!cfg_file)
+  cfg_file = fopen( cfg_filename, "w");
+  if(!cfg_file)
     {
       printf("Cannot create configuration file %s\n", cfg_filename);
       return( TST_ERR);
     }
-    fclose( cfg_file);
-  }
+  
+  fclose( cfg_file);
+    /*}*/
 
   switch( c->cnt)
   {

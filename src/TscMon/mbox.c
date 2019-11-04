@@ -194,7 +194,7 @@ mbox_write( struct cli_cmd_para *c)
 int 
 mbox_info( struct cli_cmd_para *c)
 {
-  static unsigned char sensors_installed = 0;
+  /* static unsigned char sensors_installed = 0; */
 
   if (c->cnt > 1)
   {
@@ -260,14 +260,17 @@ mbox_info( struct cli_cmd_para *c)
   int value = 0;
   int retval;
   int timestamp = 0;
+  
   while (sensor)
   {
     printf("  Sensor \"%s\":", sensor->name);
-    if (retval = get_mbox_sensor_value(tsc_fd, info, sensor->name, &value, &timestamp))
-    {
+    retval = get_mbox_sensor_value(tsc_fd, info, sensor->name, &value, &timestamp);
+    if (retval) {
       printf("   failed to get data of sensor: %s\n", strerror(retval));
     }
-    else puts("");
+    else {
+      puts("");
+    }
     printf("    status = (%d) %s\n", sensor->status, mbox_sensor_status[sensor->status]);
     printf("    value = %d\n", value);
     printf("    timestamp = %d\n", timestamp);
@@ -434,7 +437,7 @@ int mbox_payload_sensor_create( struct cli_cmd_para *c)
     return( CLI_ERR);
   }
 
-  char *sensor_name = c->para[2];
+  unsigned char *sensor_name = (unsigned char*)c->para[2];
   int value_size = atoi(c->para[3]);
   if (value_size < 1 || value_size > 4)
   {
@@ -450,6 +453,9 @@ int mbox_payload_sensor_create( struct cli_cmd_para *c)
   }
 
   payload_sensor_handle_t *handle;
+  /* sensor name is signed char, and this code puts it into unsigned char in 3rd arg */
+  /* It is better to check how sensor_name is formed carefully */
+  /* han.lee@esss.se Thursday, October 17 23:02:20 CEST 2019 */
   if (!create_payload_sensor(tsc_fd, info, sensor_name, value_size, &handle))
   {
     print_out_payload_sensor_details(handle);

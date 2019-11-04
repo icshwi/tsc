@@ -133,7 +133,7 @@ set_para_dec( char *prompt,
 int
 dma_mode( int chan)
 {
-  char prompt[32];
+  char prompt[40];
   char yn;
   struct tsc_ioctl_dma_mode  mode;
   uint data;
@@ -373,7 +373,7 @@ tsc_dma( struct cli_cmd_para *c)
     sw = 0;
 
 
-    npara = sscanf( c->para[1], "%llx:%x.%c", &tmp, &para, &sw);
+    npara = sscanf( c->para[1], "%lx:%x.%c", &tmp, &para, &sw);
     dma_req[chan].des_addr = (uint64_t)tmp;
 
     dma_req[chan].des_mode = 0;
@@ -416,7 +416,7 @@ tsc_dma( struct cli_cmd_para *c)
 
     }
     sw = 0;
-    npara = sscanf( c->para[2], "%llx:%x.%c", &tmp, &para, &sw);
+    npara = sscanf( c->para[2], "%lx:%x.%c", &tmp, &para, &sw);
     dma_req[chan].src_addr = (uint64_t)tmp;
     if( para ==  DMA_SPACE_KBUF)
     {

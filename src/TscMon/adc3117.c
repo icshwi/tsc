@@ -639,17 +639,18 @@ adc3117_eeprom_sign( struct cli_cmd_para *c,
       strftime( ct, 10, "%d%m%Y", gmtime(&tm));
       printf("current date : %s\n", ct);
 
-      strncpy( &adc3117_sign.board_name[0], " ADC3117", 8);
-      strncpy( &adc3117_sign.serial[0], "0000", 4);
-      strncpy( &adc3117_sign.version[0], "00000001", 8);
-      strncpy( &adc3117_sign.revision[0], "A0", 2);
-      strncpy( &adc3117_sign.test_date[0], ct, 8);
+      /* rosselliot [2019-10-28]: we are storing individual characters, not NUL-terminated strings, so use memcpy instead of strncpy */
+      memcpy(&adc3117_sign.board_name[0], " ADC3117", 8);
+      memcpy(&adc3117_sign.serial[0],     "0000",     4);
+      memcpy(&adc3117_sign.version[0],    "00000001", 8);
+      memcpy(&adc3117_sign.revision[0],   "A0",       2);
+      memcpy(&adc3117_sign.test_date[0],  ct,         8);
 
       cnt = c->cnt - 3;
       i = 3;
       while( cnt--)
       {
-	char *q;
+	    char *q;
 
         q =  c->para[i++];
         if( p[0] == 'b')
@@ -792,6 +793,7 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
 {
   char *p;
   int data, i;
+  uint udata;
 
   if( fmc == 2)
   {
@@ -837,7 +839,8 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
     for( i = 0; i < sizeof( struct adc3117_vref); i++)
     {
       data = 0;
-      tsc_i2c_read(tsc_fd, device, 0x6000+i, &data);
+      tsc_i2c_read(tsc_fd, device, 0x6000+i, &udata);
+      data = (int)udata;
       p[i] = (char)data;
     }
     printf("Done\n");
@@ -901,6 +904,7 @@ adc3117_eeprom_vref( struct cli_cmd_para *c,
       printf("Done\n");
     }
   }
+  return 0;  
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

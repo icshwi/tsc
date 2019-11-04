@@ -165,7 +165,8 @@ tsc_i2c( struct cli_cmd_para *c)
 int 
 tsc_i2c( struct cli_cmd_para *c)
 {
-  int bus, reg, data, addr, device;
+  int bus, reg, addr, device;
+  uint data;
   int rs, ds;
   int retval;
 
@@ -219,7 +220,7 @@ tsc_i2c( struct cli_cmd_para *c)
       tsc_print_usage( c);
       return( I2C_ERR);
     }
-    printf("i2c write: %08x %x\n", device, reg, data);
+    printf("i2c write: %08x %x %d\n", device, reg, data);
     tsc_i2c_write(tsc_fd, device, reg, data);
     return( I2C_OK);
   }

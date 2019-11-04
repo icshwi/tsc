@@ -433,8 +433,6 @@ static void
 rdwr_get_cycle_swap( char *name,
 		     struct rdwr_cycle_para *cp)
 {
-  char tmp[4];
-
   if( !name) return;
   cp->m.swap = 0x0;
   if( name[1] == 's')
@@ -442,6 +440,7 @@ rdwr_get_cycle_swap( char *name,
     cp->m.swap = 0x80;
   }
 #ifdef JFG
+  char tmp[4];
   bzero( tmp, 4);
   strncpy( tmp, name, 4);
 
@@ -631,7 +630,7 @@ rdwr_patch_addr( uint64_t addr,
     }
     case 8:
     {
-      sprintf( &pm_prompt[idx], "%016llx -> ", *(uint64_t *)p);
+      sprintf( &pm_prompt[idx], "%016lx -> ", *(uint64_t *)p);
       break;
     }
   }
@@ -1036,8 +1035,8 @@ rdwr_show_buf( uint64_t addr,
 	}
         case 8:
 	{
-	  if(swap) printf("%016llx ", (uint64_t)tsc_swap_64( *(uint64_t *)&p[j]));
-	  printf("%016llx ", *(uint64_t *)&p[j]);
+	  if(swap) printf("%016lx ", (uint64_t)tsc_swap_64( *(uint64_t *)&p[j]));
+	  printf("%016lx ", *(uint64_t *)&p[j]);
 	  break;
 	}
       }
@@ -1674,9 +1673,9 @@ tsc_rdwr_px( struct cli_cmd_para *c)
         case RDWR_SIZE_BYTE:
         {
 	  rdwr_sprintf_bin( bin_string,  *(unsigned char *)buf, 8);
-          printf("0x%08lx : 0x%02x [0b%8b] -> \n", offset, *(unsigned char *)buf, bin_string);
+          printf("0x%08lx : 0x%02x [0b%.8s] -> \n", offset, *(unsigned char *)buf, bin_string);
           break;
-        }
+        }	
         case RDWR_SIZE_SHORT:
         {
 	  unsigned short data_s;
@@ -2107,7 +2106,7 @@ int tsc_rdwr_cmp( struct cli_cmd_para *c){
 		tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx1].kb_p->k_base + off1, buf1, len);
 	}
 	else{
-		printf("Bad space identifier: %c%d\n");
+		printf("Bad space identifier: %c%d\n", sp1, idx1);
 		goto tsc_rdwr_cmp_err;
 	}
 	mode2 = 0;
@@ -2148,7 +2147,7 @@ int tsc_rdwr_cmp( struct cli_cmd_para *c){
 		tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx2].kb_p->k_base + off2, buf2, len);
 	}
 	else{
-		printf("Bad space identifier: %c%d\n");
+		printf("Bad space identifier: %c%d\n", sp2, idx2);
 		goto tsc_rdwr_cmp_err;
 	}
 	offset = rdwr_cmp_buf( buf1, buf2, len, -1);
@@ -2183,7 +2182,6 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 	uint64_t offset;
 	uint64_t data;
 	char buf[8];
-	int retval;
 	int ds;
 	struct rdwr_cycle_para *cp;
 	int rdwr;

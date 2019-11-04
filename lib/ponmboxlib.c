@@ -25,7 +25,7 @@
  *=============================< end file header >============================*/
 
 #ifndef lint
-static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $";
+//static char rcsid[] = "$Id: ponmboxlib.c,v 1.00 2017/10/05 11:39:32 ioxos Exp $";
 #endif
 
 #include <stdlib.h>
@@ -143,7 +143,7 @@ void wait_for_service_request_completion(int fd, mbox_info_t *info, int offset);
 unsigned char skip_c_string(int fd, int *offset);
 unsigned char skip_existing_mbox_sensors(int fd, mbox_info_t *info, int *offset);
 int descriptor_name_offset_for_value_size(int value_size);
-payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, char *name);
+payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, unsigned char *name);
 
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -158,8 +158,6 @@ payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size
 
 mbox_info_t *get_mbox_info(int fd)
 {
-  int i;
-  unsigned char data;
   int offset = 0;
   int continue_parsing = 1;
   unsigned char magic_byte;
@@ -296,7 +294,7 @@ int get_mbox_sensor_value(int fd, mbox_info_t *info, unsigned char *name, int *v
   mbox_sensor_data_value_t *sensor = info->sensors_values;
   while (sensor)
   {
-    if (!strcmp(sensor->name, name))
+    if (!strcmp((char*)sensor->name, (char*)name))
     {
       offset = sensor->status_offset;
       pop_mbox_byte(fd, &offset, &sensor->status);
@@ -551,14 +549,14 @@ int pop_mbox_int(int fd, int *offset, unsigned int *destination)
 unsigned char pop_mbox_string(int fd, int *offset, unsigned char **destination)
 {
   int size = 0;
-  char c;
+  unsigned char c;
   do
   {
     get_mbox_byte(fd, (*offset) + size++, &c);
   }
   while (c);
 
-  char *buffer = malloc(size);
+  unsigned char *buffer = malloc(size);
   if (!buffer) return 0;
 
   (*destination) = buffer;
@@ -773,8 +771,8 @@ unsigned char create_payload_sensor(int fd, mbox_info_t *info, unsigned char *na
   if (!name) return EFAULT;
   if (!handle) return EFAULT;
 
-  int name_length = strlen(name) + 1;
-  if (strlen(name) > SENSOR_NAME_MAX_LENGTH) return ENAMETOOLONG;
+  int name_length = strlen((char*)name) + 1;
+  if (name_length > SENSOR_NAME_MAX_LENGTH) return ENAMETOOLONG;
 
   int offset;
   if (skip_existing_mbox_sensors(fd, info, &offset)) return EFAULT;
@@ -808,7 +806,7 @@ unsigned char get_payload_sensor_value(int fd, payload_sensor_handle_t *handle, 
   if (!value) return EFAULT;
 
   int value_offset = handle->descriptor_offset + PAYLOAD_SENSOR_DESCRIPTOR_VALUE_OFFSET;
-  return pop_mbox_data(fd, &value_offset, value, handle->value_size);
+  return pop_mbox_data(fd, &value_offset, (unsigned*)value, handle->value_size);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -967,7 +965,7 @@ void free_payload_sensors(payload_sensor_handle_t *handle)
 
 unsigned char skip_c_string(int fd, int *offset)
 {
-  char c;
+  unsigned char c;
   do
   {
     pop_mbox_byte(fd, offset, &c);
@@ -995,7 +993,6 @@ unsigned char skip_existing_mbox_sensors(int fd, mbox_info_t *info, int *offset)
   int continue_parsing = 1;
   unsigned char descriptor_type;
   unsigned char descriptor_format_version;
-  unsigned char c;
   unsigned char value_size;
 
   while (continue_parsing)
@@ -1064,24 +1061,26 @@ int descriptor_name_offset_for_value_size(int value_size)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, char *name)
+payload_sensor_handle_t *create_payload_sensor_handle(int offset, int value_size, unsigned char *name)
 {
   if (!name) return NULL;
 
   payload_sensor_handle_t *handle = malloc(sizeof(payload_sensor_handle_t));
   if (!handle) return NULL;
 
-  handle->sensor_name = malloc(strlen(name));
+  handle->sensor_name = malloc(strlen((char*)name));
   if (!handle->sensor_name)
   {
     free(handle);
     return NULL;
   }
-  strcpy(handle->sensor_name, name);
+  strcpy((char*)handle->sensor_name, (char*)name);
 
   handle->next = NULL;
   handle->descriptor_offset = offset;
   handle->value_size = value_size;
+
+ return NULL;   
 }
 
 

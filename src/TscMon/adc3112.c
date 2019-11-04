@@ -265,7 +265,7 @@ adc3112_map_usr( struct tsc_ioctl_map_win *map,
 		 uint size,
 		 int usr)
 {
-  bzero( map, sizeof(map));
+  bzero( map, sizeof(*map));
   map->req.rem_addr = rem_addr;
   if( usr == 2)
   {
@@ -2302,16 +2302,17 @@ tsc_adc3112( struct cli_cmd_para *c)
       strftime( ct, 10, "%d%m%Y", gmtime(&tm));
       printf("current date : %s\n", ct);
 
-      strncpy( &adc3112_sign.board_name[0], " ADC3112", 8);
-      strncpy( &adc3112_sign.serial[0], "0000", 4);
-      strncpy( &adc3112_sign.version[0], "00000001", 8);
-      strncpy( &adc3112_sign.revision[0], "A0", 2);
-      strncpy( &adc3112_sign.test_date[0], ct, 8);
-      strncpy( &adc3112_sign.calib_date[0], ct, 8);
-      strncpy( &adc3112_sign.itl_corr[0][0], "00004000", 8);
-      strncpy( &adc3112_sign.itl_corr[1][0], "00004000", 8);
-      strncpy( &adc3112_sign.itl_corr[2][0], "00004000", 8);
-      strncpy( &adc3112_sign.itl_corr[3][0], "00004000", 8);
+      /* rosselliot [2019-10-28]: we are storing individual characters, not NUL-terminated strings, so use memcpy instead of strncpy */
+      memcpy(&adc3112_sign.board_name[0],  " ADC3112", 8);
+      memcpy(&adc3112_sign.serial[0],      "0000",     4);
+      memcpy(&adc3112_sign.version[0],     "00000001", 8);
+      memcpy(&adc3112_sign.revision[0],    "A0",       2);
+      memcpy(&adc3112_sign.test_date[0],   ct,         8);
+      memcpy(&adc3112_sign.calib_date[0],  ct,         8);
+      memcpy(&adc3112_sign.itl_corr[0][0], "00004000", 8);
+      memcpy(&adc3112_sign.itl_corr[1][0], "00004000", 8);
+      memcpy(&adc3112_sign.itl_corr[2][0], "00004000", 8);
+      memcpy(&adc3112_sign.itl_corr[3][0], "00004000", 8);
 
       cnt = c->cnt - 3;
       i = 3;

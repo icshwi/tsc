@@ -153,109 +153,6 @@ char filename[0x100];
 struct cli_cmd_history acq1430_history;
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : lmk_write
- * Prototype     : void
- * Parameters    : register, data, fmc
- * Return        : void
- *----------------------------------------------------------------------------
- * Description   : void
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-static void
-lmk_write( int reg,
-	   int data,
-	   int fmc)
-{
-  int cmd;
-
-  cmd =  0xc2000000 | reg;
-  printf("cmd = %08x - data = %08x\n", cmd, data);
-  if( fmc == 2)
-  {
-	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B + 4, data);
-	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_B, cmd);
-  }
-  else 
-  {
-	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A + 4, data);
-	tscext_csr_wr(tsc_fd, ADC_BASE_SERIAL_A, cmd);
-  }
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : lmk_init_intref
- * Prototype     : void
- * Parameters    : fmc
- * Return        : void
- *----------------------------------------------------------------------------
- * Description   : lmx init reference
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-static void
-lmk_init_intref( int fmc)
-{
-  int reg;
-
-  /**************************************************************************/
-  /* Initialize  LMK04806  with CLKREF internal oscillator  CCHD575-100MHz  */
-  /**************************************************************************/
-
-  lmk_write( 0, 0x20000, fmc);       /* LMK04806__R00 Generate a programmable RESET to the LMK04806_  */
-  usleep(2000);                      /* wait for 2 ms */
-  lmk_write( 0, 0x140, fmc);         /* LMK04806__R00 Enable  ClkOut_0-1   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
-  lmk_write( 1, 0x140, fmc);         /* LMK04806__R01 Enable  ClkOut_2-3   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
-  lmk_write( 2, 0x140, fmc);         /* LMK04806__R02 Enable  ClkOut_4-5   + ClkOUT0_DIV = 5   -> 2500/5  = 250 MHz */
-  lmk_write( 3, 0x140, fmc);         /* LMK04806__R03 Enable  ClkOut_6-7   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
-  lmk_write( 4, 0x140, fmc);         /* LMK04806__R04 Enable  ClkOut_8-9   + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
-  lmk_write( 5, 0x140, fmc);         /* LMK04806__R05 Enable  ClkOut_10-11 + ClkOUT0_DIV = 10  -> 2500/10 = 250 MHz */
-  lmk_write( 6, 0x11100000, fmc);    /* LMK04806__R06 Type = 1(LVDS) ClkOUT3/ClkOUT2/ClkOUT1  Type = 0(Power down) ClkOUT0  */
-  lmk_write( 7, 0x10100000, fmc);    /* LMK04806__R07 Type = 1(LVDS) ClkOUT7/ClkOUT5          Type = 0(Power down) ClkOUT6/ClkOUT4 */
-  lmk_write( 8, 0x01010000, fmc);    /* LMK04806__R08 Type = 1(LVDS) ClkOUT10/ClkOUT8         Type = 0(Power down) ClkOUT11/ClkOUT9 */
-  lmk_write( 9, 0x55555540, fmc);    /* LMK04806__R09 TI/NS write MUST */
-  lmk_write( 0xa, 0x11404200, fmc);  /* LMK04806__R10 OscOUT_Type = 1 (LVDS)  Powerdown  */
-  lmk_write( 0xb, 0x34028000, fmc);  /* LMK04806__R11 Device MODE=0x6 + No SYNC output */
-  lmk_write( 0xc, 0x13000000, fmc);  /* LMK04806__R12 LD pin programmable (PLL2_DLD)  */
-  lmk_write( 0xd, 0x3B7002c8, fmc);  /* LMK04806__R13 HOLDOVER pin uWIRE SDATOUT  Enable CLKin1 */
-  lmk_write( 0xe, 0x00000000, fmc);  /* LMK04806__R14 Bipolar Mode CLKin1 INPUT  */
-  lmk_write( 0xf, 0x00000000, fmc);  /* LMK04806__R15 DAC unused  */
-  lmk_write( 0x10, 0x01550400, fmc); /* LMK04806__R16 OSC IN level */
-  lmk_write( 0x18, 0x00000000, fmc); /* LMK04806__R24 PLL1 not used   PPL2  */
-  lmk_write( 0x19, 0x00000000, fmc); /* LMK04806__R25 DAC config not used  */
-  /* Pgm VCO/PLL2 = 2500 MHz */
-  lmk_write( 0x1a, 0x8fa00000, fmc); /* LMK04806__R26 PLL2 used   ICP = 3200 uA */
-  lmk_write( 0x1b, 0x00000000, fmc); /* LMK04806__R27 PLL1 not used */
-  lmk_write( 0x1c, 0x00200000, fmc); /* LMK04806__R28 PLL2_R = 2 /PPL1 N divider = 00  */
-  lmk_write( 0x1d, 0x01800320, fmc); /* LMK04806__R29 OSCIN_FREQ /PLL2_NCAL = 25)  */
-  lmk_write( 0x1e, 0x02000320, fmc); /* LMK04806__R30 /PLL2_P = 2 PLL2_N = 25  */
-  lmk_write( 0x1f, 0x00000000, fmc); /* LMK04806__R31 uWIRE Not LOCK */
-  /*---------------------------------------------*/
-  /* Enable Internal 100 MHz clock from  +OSC575 */
-  /*---------------------------------------------*/
-  if( fmc == 2)
-  {
-	tscext_csr_wr(tsc_fd, ADC_BASE_LED_B, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
-  }
-  else 
-  {
-	tscext_csr_wr(tsc_fd, ADC_BASE_LED_A, 0xC0000000); /* DAC SLEEP + CCHD575-100MHz  Power-on */
-  }
-  usleep(2000);                      /* wait for 2 ms */
-  lmk_write( 0x1e, 0x02000320, fmc); /* LMK04806__R30 PLL2 P/N Recallibration  */
-  usleep(10000);                      /* wait for 10 ms */
-  if( fmc == 2)
-  {
-	tscext_csr_wr(tsc_fd, ADC_BASE_CSR_B, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
-  }
-  else 
-  {
-	tscext_csr_wr(tsc_fd, ADC_BASE_CSR_A, 0x00000000); /* Release all ADC RESET, alowing to forward the clock referenceto FPGA  */
-  }
-  usleep(10000);                      /* wait for 10 ms */
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : acq1430_init
  * Prototype     : void
  * Parameters    : void
@@ -733,7 +630,7 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
 		      int fmc)
 {
   struct tsc_ioctl_map_win adc_mas_map_usr[5];
-  char *adc_buf1[5], *adc_buf2[5], *p;
+  char *adc_buf1[5], *adc_buf2[5];
   int csr_base[5], idelay, idelay_base;
   int i, n;
   int res[5][2][64];
@@ -750,7 +647,7 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
   {
     if( (chan < 0) || (chan > 4))
     {
-      printf("Bad ADC channel [%d]\n");
+      printf("Bad ADC channel [%d]\n", chan);
       return(-1);
     }
   }
@@ -1048,13 +945,12 @@ tsc_acq1430( struct cli_cmd_para *c)
 
   if( !strncmp( "save", c->para[1], 4))
   {
-    int i, offset, size, data, chan;
+    int i, offset, size, chan;
     char *acq_name;
     FILE *acq_file;
     char *acq_buf;
     int space;
     struct tsc_ioctl_map_win shm_mas_map_win;
-    struct acq1430_calib_res res;
 
     space = MAP_SPACE_SHM;
     if(  c->para[1][4] == '.')
@@ -1629,10 +1525,6 @@ tsc_acq1430( struct cli_cmd_para *c)
   }
   else if( !strncmp( "calidel", c->para[1], 3))
   {
-    int size;
-    int check;
-    int retval;
-
     if( (add->idx < 0) || (add->bus != BUS_SBC))
     {
       printf("wrong device name\n");
@@ -1641,11 +1533,11 @@ tsc_acq1430( struct cli_cmd_para *c)
     }
     if( add->idx == 15)
     {
-      retval = acq1430_calib_idelay( c, -1, fmc);
+      acq1430_calib_idelay( c, -1, fmc);
     }
     else
     {
-      retval = acq1430_calib_idelay( c, add->idx, fmc);
+      acq1430_calib_idelay( c, add->idx, fmc);
     }
     return(0);
   }
@@ -1926,20 +1818,21 @@ tsc_acq1430( struct cli_cmd_para *c)
       strftime( ct, 10, "%d%m%Y", gmtime(&tm));
       printf("current date : %s\n", ct);
 
-      strncpy( &acq1430_sign.board_name[0], " ADC3111", 8);
-      strncpy( &acq1430_sign.serial[0], "0000", 4);
-      strncpy( &acq1430_sign.version[0], "00000001", 8);
-      strncpy( &acq1430_sign.revision[0], "A0", 2);
-      strncpy( &acq1430_sign.test_date[0], ct, 8);
-      strncpy( &acq1430_sign.calib_date[0], ct, 8);
-      strncpy( &acq1430_sign.offset_adc[0][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[1][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[2][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[3][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[4][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[5][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[6][0], "00000000", 8);
-      strncpy( &acq1430_sign.offset_adc[7][0], "00000000", 8);
+      /* rosselliot [2019-10-28]: we are storing individual characters, not NUL-terminated strings, so use memcpy instead of strncpy */
+      memcpy(&acq1430_sign.board_name[0],    " ADC3111", 8);
+      memcpy(&acq1430_sign.serial[0],        "0000",     4);
+      memcpy(&acq1430_sign.version[0],       "00000001", 8);
+      memcpy(&acq1430_sign.revision[0],      "A0",       2);
+      memcpy(&acq1430_sign.test_date[0],     ct,         8);
+      memcpy(&acq1430_sign.calib_date[0],    ct,         8);
+      memcpy(&acq1430_sign.offset_adc[0][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[1][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[2][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[3][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[4][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[5][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[6][0], "00000000", 8);
+      memcpy(&acq1430_sign.offset_adc[7][0], "00000000", 8);
 
       cnt = c->cnt - 3;
       i = 3;
