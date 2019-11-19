@@ -16,7 +16,7 @@ $ source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux
 
 ```
 $ cd /opt/ifc14xx/2.6-4.14/sysroots/ppc64e6500-fsl-linux/lib/modules/4.14.67-ifc14xx/source
-$ sudo bash -c "source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux && modules_prepare"
+$ sudo bash -c "source /opt/ifc14xx/2.6-4.14/environment-setup-ppc64e6500-fsl-linux && make modules_prepare"
   CHK     include/config/kernel.release
   CHK     include/generated/uapi/linux/version.h
   CHK     include/generated/utsrelease.h
@@ -67,7 +67,7 @@ $ ls *.ko
 pon.ko  tsc.ko
 ```
 
-## cct (not working)
+## cct
 
 * Souce the toolchain environment
 ```
