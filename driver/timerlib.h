@@ -45,7 +45,6 @@
  *
  *=============================< end file header >============================*/
 
-
 #ifndef _H_TIMERLIB
 #define _H_TIMERLIB
 int tsc_timer_irq( struct tsc_device *ifc, int src, void *arg);

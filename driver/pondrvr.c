@@ -22,7 +22,7 @@
  *     -> pontsc_mmap()    :
  *
  *----------------------------------------------------------------------------
- *  
+ *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND

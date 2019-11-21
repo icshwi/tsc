@@ -4,6 +4,58 @@
 * Changelog file                         *
 ******************************************
 
+*** Release 1.4.16 | 04.10.2019 ***
+
+- Added support for RTM class D1.4 clocks
+- I2C linux driver bug correction (read data was always zero)
+
+*** Release 1.4.15 | 03.09.2019 ***
+
+- Implemented I2C linux driver for I2C Master Controller inside FPGA 
+
+*** Release 1.4.14 | 27.08.2019 ***
+
+- Added support for GPIO of RDT_1454
+- Improved TOSCA AXI-4 Bridge support
+
+*** Release 1.4.13 | 22.08.2019 ***
+
+- Added TOSCA AXI-4 Bridge basic support
+
+*** Release 1.4.12 | 12.08.2019 ***
+
+- Added RDT_1465 mTCA.4.1 RTM support
+
+*** Release 1.4.11 | 08.08.2019 ***
+
+- Added generic scope support for ADC_3110
+
+*** Release 1.4.10 | 16.07.2019 ***
+
+- Added support for RCC_1466 MTCA.4.1 RTM for IFC_1410
+- Improved 'set device' & 'conf show device' commands
+- Added better support for IFC_1211 2nd End-Point thru PCIe switch
+- Corrected PCI Device ID of Tosca EP  (Device ID is 0x1003)
+- Corrected Makefile to build executable and not only object file
+- Increased the number of last_xxx command history structure to support multiple tsc_central devices.
+- Updated 'conf_show_device' and 'set device' commands in TscMon
+- Added multiple 'tsc_central' devices support (tsc_get_device & set_device)
+- Modified the 'tsc_central' device naming
+- Corrected the mapping of the PCIe resource (resource inside FPGA) 
+- Added a conditional DEFINE_PCI_DEVICE_TABLE macro definition
+- Modified the driver to support multiple 'tsc_central' devices
+- Added an API for user interrupts
+- Added support for ADC_3112 (aka XUSER fast scope)
+
+*** Release 1.4.9 | 18.04.2019 ***
+
+- Added adc3112 library and functions
+- Added fscope adc3112
+- Added IO FPGA - VME P2 test
+- Removed warning during in TscMon files
+- Added Makefile in top-level and src
+- Improved ADC3117 support in TscMon
+
 *** Release 1.4.8 | 23.08.2018 ***
 
 - Modify DDR calibration process

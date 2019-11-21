@@ -14,6 +14,7 @@
  *----------------------------------------------------------------------------
  *  
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
+ *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

@@ -10,25 +10,39 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions define in
- *    pevulib.c
+ *    This file contain the declarations of all exported functions defined in
+ *    adc3112.c
  *
  *----------------------------------------------------------------------------
- *  Copyright Notice
- *  
- *    Copyright and all other rights in this document are reserved by 
- *    IOxOS Technologies SA. This documents contains proprietary information    
- *    and is supplied on express condition that it may not be disclosed, 
- *    reproduced in whole or in part, or used for any other purpose other
- *    than that for which it is supplies, without the written consent of  
- *    IOxOS Technologies SA                                                        
  *
- *----------------------------------------------------------------------------
- *  Change History
- *  
- * $Log: adc3112.h,v $
- * Revision 1.1  2014/06/12 12:23:04  ioxos
- * first checkin [JFG]
+ *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
+ *
+ *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ *    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ *    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ *    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ *    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ *    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ *    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ *    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ *    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ *    SUCH DAMAGE.
+ *
+ *    GPL license :
+ *    This program is free software; you can redistribute it and/or
+ *    modify it under the terms of the GNU General Public License
+ *    as published by the Free Software Foundation; either version 2
+ *    of the License, or (at your option) any later version.
+ *
+ *    This program is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with this program; if not, write to the Free Software
+ *    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  *=============================< end file header >============================*/
 
