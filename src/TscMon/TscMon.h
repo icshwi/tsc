@@ -15,6 +15,7 @@
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
+ *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -79,7 +80,21 @@
 #include "tst.h"
 #include "gscope.h"
 
+
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+
+#define debugPrintf(...) {\
+  do {\
+    printf("[%s:%s %d]", __FILENAME__, __func__, __LINE__);\
+    printf(__VA_ARGS__);\
+    printf("\n");\
+  } while(0);\
+}
+
+
+
 int tsc_print_usage(struct cli_cmd_para *c);
 int tsc_ddr_idel_calib_start(int quiet);
+
 
 #endif /* _H_TSCMON */
