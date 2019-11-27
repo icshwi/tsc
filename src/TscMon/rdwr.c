@@ -89,6 +89,8 @@ extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
 
 extern int tsc_fd;
 
+
+
 char *
 rdwr_rcsid()
 {
@@ -223,7 +225,7 @@ rdwr_init( void)
   }
   else
   {
-    printf("Cannot allocate kernel buffer\n");
+    debugPrintf("Cannot allocate kernel buffer\n");
   }
 
   bzero( (char *)&aiocb, sizeof(struct aiocb) ); // Fill byte block with 0
@@ -687,7 +689,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
   }
   else if( sscanf( c->para[0], "%x", &offset) != 1)
   {
-    printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
@@ -719,7 +721,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
       }
       if( retval < 0)
       {
-        printf("cannot access TSC register %x -> error %d\n", offset, retval);
+        debugPrintf("cannot access TSC register %x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       printf("0x%04x : 0x%08x -> \n", offset, data);
@@ -727,7 +729,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( sscanf( c->para[1], "%x", &data) != 1)
     {
-      printf("Bad data argument [%s] -> usage:\n", c->para[1]);
+      debugPrintf("Bad data argument [%s] -> usage:\n", c->para[1]);
       tsc_print_usage( c);
       return( RDWR_ERR);
     }
@@ -752,7 +754,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( retval < 0)
     {
-      printf("cannot access TSC register %x -> error %d\n", offset, retval);
+      debugPrintf("cannot access TSC register %x -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
     return( RDWR_OK);
@@ -785,7 +787,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     }
     if( retval < 0)
     {
-      printf("cannot access TSC register 0x%x -> error %d\n", offset, retval);
+      debugPrintf("cannot access TSC register 0x%x -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
     next = rdwr_patch_addr( (uint64_t)offset, (void *)&data, cp->m.ads, 0);
@@ -815,7 +817,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
 	data = (int)strtoul( next, &p, 16);
 	if( p == next)
         {
-	  printf("Format error\n");
+	  debugPrintf("Format error\n"); 
 	}
 	else
 	{
@@ -840,7 +842,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
 	  }
           if( retval < 0)
           {
-            printf("cannot access TSC register %x -> error %d\n", offset, retval);
+            debugPrintf("cannot access TSC register %x -> error %d\n", offset, retval);
             return( RDWR_ERR);
           }
 	  offset += ds;
@@ -879,7 +881,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     retval = sscanf( c->para[0], "%x..%x", &start, &end);
     if( !retval)
     {
-      printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+      debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
       tsc_print_usage( c);
       return( RDWR_ERR);
     }
@@ -914,7 +916,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
       retval = tsc_pciep_read(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | offset, &data);
       if( retval < 0)
       {
-        printf("\ncannot access TSC PCI CFG register 0x%x -> error %d\n", offset*4, retval);
+        debugPrintf("\ncannot access TSC PCI CFG register 0x%x -> error %d\n", offset*4, retval);
         return( RDWR_ERR);
       }
       if( !((i*4)&0xf)) printf("\n%08x : ", 4*offset);
@@ -925,7 +927,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
       retval = tsc_pon_read(tsc_fd, offset, &data);
       if( retval < 0)
       {
-        printf("\ncannot access PON register 0x%x -> error %d\n", offset, retval);
+        debugPrintf("\ncannot access PON register 0x%x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       if( !(i&0xf)) printf("\n%08x : ", offset);
@@ -936,7 +938,7 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
       retval = tsc_csr_read(tsc_fd, offset, &data);
       if( retval < 0)
       {
-        printf("\ncannot access TSC register 0x%x -> error %d\n", offset, retval);
+        debugPrintf("\ncannot access TSC register 0x%x -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       if( !(i&0xf)) printf("\n%08x : ", offset);
@@ -1045,13 +1047,13 @@ rdwr_show_buf( uint64_t addr,
         case 2:
 	{
 	  if(swap) printf("%04x ", (ushort)tsc_swap_16( *(short *)&p[j]));
-	  else printf("%04x ", *(ushort *)&p[j]);
+	  else     printf("%04x ", *(ushort *)&p[j]);
 	  break;
 	}
         case 4:
 	{
 	  if(swap) printf("%08x ", (uint)tsc_swap_32( *(int *)&p[j]));
-	  else printf("%08x ", *(uint *)&p[j]);
+	  else     printf("%08x ", *(uint *)&p[j]);
 	  break;
 	}
         case 8:
@@ -1102,7 +1104,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
   cp = rdwr_get_cycle_space( c->cmd);
   if( !cp)
   {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
     goto tsc_rdwr_dx_error;
   }
   len = cp->len;
@@ -1111,7 +1113,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
     len = rdwr_get_cycle_addr(  c->para[0], cp);
     if( len < 0)
     {
-      printf("Bad address argument [%s] -> usage:\n", c->para[0]);
+      debugPrintf("Bad address argument [%s] -> usage:\n", c->para[0]);
       goto tsc_rdwr_dx_error;
     }
     cp->len = len;
@@ -1126,7 +1128,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
   {
     if( !cp->kb_p)
     {
-      printf("kernel buffer not available\n");
+      debugPrintf("kernel buffer not available\n");
       free(buf);
       return( RDWR_ERR);
     }
@@ -1215,7 +1217,7 @@ rdwr_fill_buf( void *buf,
 	  data =  (ushort)cp->data ^ para;
 	}
 	if( cp->m.swap & 0x80) *p++ = tsc_swap_16( data);
-        else *p++ = data;
+        else                   *p++ = data;
 	if( cp->operation == 'r') data =  (ushort)random();
 	if( cp->operation == 's') data =  (ushort)((int)data + (int)cp->para);
 	if( cp->operation == 'w') data =  (ushort)cp->data;
@@ -1242,7 +1244,7 @@ rdwr_fill_buf( void *buf,
 	  data =  (uint)cp->data ^ para;
 	}
 	if( cp->m.swap & 0x80) *p++ = tsc_swap_32( data);
-        else *p++ = data;
+        else                   *p++ = data;
 	if( cp->operation == 'r') data =  (uint)((random()<<24) + random());
 	if( cp->operation == 's') data +=  (uint)cp->para;
 	if( cp->operation == 'w') data =  (uint)cp->data;
@@ -1277,7 +1279,7 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 	if(cnt--){
 		cp = rdwr_get_cycle_space( c->cmd);
 		if( !cp){
-			printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+			debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
 			tsc_print_usage( c);
 			return( RDWR_ERR);
 		}
@@ -1285,13 +1287,13 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 		if( c->cnt){
 			len = rdwr_get_cycle_addr(  c->para[0], cp);
 			if( len < 0){
-				printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+				debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
 				tsc_print_usage( c);
 				return( RDWR_ERR);
 			}
 			if( c->cnt > 1){
 				if( rdwr_get_cycle_data(  c->para[1], cp) < 0){
-					printf("Bad data argument [%s] -> usage:\n", c->para[0]);
+					debugPrintf("Bad data argument [%s] -> usage:\n", c->para[0]);
 					tsc_print_usage( c);
 					return( RDWR_ERR);
 				}
@@ -1311,7 +1313,7 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 			cp->data = (uint64_t)rdwr_fill_buf( buf, blk, cp);
 			if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
 				if( !cp->kb_p){
-					printf("kernel buffer not available\n");
+					debugPrintf("kernel buffer not available\n");
 					return( RDWR_ERR);
 				}
 				tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + addr, buf, (uint)blk);
@@ -1328,7 +1330,7 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 			cp->data = (uint64_t)rdwr_fill_buf( buf, last, cp);
 			if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
 				if( !cp->kb_p){
-					printf("kernel buffer not available\n");
+					debugPrintf("kernel buffer not available\n");
 					return( RDWR_ERR);
 				}
 				tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + addr, buf, (uint)last);
@@ -1342,7 +1344,7 @@ int tsc_rdwr_fx( struct cli_cmd_para *c){
 		return(RDWR_OK);
 	}
 	else {
-	    printf("Not enough arguments -> usage:\n");
+	    debugPrintf("Not enough arguments -> usage:\n");
 	    tsc_print_usage(c);
 		return( RDWR_ERR);
 	}
@@ -1403,7 +1405,7 @@ rdwr_tx_error( void *buf_in,
 	       int ds,
 		   uint64_t base)
 {
-  printf("Data error at address %x \n", idx);
+  debugPrintf("Data error at address %x \n", idx);
   script_exit = 1;
   idx &= 0xffff8;
   switch( ds)
@@ -1514,12 +1516,12 @@ tsc_rdwr_tx( struct cli_cmd_para *c)
   cp = rdwr_get_cycle_space( c->cmd);
   if( !cp)
   {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
     goto tsc_rdwr_tx_error;
   }
   if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF)
   {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
     goto tsc_rdwr_tx_error;
   }
   len = cp->len;
@@ -1528,14 +1530,14 @@ tsc_rdwr_tx( struct cli_cmd_para *c)
     len = rdwr_get_cycle_addr(  c->para[0], cp);
     if( len < 0)
     {
-      printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+      debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
       goto tsc_rdwr_tx_error;
     }
     if( c->cnt > 1)
     {
       if( rdwr_get_cycle_data(  c->para[1], cp) < 0)
       {
-         printf("Bad data argument [%s] -> usage:\n", c->para[0]);
+         debugPrintf("Bad data argument [%s] -> usage:\n", c->para[0]);
 	 goto tsc_rdwr_tx_error;
       }
     }
@@ -1559,7 +1561,7 @@ tsc_rdwr_tx( struct cli_cmd_para *c)
   {
     if( aio_read( &aiocb) < 0)
     {
-      perror("aio_read");
+      perror("tsc_rdwr_tx : aio_read");
       goto xprs_rdwr_tx_exit;
     }
   }
@@ -1634,7 +1636,7 @@ tsc_rdwr_tx_error:
 int 
 tsc_rdwr_px( struct cli_cmd_para *c)
 {
-	uint64_t offset;
+  uint64_t offset;
   int data;
   char buf[8];
   int retval;
@@ -1647,7 +1649,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
   cp = rdwr_get_cycle_space( c->cmd);
   if( !cp)
   {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
     goto tsc_rdwr_px_error;
   }
   rdwr_get_cycle_ds( c->ext, cp);
@@ -1661,7 +1663,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
   {
     if( sscanf( c->para[0], "%lx", &offset) != 1)
     {
-      printf("Bad address argument [%s] -> usage:\n", c->para[0]);
+      debugPrintf("Bad address argument [%s] -> usage:\n", c->para[0]);
       goto tsc_rdwr_px_error;
     }
     cp->addr = (uint64_t)offset;
@@ -1675,7 +1677,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       {
         if( !cp->kb_p)
         {
-          printf("kernel buffer not available\n");
+          debugPrintf("kernel buffer not available\n");
           return( RDWR_ERR);
         }
 	retval =  tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
@@ -1686,7 +1688,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       }
       if( retval < 0)
       {
-        printf("cannot access TSC resoource at offfset %lx -> error %d\n", offset, retval);
+        debugPrintf("cannot access TSC resource at offset %lx -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       switch( ds)
@@ -1731,7 +1733,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
     {
       if( sscanf( c->para[1], "%x", &data) != 1)
       {
-        printf("Bad data argument [%s] -> usage:\n", c->para[1]);
+        debugPrintf("Bad data argument [%s] -> usage:\n", c->para[1]);
         goto tsc_rdwr_px_error;
       }
       if( ds == RDWR_SIZE_BYTE)  *(char *)buf = (char)data;
@@ -1761,7 +1763,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       {
         if( !cp->kb_p)
         {
-          printf("kernel buffer not available\n");
+          debugPrintf("kernel buffer not available\n");
           return( RDWR_ERR);
         }
  	retval =  tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
@@ -1772,7 +1774,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
       }
       if( retval < 0)
       {
-        printf("cannot access TSC register %lx -> error %d\n", offset, retval);
+        debugPrintf("cannot access TSC register %lx -> error %d\n", offset, retval);
         return( RDWR_ERR);
       }
       return( RDWR_OK);
@@ -1785,7 +1787,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
     {
       if( !cp->kb_p)
       {
-        printf("kernel buffer not available\n");
+        debugPrintf("kernel buffer not available\n");
         return( RDWR_ERR);
       }
       retval =  tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
@@ -1796,7 +1798,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
     }
     if( retval < 0)
     {
-      printf("cannot access TSC register 0x%lx -> error %d\n", offset, retval);
+      debugPrintf("cannot access TSC register 0x%lx -> error %d\n", offset, retval);
       return( RDWR_ERR);
     }
     next = rdwr_patch_addr( offset, (void *)buf, cp->m.ads, cp->m.swap);
@@ -1826,7 +1828,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	data = (int)strtoul( next, &p, 16);
 	if( p == next)
         {
-	  printf("Format error\n");
+	  debugPrintf("Format error\n");
 	}
 	else
 	{
@@ -1857,7 +1859,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
           {
             if( !cp->kb_p)
             {
-              printf("kernel buffer not available\n");
+              debugPrintf("kernel buffer not available\n");
               return( RDWR_ERR);
             }
 	    retval =  tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
@@ -1868,7 +1870,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
           }
           if( retval < 0)
           {
-            printf("cannot access TSC register %lx -> error %d\n", offset, retval);
+            debugPrintf("cannot access TSC register %lx -> error %d\n", offset, retval);
             return( RDWR_ERR);
           }
 	  offset += (uint64_t)ds;
@@ -1905,25 +1907,25 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
 
   if( c->cnt < 3)
   {
-    printf("Not enough arguments -> usage:\n");
+    debugPrintf("Not enough arguments -> usage:\n");
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   if( sscanf( c->para[0],"%x", &offset) != 1)
   {
-    printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   if( sscanf( c->para[1],"%x", &cmp) != 1)
   {
-    printf("Bad data compare argument [%s] -> usage:\n", c->para[1]);
+    debugPrintf("Bad data compare argument [%s] -> usage:\n", c->para[1]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   if( sscanf( c->para[2],"%x", &mask) != 1)
   {
-    printf("Bad mask argument [%s] -> usage:\n", c->para[2]);
+    debugPrintf("Bad mask argument [%s] -> usage:\n", c->para[2]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
@@ -1939,7 +1941,7 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
   }
   if( retval < 0)
   {
-    printf("Cannot access register %x\n", offset);
+    debugPrintf("Cannot access register %x\n", offset);
     script_exit = 1;
     return(RDWR_ERR);
   }
@@ -1974,32 +1976,32 @@ tsc_rdwr_cx( struct cli_cmd_para *c)
 
   if( c->cnt < 3)
   {
-    printf("Not enough arguments -> usage:\n");
+    debugPrintf("Not enough arguments -> usage:\n");
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   if( sscanf( c->para[0],"%x", &addr) != 1)
   {
-    printf("Bad addr argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad addr argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   if( sscanf( c->para[1],"%x", &cmp) != 1)
   {
-    printf("Bad data compare argument [%s] -> usage:\n", c->para[1]);
+    debugPrintf("Bad data compare argument [%s] -> usage:\n", c->para[1]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   if( sscanf( c->para[2],"%x", &mask) != 1)
   {
-    printf("Bad mask argument [%s] -> usage:\n", c->para[2]);
+    debugPrintf("Bad mask argument [%s] -> usage:\n", c->para[2]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
   cp = rdwr_get_cycle_space( c->cmd);
   if( !cp)
   {
-    printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+    debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
     tsc_print_usage( c);
     return( RDWR_ERR);
   }
@@ -2010,7 +2012,7 @@ tsc_rdwr_cx( struct cli_cmd_para *c)
   retval =  tsc_read_sgl(tsc_fd, (uint64_t)addr, buf, cp->mode);
   if( retval < 0)
   {
-    printf("Cannot access address %x\n", addr);
+    debugPrintf("Cannot access address %x\n", addr);
     script_exit = 1;
     return(RDWR_ERR);
   }
@@ -2062,27 +2064,27 @@ int tsc_rdwr_cmp( struct cli_cmd_para *c){
 	retval = RDWR_ERR;
 
 	if( c->cnt < 3){
-		printf("Not enough arguments -> usage:\n");
+		debugPrintf("Not enough arguments -> usage:\n");
 		tsc_print_usage( c);
 		return( retval);
 	}
 	if( sscanf( c->para[0],"%x:%c%d", &off1, &sp1, &idx1) < 2){
-		printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+		debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
 		tsc_print_usage( c);
 		return( retval);
 	}
 	if( sscanf( c->para[1],"%x:%c%d", &off2, &sp2, &idx2) < 2){
-		printf("Bad offset argument [%s] -> usage:\n", c->para[0]);
+		debugPrintf("Bad offset argument [%s] -> usage:\n", c->para[0]);
 		tsc_print_usage( c);
 		return( retval);
 	}
 	if( sscanf( c->para[2],"%x", &len) < 1){
-		printf("Bad length argument [%s] -> usage:\n", c->para[0]);
+		debugPrintf("Bad length argument [%s] -> usage:\n", c->para[0]);
 		tsc_print_usage( c);
 		return( retval);
 	}
 	else if (!((len % 4)  == 0)){
-		printf("Bad length argument [%s] -> usage:\n", c->para[0]);
+		debugPrintf("Bad length argument [%s] -> usage:\n", c->para[0]);
 		tsc_print_usage( c);
 		return( retval);
 	}
@@ -2093,12 +2095,12 @@ int tsc_rdwr_cmp( struct cli_cmd_para *c){
 	bzero(buf1, len);
 	buf2 = NULL;
 	if( !buf1){
-		printf("Cannot allocate memory\n");
+		debugPrintf("Cannot allocate memory\n");
 		return( retval);
 	}
 	if( (sp1 == 's') || (sp1 == 'u')){
 		if( (idx1 < 1) || (idx1 > 2)){
-			printf("Bad space identifier: %c%d\n", sp1, idx1);
+			debugPrintf("Bad space identifier : %c%d\n", sp1, idx1);
 			goto tsc_rdwr_cmp_err;
 		}
 		if (CheckByteOrder()) { // PPC Big Endian
@@ -2117,29 +2119,29 @@ int tsc_rdwr_cmp( struct cli_cmd_para *c){
 	}
 	else if( sp1 == 'k'){
 		if( (idx1 < 0) || (idx1 >= TSC_NUM_KBUF)){
-			printf("Bad kernel buffer index %d\n", idx1);
+			debugPrintf("Bad kernel buffer index %d\n", idx1);
 			goto tsc_rdwr_cmp_err;
 		}
 		if( !last_kbuf_cycle[idx1].kb_p){
-			printf("Kernel buffer #%d not allocated\n", idx1);
+			debugPrintf("Kernel buffer #%d not allocated\n", idx1);
 			goto tsc_rdwr_cmp_err;
 		}
 		tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx1].kb_p->k_base + off1, buf1, len);
 	}
 	else{
-		printf("Bad space identifier: %c%d\n", sp1, idx1);
+		debugPrintf("Bad space identifier: %c%d\n", sp1, idx1);
 		goto tsc_rdwr_cmp_err;
 	}
 	mode2 = 0;
 	buf2 = (char *)malloc( len);
 	bzero(buf2, len);
 	if( !buf2){
-		printf("Cannot allocate memory\n");
+		debugPrintf("Cannot allocate memory\n");
 		return( retval);
 	}
 	if( (sp2 == 's') || (sp2 == 'u')){
 		if( (idx2 < 1) || (idx2 > 2)){
-			printf("Bad space identifier: %c%d\n", sp2, idx2);
+			debugPrintf("Bad space identifier: %c%d\n", sp2, idx2);
 			goto tsc_rdwr_cmp_err;
 		}
 		if (CheckByteOrder()) { // PPC Big Endian
@@ -2158,17 +2160,17 @@ int tsc_rdwr_cmp( struct cli_cmd_para *c){
 	}
 	else if( sp2 == 'k'){
 		if( (idx2 < 0) || (idx2 >= TSC_NUM_KBUF)){
-			printf("Bad kernel buffer index %d\n", idx2);
+			debugPrintf("Bad kernel buffer index %d\n", idx2);
 			goto tsc_rdwr_cmp_err;
 		}
 		if( !last_kbuf_cycle[idx2].kb_p){
-			printf("Kernel buffer #%d not allocated\n", idx2);
+			debugPrintf("Kernel buffer #%d not allocated\n", idx2);
 			goto tsc_rdwr_cmp_err;
 		}
 		tsc_kbuf_read(tsc_fd, last_kbuf_cycle[idx2].kb_p->k_base + off2, buf2, len);
 	}
 	else{
-		printf("Bad space identifier: %c%d\n", sp2, idx2);
+		debugPrintf("Bad space identifier: %c%d\n", sp2, idx2);
 		goto tsc_rdwr_cmp_err;
 	}
 	offset = rdwr_cmp_buf( buf1, buf2, len, -1);
@@ -2211,12 +2213,12 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 	if(cnt--) {
 		cp = rdwr_get_cycle_space( c->cmd);
 		if( !cp){
-			printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+			debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
 			tsc_print_usage( c);
 			return( RDWR_ERR);
 		}
 		if( (cp->m.space & RDWR_SPACE_MASK) == RDWR_SPACE_KBUF){
-			printf("Bad space argument [%s] -> usage:\n", c->para[0]);
+			debugPrintf("Bad space argument [%s] -> usage:\n", c->para[0]);
 			tsc_print_usage( c);
 			return( RDWR_ERR);
 		}
@@ -2225,7 +2227,7 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 		}
 		else {
 			if( sscanf( c->para[0], "%lx", &offset) != 1){
-				printf("Bad address argument [%s] -> usage:\n", c->para[0]);
+				debugPrintf("Bad address argument [%s] -> usage:\n", c->para[0]);
 				tsc_print_usage( c);
 				return( RDWR_ERR);
 			}
@@ -2234,7 +2236,7 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 		rdwr = 0;
 		if( c->cnt > 1){
 			if( sscanf( c->para[1], "%lx", &data) != 1){
-				printf("Bad data argument [%s] -> usage:\n", c->para[1]);
+				debugPrintf("Bad data argument [%s] -> usage:\n", c->para[1]);
 				tsc_print_usage( c);
 				return( RDWR_ERR);
 			}
@@ -2248,7 +2250,7 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 		ds = RDWR_MODE_GET_DS(cp->m.ads);
 		if( aio_error( &aiocb) != EINPROGRESS){
 			if( aio_read( &aiocb) < 0){
-				perror("aio_read");
+				perror("tsc_rdrw_lx : aio_read");
 				return(RDWR_OK);
 			}
 		}
@@ -2293,7 +2295,7 @@ int tsc_rdwr_lx( struct cli_cmd_para *c){
 			aio_cancel( aiocb.aio_fildes, &aiocb);
 		}
 	}
-    printf("Not enough arguments -> usage:\n");
+    debugPrintf("Not enough arguments -> usage:\n");
     tsc_print_usage(c);
     return( RDWR_ERR);
 }
