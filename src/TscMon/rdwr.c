@@ -1059,7 +1059,7 @@ rdwr_show_buf( uint64_t addr,
         case 8:
 	{
 	  if(swap) printf("%016lx ", (uint64_t)tsc_swap_64( *(uint64_t *)&p[j]));
-	  printf("%016lx ", *(uint64_t *)&p[j]);
+	  else     printf("%016lx ", *(uint64_t *)&p[j]);
 	  break;
 	}
       }
