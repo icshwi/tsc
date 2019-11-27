@@ -17,8 +17,8 @@
 # 
 # Author  : Jeong Han Lee
 # email   : jeonghan.lee@gmail.com
-# Date    : Thursday, October 17 20:53:12 CEST 2019
-# version : 0.0.1
+# Date    : Wednesday, November 27 12:01:40 CET 2019
+# version : 0.0.2
 #
 
 TOP:=$(CURDIR)
@@ -62,7 +62,7 @@ TSCTST_OBJS :=$(addsuffix .o,$(basename $(TSCTST_SRCS)))
 TSBLIB:= libtsc.so
 ADCLIB:= libadc.so
 
-CFLAGS := -Wall
+CFLAGS := -Wall -fstack-protector-strong
 LDFLAGS :=-Wall -lrt -lm
 
 BINS := TscMon SmemCalibration 
