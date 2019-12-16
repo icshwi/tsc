@@ -88,6 +88,8 @@
 #define ADC3110_I2C_EEPROM    0x01010051
 #define ADC3110_I2C_THERMO    0x01040048
 
+#define ADC3110_SIGN_1 0x1200
+#define ADC3110_SIGN_2 0x1300
 
 #define adc3110_spi_ads01_read(fd, fmc, reg)             adc3110_spi_read(fd, fmc, ADC3110_SPI_ADS01, reg) 
 #define adc3110_spi_ads01_write(fd, fmc, reg, data)      adc3110_spi_write(fd, fmc, ADC3110_SPI_ADS01, reg, data) 
