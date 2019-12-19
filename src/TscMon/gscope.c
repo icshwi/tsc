@@ -687,12 +687,13 @@ int tsc_gscope_fwinfo(struct cli_cmd_para *c)
     }
 
 tsc_gscope_fwinfo_usage:
-    printf("usage: gscope fwinfo <reg> [<slot>]\n");
+    printf("usage: gscope fwinfo <reg> [<n>]\n");
     printf("       where reg = \n");
-    printf("           tosca      -> Short-hash from toasca2b git repository\n");
-    printf("           xapp       -> Short-hash from xuser_scope_generic git repository\n");
-    printf("           fmc <slot> -> Short-hash from the adc_311<x>_fdk git repository\n");
-    printf("           all        -> all of the above\n");
+    printf("           tosca   =  short-hash from toasca2b git repository\n");
+    printf("           xapp    =  short-hash from xuser_scope_generic git repository\n");
+    printf("           fmc <n> =  short-hash from the adc_311<x>_fdk git repository\n");
+    printf("                      for fmc identifier <n-{1,2}>\n");
+    printf("           all     =  all of the above\n");
     return(-1);
 }
 

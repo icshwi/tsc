@@ -531,12 +531,13 @@ char *gscope_msg[]   =
   "                     %d = date",
   "                     %t = time",
   "         <size>     = size of the file",
-  "gscope fwinfo.<reg> <slot>",
+  "gscope fwinfo <reg> [<n>]",
   "         <reg> = tosca,xapp,fmc,all",
-  "             tosca      -> Short-hash from toasca2b git repository",
-  "             xapp       -> Short-hash from xuser_scope_generic git repository",
-  "             fmc <slot> -> Short-hash from the adc_311<x>_fdk git repository",
-  "             all        -> all of the above",
+  "         parameters: tosca   = short-hash from toasca2b git repository",
+  "                     xapp    = short-hash from xuser_scope_generic git repository",
+  "                     fmc <n> = short-hash from the adc_311<x>_fdk git repository",
+  "                               for fmc indentifier <n={1,2}>",
+  "                     all     = all of the above",
 0};
 
 char *help_msg[]   = 
