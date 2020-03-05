@@ -480,6 +480,7 @@ static const int TSC_CSR_IDMA2_DCNT[4] = { TSC_CSR_IDMA2_RD_0_DCNT, TSC_CSR_IDMA
 #define TSC_PCIE_MMUDAT_DES_USR             (3<<12)  /* destination User Block            */
 #define TSC_PCIE_MMUDAT_DES_USR1            (4<<12)  /* destination User Block 1          */
 #define TSC_PCIE_MMUDAT_DES_USR2            (5<<12)  /* destination User Block 2          */
+#define TSC_PCIE_MMUDAT_DES_AXI4            (6<<12)  /* destination AXI-4 Bridge          */
 
 #define TSC_PCIE_MMUDAT_DES_MASK          (0xf<<12)  /* destination Mask                  */
 
@@ -932,14 +933,18 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
 #define TSC_IDMA_DES0_SHM_SWAP_DW        (2<<28)  /* Double word swapping          */
 #define TSC_IDMA_DES0_SHM_SWAP_QW        (3<<28)  /* Quad word swapping            */
 
-#define TSC_IDMA_DES1_WC_MASK       (0xfffffc<<0)  /* word count mask               */
-#define TSC_IDMA_DES1_DES_PCIe            (0<<24)  /* remote space is PCIe          */
-#define TSC_IDMA_DES1_DES_SHM2            (2<<24)  /* remote space is SHM #2        */
-#define TSC_IDMA_DES1_DES_USER            (3<<24)  /* remote space is USER          */
-#define TSC_IDMA_DES1_AS_CRCSR            (0<<28)  /* remote mode configuration */
-#define TSC_IDMA_DES1_AS_USER             (7<<28)  /* remote mode USER          */
-#define TSC_IDMA_DES1_AS_IACK            (15<<28)  /* remote mode IACK          */
-#define TSC_IDMA_DES1_AS_MASK           (0xf<<28)  /* remote mode IACK          */
+#define TSC_IDMA_DES1_WC_MASK     (0xfffffc<<0)  /* word count mask               */
+#define TSC_IDMA_DES1_DES_PCIe          (0<<24)  /* remote space is PCIe #0       */
+#define TSC_IDMA_DES1_DES_PCIe1         (1<<24)  /* remote space is PCIe #1       */
+#define TSC_IDMA_DES1_DES_SHM1          (2<<24)  /* remote space is SHM #1        */
+#define TSC_IDMA_DES1_DES_SHM2          (3<<24)  /* remote space is SHM #2        */
+#define TSC_IDMA_DES1_DES_USR1          (4<<24)  /* remote space is USER #1       */
+#define TSC_IDMA_DES1_DES_USR2          (5<<24)  /* remote space is USER #2       */
+#define TSC_IDMA_DES1_DES_AXI4          (6<<24)  /* remote space is AXI-4         */
+#define TSC_IDMA_DES1_AS_CRCSR          (0<<28)  /* remote mode configuration */
+#define TSC_IDMA_DES1_AS_USER           (7<<28)  /* remote mode USER          */
+#define TSC_IDMA_DES1_AS_IACK          (15<<28)  /* remote mode IACK          */
+#define TSC_IDMA_DES1_AS_MASK         (0xf<<28)  /* remote mode IACK          */
 
 #define TSC_IDMA_DES2_BURST_2k             (0<<0)  /* burst size 2 KBytes           */
 #define TSC_IDMA_DES2_BURST_1k             (1<<0)  /* burst size 1 KBytes           */

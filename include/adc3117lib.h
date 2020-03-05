@@ -1,21 +1,19 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : rcc1466lib.h
- *    author   : XP, RH
+ *    filename : fscope3117lib.h
+ *    author   : JFG, XP
  *    company  : IOxOS
- *    creation : July 15,2019
+ *    creation : october 18,2018
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions define in
- *    rcc1466lib.c
+ *    That library contains a set of function to access the ADC3117 FMC
  *
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
- *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -46,61 +44,36 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_RCC1466LIB
-#define _H_RCC1466LIB
+#define IFC1211
 
-typedef enum {
-	RCC1466_EXT_PIN_LOW,
-	RCC1466_EXT_PIN_HIGH,
-	RCC1466_EXT_PIN_Z
-	} rcc1466_ext_pin_state_t;
+#define ADC3117_FMC1               1
+#define ADC3117_FMC2               2
+#define ADC3117_FMC_NUM            2
+#define ADC3117_CHAN_NUM          20
+#define ADC3117_CHAN_GROUP         4
 
-typedef enum {
-	RCC1466_LED123_GREEN,	// 0
-	RCC1466_LED123_RED,		// 1
-	RCC1466_LED124_GREEN,	// 2
-	RCC1466_LED124_RED,		// 3
-	RCC1466_LED125_GREEN,	// 4
-	RCC1466_LED125_RED,		// 5
-	RCC1466_LED126_GREEN,	// 6
-	RCC1466_LED126_RED,		// 7
-	} rcc1466_led_t;
+#define ADC3117_CSR_BASE   0x00001000
+#define ADC3117_CSR_OFF_FMC2    0x100
+#define ADC3117_CSR_SIGN         0x80
+#define ADC3117_CSR_CTL          0x81
+#define ADC3117_CSR_LED          0x82
+#define ADC3117_CSR_SERIAL       0x83
+#define ADC3117_CSR_GPIO         0x85
+#define ADC3117_CSR_DISC         0x86
+#define ADC3117_CSR_FMC          0x87
+#define ADC3117_CSR_ADDR( csr)   (ADC3117_CSR_BASE | (csr<<2))
 
-typedef enum {
-	RCC1466_SFP_FPGA_LANE_0,
-	RCC1466_SFP_FPGA_LANE_1,
-	RCC1466_SFP_FPGA_LANE_2,
-	RCC1466_SFP_FPGA_LANE_3,
-	RCC1466_SFP_CPU_SGMII
-	} rcc1466_sfp_id_t;
+#define ADC3117_SIGN_ID    0x31170000
+#define ADC3117_SIGN_MASK  0xffff0000
 
-typedef enum {
-	SFP_PRESENT        = 0x08,
-	SFP_TX_FAULT       = 0x10,
-	SFP_LOSS_OF_SIGNAL = 0x20
-	} rcc1466_sfp_status_t;
 
-typedef enum {
-	SFP_TX_DISABLE     = 0x01,
-	SFP_RX_HIGH_RATE   = 0x02,
-	SFP_TX_HIGH_RATE   = 0x04
-	} rcc1466_sfp_control_t;
+#define adc3117_csr_rd(fd, fmc, csr)                 adc_csr_rd(fd, fmc, csr)
+#define adc3117_csr_wr(fd, fmc, csr, data)           adc_csr_rd(fd, fmc, csr, data)
+#define adc3117_identify(fd, fmc)                     adc_identify(fd, fmc)
+#define adc3117_spi_read(fd, fmc, cmd, reg)          adc_spi_read(fd, fmc, cmd, reg)
+#define adc3117_spi_write(fd, fmc, cmd, reg, data)   adc_spi_write(fd, fmc, cmd, reg, data)
+#define adc3117_i2c_read(fd, fmc, dev, reg)          adc_i2c_read(fd, fmc, cmd, reg)
+#define adc3117_i2c_write(fd, fmc, dev, reg, data)   adc_i2c_write(fd, fmc, cmd, reg, data)
 
-typedef enum {
-	RCC1466_I2C_SFP5      = 0x01,
-	RCC1466_I2C_SFP1      = 0x08,
-	RCC1466_I2C_SFP2      = 0x10,
-	RCC1466_I2C_SFP3      = 0x20,
-	RCC1466_I2C_SFP4      = 0x40,
-	RCC1466_I2C_MEZZANINE = 0x80
-	} rcc1466_i2c_channel_t;
-
-int rcc1466_init(int fd);
-int rcc1466_presence(int fd);
-int rcc1466_extension_presence(int fd, int *present);
-int rcc1466_led_turn_on(int fd, rcc1466_led_t led_id);
-int rcc1466_led_turn_off(int fd, rcc1466_led_t led_id);
-int rcc1466_sfp_status(int fd, rcc1466_sfp_id_t id, uint8_t *status);
-int rcc1466_sfp_control(int fd, rcc1466_sfp_id_t id, int sfp_enable, int sfp_rate);
-int rcc1466_select_i2c_channel(int fd, rcc1466_i2c_channel_t channel);
-#endif /*  _H_RCC1466LIB */
+int adc3117_set_verbose( int vf);
+    

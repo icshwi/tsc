@@ -34,8 +34,8 @@ CFLAGS	:= -MMD -MP -Wall $(INC)
 
 CFILES	:= TscMon.c script.c rdwr.c conf.c map.c mbox.c amc.c rtm.c dma.c 
 CFILES	+= timer.c sflash.c buf.c tst.c semaphore.c fifo.c lmk.c 
-CFILES	+= ddr.c i2c.c adc3110.c adc3117.c adc3112.c acq1430.c alias.c 
-CFILES	+= tdma.c rsp1461.c rdt1465.c rcc1466.c gscope.c
+CFILES	+= ddr.c i2c.c adc3110.c adc3117.c adc3112.c adc3210.c acq1430.c alias.c 
+CFILES	+= tdma.c fbi1482.c rcf1450.c rsp1461.c rdt1465.c rcc1466.c gscope.c
 
 OFILES	:= $(CFILES:.c=.o)
 

@@ -122,14 +122,17 @@
 #define ADC3110_ADS_MODE_RAND      0x00a
 #define ADC3110_ADS_MODE_SINE      0x00b
 
+#define adc3110_csr_rd(fd, fmc, csr)                 adc_csr_rd(fd, fmc, csr)
+#define adc3110_csr_wr(fd, fmc, csr, data)           adc_csr_wr(fd, fmc, csr, data)
+#define adc3110_identify(fd, fmc)                    adc_identify(fd, fmc)
+#define adc3110_spi_read(fd, fmc, cmd, reg)          adc_spi_read(fd, fmc, cmd, reg)
+#define adc3110_spi_write(fd, fmc, cmd, reg, data)   adc_spi_write(fd, fmc, cmd, reg, data)
+#define adc3110_i2c_read(fd, fmc, dev, reg)          adc_i2c_read(fd, fmc, cmd, reg)
+#define adc3110_i2c_write(fd, fmc, dev, reg, data)   adc_i2c_write(fd, fmc, cmd, reg, data)
 
 int adc3110_set_verbose(int vf);
 int adc3110_identify(int fd, int fmc);
 void adc3110_reset(int fd, int fmc);
-int adc3110_spi_read(int fd, int fmc, int cmd, int reg);
-int adc3110_spi_write(int fd, int fmc, int cmd, int reg, int data);
-uint adc3110_i2c_read(int fd, int fmc, uint cmd, uint reg);
-int adc3110_i2c_write(int fd, int fmc, uint cmd, uint reg, uint data);
 void adc3110_lmk_init(int fd, int fmc, int reg[]);
 void adc3110_lmk_dump(int fd, int fmc);
 void adc3110_ads42lb69_init(int fd, int fmc, int chan_set); 

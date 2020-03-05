@@ -1,21 +1,20 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : rcc1466lib.h
- *    author   : XP, RH
+ *    filename : rcf1450lib.h
+ *    author   : RH
  *    company  : IOxOS
- *    creation : July 15,2019
+ *    creation : December 11,2019
  *
  *----------------------------------------------------------------------------
  *  Description
  *
  *    This file contain the declarations of all exported functions define in
- *    rcc1466lib.c
+ *    rcf1450lib.c
  *
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
- *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -46,61 +45,15 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_RCC1466LIB
-#define _H_RCC1466LIB
+#ifndef _H_RCF1450LIB
+#define _H_RCF1450LIB
 
-typedef enum {
-	RCC1466_EXT_PIN_LOW,
-	RCC1466_EXT_PIN_HIGH,
-	RCC1466_EXT_PIN_Z
-	} rcc1466_ext_pin_state_t;
+#include "../include/fbi1482lib.h"
 
-typedef enum {
-	RCC1466_LED123_GREEN,	// 0
-	RCC1466_LED123_RED,		// 1
-	RCC1466_LED124_GREEN,	// 2
-	RCC1466_LED124_RED,		// 3
-	RCC1466_LED125_GREEN,	// 4
-	RCC1466_LED125_RED,		// 5
-	RCC1466_LED126_GREEN,	// 6
-	RCC1466_LED126_RED,		// 7
-	} rcc1466_led_t;
-
-typedef enum {
-	RCC1466_SFP_FPGA_LANE_0,
-	RCC1466_SFP_FPGA_LANE_1,
-	RCC1466_SFP_FPGA_LANE_2,
-	RCC1466_SFP_FPGA_LANE_3,
-	RCC1466_SFP_CPU_SGMII
-	} rcc1466_sfp_id_t;
-
-typedef enum {
-	SFP_PRESENT        = 0x08,
-	SFP_TX_FAULT       = 0x10,
-	SFP_LOSS_OF_SIGNAL = 0x20
-	} rcc1466_sfp_status_t;
-
-typedef enum {
-	SFP_TX_DISABLE     = 0x01,
-	SFP_RX_HIGH_RATE   = 0x02,
-	SFP_TX_HIGH_RATE   = 0x04
-	} rcc1466_sfp_control_t;
-
-typedef enum {
-	RCC1466_I2C_SFP5      = 0x01,
-	RCC1466_I2C_SFP1      = 0x08,
-	RCC1466_I2C_SFP2      = 0x10,
-	RCC1466_I2C_SFP3      = 0x20,
-	RCC1466_I2C_SFP4      = 0x40,
-	RCC1466_I2C_MEZZANINE = 0x80
-	} rcc1466_i2c_channel_t;
-
-int rcc1466_init(int fd);
-int rcc1466_presence(int fd);
-int rcc1466_extension_presence(int fd, int *present);
-int rcc1466_led_turn_on(int fd, rcc1466_led_t led_id);
-int rcc1466_led_turn_off(int fd, rcc1466_led_t led_id);
-int rcc1466_sfp_status(int fd, rcc1466_sfp_id_t id, uint8_t *status);
-int rcc1466_sfp_control(int fd, rcc1466_sfp_id_t id, int sfp_enable, int sfp_rate);
-int rcc1466_select_i2c_channel(int fd, rcc1466_i2c_channel_t channel);
-#endif /*  _H_RCC1466LIB */
+int rcf1450_presence(int fd);
+int rcf1450_init(int fd);
+int rcf1450_get_uid(int fd, unsigned char *uid);
+int rcf1450_get_temp(int fd, int *temp);
+int rcf1450_rs485_set_indicator(int fd, fbi1482_rs485_indicator_t indicator, int state);
+int rcf1450_rs485_txen(int fd, fbi1482_rs485_txen_t channel, int state);
+#endif /*  _H_RCF1450LIB */

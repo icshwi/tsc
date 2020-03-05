@@ -54,8 +54,10 @@
 int CheckByteOrder(void);
 int tsc_read_loop(int fd, uint64_t rem_addr, char *buf, int len, uint mode);
 int tsc_write_loop(int fd, uint64_t rem_addr, char *buf, int len, uint mode);
+int set_device(int device);
 int tsc_init(uint32_t card);
 int tsc_exit(int fd);
+int tsc_get_device(void);
 char *tsc_get_lib_version( void);
 char *tsc_get_drv_version( void);
 char *tsc_get_drv_name( void);

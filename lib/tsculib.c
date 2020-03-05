@@ -69,7 +69,6 @@ static unsigned short tsc_device_id;
 static int  tsc_has_axi = -1;
 static int  tsc_axi_cap = 0;
 
-
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : CheckByteOrder
  * Prototype     : int
@@ -251,6 +250,48 @@ tsc_get_device_id()
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_device_init
+ * Prototype     : int
+ * Parameters    : none
+ * Return        : 1 = success,  0 < error
+ *----------------------------------------------------------------------------
+ * Description   : Initialize device specific internal variables
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+/* prototype definition, as function declared further down in file */
+int tsc_csr_read(int, int, int *); 
+
+static int tsc_device_init(int fd)
+{
+  int tmp, ret;
+
+  /* retrieve Vendor_ID & Device_ID of current selected device */
+  ioctl(fd, TSC_IOCTL_ID_VENDOR, &tsc_vendor_id);
+  ioctl(fd, TSC_IOCTL_ID_DEVICE, &tsc_device_id);
+  
+  /* verify present of AXI-4 Bridge */
+  tsc_has_axi = 0;
+ 
+  /* read AXI-4 Bridge Signature */
+  ret = tsc_csr_read(fd, TSC_CSR_AXI4_SIGN, &tmp);
+  if (ret < 0) return ret;
+   
+  /* check AXI-4 Bridge Signature */
+  if (((tmp >> 16) & 0xFFFF) == TSC_AXI4_SIGN)
+  {
+    /* read AXI-4 Bridge configuration */
+    ret = tsc_csr_read(fd, TSC_CSR_AXI4_CFG, &tsc_axi_cap);
+    printf("AXI-4 Bridge Configuration ret: %d, %8x\n", ret, tsc_axi_cap);
+    if (ret < 0) return ret;
+  
+    tsc_has_axi = 1;
+    printf("AXI-4 bridge detected...\n");
+  }
+  return 1;
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_init
  * Prototype     : int
  * Parameters    : none
@@ -276,6 +317,9 @@ tsc_init(uint32_t card)
     ioctl(fd, TSC_IOCTL_ID_VENDOR, &tsc_vendor_id);
     ioctl(fd, TSC_IOCTL_ID_DEVICE, &tsc_device_id);
   }
+
+ printf("Initializing the device...\n");   
+ tsc_device_init(fd);
 
   return(fd);
 }
@@ -536,7 +580,7 @@ int tsc_axil_write(int fd, int addr, int wstrb, int prot, int *data_p)
   
   /* AXI-4 Lite Master disabled -> exit */
   if ((tsc_axi_cap & TSC_AXI4_CFG_AXIL_MASTER) == 0)  return -1;
-  
+ 
   tmp = (TSC_AXIL_ADD_ADDR(addr) | TSC_AXIL_ADD_PROT(prot));
   ret = tsc_csr_write(fd, TSC_CSR_AXIL_ADD, &tmp);
   if (ret < 0) return ret;
