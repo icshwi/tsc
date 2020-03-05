@@ -1,21 +1,20 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : rcc1466lib.h
- *    author   : XP, RH
+ *    filename : adc3117lib.c
+ *    author   : JFG, XP
  *    company  : IOxOS
- *    creation : July 15,2019
+ *    creation : october 18,2018
  *
  *----------------------------------------------------------------------------
  *  Description
  *
- *    This file contain the declarations of all exported functions define in
- *    rcc1466lib.c
+ *    That library contains a set of function to access the TOSCA II XUSER
+ *    FASTSCOPE ADC3117 data acquisition logic.
  *
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
- *  Copyright (C) 2019  European Spallation Source ERIC
  *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -46,61 +45,62 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_RCC1466LIB
-#define _H_RCC1466LIB
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <tsculib.h>
+#include <tscextlib.h>
+#include <adclib.h>
+#include <adc3117lib.h>
 
-typedef enum {
-	RCC1466_EXT_PIN_LOW,
-	RCC1466_EXT_PIN_HIGH,
-	RCC1466_EXT_PIN_Z
-	} rcc1466_ext_pin_state_t;
+int adc3117_verbose_flag = 0;
 
-typedef enum {
-	RCC1466_LED123_GREEN,	// 0
-	RCC1466_LED123_RED,		// 1
-	RCC1466_LED124_GREEN,	// 2
-	RCC1466_LED124_RED,		// 3
-	RCC1466_LED125_GREEN,	// 4
-	RCC1466_LED125_RED,		// 5
-	RCC1466_LED126_GREEN,	// 6
-	RCC1466_LED126_RED,		// 7
-	} rcc1466_led_t;
+int adc3117_set_verbose(int vf)
+{
+  adc3117_verbose_flag = vf;
+  return(adc3117_verbose_flag);
+}
 
-typedef enum {
-	RCC1466_SFP_FPGA_LANE_0,
-	RCC1466_SFP_FPGA_LANE_1,
-	RCC1466_SFP_FPGA_LANE_2,
-	RCC1466_SFP_FPGA_LANE_3,
-	RCC1466_SFP_CPU_SGMII
-	} rcc1466_sfp_id_t;
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_XXX
+ * Prototype     : int
+ * Parameters    : void
+ * Return        : 
+ *----------------------------------------------------------------------------
+ * Description   : 
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-typedef enum {
-	SFP_PRESENT        = 0x08,
-	SFP_TX_FAULT       = 0x10,
-	SFP_LOSS_OF_SIGNAL = 0x20
-	} rcc1466_sfp_status_t;
+int adc3117_XXX(void)
+{
 
-typedef enum {
-	SFP_TX_DISABLE     = 0x01,
-	SFP_RX_HIGH_RATE   = 0x02,
-	SFP_TX_HIGH_RATE   = 0x04
-	} rcc1466_sfp_control_t;
+  return( 0);
+}
 
-typedef enum {
-	RCC1466_I2C_SFP5      = 0x01,
-	RCC1466_I2C_SFP1      = 0x08,
-	RCC1466_I2C_SFP2      = 0x10,
-	RCC1466_I2C_SFP3      = 0x20,
-	RCC1466_I2C_SFP4      = 0x40,
-	RCC1466_I2C_MEZZANINE = 0x80
-	} rcc1466_i2c_channel_t;
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3117_reset
+ * Prototype     : void
+ * Parameters    : fmc FMC identifier (1 or 2)
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : perform a reset of the ADC3117 FMC by setting and re-setting
+ * bit 8 of the control register (ADC_CSR_CTL)
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int rcc1466_init(int fd);
-int rcc1466_presence(int fd);
-int rcc1466_extension_presence(int fd, int *present);
-int rcc1466_led_turn_on(int fd, rcc1466_led_t led_id);
-int rcc1466_led_turn_off(int fd, rcc1466_led_t led_id);
-int rcc1466_sfp_status(int fd, rcc1466_sfp_id_t id, uint8_t *status);
-int rcc1466_sfp_control(int fd, rcc1466_sfp_id_t id, int sfp_enable, int sfp_rate);
-int rcc1466_select_i2c_channel(int fd, rcc1466_i2c_channel_t channel);
-#endif /*  _H_RCC1466LIB */
+void adc3117_reset(int fd, int fmc)
+{
+  int sign;
+  int pon;
+
+  pon = 0xc0000000;
+  tsc_pon_write(fd, 0xc, &pon);
+  usleep( 20000);
+  sign = adc_csr_rd(fd, fmc, ADC_CSR_SIGN);
+  adc_csr_wr(fd, fmc, ADC_CSR_SIGN, sign);
+  usleep( 50000);
+  adc_csr_wr(fd, fmc, ADC_CSR_CTL, 0x2);
+
+  return;
+}
+

@@ -82,10 +82,12 @@ struct rdwr_cycle_para last_usr_cycle[2];
 struct rdwr_cycle_para last_usr2_cycle[2];
 struct rdwr_cycle_para last_pci1_cycle;
 struct rdwr_cycle_para last_pci2_cycle;
+struct rdwr_cycle_para last_axi4_cycle;
 struct rdwr_cycle_para last_kbuf_cycle[TSC_NUM_KBUF];
 extern int script_exit;
 
 extern struct tsc_kbuf_ctl tsc_kbuf_ctl[];
+extern int tsc_has_axi_master;
 
 extern int tsc_fd;
 
@@ -107,7 +109,7 @@ rdwr_rcsid()
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 rdwr_init( void)
 {
   int i;
@@ -206,6 +208,14 @@ rdwr_init( void)
   last_pci2_cycle.m.am = 0x00;
   last_pci2_cycle.loop = 1;
 
+  bzero( &last_axi4_cycle, sizeof(struct rdwr_cycle_para));
+  last_axi4_cycle.len = 0x40;
+  last_axi4_cycle.m.ads = 0x44;
+  last_axi4_cycle.m.space = RDWR_SPACE_AXI4;
+  last_axi4_cycle.m.swap = 0x00;
+  last_axi4_cycle.m.am = 0x00;
+  last_axi4_cycle.loop = 1;
+
   for( i = 0; i <  TSC_NUM_KBUF; i++)
   {
     bzero( &last_kbuf_cycle[i], sizeof(struct rdwr_cycle_para));
@@ -246,7 +256,7 @@ rdwr_init( void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 rdwr_exit( void)
 {
   return(0);
@@ -263,7 +273,12 @@ rdwr_exit( void)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-struct rdwr_cycle_para * rdwr_get_cycle_space( char *cmd_p){
+struct rdwr_cycle_para * rdwr_get_cycle_space( char *cmd_p)
+{
+
+  if(tsc_has_axi_master == 1 && cmd_p[1] == 'a') {
+    return( &last_axi4_cycle);
+  }
 
 	if( cmd_p[1] == 'p'){
 		if( strlen( cmd_p) > 2 ){
@@ -321,20 +336,20 @@ static int
 rdwr_get_cycle_addr( char *addr_p,
 		     struct rdwr_cycle_para *cp)
 {
-  int start, end;
+  uint64_t start, end;
   int len;
   int retval;
 
   len = cp->len;
-  retval = sscanf( addr_p, "%x..%x", &start, &end);
+  retval = sscanf( addr_p, "%lx..%lx", &start, &end);
   if( !retval)
   {
     return( RDWR_ERR);
   }
-  cp->addr = (uint64_t)start;
+  cp->addr = start;
   if( retval > 1)
   {
-    len = end - start;
+    len = (int)(end - start);
     if( len < 0) len = -len;
   }
   return( len);
@@ -570,7 +585,7 @@ static char
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void rdwr_sprintf_bin( char *s, 
+void rdwr_sprintf_bin( char *s,
 		       unsigned n,
 		       unsigned int bit_size)
 {
@@ -599,7 +614,7 @@ void rdwr_sprintf_bin( char *s,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-static char * 
+static char *
 rdwr_patch_addr( uint64_t addr,
 		 void *data_p,
 		 int mode,
@@ -607,9 +622,9 @@ rdwr_patch_addr( uint64_t addr,
 {
   unsigned char *p;
   int ds;
-  char pm_prompt[32];
+  char pm_prompt[60];
   int idx;
-  char bin_string[33];
+  char bin_string[40];
 
   p = (unsigned char *)data_p;
   ds = mode & 0xf;
@@ -630,7 +645,7 @@ rdwr_patch_addr( uint64_t addr,
 	rdwr_sprintf_bin( bin_string, tsc_swap_16( *(ushort *)p), 16);
 	sprintf( &pm_prompt[idx], "%04x [%s] -> ", (ushort)tsc_swap_16( *(ushort *)p), bin_string);
       }
-      else 
+      else
       {
 	rdwr_sprintf_bin( bin_string, *(ushort *)p, 16);
 	sprintf( &pm_prompt[idx], "%04x [%s] -> ", *(ushort *)p,  bin_string);
@@ -644,7 +659,7 @@ rdwr_patch_addr( uint64_t addr,
 	rdwr_sprintf_bin( bin_string, tsc_swap_32( *(uint *)p), 32);
 	sprintf( &pm_prompt[idx], "%08x [%s] -> ",  tsc_swap_32( *(uint *)p), bin_string);
       }
-      else 
+      else
       {
 	rdwr_sprintf_bin( bin_string, *(uint *)p, 32);
 	sprintf( &pm_prompt[idx], "%08x [%s] -> ", *(uint *)p, bin_string);
@@ -671,12 +686,12 @@ rdwr_patch_addr( uint64_t addr,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 tsc_rdwr_pr( struct cli_cmd_para *c)
 {
   int offset;
   int data;
-  int retval;
+  int retval = 0;
   int iex;
   int as, ds;
   struct rdwr_cycle_para *cp;
@@ -706,14 +721,30 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
         {
           retval =  tsc_pciep_read(tsc_fd, TSC_A7_PCIEP1_ADDPT_CFG | (offset/4), &data);
 	}
-	else 
+	else
 	{
           retval =  tsc_pciep_read(tsc_fd, TSC_A7_PCIEP_ADDPT_CFG | (offset/4), &data);
 	}
+        if( retval < 0)
+        {
+          printf("cannot access TSC PCI CFG register %x -> error %d\n", offset, retval);
+        }
       }
       else if( c->cmd[1] == 'i')
       {
         retval =  tsc_pon_read(tsc_fd, offset, &data);
+        if( retval < 0)
+        {
+          printf("cannot access PON register %x -> error %d\n", offset, retval);
+        }
+      }
+      else if( c->cmd[1] == 'l')
+      {
+        retval = tsc_axil_read( offset, 2, &data);
+        if( retval < 0)
+        {
+          printf("cannot access AXI-4 Lite register %x -> error %d\n", offset, retval);
+        }
       }
       else
       {
@@ -933,6 +964,17 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
       if( !(i&0xf)) printf("\n%08x : ", offset);
       printf("%08x ", data);
     }
+    else if( c->cmd[1] == 'l')
+    {
+      retval = tsc_axil_read( offset, 2, &data);
+      if ( retval < 0)
+      {
+        printf("\ncannot access AXI-4 Lite register 0x%x -> error %d\n", offset*4, retval);
+        return( RDWR_ERR);
+      }
+      if( !(i&0xf)) printf("\n%08x : ", offset);
+      printf("%08x ", data);
+    }
     else
     {
       retval = tsc_csr_read(tsc_fd, offset, &data);
@@ -1009,7 +1051,7 @@ rdwr_show_addr( uint64_t addr,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-static int 
+static int
 rdwr_show_buf( uint64_t addr,
 	       void *buf,
 	       int len,
@@ -1047,19 +1089,19 @@ rdwr_show_buf( uint64_t addr,
         case 2:
 	{
 	  if(swap) printf("%04x ", (ushort)tsc_swap_16( *(short *)&p[j]));
-	  else     printf("%04x ", *(ushort *)&p[j]);
+	  else printf("%04x ", *(ushort *)&p[j]);
 	  break;
 	}
         case 4:
 	{
 	  if(swap) printf("%08x ", (uint)tsc_swap_32( *(int *)&p[j]));
-	  else     printf("%08x ", *(uint *)&p[j]);
+	  else printf("%08x ", *(uint *)&p[j]);
 	  break;
 	}
         case 8:
 	{
 	  if(swap) printf("%016lx ", (uint64_t)tsc_swap_64( *(uint64_t *)&p[j]));
-	  else     printf("%016lx ", *(uint64_t *)&p[j]);
+	  printf("%016lx ", *(uint64_t *)&p[j]);
 	  break;
 	}
       }
@@ -1094,7 +1136,7 @@ rdwr_show_buf( uint64_t addr,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 tsc_rdwr_dx( struct cli_cmd_para *c)
 {
   struct rdwr_cycle_para *cp;
@@ -1134,7 +1176,7 @@ tsc_rdwr_dx( struct cli_cmd_para *c)
     }
     tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + cp->addr, buf, (uint)cp->len);
   }
-  else 
+  else
   {
     tsc_read_blk(tsc_fd, cp->addr, buf, cp->len, cp->mode);
   }
@@ -1160,7 +1202,7 @@ tsc_rdwr_dx_error:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 rdwr_fill_buf( void *buf,
 	       int len,
 	       struct rdwr_cycle_para *cp)
@@ -1182,7 +1224,7 @@ rdwr_fill_buf( void *buf,
       for( i = 0; i < len; i+=1)
       {
 	if( cp->operation == 'w')
-	{ 
+	{
 	  char para;
 	  int shift;
 
@@ -1208,7 +1250,7 @@ rdwr_fill_buf( void *buf,
       for( i = 0; i < len; i+=2)
       {
 	if( cp->operation == 'w')
-	{ 
+	{
 	  ushort para;
 	  int shift;
 
@@ -1235,7 +1277,7 @@ rdwr_fill_buf( void *buf,
       for( i = 0; i < len; i+=4)
       {
 	if( cp->operation == 'w')
-	{ 
+	{
 	  uint para;
 	  int shift;
 
@@ -1470,7 +1512,7 @@ rdwr_tx_error( void *buf_in,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 rdwr_test( uint64_t addr,
 	   int len,
 	   struct rdwr_cycle_para *cp)
@@ -1506,7 +1548,7 @@ rdwr_test( uint64_t addr,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 tsc_rdwr_tx( struct cli_cmd_para *c)
 {
   struct rdwr_cycle_para *cp;
@@ -1633,7 +1675,7 @@ tsc_rdwr_tx_error:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 tsc_rdwr_px( struct cli_cmd_para *c)
 {
   uint64_t offset;
@@ -1682,7 +1724,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
         }
 	retval =  tsc_kbuf_read(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
       }
-      else 
+      else
       {
 	retval =  tsc_read_sgl(tsc_fd, offset, buf, cp->mode);
       }
@@ -1698,7 +1740,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	  rdwr_sprintf_bin( bin_string,  *(unsigned char *)buf, 8);
           printf("0x%08lx : 0x%02x [0b%.8s] -> \n", offset, *(unsigned char *)buf, bin_string);
           break;
-        }	
+        }
         case RDWR_SIZE_SHORT:
         {
 	  unsigned short data_s;
@@ -1743,7 +1785,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	{
 	  *(short *)buf = tsc_swap_16( (short)data);
 	}
-	else 
+	else
 	{
 	  *(short *)buf = (short)data;
 	}
@@ -1754,7 +1796,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	{
 	  *(int *)buf = tsc_swap_32( data);
 	}
-	else 
+	else
 	{
 	  *(int *)buf = data;
 	}
@@ -1768,7 +1810,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
         }
  	retval =  tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
       }
-      else 
+      else
       {
 	retval =  tsc_write_sgl(tsc_fd, offset, buf, cp->mode);
       }
@@ -1839,7 +1881,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	    {
 	      *(short *)buf = tsc_swap_16( (short)data);
 	    }
-	    else 
+	    else
 	    {
 	      *(short *)buf = (short)data;
 	    }
@@ -1850,7 +1892,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
 	    {
 	      *(int *)buf = tsc_swap_32( data);
 	    }
-	    else 
+	    else
 	    {
 	      *(int *)buf = data;
 	    }
@@ -1864,7 +1906,7 @@ tsc_rdwr_px( struct cli_cmd_para *c)
             }
 	    retval =  tsc_kbuf_write(tsc_fd, cp->kb_p->k_base + offset, buf, (uint)ds);
 	  }
-	  else  
+	  else
           {
 	    retval =  tsc_write_sgl(tsc_fd, offset, buf, cp->mode);
           }
@@ -1898,7 +1940,7 @@ tsc_rdwr_px_error:
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 tsc_rdwr_cr( struct cli_cmd_para *c)
 {
   int offset, cmp, mask;
@@ -1964,7 +2006,7 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 tsc_rdwr_cx( struct cli_cmd_para *c)
 {
   int addr, cmp, mask;
