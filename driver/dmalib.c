@@ -788,7 +788,11 @@ dma_set_desc(struct dma_ctl *dma_ctl_p,
   /* prepare transfer descriptor */
   dd->ctl = dma_set_ctl(space, &type, trig, intr, dc->mode);
   dd->wcnt = (uint)space << 24 | (size & TSC_IDMA_DES1_WC_MASK);
-  dd->shm_addr = (shm_addr & TSC_IDMA_DES2_ADDR_MASK) | 3;       /* SHM local buffer         */
+  dd->shm_addr = shm_addr & TSC_IDMA_DES2_ADDR_MASK;       /* SHM local buffer         */
+  if( !(dc->mode & DMA_MODE_TURBO))
+  {
+      dd->shm_addr |=  3;      /* if not turbo limit read burst to 256 bytes  */
+  }
   dd->next = next;                   
   dd->rem_addr_l = (uint)addr;                                   /* address bit 0:31         */
   tmp = addr;                                                    /* if address  is 64 bit    */
