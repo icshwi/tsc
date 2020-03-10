@@ -211,26 +211,33 @@ tsc_map_mas_set_mode( struct tsc_device *ifc,
   short mode;
 
   mode = 0;
-  if( m->space == MAP_SPACE_SHM1)
+  switch( m->space) 
   {
-    mode |= TSC_PCIE_MMUDAT_DES_SHM1;
+    case MAP_SPACE_SHM1:
+      mode |= TSC_PCIE_MMUDAT_DES_SHM1;
+      break;
+      
+    case MAP_SPACE_SHM2:
+      mode |= TSC_PCIE_MMUDAT_DES_SHM2;
+      break;
+    
+    case MAP_SPACE_USR1:
+      mode |= TSC_PCIE_MMUDAT_DES_USR1;
+      break;
+
+    case MAP_SPACE_USR2:
+      mode |= TSC_PCIE_MMUDAT_DES_USR2;
+      break;
+
+    case MAP_SPACE_AXI4:
+      mode |= TSC_PCIE_MMUDAT_DES_AXI4;
+      mode |= (m->am & TSC_AXI4_MODE_MASK);
+      break;
+
+    default:
+      break;
   }
-  else if( m->space == MAP_SPACE_SHM2)
-  {
-    mode |= TSC_PCIE_MMUDAT_DES_SHM2;
-  }
-  else if( m->space == MAP_SPACE_USR)
-  {
-    mode |= TSC_PCIE_MMUDAT_DES_USR;
-  }
-  else if( m->space == MAP_SPACE_USR1)
-  {
-    mode |= TSC_PCIE_MMUDAT_DES_USR1;
-  }
-  else if( m->space == MAP_SPACE_USR2)
-  {
-    mode |= TSC_PCIE_MMUDAT_DES_USR2;
-  }
+
   if(mode){
     mode |= (1<<0) | (1<<1);    // Enable page, Enable write
   }

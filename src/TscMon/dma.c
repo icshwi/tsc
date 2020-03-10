@@ -324,6 +324,22 @@ dma_mode( int chan)
     {
       mode.mode &= ~DMA_MODE_ADD_NO_UPD;
     }
+  }  
+  
+  yn = 'n';
+	
+  if( mode.mode & DMA_MODE_TURBO) yn = 'y';
+  sprintf(prompt, "Enable TURBO mode [%c] -> ", yn);
+  if( !set_para_char( prompt, &yn))
+  {
+    if( yn == 'y')
+    {
+       mode.mode |= DMA_MODE_TURBO;
+    }
+    else
+    {
+      mode.mode &= ~DMA_MODE_TURBO;
+    }
   }
 
   data = (mode.mode >> 12)&3;

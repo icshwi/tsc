@@ -91,6 +91,7 @@
 #define TSC_IOCTL_CSR_PON         (TSC_IOCTL_CSR | 0x300)
 #define TSC_IOCTL_CSR_PON_RD      (TSC_IOCTL_CSR | 0x301)
 #define TSC_IOCTL_CSR_PON_WR      (TSC_IOCTL_CSR | 0x302)
+#define TSC_IOCTL_CSR_BASE        (TSC_IOCTL_CSR | 0xf00)
 
 struct tsc_ioctl_csr_op
 {
@@ -119,16 +120,17 @@ struct tsc_ioctl_csr_op
 #define MAP_ID_MAS_PCIE_MEM    1
 #define MAP_ID_MAS_PCIE_PMEM   2
 
-#define MAP_SPACE_INVALID         -1
-#define MAP_SPACE_PCIE             0  
-#define MAP_SPACE_PCIE1            0  
-#define MAP_SPACE_PCIE2            1  
-#define MAP_SPACE_SHM              2  
-#define MAP_SPACE_SHM1             2  
-#define MAP_SPACE_SHM2             3  
-#define MAP_SPACE_USR              3  
-#define MAP_SPACE_USR1             4  
-#define MAP_SPACE_USR2             5  
+#define MAP_SPACE_INVALID              -1
+#define MAP_SPACE_PCIE                  0
+#define MAP_SPACE_PCIE1    MAP_SPACE_PCIE
+#define MAP_SPACE_PCIE2                 1
+#define MAP_SPACE_SHM                   2
+#define MAP_SPACE_SHM1      MAP_SPACE_SHM
+#define MAP_SPACE_SHM2                  3
+#define MAP_SPACE_USR                   4
+#define MAP_SPACE_USR1      MAP_SPACE_USR
+#define MAP_SPACE_USR2                  5
+#define MAP_SPACE_AXI4                  6
 
 #define MAP_FLAG_FREE           0
 #define MAP_FLAG_BUSY           1
@@ -222,6 +224,10 @@ struct tsc_ioctl_map_win
 #define ITC_SRC_DMA2_WR0_ERR      0x35
 #define ITC_SRC_DMA2_WR1_END      0x36
 #define ITC_SRC_DMA2_WR1_ERR      0x37
+#define ITC_SRC_USR1_0            0x40
+#define ITC_SRC_USR1_1            0x41
+#define ITC_SRC_USR1_2            0x42
+#define ITC_SRC_USR1_3            0x43
 
 #define ITC_IP(src)      (1<<(src&0xf)) /* interrupt pending bitfield from source id     */
 
@@ -246,17 +252,18 @@ struct tsc_ioctl_map_win
 #define TSC_IOCTL_RDWR_READ        (TSC_IOCTL_RDWR | 0x01)
 #define TSC_IOCTL_RDWR_WRITE       (TSC_IOCTL_RDWR | 0x02)
 
-#define RDWR_SPACE_PCIE   0
-#define RDWR_SPACE_PCIE1  0
-#define RDWR_SPACE_PCIE2  1
-#define RDWR_SPACE_SHM    2
-#define RDWR_SPACE_SHM1   2
-#define RDWR_SPACE_SHM2   3
-#define RDWR_SPACE_USR    3
-#define RDWR_SPACE_USR1   4
-#define RDWR_SPACE_USR2   5
-#define RDWR_SPACE_KBUF   8
-#define RDWR_SPACE_MASK 0xf
+#define RDWR_SPACE_PCIE                 0
+#define RDWR_SPACE_PCIE1  RDWR_SPACE_PCIE
+#define RDWR_SPACE_PCIE2                1
+#define RDWR_SPACE_SHM                  2
+#define RDWR_SPACE_SHM1    RDWR_SPACE_SHM
+#define RDWR_SPACE_SHM2                 3
+#define RDWR_SPACE_USR                  4
+#define RDWR_SPACE_USR1    RDWR_SPACE_USR
+#define RDWR_SPACE_USR2                 5
+#define RDWR_SPACE_AXI4                 6
+#define RDWR_SPACE_KBUF                 8
+#define RDWR_SPACE_MASK               0xf
 
 #define RDWR_SWAP_NO      0
 #define RDWR_SWAP_AUTO    1
@@ -376,12 +383,13 @@ struct tsc_ioctl_dma_time
 #define DMA_MODE_SHM_MASK              0x300
 #define DMA_MODE_RELAX                  0x20
 #define DMA_MODE_SNOOP                  0x10
+#define DMA_MODE_TURBO                   0x8
 #define DMA_MODE_ADD_NO_INC              0x4
 #define DMA_MODE_ADD_NO_UPD              0x2
 #define DMA_MODE_ADD_MASK                0x6
 #define DMA_MODE_GET                     0x0
 #define DMA_MODE_SET                     0x1
-#define DMA_MODE_SG                      0x8
+#define DMA_MODE_SG                     0x40
 
 #define DMA_SPACE_PCIE       0x00 // Over PCIe EP 0
 #define DMA_SPACE_PCIE1      0x01 // Over PCIe EP 1

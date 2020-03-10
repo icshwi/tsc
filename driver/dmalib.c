@@ -608,7 +608,7 @@ dma_get_desc( struct dma_ctl *dma_ctl_p,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : dma_set_ctl
  * Prototype     : uint
- * Parameters    : space, trig, intr, mode
+ * Parameters    : space, type, trig, intr, mode
  * Return        : dma controller value
  *----------------------------------------------------------------------------
  * Description   : set dma controller value
@@ -617,25 +617,66 @@ dma_get_desc( struct dma_ctl *dma_ctl_p,
 
 static uint 
 dma_set_ctl( uint space,
-	     uint trig,
-	     uint intr,
-	     uint mode)
+             uint *type,
+             uint trig,
+             uint intr,
+             uint mode)
 {
   uint ctl;
+  int des;
 
   debugk(("in dma_set_ctl( %x, %x, %x, %x)...", space, trig, intr, mode));
   ctl = TSC_IDMA_DES0_UPDATE_TIME | trig | intr;
   ctl |= mode & ( DMA_MODE_ADD_MASK | DMA_MODE_SHM_MASK | DMA_MODE_SNOOP | DMA_MODE_RELAX);
   ctl |= (mode & DMA_MODE_WR_POST_MASK) << 12;
 
+  des = (space & DMA_SPACE_MASK);
 
-  if( (space & DMA_SPACE_MASK) == DMA_SPACE_PCIE)
-  { 
-    //ctl |= TSC_IDMA_DES0_PSIZE_512 | TSC_IDMA_DES0_RELAX;
-    ctl |= TSC_IDMA_DES0_PSIZE_512;
+  switch (des)
+  {
+    case DMA_SPACE_PCIE:
+    case DMA_SPACE_PCIE1:
+      ctl |= TSC_IDMA_DES0_PSIZE_512;
+      if( mode & DMA_MODE_TURBO)
+      {
+        ctl |= 0x800000; /* set TURBO mode */
+      }
+      break;
+    
+    case DMA_SPACE_USR:
+      ctl |= (mode & 0xC000) << 4;
+      break;
+
+    case DMA_SPACE_AXI4:
+      if (mode & DMA_MODE_AXI4_BT) 
+      {
+        ctl |= TSC_IDMA_DES0_AXI4_BT;
+      }
+      if (type != NULL) 
+      {
+        (*type) = 0;
+        if (mode & DMA_MODE_AXI4_BS) 
+        {
+          (*type) |= TSC_IDMA_DES1_AXI4_BS;
+        }
+        if (mode & DMA_MODE_AXI4_PROT_0)
+        {
+          (*type) |= TSC_IDMA_DES1_AXI4_PROT_0;
+        }
+        if (mode & DMA_MODE_AXI4_PROT_1_INV)
+        {
+          (*type) |= TSC_IDMA_DES1_AXI4_PROT_1_INV;
+        }
+        if (mode & DMA_MODE_AXI4_PROT_2)
+        {
+          (*type) |= TSC_IDMA_DES1_AXI4_PROT_2;
+        }
+      }
+      break;
+    
+    default:
+      break;
   }
-
-
 
   if( (space & DMA_SPACE_MASK) == DMA_SPACE_USR) 
   {
@@ -669,7 +710,7 @@ dma_set_sg_desc(struct dma_ctl *dma_ctl_p,
 {
   struct dma_ctl *dc;
   struct dma_desc *dd;
-  uint next, trig, intr;
+  uint next, trig, intr, type;
   uint64_t tmp;
 
   debugk(("in dma_set_sg_desc( %d : %x, %llx, %x, %x)...\n", dma_ctl_p->chan, dev_addr, pci_addr, size, space));
@@ -688,11 +729,16 @@ dma_set_sg_desc(struct dma_ctl *dma_ctl_p,
   }
 
   trig = TSC_IDMA_DES0_TRIGOUT_NO;
+  intr = TSC_IDMA_DES0_INTR_END;
 
   /* prepare transfer descriptor */
-  dd->ctl = dma_set_ctl(space, trig, intr, dc->mode);
-  dd->wcnt = (uint)space << 24 | (size & TSC_IDMA_DES1_WC_MASK);
-  dd->shm_addr = (dev_addr & TSC_IDMA_DES2_ADDR_MASK) | 3;       /* SHM local buffer             */
+  dd->ctl = dma_set_ctl(space, &type, trig, intr, dc->mode);
+  dd->wcnt = (type & TSC_IDMA_DES1_AS_MASK) | (uint)((space&7) << 24) | (size & TSC_IDMA_DES1_WC_MASK);
+  dd->shm_addr = (dev_addr & TSC_IDMA_DES2_ADDR_MASK);      /* SHM local buffer */
+  if( !(dc->mode & DMA_MODE_TURBO))
+  {
+    dd->shm_addr |=  3;      /* if not turbo limit read burst to 256 bytes  */
+  }
   dd->next = next;                   
   dd->rem_addr_l = (uint)pci_addr;                               /* des address bit 0:31         */
   tmp = pci_addr;                                                /* if des address  is 64 bit    */
@@ -728,7 +774,7 @@ dma_set_desc(struct dma_ctl *dma_ctl_p,
 {
   struct dma_ctl *dc;
   struct dma_desc *dd;
-  uint next, trig, intr;
+  uint next, trig, intr, type;
   uint64_t tmp;
 
   debugk(("in dma_set_desc( %d : %x, %llx, %x, %x)...\n", dma_ctl_p->chan, shm_addr, addr, size, space));
@@ -740,9 +786,13 @@ dma_set_desc(struct dma_ctl *dma_ctl_p,
   intr = TSC_IDMA_DES0_INTR_ERR_END;
 
   /* prepare transfer descriptor */
-  dd->ctl = dma_set_ctl(space, trig, intr, dc->mode);
+  dd->ctl = dma_set_ctl(space, &type, trig, intr, dc->mode);
   dd->wcnt = (uint)space << 24 | (size & TSC_IDMA_DES1_WC_MASK);
-  dd->shm_addr = (shm_addr & TSC_IDMA_DES2_ADDR_MASK) | 3;       /* SHM local buffer         */
+  dd->shm_addr = shm_addr & TSC_IDMA_DES2_ADDR_MASK;       /* SHM local buffer         */
+  if( !(dc->mode & DMA_MODE_TURBO))
+  {
+      dd->shm_addr |=  3;      /* if not turbo limit read burst to 256 bytes  */
+  }
   dd->next = next;                   
   dd->rem_addr_l = (uint)addr;                                   /* address bit 0:31         */
   tmp = addr;                                                    /* if address  is 64 bit    */

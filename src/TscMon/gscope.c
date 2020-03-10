@@ -56,12 +56,14 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include <errno.h>
 #include <cli.h>
 #include <unistd.h>
 #include "../../include/tscextlib.h"
 #include <tscioctl.h>
 #include <tsculib.h>
 #include "gscope.h"
+#include <gscopelib.h>
 #include <gscope3110lib.h>
 #include <adc3110lib.h>
 
@@ -81,7 +83,7 @@ int
 tsc_gscope_identify(struct cli_cmd_para *c)
 {
     //printf("In tsc_gscope_identify()\n");
-    printf("Generic Scope signature: %08x\n", gscope3110_identify(tsc_fd));
+    printf("Generic Scope signature: %08x\n", gscope_identify(tsc_fd));
     return(0);
 }
 
@@ -110,47 +112,69 @@ tsc_gscope_init(struct cli_cmd_para *c)
     {
         int fmc;
 
-        fmc = ADC3110_FMC1;
-        if( c->ext)
-        {
-            fmc = strtoul( c->ext, &p, 16);
-            if(( fmc < ADC3110_FMC1) || ( fmc > ADC3110_FMC2))
-            {
-                printf("bad FMC index : %d\n", fmc);
-                return( -1);
-            }
-        }
-        gscope3110_acq_dpram_init(tsc_fd, fmc, 0xff, 0x8000);
-        return(0);
-    }
-    if( !strncmp( "smem", c->para[1], 3))
-    {
-        if( c->cnt < 5)
-        {
-            printf("gscope init smem needs more arguments\n");
-            goto tsc_gscope_init_smem_usage;
+		fmc = ADC3110_FMC1;
+		if( c->ext) 
+		{
+			fmc = strtoul( c->ext, &p, 16);
+			if(( fmc < ADC3110_FMC1) || ( fmc > ADC3110_FMC2))
+			{
+				printf("bad FMC index : %d\n", fmc);
+				return( -1);
+			}
+		}
+		gscope3110_acq_dpram_init(tsc_fd, fmc, 0xff, 0x8000);
+		return(0);
+	}
+	if( !strncmp( "smem", c->para[1], 3))
+	{
+		int fmc;
 
-        }
+		fmc = ADC3110_FMC1;
+		if( c->ext) 
+		{
+			fmc = strtoul( c->ext, &p, 16);
+			if(( fmc < ADC3110_FMC1) || ( fmc > ADC3110_FMC2))
+			{
+				printf("bad FMC index : %d\n", fmc);
+				return( -1);
+			}
+		}
+		if( c->cnt < 5)
+		{
+			printf("gscope init smem needs more arguments\n");
+			goto tsc_gscope_init_smem_usage;
 
-        sscanf(c->para[2], "%x", &chan_set);
-        sscanf(c->para[3], "%x", &base);
-        sscanf(c->para[4], "%x", &size);
+		}
 
-        gscope3110_acq_smem_init(tsc_fd, chan_set, base, size, 0);
-        return(0);
-    }
+		sscanf(c->para[2], "%x", &chan_set);
+		sscanf(c->para[3], "%x", &base);
+		sscanf(c->para[4], "%x", &size);
+		if((gscope_identify(tsc_fd) & 0xffff) == 0x3110)
+		{
+		  gscope3110_acq_smem_init(tsc_fd, chan_set, base, size, 0);
+		}
+		if((gscope_identify(tsc_fd) & 0xffff) == 0x3210)
+		{
+		  gscope3210_acq_smem_init(tsc_fd, chan_set, base, size, 0);
+		}
+		if((gscope_identify(tsc_fd) & 0xffff) == 0x3117)
+		{
+		  gscope3117_acq_smem_init(tsc_fd, fmc, base, size, 0);
+		}
+		return(0);
+	}
 
-tsc_gscope_init_smem_usage:
-    printf("usage: gscope init smem <chanset> <base> <size>\n");
-    printf("       where chanset  = list of enabled channel\n");
-    printf("             base     = first buffer base adress\n");
-    printf("             size     = size of the buffers\n");
-    return (-1);
+	tsc_gscope_init_smem_usage:
+	printf("usage: gscope init smem <chanset> <base> <size>\n");
+	printf("       where chanset  = list of enabled channel\n");
+	printf("             base     = first buffer base adress\n");
+	printf("             size     = size of the buffers\n");
+	return (-1);
 
-tsc_gscope_init_usage:
-    printf("usage: gscope init <mode>\n");
-    printf("       where mode = dpram or smem\n");
-    return(-1);
+	tsc_gscope_init_usage:
+	printf("usage: gscope init <mode>\n");
+	printf("       where mode = dpram or smem\n");
+	return(-1);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -176,7 +200,7 @@ tsc_gscope_acq(struct cli_cmd_para *c)
     }
     if( !strncmp( "arm", c->para[1], 3))
     {
-        int prop, acq_mode, acq_trig, sync, mode, mode2;
+        int prop, acq_mode, acq_trig, sync, mode; //, mode2;
 
         fmc = ADC3110_FMC1;
         prop = 4;
@@ -244,20 +268,24 @@ tsc_gscope_acq(struct cli_cmd_para *c)
 
         mode = acq_mode | acq_trig | sync;
 
-        if(fmc == GSCOPE3110_MIXED_FMC){
-            mode2 = mode ^ 4;
-            if(sync == GSCOPE3110_ARM_CODE_MASTER){
-                gscope3110_acq_arm(tsc_fd, ADC3110_FMC2, mode2, prop, 0);
-                gscope3110_acq_arm(tsc_fd, ADC3110_FMC1, mode, prop, 0);
-            }
-            else{
-                gscope3110_acq_arm(tsc_fd, ADC3110_FMC1, mode, prop, 0);
-                gscope3110_acq_arm(tsc_fd, ADC3110_FMC2, mode2, prop, 0);
-            }
+		if(fmc == GSCOPE3110_MIXED_FMC){
+			// mode2 = mode | 4;
+			if(sync == GSCOPE3110_ARM_CODE_MASTER){
+			  printf("arm FMC2 slave : %x\n", mode | 4);
+			  gscope3110_acq_arm(tsc_fd, ADC3110_FMC2, mode| 4, prop, 0, 0);
+			  printf("arm FMC1 master : %x\n", mode & ~4);
+			  gscope3110_acq_arm(tsc_fd, ADC3110_FMC1, mode & ~4, prop, 0, 0);
+			}
+			else{
+			  printf("arm FMC1 slave : %x\n", mode | 4);
+			  gscope3110_acq_arm(tsc_fd, ADC3110_FMC1, mode | 4, prop, 0, 0);
+			  printf("arm FMC2 master : %x\n", mode & ~4);
+			  gscope3110_acq_arm(tsc_fd, ADC3110_FMC2, mode & ~4, prop, 0, 0);
+			}
 
 
         }else{
-            gscope3110_acq_arm(tsc_fd, fmc, mode, prop, 0);
+            gscope3110_acq_arm(tsc_fd, fmc, mode, prop, 0, 0);
 
         }
 
@@ -337,7 +365,7 @@ tsc_gscope_acq_abo_usage:
             else{
                 goto tsc_gscope_acq_trig_usage;
             }
-            gscope_acq_dis(tsc_fd, fmc);
+            gscope_trig_dis(tsc_fd, fmc);
             return 0;
         }
 
@@ -367,10 +395,27 @@ tsc_gscope_acq_abo_usage:
                 goto tsc_gscope_acq_trig_adc_usage;
             }
 
-            if(chan < 0 || chan > 7){
-                printf("that channel does not exist\n");
-                return(-1);
-            }
+	        if((gscope_identify(tsc_fd) & 0xffff) == 0x3110)
+	        {
+                if(chan < 0 || chan > 7){
+                    printf("that channel does not exist\n");
+                    return(-1);
+                }
+	        }
+            if((gscope_identify(tsc_fd) & 0xffff) == 0x3210)
+            {
+ 	            if(chan < 0 || chan > 3){
+	                printf("that channel does not exist\n");
+	                return(-1);
+	            }
+	        }
+            if((gscope_identify(tsc_fd) & 0xffff) == 0x3117)
+                {
+ 	            if(chan < 0 || chan > 19){
+	                printf("that channel does not exist\n");
+	                return(-1);
+	            }
+	        }
 
             main_mode = GSCOPE3110_TRIG_CODE_ADC;
             if(!strncmp( "lvl", c->para[4], 3))
@@ -420,7 +465,7 @@ tsc_gscope_acq_abo_usage:
         }
 
         mode = main_mode | lvl_edge | direct | sign;
-        gscope3110_acq_trig(tsc_fd, fmc, chan, mode, offset, hyst);
+        gscope3110_trig_set(tsc_fd, fmc, chan, mode, offset, hyst);
 
         return(0);
     }
@@ -456,6 +501,194 @@ tsc_gscope_acq_usage:
     return(-1);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_gscope_trig
+ * Prototype     : int
+ * Parameters    : cli command parameter structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3110 command
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int 
+tsc_gscope_trig( struct cli_cmd_para *c)
+{
+	int fmc;
+	char *p;
+	int mode, offset, main_mode, lvl_edge, direct, sign, hyst, chan, base;
+
+	if( c->cnt < 2)
+	{
+		printf("gscope trig command needs more arguments\n");
+		goto tsc_gscope_trig_usage;
+	}
+
+
+		offset = 0;
+		hyst = 0;
+		base = 0;
+		fmc = ADC3110_FMC1;
+		main_mode = GSCOPE3110_TRIG_CODE_MAN;
+		lvl_edge = GSCOPE3110_TRIG_CODE_LVL;
+		direct = GSCOPE3110_TRIG_CODE_UP;
+		sign = GSCOPE3110_TRIG_CODE_SIGN;
+
+		if(c->cnt < 2){
+			printf("gscope acq trig command needs more arguments\n");
+			goto tsc_gscope_trig_usage;
+		}
+
+		if( c->ext){
+			fmc = strtoul( c->ext, &p, 16);
+		}
+		else{
+			goto tsc_gscope_trig_usage;
+		}
+
+		if(fmc < ADC3110_FMC1 || fmc > ADC3110_FMC2){
+			printf("Bad FMC index\n");
+			return(-1);
+		}
+
+		if(!strncmp( "dis", c->para[1], 3)){
+			gscope_trig_dis(tsc_fd, fmc);
+			return 0;
+		}
+
+		if( !strncmp( "man", c->para[1], 3))
+		{
+			main_mode = GSCOPE3110_TRIG_CODE_MAN;
+		}
+		else if(!strncmp( "gpio", c->para[1], 3))
+		{
+			main_mode = GSCOPE3110_TRIG_CODE_GPIO;
+		}
+		else if(!strncmp( "adc", c->para[1], 3))
+		{
+
+			if(c->cnt < 5){
+				printf("gscope acq trig adc command needs more arguments\n");
+				goto tsc_gscope_trig_usage;
+			}
+
+
+			if(sscanf(&c->para[1][4], "%d.%d", &offset, &hyst) < 2){
+			  printf("Bad parameter : %s\n", c->para[1]);
+				goto tsc_gscope_trig_usage;
+			}
+
+			chan = 0;
+			if(sscanf(c->para[2], "%d", &chan) < 1){
+			  printf("Bad parameter : %s\n", c->para[2]);
+				goto tsc_gscope_trig_usage;
+			}
+
+		        if((gscope_identify(tsc_fd) & 0xffff) == 0x3110)
+		        {
+		 	  if(chan < 0 || chan > 7){
+				printf("that channel does not exist\n");
+				return(-1);
+			  }
+			}
+		        if((gscope_identify(tsc_fd) & 0xffff) == 0x3210)
+		        {
+		 	  if(chan < 0 || chan > 3){
+				printf("that channel does not exist\n");
+				return(-1);
+			  }
+			  base = chan << 14;
+			  if((offset > 0x3fff) || (offset < 0)) 
+			  {
+				printf("Bad offset parameter\n");
+				return(-1);
+			  }
+			  if((hyst > 0x3fff) || (hyst < 0)) 
+			  {
+				printf("Bad hysteresis parameter\n");
+				return(-1);
+			  }
+			}
+		        if((gscope_identify(tsc_fd) & 0xffff) == 0x3117)
+		        {
+		 	  if(chan < 0 || chan > 19){
+				printf("that channel does not exist\n");
+				return(-1);
+			  }
+			}
+
+			main_mode = GSCOPE3110_TRIG_CODE_ADC;
+			if(!strncmp( "lvl", c->para[3], 3))
+			{
+				lvl_edge = GSCOPE3110_TRIG_CODE_LVL;
+			} 
+			else if(!strncmp( "edge", c->para[3], 3))
+			{
+				lvl_edge = GSCOPE3110_TRIG_CODE_EDGE;
+			}
+			else
+			{
+			  printf("Bad parameter : %s\n", c->para[3]);
+				goto tsc_gscope_trig_usage;
+			}
+
+
+			if(!strncmp( "up", c->para[4], 2))
+			{
+				direct = GSCOPE3110_TRIG_CODE_UP;
+			} 
+
+			else if(!strncmp( "down", c->para[4], 3))
+			{
+				direct = GSCOPE3110_TRIG_CODE_DOWN;
+			}
+			else{
+			  printf("Bad parameter : %s\n", c->para[4]);
+				goto tsc_gscope_trig_usage;
+			}
+
+			if(c->cnt > 5){
+
+				if(!strncmp( "unsigned", c->para[5], 3))
+				{
+					sign = GSCOPE3110_TRIG_CODE_UNSIGN;
+				}
+				else if(!strncmp( "signed", c->para[5], 3))
+				{
+					sign = GSCOPE3110_TRIG_CODE_SIGN;
+				}
+				else
+				{
+			  printf("Bad parameter : %s\n", c->para[5]);
+					goto tsc_gscope_trig_usage;
+				}
+			}
+
+		} 
+
+		else
+		{
+			goto tsc_gscope_trig_usage;
+		}
+
+		mode = main_mode | lvl_edge | direct | sign;
+		gscope3110_trig_set(tsc_fd, fmc, chan, mode, base+offset, base+hyst);
+
+		return(0);
+tsc_gscope_trig_usage:
+	printf("usage: gscope.<x> trig dis\n");
+	printf("       gscope.<x> trig man\n");
+	printf("       gscope.<x> trig auto\n");
+	printf("       gscope.<x> trig gpio\n");
+	printf("       gscope.<x> trig adc.<offset>.<hyst> <chan> <type> <dir> [<sign>]\n");
+	printf("       where offset   = the level the signal needs to exceed to trigger the acquisition\n");
+	printf("             chan     = the channel which is going to trigger the acquisition\n");
+	printf("             hyst     = hysteresis value\n");
+	printf("             type     = lvl or edge\n");
+	printf("             dir      = above/below the level or rising/falling edge (up/down)\n");
+	printf("             sign     = signed or unsigned offset (signed per default)\n");
+  return (-1);
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_gscope_save
@@ -468,46 +701,109 @@ tsc_gscope_acq_usage:
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int tsc_gscope_save(struct cli_cmd_para *c){
+  
+    int new_size, chanset, i, buf_mode, fmc, mask;
+    char *new_filename, *p;
 
-    int new_size, chanset, i;
-    char *new_filename;
+    fmc = ADC3110_FMC1;
+	if(c->cnt < 4){
+		goto tsc_gscope_save_usage;
+	}
 
-    if(c->cnt < 3){
-        goto tsc_gscope_save_usage;
-    }
+	if( c->ext)
+	{
+	  fmc = strtoul( c->ext, &p, 16);
+	}
+	else 
+	{
+	    goto tsc_gscope_save_usage;
+	}
+	if( !strncmp( "smem", c->para[1], 2))
+	{
+	  buf_mode = GSCOPE3110_ACQ_MODE_SMEM;
+	}
+	else if( !strncmp( "dpram", c->para[1], 2))
+	{
+	  buf_mode = GSCOPE3110_ACQ_MODE_DPRAM;
+	}
+	else
+	{
+		goto tsc_gscope_save_usage;
+	}
+	if(sscanf( c->para[2],"%x", &chanset) < 1){
+		goto tsc_gscope_save_usage;
+	}
 
-    if(sscanf( c->para[1],"%x", &chanset) < 1){
-        goto tsc_gscope_save_usage;
-    }
+	if((gscope_identify(tsc_fd) & 0xffff) == 0x3110)
+	{
+  	  if(chanset < 0 || chanset > 0xFF){
+		printf("that chanset does not exist\n");
+		return (-1);
+	  }
+	}
+	if((gscope_identify(tsc_fd) & 0xffff) == 0x3210)
+	{
+  	  if(chanset < 0 || chanset > 0xF){
+		printf("that chanset does not exist\n");
+		return (-1);
+	  }
+	}
+	if((gscope_identify(tsc_fd) & 0xffff) == 0x3117)
+	{
+  	  if(chanset < 0 || chanset > 0xFFFFF){
+		printf("that chanset does not exist\n");
+		return (-1);
+	  }
+	}
 
-    if(chanset < 0 || chanset > 0xFF){
-        printf("that chanset does not exist\n");
-        return (-1);
-    }
+	new_size = 0;
+	if(c->cnt >= 5){
+		sscanf( c->para[4],"%x", &new_size);
+	}
 
-    new_size = 0;
-    if(c->cnt == 4){
-        sscanf( c->para[3],"%x", &new_size);
-    }
+	mask = 0xffff;
+	if(c->cnt >= 6){
+		sscanf( c->para[5],"%x", &mask);
+	}
 
-    i = 0;
-    while(chanset != 0){
-        if((chanset & 1) == 1){
-            new_filename = gscope3110_filename_generator(c->para[2], i);
-            gscope3110_save(tsc_fd, i, new_filename, 1, new_size);
-        }
-        chanset = chanset >> 1;
-        i++;
-    }
-    return 0;
+	i = 0;
+	while(chanset != 0){
+		if((chanset & 1) == 1){
+			new_filename = gscope3110_filename_generator(c->para[3], i);
+			if( buf_mode == GSCOPE3110_ACQ_MODE_SMEM)
+			{
+                if((gscope_identify(tsc_fd) & 0xffff) == 0x3110)
+		        {
+			        gscope3110_smem_save(tsc_fd, i, new_filename, 1, new_size, mask);
+			    }
+		        if((gscope_identify(tsc_fd) & 0xffff) == 0x3210)
+		        {
+			        gscope3210_smem_save(tsc_fd, i, new_filename, 1, new_size, mask);
+			    }
+		        if((gscope_identify(tsc_fd) & 0xffff) == 0x3117)
+		        {
+			        gscope3117_smem_save(tsc_fd, fmc, i, new_filename, 1, new_size, mask);
+			    }
+			}
+			if( buf_mode == GSCOPE3110_ACQ_MODE_DPRAM)
+			{
+			    gscope3110_dpram_save(tsc_fd, fmc, i, new_filename, 1, new_size);
+			}
+		}
+		chanset = chanset >> 1;
+		i++;
+	}
+	return 0;
 
 
 tsc_gscope_save_usage:
-    printf("usage: gscope save <chan> <filename> [<size>]\n");
-    printf("       where chan     = channel\n");
-    printf("             filename = histogram filename\n");
-    printf("             size     = size of the file\n");
-    return(-1);
+	printf("usage: gscope.<fmc> save <buf> <chan> <filename> [<size>] [<mask>]\n");
+	printf("       where buf      = smem or dpram\n");
+	printf("             chan     = channel\n");
+	printf("             filename = histogram filename\n");
+	printf("             size     = size of the file\n");
+	printf("             mask     = data mask\n");
+	return(-1);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -711,31 +1007,37 @@ tsc_gscope_fwinfo_usage:
 int 
 tsc_gscope(struct cli_cmd_para *c)
 {
-    if( c->cnt < 1)
-    {
-        printf("gscope command needs more arguments\n");
-        printf("usage: gscope.<fmc> <op> [<para>] ..\n");
-        return(-1);
-    }
-    if( !strncmp( "identify", c->para[0], 2))
-    {
-        return(tsc_gscope_identify(c));
-    }
-    if( !strncmp( "init", c->para[0], 2))
-    {
-        return(tsc_gscope_init(c));
-    }
-    if( !strncmp( "acq", c->para[0], 2))
-    {
-        return(tsc_gscope_acq(c));
-    }
-    if( !strncmp( "save", c->para[0], 2))
-    {
-        return(tsc_gscope_save(c));
-    }
+
+
+	if( c->cnt < 1)
+	{
+		printf("gscope command needs more arguments\n");
+		printf("usage: gscope.<fmc> <op> [<para>] ..\n");
+		return(-1);
+	}
+	if( !strncmp( "identify", c->para[0], 2))
+	{
+		return(tsc_gscope_identify(c));
+	}
+	if( !strncmp( "init", c->para[0], 2))
+	{
+		return(tsc_gscope_init(c));
+	}
+	if( !strncmp( "acq", c->para[0], 2))
+	{
+		return(tsc_gscope_acq(c));
+	}
+	if( !strncmp( "trig", c->para[0], 2))
+	{
+		return(tsc_gscope_trig(c));
+	}
+	if( !strncmp( "save", c->para[0], 2))
+	{
+		return(tsc_gscope_save(c));
+	}
     if( !strncmp( "fwinfo", c->para[0], 2)) {
         return(tsc_gscope_fwinfo(c));
     }
-    printf("gscope operation not supported\n");
-    return(-1);
+	printf("gscope operation not supported\n");
+	return(-1);
 }

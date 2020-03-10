@@ -746,3 +746,24 @@ int rcc1466_sfp_control(int fd, rcc1466_sfp_id_t id, int sfp_enable, int sfp_rat
 	}
 	return retval;
 }
+
+int rcc1466_select_i2c_channel(int fd, rcc1466_i2c_channel_t channel)
+{
+	int retval = 0;
+	int addr   = 0;
+	int bus    = 4;
+	int reg    = 0;
+	int rs     = 1;
+	int ds     = 1;
+	int device = 0;
+	int data   = 0;
+
+	addr = 0x70;
+	data = channel;
+	reg  = channel;
+	device = (bus & 7) << 29; device |= addr & 0x7f; device |= ((rs - 1) & 3) << 16; device |= ((ds - 1) & 3) << 18;
+	retval = tsc_i2c_write(fd, device, reg, data);
+        // tsc_i2c_write() is broken -> ignore return value
+        retval = 0;
+	return retval;
+}

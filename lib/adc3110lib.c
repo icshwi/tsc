@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <tsculib.h>
 #include <tscextlib.h>
+#include <adclib.h>
 #include <adc3110lib.h>
 
 int adc3110_verbose_flag = 0;
@@ -67,8 +68,7 @@ int adc3110_spi_ads[ADC3110_CHAN_NUM] =
 };
 
 
-int 
-adc3110_set_verbose( int vf)
+int adc3110_set_verbose(int vf)
 {
   adc3110_verbose_flag = vf;
   return(adc3110_verbose_flag);
@@ -84,237 +84,11 @@ adc3110_set_verbose( int vf)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-adc3110_XXX( void)
+int adc3110_XXX(void)
 {
 
   return( 0);
 }
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_csr_rd
- * Prototype     : int
- * Parameters    : fmc	fmc index (1 or 2)
- *                 csr	register index
- * Return        : register content
- *----------------------------------------------------------------------------
- * Description   : Read ADC3110 CSR register referred by csr
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int 
-adc3110_csr_rd(int fd, int fmc,
-		int csr)
-{
-  int addr;
-  int data;
-
-  addr = ADC3110_CSR_ADDR( csr);
-  if( fmc == ADC3110_FMC2) addr +=  ADC3110_CSR_OFF_FMC2;
-  tsc_csr_read(fd, addr, &data);
-  return( data);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_csr_wr
- * Prototype     : void
- * Parameters    : fmc  fmc index (1 or 2)
- *                 csr  register index
- *                 data  data to be written in register
- * Return        : void
- *----------------------------------------------------------------------------
- * Description   : Write ADC3110 CSR register referred by csr with data
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-void 
-adc3110_csr_wr(int fd, int fmc,
-		int csr,
-	        int data)
-{
-  int addr;
-
-  addr = ADC3110_CSR_ADDR( csr);
-  if( fmc == ADC3110_FMC2) addr +=  ADC3110_CSR_OFF_FMC2;
-  tsc_csr_write(fd, addr, &data);
-
-  return;
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_identify
- * Prototype     : int
- * Parameters    : fmc FMC identifier (1 or 2)
- * Return        : ADC3110 signature (expect ADC3110_SIGN_ID)
- *----------------------------------------------------------------------------
- * Description   : returns the content of ADC3110 signature register (index 0x80)
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int 
-adc3110_identify(int fd, int fmc)
-{
-  int id;
-
-  id = adc3110_csr_rd(fd, fmc,  ADC3110_CSR_SIGN);
-
-  return( id);
-}
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_spi_read
- * Prototype     : int
- * Parameters    : fmc  fmc number (1 or 2)
- *                 cmd  SPI device address
- *                 reg  register index
- * Return        : content of register
- *----------------------------------------------------------------------------
- * Description   : returns the content of register reg located in the resource 
- * identified by cmd
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3110_spi_read(int fd, int fmc,
-		  int cmd,
-	 	  int reg)
-{
-  int tmo, data;
-
-  cmd |=  0x80000000 | reg;
-  tmo = 1000;
-  //printf("adc3110_spi_read( %x, %x, %x)\n", fmc, cmd, reg);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_SERIAL, cmd);
-  while( --tmo)
-  {
-    if( !(adc3110_csr_rd(fd, fmc, ADC3110_CSR_SERIAL) & 0x80000000)) break;
-  }
-  if( !tmo)
-  {
-    printf("adc3110_spi_read() : cmd = %08x -> timeout...\n", cmd);
-    return(-1);
-  }
-  data = adc3110_csr_rd(fd, fmc, ADC3110_CSR_SERIAL+1);
-  //printf("cmd = %08x - data = %08x\n", cmd, data);
-
-  return( data);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_spi_write
- * Prototype     : int
- * Parameters    : fmc  fmc number (1 or 2)
- *                 cmd  SPI device address
- *                 reg  register index
- *                 data  data to be written in register
- * Return        : 0  if SPI command OK
- * 				  -1  in case of timeout
- *----------------------------------------------------------------------------
- * Description   : writes data in the register reg located in the resource 
- * identified by cmd
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3110_spi_write(int fd, int fmc,
-		   int cmd,
-	 	   int reg,
-		   int data)
-{
-  int tmo;
-
-  cmd |=  0xc0000000 | reg;
-  tmo = 1000;
-  //printf("adc3110_spi_read( %x, %x, %x)\n", fmc, cmd, reg);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_SERIAL+1, data);
-  data = adc3110_csr_rd(fd, fmc, ADC3110_CSR_SERIAL+1);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_SERIAL, cmd);
-  while( --tmo)
-  {
-    if( !(adc3110_csr_rd(fd, fmc, ADC3110_CSR_SERIAL) & 0x80000000)) break;
-  }
-  if( !tmo)
-  {
-    printf("adc3110_spi_read() : cmd = %08x -> timeout...\n", cmd);
-    return(-1);
-  }
-
-  return( 0);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_i2c_read
- * Prototype     : int
- * Parameters    : fmc  FMC identifier (1 or 2)
- *                 dev  I2C device address
- *                 reg  register index
- * Return        : content of register
- *----------------------------------------------------------------------------
- * Description   : returns the content of register reg located in the resource
- * identified by dev.
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-uint
-adc3110_i2c_read(int fd, int fmc,
-		  uint device,
-	 	  uint reg)
-{
-  int status;
-  uint data;
-
-  if( fmc == ADC3110_FMC2)
-  {
-    device |= 0xa0000000;
-  }
-  else
-  {
-    device |= 0x80000000;
-  }
-  status = tsc_i2c_read(fd, device, reg, &data);
-  if( status < 0)
-  {
-    return(-1);
-  }
-  return( data);
-}    
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc3110_i2c_write
- * Prototype     : int
- * Parameters    : fmc  fmc number (1 or 2)
- *                 dev  I2C device address
- *                 reg  register index
- *                 data  data to be written in register
- * Return        : 0  if I2C cycle OK
- * 				  -1  if error
- *----------------------------------------------------------------------------
- * Description   : write data in the register reg located in the resource 
- * identified by dev
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc3110_i2c_write(int fd, int fmc,
-		   uint device,
-	 	   uint reg,
-		   uint data)
-{
-  int status;
-
-  if( fmc == ADC3110_FMC2)
-  {
-    device |= 0xa0000000;
-  }
-  else
-  {
-    device |= 0x80000000;
-  }
-  status = tsc_i2c_write(fd, device, reg, data);
-  if( status < 0)
-  {
-    return(-1);
-  }
-  return( 0);
-}    
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3110_reset
@@ -327,8 +101,7 @@ adc3110_i2c_write(int fd, int fmc,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void
-adc3110_reset(int fd, int fmc)
+void adc3110_reset(int fd, int fmc)
 {
   int sign;
   int pon;
@@ -360,9 +133,7 @@ adc3110_reset(int fd, int fmc)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void
-adc3110_lmk_init(int fd, int fmc,
-		  int lmk_reg[])
+void adc3110_lmk_init(int fd, int fmc, int lmk_reg[])
 {
   int reg;
 

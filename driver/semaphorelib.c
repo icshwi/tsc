@@ -48,7 +48,7 @@
 #include "tscos.h"
 #include "tscdrvr.h"
 
-#define DBG
+#define DBGno
 #include "debug.h"
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

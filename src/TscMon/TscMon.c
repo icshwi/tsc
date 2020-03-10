@@ -538,7 +538,7 @@ int main(int argc, char *argv[]){
 	int iex     = 0;
 	int retval  = 0;
 	int cmd_cnt = 0;
-        int cap     = 0;
+    int cap     = 0;
 	int mm      = 0;
 	int dd      = 0;
 	int yy      = 0;
@@ -600,7 +600,9 @@ int main(int argc, char *argv[]){
   /* Detect AXI-4 */
   if (tsc_axi_get_cap(&cap) == 1)
   {
-    tsc_has_axi_master = ((cap & TSC_AXI4_CFG_AXI_MASTER)!=0 ? 1 : 0);
+     tsc_has_axi_master = 1;   
+     /* this line is nonsense - the 16 LSBs are hard-coded to '0' in the VHDL 
+     tsc_has_axi_master = ((cap & TSC_AXI4_CFG_AXI_MASTER)!=0 ? 1 : 0); */
   }
 
 	/* configure the terminal in canonical mode with echo */
@@ -644,13 +646,6 @@ int main(int argc, char *argv[]){
 
 	if (quiet == 0){
 
-
-//		printf("          _______       __  __             \n");
-//		printf("         |__   __|     |  \\/  |            \n");
-//		printf("            | |___  ___| \\  / | ___  _ __  \n");
-//		printf("            | / __|/ __| |\\/| |/ _ \\| '_ \\ \n");
-//		printf("            | \\__ \\ (__| |  | | (_) | | | |\n");
-//		printf("            |_|___/\\___|_|  |_|\\___/|_| |_|\n");
 		printf("    _______ _______ _______ _______  _____  __   _ \n");
 		printf("       |    |______ |       |  |  | |     | | \\  | \n");
 		printf("       |    ______| |_____  |  |  | |_____| |  \\_| \n");
@@ -683,7 +678,10 @@ int main(int argc, char *argv[]){
 		else {
 			printf("     |  Driver IFC14xx Version %s            |\n", tsc_get_drv_version());
 		}
-		printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
+		if (tsc_has_axi_master) {
+            printf("     |  AXI-4 Subsystem detected                |\n");
+        }
+        printf("     |  ******* Official release %s *******  |\n", TscMon_official_release);
 		printf("     +------------------------------------------+\n");
 	}
 	printf("\n");
