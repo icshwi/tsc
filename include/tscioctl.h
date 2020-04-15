@@ -295,7 +295,7 @@ struct tsc_ioctl_map_win
 #define RDWR_LOOP        0x80000000
 
 
-struct rdwr_mode {char ads; char space; char swap; char am;}
+struct rdwr_mode {char ads; char space; char swap; char am;};
 
 struct tsc_ioctl_rdwr
 {
