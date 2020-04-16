@@ -294,6 +294,9 @@ struct tsc_ioctl_map_win
 #define RDWR_SWAP_DATA         0x80
 #define RDWR_LOOP        0x80000000
 
+
+struct rdwr_mode {char ads; char space; char swap; char am;};
+
 struct tsc_ioctl_rdwr
 {
   uint64_t rem_addr;
@@ -302,7 +305,7 @@ struct tsc_ioctl_rdwr
   union
   {
     uint mode;
-    struct rdwr_mode {char ads; char space; char swap; char am;}m;
+    struct rdwr_mode m;
   }; 
 };
 
