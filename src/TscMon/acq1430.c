@@ -100,6 +100,9 @@ static char *rcsid = "$Id: acq1430.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #define ADC_BASE_IDELAY_A  (ADC_BASE_A +0x038)
 #define ADC_BASE_IDELAY_B  (ADC_BASE_B +0x038)
 
+#define XUSER_SCOPE_TMEM_BUF_ADDR   0x100000
+#define XUSER_SCOPE_TMEM_BUF_SIZE   0x20000
+
 struct tsc_acq1430_devices
 {
   char *name;
@@ -697,7 +700,7 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
     if( fmc == 2)
     {
         adc_mas_map_usr[i].req.mode.space = MAP_SPACE_USR2;
-        adc_mas_map_usr[i].req.rem_addr = 0x1100000 + (0x20000*i);
+        adc_mas_map_usr[i].req.rem_addr = XUSER_SCOPE_TMEM_BUF_ADDR + (XUSER_SCOPE_TMEM_BUF_SIZE * i);
         csr_base[i] = 0x11d0;
     }
     else
@@ -705,13 +708,13 @@ acq1430_calib_idelay( struct cli_cmd_para *c,
       if( i < 4)
       {
         adc_mas_map_usr[i].req.mode.space = MAP_SPACE_USR1;
-        adc_mas_map_usr[i].req.rem_addr = 0x1100000 + (0x20000*i);
+        adc_mas_map_usr[i].req.rem_addr = XUSER_SCOPE_TMEM_BUF_ADDR + (XUSER_SCOPE_TMEM_BUF_SIZE * i);
         csr_base[i] = 0x11c0;
       }
       else 
       {
         adc_mas_map_usr[i].req.mode.space = MAP_SPACE_USR2;
-        adc_mas_map_usr[i].req.rem_addr = 0x1100000;
+        adc_mas_map_usr[i].req.rem_addr = XUSER_SCOPE_TMEM_BUF_ADDR;
         csr_base[i] = 0x11d0;
       }
     }
