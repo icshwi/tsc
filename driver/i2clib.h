@@ -51,7 +51,8 @@
 struct i2c_ctl
 {
   struct mutex i2c_lock;        /* mutex to lock I2C access                     */
-  struct semaphore sem;         /* semaphore to synchronize with I2C interrput  */
+  wait_queue_head_t i2c_irq_wait;         /* wait queue to synchronize I2C interrput  */
+  int status;
 };
 
 void tsc_i2c_irq( struct tsc_device *ifc, int src, void *arg);

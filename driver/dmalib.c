@@ -117,7 +117,7 @@ tsc_dma_irq( struct  tsc_device *ifc,
 
   debugk(("DMA #%d IRQ masking -> %08x [%x]\n", dma_ctl_p->chan, dma_ctl_p->irq, dma_ctl_p->status));
   iowrite32( dma_ctl_p->irq, ifc->csr_ptr + base + TSC_CSR_ILOC_ITC_IMS);
-  up( &dma_ctl_p->sem);
+  wake_up_interruptible(&dma_ctl_p->dma_irq_wait);
   return;
 }
 
@@ -182,7 +182,8 @@ dma_init( struct dma_ctl *dma_ctl_p)
   }
   dma_ctl_p->mode  = 0;
   mutex_init( &dma_ctl_p->dma_lock);
-  sema_init( &dma_ctl_p->sem, 0);
+  init_waitqueue_head(&dma_ctl_p->dma_irq_wait);
+  dma_ctl_p->status = DMA_STATUS_RESET;
   dma_ctl_p->state = DMA_STATE_IDLE;
 
   return 0;
@@ -453,26 +454,34 @@ dma_wait( struct dma_ctl *dma_ctl_p,
       }
     }
     jiffies =  msecs_to_jiffies(tmo*scale) + 1;
-    retval = down_timeout( &dma_ctl_p->sem, jiffies);
+    retval = wait_event_interruptible_timeout(dma_ctl_p->dma_irq_wait, dma_ctl_p->status & DMA_STATUS_DONE, jiffies);
   }
   else
   {
-    retval = down_interruptible( &dma_ctl_p->sem);
+    retval = wait_event_interruptible(dma_ctl_p->dma_irq_wait, dma_ctl_p->status & DMA_STATUS_DONE);
   }
 
   /* protect against concurrent access to queue control structure */
   mutex_lock(&dma_ctl_p->dma_lock);
-  if( retval)
+  if(tmo && retval == 0)
   {
     debugk(("DMA wait timeout\n"));
     dma_ctl_p->state = DMA_STATE_STARTED;
     dma_ctl_p->status |= DMA_STATUS_TMO;
+    retval = -ETIME;
+  }
+  else if (retval < 0)
+  {
+    debugk(("DMA IRQ wait interrupted by a signal\n"));
+    dma_ctl_p->state = DMA_STATE_STARTED;
+    dma_ctl_p->status |= DMA_STATUS_ERR;
   }
   else 
   {
     debugk(("DMA IRQ received -> %x [%x]\n", dma_ctl_p->status, dma_ctl_p->state));
     dma_ctl_p->state = DMA_STATE_DONE;
     dma_ctl_p->status |= DMA_STATUS_ENDED;
+    retval = 0;
   }
   /* release locking semaphore */
   mutex_unlock(&dma_ctl_p->dma_lock);
@@ -966,11 +975,8 @@ dma_move_consistent(struct tsc_device *ifc,
   }
   dma_set_pipe(dma_ctl_p, pipe);
 
-  /* reset synchronization semaphore */
-  sema_init(&dma_ctl_p->sem, 0);
-
   /* clear transfer status */
-  dma_ctl_p->status = 0;
+  dma_ctl_p->status = DMA_STATUS_RESET;
 
   /* unmask DMA  interrupts */
   debugk(("DMA IRQ unmasking -> %08x\n", irq));
@@ -1046,11 +1052,8 @@ dma_move_sg(struct tsc_device *ifc,
   /* Reset pipe settings */
   dma_set_pipe(dma_ctl_p, 0);
 
-  /* reset synchronization semaphore */
-  sema_init(&dma_ctl_p->sem, 0);
-
   /* clear transfer status */
-  dma_ctl_p->status = 0;
+  dma_ctl_p->status = DMA_STATUS_RESET;
 
   /* unmask DMA  interrupts */
   debugk(("DMA IRQ unmasking -> %08x\n", irq));
@@ -1425,7 +1428,6 @@ tsc_dma_transfer(struct tsc_device *ifc,
   {
     dma_clear(dma_ctl_p);
     dma_free(dma_ctl_p);
-    retval = -EIO;
   }
   return retval;
 }

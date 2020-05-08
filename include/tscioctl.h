@@ -448,6 +448,7 @@ struct tsc_ioctl_dma_time
 #define DMA_STATE_WAITING       0x03
 #define DMA_STATE_DONE          0x04
 
+#define DMA_STATUS_RESET                  0x0
 #define DMA_STATUS_RUN_RD0             0x01
 #define DMA_STATUS_RUN_RD1             0x02
 #define DMA_STATUS_RUN_WR0             0x04
@@ -552,6 +553,9 @@ struct tsc_ioctl_fifo
 
 #define I2C_DEV( addr, bus, size) (((bus &0x7)<<29) | (addr&0x7f) | size)
 
+#define I2C_STATUS_RESET 0x0
+#define I2C_STATUS_DONE  0x1
+
 struct tsc_i2c_devices
 {
   char *name;
@@ -622,6 +626,9 @@ typedef enum {
 #define TSC_IOCTL_USER_WAIT         (TSC_IOCTL_USER | 0x1)
 #define TSC_IOCTL_USER_SUBSCRIBE    (TSC_IOCTL_USER | 0x2)
 #define TSC_IOCTL_USER_UNSUBSCRIBE  (TSC_IOCTL_USER | 0x3)
+
+#define USER_STATUS_RESET 0x0
+#define USER_STATUS_DONE  0x1
 
 struct tsc_ioctl_user_irq
 {
