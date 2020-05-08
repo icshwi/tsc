@@ -85,7 +85,7 @@ struct dma_ctl
   uint desc_offset;              /* PCI base address of SHM allocated to DMA descriptor             */
   uint ring_offset;              /* PCI base address of SHM allocated to DMA ring buffer            */
   struct mutex dma_lock;         /* mutex to lock DMA access                     */
-  struct semaphore sem;           /* semaphore to synchronize with DMA interrputs  */
+  wait_queue_head_t dma_irq_wait;           /* wait queue to synchronize DMA interrputs  */
   struct dma_desc dma_desc;
   int status;                    /* DMA transfer status                                             */
   int irq;                       /* IRQs associated to the DMA channel                              */

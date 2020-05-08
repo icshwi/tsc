@@ -71,7 +71,8 @@ void tsc_user_irq(struct  tsc_device *ifc, int src, void *arg)
 	itc = TSC_ALL_ITC_IACK_ITC(src);
 
 	debugk(("Received interrupt %d from %d\n", ip, itc));
-	up(&user_irq_ctl_p->user_irq_sem[ip]);
+	user_irq_ctl_p->status[ip] = USER_STATUS_DONE;
+	wake_up_interruptible(&user_irq_ctl_p->user_irq_wait[ip]);
 
 	return;
 }
@@ -98,8 +99,10 @@ void user_irq_init(struct user_irq_ctl *user_irq_ctl_p)
 	tsc_irq_register(user_irq_ctl_p->ifc, ITC_CTL(TSC_ITC_SRC_USER1_6), TSC_ITC_SRC_USER1_6 & 0xf, tsc_user_irq, (void *)user_irq_ctl_p);
 	tsc_irq_register(user_irq_ctl_p->ifc, ITC_CTL(TSC_ITC_SRC_USER1_7), TSC_ITC_SRC_USER1_7 & 0xf, tsc_user_irq, (void *)user_irq_ctl_p);
 
-	for (irq = 0; irq < 8; irq++)
-		sema_init(&user_irq_ctl_p->user_irq_sem[irq], 0);
+	for (irq = 0; irq < 8; irq++) {
+		init_waitqueue_head(&user_irq_ctl_p->user_irq_wait[irq]);
+		user_irq_ctl_p->status[irq] = USER_STATUS_RESET;
+	}
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -124,6 +127,7 @@ int tsc_user_irq_wait(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_ir
 		return -EINVAL;
 
 	user_irq_ctl_p = ifc->user_irq_ctl;
+	user_irq_ctl_p->status[user_irq_p->irq] = USER_STATUS_RESET;
 
 	/* User irq are on agent sw 4, XUSER1 */
 	agent_sw_offset = TSC_CSR_AGENT_SW_OFFSET * 4;
@@ -144,22 +148,33 @@ int tsc_user_irq_wait(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_ir
 			}
 		}
 		jiffies = msecs_to_jiffies(tmo*scale) + 1;
-		ret = down_timeout(&user_irq_ctl_p->user_irq_sem[user_irq_p->irq], jiffies);
+		ret = wait_event_interruptible_timeout(user_irq_ctl_p->user_irq_wait[user_irq_p->irq],
+										user_irq_ctl_p->status[user_irq_p->irq] & USER_STATUS_DONE,
+										jiffies);
 	}
 	else
 	{
-		ret = down_interruptible(&user_irq_ctl_p->user_irq_sem[user_irq_p->irq]);
+		ret = wait_event_interruptible(user_irq_ctl_p->user_irq_wait[user_irq_p->irq],
+										user_irq_ctl_p->status[user_irq_p->irq] & USER_STATUS_DONE);
 	}
 
-	if (ret)
+	if (tmo && ret == 0)
 	{
 		printk("USER IRQ wait timeout\n");
+		/* Mask interrupt */
+		iowrite32((1 << user_irq_p->irq), ifc->csr_ptr + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_IMS_OFFSET + agent_sw_offset);
+		ret = -ETIME;
+	}
+	else if (ret < 0)
+	{
+		printk("USER IRQ wait interrupted by a signal\n");
 		/* Mask interrupt */
 		iowrite32((1 << user_irq_p->irq), ifc->csr_ptr + TSC_CSR_ITC_OFFSET + TSC_CSR_ITC_IMS_OFFSET + agent_sw_offset);
 	}
 	else
 	{
 		debugk(("USER IRQ received\n"));
+		ret = 0;
 	}
 
 	return ret;
@@ -187,7 +202,7 @@ int tsc_user_irq_subscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *us
 	for (irq = 0; irq < 8; irq++)
 	{
 		if (user_irq_p->mask & (1 << irq))
-			sema_init(&user_irq_ctl_p->user_irq_sem[irq], 0);
+			user_irq_ctl_p->status[irq] = USER_STATUS_RESET;
 	}
 
 	/* User irq are on agent sw 4, XUSER1 */
@@ -221,7 +236,7 @@ int tsc_user_irq_unsubscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *
 	for (irq = 0; irq < 8; irq++)
 	{
 		if (user_irq_p->mask & (1 << irq))
-			sema_init(&user_irq_ctl_p->user_irq_sem[irq], 0);
+			user_irq_ctl_p->status[irq] = USER_STATUS_RESET;
 	}
 
 	/* User irq are on agent sw 4, XUSER1 */

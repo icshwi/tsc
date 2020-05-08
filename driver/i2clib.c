@@ -66,7 +66,8 @@ tsc_i2c_irq( struct tsc_device *ifc,
 	     int src,
 	     void *arg)
 {
-  up( &ifc->i2c_ctl->sem);
+  ifc->i2c_ctl->status = I2C_STATUS_DONE;
+  wake_up_interruptible(&ifc->i2c_ctl->i2c_irq_wait);
   return;
 }
 
@@ -102,11 +103,12 @@ tsc_i2c_wait( struct tsc_device *ifc,
 {
   int jiffies, retval;
  
-  jiffies =  msecs_to_jiffies( 10); /* timeout after 10 msec */
-  retval = down_timeout( &ifc->i2c_ctl->sem, jiffies);
+  jiffies = msecs_to_jiffies(10); /* timeout after 10 msec */
+  ifc->i2c_ctl->status = I2C_STATUS_RESET;
+  retval = wait_event_interruptible_timeout(ifc->i2c_ctl->i2c_irq_wait, ifc->i2c_ctl->status & I2C_STATUS_DONE, jiffies);
   debugk(("masking [%d : %x]\n", retval, ioread32( ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS)));
-  iowrite32( irq, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
-  return( retval);
+  iowrite32(irq, ifc->csr_ptr + TSC_CSR_ILOC_ITC_IMS);
+  return retval;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

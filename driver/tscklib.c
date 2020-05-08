@@ -761,8 +761,9 @@ tsc_i2c_init( struct tsc_device *ifc)
     return(-ENOMEM);
   }
   /* initialize I2C control structure */
-  mutex_init( &ifc->i2c_ctl->i2c_lock);
-  sema_init( &ifc->i2c_ctl->sem, 0);
+  mutex_init(&ifc->i2c_ctl->i2c_lock);
+  init_waitqueue_head(&ifc->i2c_ctl->i2c_irq_wait);
+  ifc->i2c_ctl->status = I2C_STATUS_RESET;
   //tsc_irq_register( ifc, ITC_SRC_I2C_OK, tsc_i2c_irq, (void *)ifc->i2c_ctl);
   //tsc_irq_register( ifc, ITC_SRC_I2C_ERR, tsc_i2c_irq, (void *)ifc->i2c_ctl);
 

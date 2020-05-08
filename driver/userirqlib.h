@@ -52,7 +52,8 @@
 struct user_irq_ctl
 {
 	struct tsc_device *ifc;                    /* IFC device */
-	struct semaphore user_irq_sem[8];          /* semaphore to synchronize with interrputs */
+	wait_queue_head_t user_irq_wait[8];          /* wait queue to synchronize interrputs */
+	int status[8];
 };
 
 void tsc_user_irq(struct tsc_device *ifc, int src, void *arg);
