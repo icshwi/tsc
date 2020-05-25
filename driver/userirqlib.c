@@ -191,19 +191,13 @@ int tsc_user_irq_wait(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_ir
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int tsc_user_irq_subscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_irq_p)
 {
-	int agent_sw_offset = 0, irq = 0;
+	int agent_sw_offset = 0;
 	struct user_irq_ctl *user_irq_ctl_p;
 
 	if (user_irq_p == NULL)
 		return -EINVAL;
 
 	user_irq_ctl_p = ifc->user_irq_ctl;
-
-	for (irq = 0; irq < 8; irq++)
-	{
-		if (user_irq_p->mask & (1 << irq))
-			user_irq_ctl_p->status[irq] = USER_STATUS_RESET;
-	}
 
 	/* User irq are on agent sw 4, XUSER1 */
 	agent_sw_offset = TSC_CSR_AGENT_SW_OFFSET * 4;
@@ -225,19 +219,13 @@ int tsc_user_irq_subscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *us
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 int tsc_user_irq_unsubscribe(struct tsc_device *ifc, struct tsc_ioctl_user_irq *user_irq_p)
 {
-	int agent_sw_offset = 0, irq = 0;
+	int agent_sw_offset = 0;
 	struct user_irq_ctl *user_irq_ctl_p;
 
 	if (user_irq_p == NULL)
 		return -EINVAL;
 
 	user_irq_ctl_p = ifc->user_irq_ctl;
-
-	for (irq = 0; irq < 8; irq++)
-	{
-		if (user_irq_p->mask & (1 << irq))
-			user_irq_ctl_p->status[irq] = USER_STATUS_RESET;
-	}
 
 	/* User irq are on agent sw 4, XUSER1 */
 	agent_sw_offset = TSC_CSR_AGENT_SW_OFFSET * 4;
