@@ -32,7 +32,7 @@ CFLAGS	        := -MP -MMD -Wall $(INCDIRS) $(EXTRAFLAGS)
 SRCS_LIB_TSC	:= tsculib.c clilib.c tscextlib.c tstlib.c ponmboxlib.c \
                    mtca4amclib.c mtca4rtmlib.c pca9539lib.c i2ceepromlib.c \
                    fbi1482lib.c rcf1450lib.c rsp1461lib.c rdt1465lib.c \
-                   rdt1465lib.c rcc1466lib.c
+                   rcc1466lib.c
 SRCS_LIB_ADC	:= adclib.c  adc3112lib.c fscope3112lib.c adc3110lib.c \
                    gscopelib.c gscope3110lib.c adc3117lib.c adc3210lib.c 
 

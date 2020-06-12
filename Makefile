@@ -63,7 +63,7 @@ TSCTST_OBJS :=$(addsuffix .o,$(basename $(TSCTST_SRCS)))
 TSBLIB:= libtsc.so
 ADCLIB:= libadc.so
 
-CFLAGS := -Wall -fstack-protector-strong
+CFLAGS := -Wall
 LDFLAGS :=-Wall -lrt -lm
 
 BINS := TscMon SmemCalibration 
