@@ -70,8 +70,8 @@ int tsc_smon_read(int fd, int idx, int *data_p);   /* read from ARTIX7 SMON regi
 int tsc_pon_write(int fd, int idx, int *data_p);   /* write to PMON register             */
 int tsc_pon_read(int fd, int idx, int *data_p);    /* read from PON register             */
 int tsc_axi_get_cap(int *cap);
-int tsc_axil_write( int idx, int wstrb, int prot, int * data_p);
-int tsc_axil_read( int idx, int prot, int * data_p);
+int tsc_axil_write(int fd, int idx, int wstrb, int prot, int * data_p);
+int tsc_axil_read(int fd, int idx, int prot, int * data_p);
 int tsc_pciep_write(int fd, int idx, int *data_p); /* write to ARTIX7 PCIEP register     */
 int tsc_pciep_read(int fd, int idx, int *data_p);  /* read from ARTIX7 PCIEP register    */
 uint64_t tsc_swap_64(uint64_t);
