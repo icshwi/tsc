@@ -282,11 +282,9 @@ static int tsc_device_init(int fd)
   {
     /* read AXI-4 Bridge configuration */
     ret = tsc_csr_read(fd, TSC_CSR_AXI4_CFG, &tsc_axi_cap);
-    printf("AXI-4 Bridge Configuration ret: %d, %8x\n", ret, tsc_axi_cap);
     if (ret < 0) return ret;
   
     tsc_has_axi = 1;
-    printf("AXI-4 bridge detected...\n");
   }
   return 1;
 }

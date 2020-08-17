@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : TscMon.c
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -597,13 +597,11 @@ int main(int argc, char *argv[]){
 	mm = (tsc_date>>23) & 0xf;
 	dd = (tsc_date>>27) & 0x1f;
 
-  /* Detect AXI-4 */
-  if (tsc_axi_get_cap(&cap) == 1)
-  {
-     tsc_has_axi_master = 1;   
-     /* this line is nonsense - the 16 LSBs are hard-coded to '0' in the VHDL 
-     tsc_has_axi_master = ((cap & TSC_AXI4_CFG_AXI_MASTER)!=0 ? 1 : 0); */
-  }
+    /* Detect AXI-4 */
+    if (tsc_axi_get_cap(&cap) == 1)
+    {
+       tsc_has_axi_master = ((cap & TSC_AXI4_CFG_AXI_MASTER)!=0 ? 1 : 0);
+    }
 
 	/* configure the terminal in canonical mode with echo */
 	ioctl( 0, TIOCGWINSZ, &winsize);
@@ -621,9 +619,9 @@ int main(int argc, char *argv[]){
 	tdma_init(quiet);
 
 	// Launch automatically DDR3 calibration
-	// ICSHWI-2991 - Workaroud for the issue: only perform the 
+	// ICSHWI-2991 - Workaroud for the issue: only perform the
 	//               calibration on PPC
-	if (ppc) 
+	if (ppc)
 		tsc_ddr_idel_calib_start(quiet);
 
 	if (exit) {

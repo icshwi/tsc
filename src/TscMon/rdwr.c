@@ -91,8 +91,6 @@ extern int tsc_has_axi_master;
 
 extern int tsc_fd;
 
-
-
 char *
 rdwr_rcsid()
 {
@@ -740,7 +738,7 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
       }
       else if( c->cmd[1] == 'l')
       {
-        retval = tsc_axil_read( offset, 2, &data);
+        retval = tsc_axil_read(tsc_fd, offset, 2, &data);
         if( retval < 0)
         {
           printf("cannot access AXI-4 Lite register %x -> error %d\n", offset, retval);
@@ -779,6 +777,14 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     {
       retval =  tsc_pon_write(tsc_fd, offset, &data);
     }
+    else if( c->cmd[1] == 'l')
+    {
+      retval = tsc_axil_write(tsc_fd, offset, 0xF, 2, &data);
+      if( retval < 0)
+      {
+        debugPrintf("cannot access AXI-4 Lite register %x -> error %d\n", offset, retval);
+      }
+    }
     else
     {
       retval =  tsc_csr_write(tsc_fd, offset, &data);
@@ -811,6 +817,18 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
     else if( c->cmd[1] == 'i')
     {
       retval =  tsc_pon_read(tsc_fd, offset, &data);
+      if( retval < 0)
+      {
+        debugPrintf("cannot access PON register %x -> error %d\n", offset, retval);
+      }
+    }
+    else if( c->cmd[1] == 'l')
+    {
+      retval = tsc_axil_read(tsc_fd, offset, 2, &data);
+      if( retval < 0)
+      {
+        debugPrintf("cannot access AXI-4 Lite register %x -> error %d\n", offset, retval);
+      }
     }
     else
     {
@@ -867,6 +885,14 @@ tsc_rdwr_pr( struct cli_cmd_para *c)
           {
 	    retval =  tsc_pon_write(tsc_fd, offset, &data);
 	  }
+          else if( c->cmd[1] == 'l')
+          {
+            retval = tsc_axil_write(tsc_fd, offset, 0xF, 2, &data);
+            if( retval < 0)
+            {
+              debugPrintf("cannot access AXI-4 Lite register %x -> error %d\n", offset, retval);
+            }
+          }
 	  else 
           {
 	    retval =  tsc_csr_write(tsc_fd, offset, &data);
@@ -966,10 +992,10 @@ tsc_rdwr_dr( struct cli_cmd_para *c)
     }
     else if( c->cmd[1] == 'l')
     {
-      retval = tsc_axil_read( offset, 2, &data);
+      retval = tsc_axil_read(tsc_fd, offset, 2, &data);
       if ( retval < 0)
       {
-        printf("\ncannot access AXI-4 Lite register 0x%x -> error %d\n", offset*4, retval);
+        debugPrintf("\ncannot access AXI-4 Lite register 0x%x -> error %d\n", offset*4, retval);
         return( RDWR_ERR);
       }
       if( !(i&0xf)) printf("\n%08x : ", offset);
@@ -1977,9 +2003,21 @@ tsc_rdwr_cr( struct cli_cmd_para *c)
   {
     retval = tsc_pon_read(tsc_fd, offset, &data);
   }
+  else if ( c->cmd[1] ==  'l')
+  {
+    retval = tsc_axil_read(tsc_fd, offset, 2, &data);
+    if(retval < 0)
+    {
+      debugPrintf("Cannot access AXI-4 Lite register %x\n", offset);
+    }
+  }
   else 
   {
     retval = tsc_csr_read(tsc_fd, offset, &data);
+    if(retval < 0)
+    {
+      debugPrintf("Cannot access TSC egister %x\n", offset);
+    }
   }
   if( retval < 0)
   {
