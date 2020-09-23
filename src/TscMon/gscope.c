@@ -824,10 +824,10 @@ int tsc_gscope_fwinfo_read(char addr, int *hash) {
 
     char val = 0;
     int retval;
-
+    uint i = 0;
     *hash = 0;
     /* Compose hash via 4x byte reads */
-    for (uint i=0; i<4; i++) {
+    for (i=0; i<4; i++) {
         retval = tsc_usr_read(tsc_fd, addr+i, &val, 0, 1, 0, 1);
         if (retval < 0) {
             printf("Read from USER register 0x%2x failed!\n", addr);
