@@ -51,9 +51,13 @@
 
 #include "tsc.h"
 
+#ifndef _GNU_SOURCE
 #ifndef _LINUX_TYPES_H
 #include <stdint.h>
 #endif /* _LINUX_TYPES_H */
+#else
+#include <stdint.h>
+#endif /*_GNU_SOURCE */
 
 #define TSC_BOARD_IFC1211        0x73571211
 #define TSC_BOARD_IFC1410        0x73571410
