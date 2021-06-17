@@ -812,15 +812,16 @@ if (!quiet) {
 }
         // Loop on 16 DQ
         for(j = 0; j < 16; j++){
-            // Store initial value of count of the IFSTA register
+            // Read final value of the IFSTA register
             dq_path = (j << 12);
             tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &dq_path);
             tsc_csr_read(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read);           // Acquire current value of the register
-            vtc_set = (vtc_read | (1 << 28));                           // Set value to disable VTC
+            vtc_set = (vtc_read | (1 << 28));                                   // Set value to disable VTC
             tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_set);           // Disable VTC
-            tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value);         // Read initial value of IFSTA register
+            tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value);         // Read final value of IFSTA register
             tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read);          // Re-active active VTC
 if (!quiet) {
+            /* IDELAY value is stored in the 9 LSBs of SMEM_DDR_IFSTA register (SMEM_DDR3_DELQ register) */
             // MEM1
             if(r == 0) {
                 printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_1[j], cnt_value, cnt_value & 0x1ff);
