@@ -189,6 +189,7 @@ int main(int argc, char * argv[]){
     unsigned int    init_delay_2[16]          = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    temp_cnt_value_store[16]  = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     unsigned int    final_cnt_value_store[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned int    final_cnt_value_store1[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     int             dq_path         = 0;
     unsigned int    r, rr           = 0;
     unsigned int    best            = 0;
@@ -207,6 +208,7 @@ int main(int argc, char * argv[]){
     unsigned int    ref_pattern[32] = {0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1};
     int slot = 0;
     int i = 0;
+    unsigned int expected_val = 0;
     // 32 bits reference pattern for each DQ : 0101 1001 0011 0100 1011 0101 1001 0011
 
     unsigned int word0  = 0xffff0000; // 1111 1111 1111 1111 0000 0000 0000 0000
@@ -276,14 +278,14 @@ int main(int argc, char * argv[]){
         rr = 2;
     }
 
-        if (tsc_ddr_is_calibrated(tsc_fd) == 1)
-       {
-       if (!quiet)
-       {
-           printf("Calibration already done !\n");
-       }
-       return (0);
-  }
+      //  if (tsc_ddr_is_calibrated(tsc_fd) == 1)
+      // {
+      //   if (!quiet)
+      //   {
+      //       printf("Calibration already done !\n");
+      //   }
+      // return (0);
+ //  }
 
     /* Reset memory controller */
     /***************************************************************************/
@@ -608,6 +610,9 @@ else {
             }
 
             // Update the array with the new count value
+            if (r == 0)
+                final_cnt_value_store1[j] = marker;
+
             final_cnt_value_store[j] = marker;
 if (!quiet) {
             if(j < 8){
@@ -807,9 +812,9 @@ if (!quiet) {
         data = 0;
         tsc_csr_write(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &data);
         tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &data);
-if (!quiet) {
+//if (!quiet) {
         printf("Final value for MEM%x : \n", mem);
-}
+//}
         // Loop on 16 DQ
         for(j = 0; j < 16; j++){
             // Read final value of the IFSTA register
@@ -820,17 +825,27 @@ if (!quiet) {
             tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_set);           // Disable VTC
             tsc_csr_read(tsc_fd, SMEM_DDR3_IFSTA[mem - 1], &cnt_value);         // Read final value of IFSTA register
             tsc_csr_write(tsc_fd, SMEM_DDR3_IDEL[mem - 1], &vtc_read);          // Re-active active VTC
-if (!quiet) {
+//if (!quiet) {
             /* IDELAY value is stored in the 9 LSBs of SMEM_DDR_IFSTA register (SMEM_DDR3_DELQ register) */
             // MEM1
             if(r == 0) {
-                printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_1[j], cnt_value, cnt_value & 0x1ff);
+                if (j < 8) {
+                    expected_val = final_cnt_value_store1[j + 8] & 0x1ff;
+                } else {
+                    expected_val = final_cnt_value_store1[j - 8] & 0x1ff;
+                }
+                printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x  -> Expected delay 0x%03x\n", j, init_delay_1[j], cnt_value, cnt_value & 0x1ff, expected_val);
             }
             // MEM2
             else if (r == 1){
-                printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x \n", j, init_delay_2[j], cnt_value, cnt_value & 0x1ff);
+                if (j < 8) {
+                    expected_val = final_cnt_value_store[j + 8] & 0x1ff;
+                } else {
+                    expected_val = final_cnt_value_store[j - 8] & 0x1ff;
+                }
+                printf("DQ[%02i] Initial delay 0x%03x - IFSTA register 0x%08x -> Final delay 0x%03x -> Expected delay 0x%03x\n", j, init_delay_2[j], cnt_value, cnt_value & 0x1ff, expected_val);
             }
-}
+//}
         }
 
         // Set IDEL and IFSTA to 0
@@ -843,9 +858,9 @@ if (!quiet) {
     }
     tsc_ddr_set_calibration_done(tsc_fd, 1);
 
-if (!quiet) {
+//if (!quiet) {
     printf("\n");
-}
+//}
     // TSC exit
     tsc_exit(tsc_fd);
 
