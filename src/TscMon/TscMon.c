@@ -507,6 +507,77 @@ else {
     return 0;
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_is_calibrated
+ * Prototype     : int
+ * Parameters    : -
+ * Return        : 0  = not calibrated,                 need a calibration
+ *                 -1 = timeout waiting on calibration, need a calibration
+ *                 1  = already calibrated
+ *----------------------------------------------------------------------------
+ * Description   : verify if ddr memory is already calibrated
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static int tsc_ddr_is_calibrated()
+{
+  int data, to = 1000;
+
+  while (to>0)
+  {
+    /* verify if SMEM is calibrated and take the semaphore is if not calibrated */
+    tsc_csr_read(tsc_fd, TSC_CSR_SMEM_DDR3_CALSEM, &data);
+
+    /* calibration semaphore register not present ? -> calibration needed */
+    if ((data & 0xe0000000) == TSC_SMEM_DDR3_CALSEM_ABSENT)
+    {
+      return(0);
+    }
+
+    /* semaphore already taken -> we should wait */
+    if ((data & 0xe0000000) == TSC_SMEM_DDR3_CALSEM_OWNED)
+    {
+      to--;
+      continue;
+    }
+
+    /* calibration done ! -> ok already calibrated */
+    if ((data & 0xe0000000) == TSC_SMEM_DDR3_CALSEM_DONE)
+    {
+      return(1);
+    }
+
+    /* Calibration need to be done (or semaphore not available) ? -> do it */
+    if ((data & 0xe0000000) != TSC_SMEM_DDR3_CALSEM_DONE)
+    {
+      return(0);
+    }
+  }
+  /* reset semaphore and redo the calibration */
+  data = 0;
+  tsc_csr_write(tsc_fd, TSC_CSR_SMEM_DDR3_CALSEM, &data);
+
+  /* timeout */
+  return (-1);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_ddr_set_calibration_done
+ * Prototype     : int
+ * Parameters    : -
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : set calibration done flag for the ddr memory
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static void tsc_ddr_set_calibration_done(int done)
+{
+  int data;
+  data = ((done!=0) ? TSC_SMEM_DDR3_CALSEM_DONE : 0);
+  tsc_csr_write(tsc_fd, TSC_CSR_SMEM_DDR3_CALSEM, &data);
+}
+
 void usage()
 {
 	printf("TscMon usage:\n");
@@ -621,12 +692,20 @@ int main(int argc, char *argv[]){
 	// Launch automatically DDR3 calibration
 	// ICSHWI-2991 - Workaroud for the issue: only perform the
 	//               calibration on PPC
-	if (ppc)
-		tsc_ddr_idel_calib_start(quiet);
+	// if (ppc)
+	  /* verify if SMEM is calibrated or not */
+      if (tsc_ddr_is_calibrated() != 1)
+      {
+          /* Launch automatically DDR3 calibration */
+          retval = tsc_ddr_idel_calib_start(quiet);
+
+          /* set calibration done status */
+          tsc_ddr_set_calibration_done(((retval == 0)?1:0));
+      }
 
 	if (exit) {
 		if (ppc) {
-		//Enable FMCs and exit. DDR already calibrated
+		    //Enable FMCs and exit. DDR already calibrated
 			data = 0xC0000000;
 			tsc_pon_write(tsc_fd, 0xC, &data);
 		}

@@ -826,11 +826,12 @@ tsc_csr_op( struct tsc_device *ifc,
     {
       return( -EINVAL);
     }
-    /* register offset must be below 0x1000 */
-    if( csr_op->offset > TSC_CSR_OFFSET_MAX)
-    {
-      return( -EINVAL);
-    }
+  }
+
+  /* register offset must be below 0x1000 */
+  if( csr_op->offset > TSC_CSR_OFFSET_MAX)
+  {
+    return( -EINVAL);
   }
 
   mutex_lock( &ifc->csr_lock);
