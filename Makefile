@@ -57,7 +57,7 @@ SMEMCA_SRCS :=SmemCalibration.c
 TSCLIB_OBJS :=$(addsuffix .o,$(basename $(TSCLIB_SRCS)))
 ADCLIB_OBJS :=$(addsuffix .o,$(basename $(ADCLIB_SRCS)))
 TSCMON_OBJS :=$(addsuffix .o,$(basename $(TSCMON_SRCS)))
-SMEMCA_OBJS :=$(addsuffix .o,$(basename $(SRC_SMEMCAL)))
+SMEMCA_OBJS :=$(addsuffix .o,$(basename $(SMEMCA_SRCS)))
 TSCTST_OBJS :=$(addsuffix .o,$(basename $(TSCTST_SRCS)))
 
 TSBLIB:= libtsc.so
@@ -73,7 +73,7 @@ build: $(BINS)
 TscMon: $(TSCMON_OBJS) $(ADCLIB_OBJS) $(TSCLIB_OBJS)
 	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
-SmemCalibration: $(SMEMCA_OBJS) $(TSCMON_OBJS) $(ADCLIB_OBJS) $(TSCLIB_OBJS)
+SmemCalibration: $(SMEMCA_OBJS) $(TSCLIB_OBJS)
 	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 TscTst: $(TSCTST_OBJS) $(TSCMON_OBJS)

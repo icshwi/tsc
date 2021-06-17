@@ -228,6 +228,7 @@
 #define TSC_CSR_SMEM_DDR3_DELQ	        0x808
 #define TSC_CSR_SMEM_DDR3_IDEL	        0x80c
 #define TSC_CSR_SMEM_SRAM_CSR	        0x810
+#define TSC_CSR_SMEM_DDR3_CALSEM        0x814
 
 #define TSC_CSR_SMEM2_BASE	        	0xc00
 #define TSC_CSR_SMEM2_DDR3_CSR	        0xc00
@@ -235,6 +236,7 @@
 #define TSC_CSR_SMEM2_DDR3_DELQ	        0xc08
 #define TSC_CSR_SMEM2_DDR3_IDEL	        0xc0c
 #define TSC_CSR_SMEM2_SRAM_CSR	        0xc10
+#define TSC_CSR_SMEM2_DDR3_CALSEM       0xc14
 
 #define TSC_CSR_IDMA_BASE	       	 	0x800
 #define TSC_CSR_IDMA_GCSR	        	0x840
@@ -833,6 +835,13 @@ static const int TSC_ITC_IM_IRQ[7] = { TSC_ITC_IM_IRQ1,
  *  DDR3 CSR (CSR + $800/C)
  */
 #define TSC_SMEM_DDR3_SIZE(x) ((x&0xc)?(0x8000000<<((x>>2)&3)):0)  /* calculate SMEM DDR3 size            */
+
+/*
+ *  DDR3 CSR (CSR + $814)
+ */
+#define TSC_SMEM_DDR3_CALSEM_ABSENT   (1<<29)
+#define TSC_SMEM_DDR3_CALSEM_OWNED    (1<<30)
+#define TSC_SMEM_DDR3_CALSEM_DONE     (1<<31)
 
 /*
  *  SRAM CSR (CSR + $810/C)
