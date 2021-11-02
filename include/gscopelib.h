@@ -31,14 +31,15 @@
 
 #define GSCOPE_CSR_BASE   0x00001000
 #define GSCOPE_CSR_ADDR( csr)      (GSCOPE_CSR_BASE | (csr<<2))
-#define GSCOPE_CSR_SIGN1        0x60
+
+#define GSCOPE_CSR_SIGN1        0x60   /* 0x1180 */
 #define GSCOPE_CSR_MAP1         0x61
 #define GSCOPE_CSR_RWT1         0x63
 #define GSCOPE_CSR_SIGN2        0x64
 #define GSCOPE_CSR_MAP2         0x65
 #define GSCOPE_CSR_RWT2         0x67
 
-#define GSCOPE_CSR_FE1_CSR1     0x68
+#define GSCOPE_CSR_FE1_CSR1     0x68   /* 0x11a0 */
 #define GSCOPE_CSR_FE1_CSR2     0x69 
 #define GSCOPE_CSR_FE1_CSR3     0x6a 
 #define GSCOPE_CSR_FE1_TRIG     0x6b 
@@ -47,7 +48,7 @@
 #define GSCOPE_CSR_FE2_CSR3     0x6e 
 #define GSCOPE_CSR_FE2_TRIG     0x6f
  
-#define GSCOPE_CSR_SWR1_RGB_CFG       0x70
+#define GSCOPE_CSR_SWR1_RGB_CFG       0x70   /* 0x11c0 */
 #define GSCOPE_CSR_DWR1_RGB_CFG       0x70
 #define GSCOPE_CSR_SWR1_RGB_BAS       0x71
 #define GSCOPE_CSR_SWR1_ACQ_MGT       0x72
@@ -191,15 +192,45 @@
 
 #define GSCOPE_MIXED_FMC                 3
 
+/* Dual buffer control bits */
+#define GSCOPE_ACQ_DUALBUF0_RDY       (1<<8)      /* Primary Ring Buffer Set available                                */
+#define GSCOPE_ACQ_DUALBUF1_RDY       (1<<9)      /* Secondary Ring Buffer Set available                              */
+#define GSCOPE_ACQ_DUALBUF0_DONE      (1<<10)     /* Primary Ring Buffer Set consumed                                 */
+#define GSCOPE_ACQ_DUALBUF1_DONE      (1<<11)     /* Secondary Ring Buffer Set consumed                               */
+#define GSCOPE_ACQ_DUALBUF_ENA        (1<<12)     /* Dual buffer mode Enable                                          */
+
+/* save mode */
+#define GSCOPE_SAVE_MODE_BUF          (0<<0)    /* Save sample data into a buffer                                     */
+#define GSCOPE_SAVE_MODE_FILE         (1<<0)    /* Save sample data into a file                                       */
+#define GSCOPE_SAVE_AUTO_BUF          (0<<1)    /* Automatic buffer selection (only in dual buffer mode)              */
+#define GSCOPE_SAVE_FORCE_BUF         (1<<1)    /* Force buffer selection     (only in dual buffer mode)              */
+#define GSCOPE_SAVE_PRI_BUF           (0<<2)    /* Primary Buffer             (only in dual buffer mode when FORCED)  */
+#define GSCOPE_SAVE_SEC_BUF           (0<<2)    /* Secondary Buffer           (only in dual buffer mode when FORCED)  */
+
+
+
 void gscope_csr_wr(int fd, int csr, int data);
 int gscope_csr_rd(int fd, int csr);
 int gscope_identify(int fd);
 struct tsc_ioctl_map_win *gscope_map(int fd, int space, char **buf, int offset, int size);
 void gscope_unmap(int fd, struct tsc_ioctl_map_win *map, char *u_addr);
 
-int gscope_acq_status(int fd, int fmc);
-int gscope_acq_arm(int fd, int fmc, int trig_mode, int trig_pos, int buf_size, int rearm);
-int gscope_acq_abort(int fd, int fmc);
-int gscope_acq_rearm(int fmc);
+void                         gscope_csr_wr         (int fd, int csr, int data);
+int                          gscope_csr_rd         (int fd, int csr);
+int                          gscope_identify       (int fd);
+struct tsc_ioctl_map_win  *  gscope_map            (int fd, int space, char **buf, int offset, int size) ;
+void                         gscope_unmap          (int fd, struct tsc_ioctl_map_win *map, char *u_addr);
+int                          gscope_acq_status     (int fd, int fmc);
+int                          gscope_acq_arm        (int fd, int fmc, int trig_mode, int trig_pos, int buf_size, int rearm);
+int                          gscope_acq_abort      (int fd, int fmc);
+int                          gscope_acq_rearm      (int fd, int fmc);
+int                          gscope_acq_release_buf(int fd, int fmc, int buf);
+void                         gscope_trig_dis       (int fd, int fmc);
+
+void                         gscope_dump           (int fd, int fmc);
+
+void                         gscope_mux_build_map      (int fd);
+int                          gscope_mux_get_map        (int fd, int adc);
+int                          gscope_mux_get_scope_chan (int fd, int adc);
 
 #endif /*  _H_GSCOPELIB */

@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : adclib.c
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -15,7 +15,7 @@
  *----------------------------------------------------------------------------
  *
  *  Copyright (C) IOxOS Technologies SA <ioxos@ioxos.ch>
- *  
+ *
  *    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
  *    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  *    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -50,74 +50,10 @@
 #include <unistd.h>
 #include <tsculib.h>
 #include <tscextlib.h>
+#include <fmclib.h>
 #include <adclib.h>
 
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc_csr_rd
- * Prototype     : int
- * Parameters    : fmc	fmc index (1 or 2)
- *                 csr	register index
- * Return        : register content
- *----------------------------------------------------------------------------
- * Description   : Read ADC CSR register referred by csr
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-adc_csr_rd(int fd, int fmc, int csr)
-{
-  int addr;
-  int data;
-
-  addr = ADC_CSR_ADDR( csr);
-  if( fmc == ADC_FMC2) addr +=  ADC_CSR_OFF_FMC2;
-  tsc_csr_read(fd,  addr, &data);
-  return( data);
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc_csr_wr
- * Prototype     : void
- * Parameters    : fmc  fmc index (1 or 2)
- *                 csr  register index
- *                 data  data to be written in register
- * Return        : void
- *----------------------------------------------------------------------------
- * Description   : Write ADC CSR register referred by csr with data
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-void 
-adc_csr_wr(int fd, int fmc, int csr, int data)
-{
-  int addr;
-
-  addr = ADC_CSR_ADDR( csr);
-  if( fmc == ADC_FMC2) addr +=  ADC_CSR_OFF_FMC2;
-  tsc_csr_write(fd, addr, &data);
-
-  return;
-}
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc_identify
- * Prototype     : int
- * Parameters    : fmc FMC identifier (1 or 2)
- * Return        : ADC signature (expect ADC_SIGN_ID)
- *----------------------------------------------------------------------------
- * Description   : returns the content of ADC signature register (index 0x80)
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int 
-adc_identify(int fd, int fmc)
-{
-  int id;
-
-  id = adc_csr_rd(fd, fmc,  ADC_CSR_SIGN);
-
-  return( id);
-}
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc_spi_read
  * Prototype     : int
@@ -126,33 +62,51 @@ adc_identify(int fd, int fmc)
  *                 reg  register index
  * Return        : content of register
  *----------------------------------------------------------------------------
- * Description   : returns the content of register reg located in the resource 
+ * Description   : returns the content of register reg located in the resource
  * identified by cmd
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int
-adc_spi_read(int fd, int fmc, int cmd, int reg)
+int adc_spi_read(int fd, int fmc, int cmd, int reg, int *data)
 {
-  int tmo, data;
+  int to, tmp, ret;
 
-  cmd |=  0x80000000 | reg;
-  tmo = 1000;
+  to = 1000;
+  cmd |=  ((1<<31) | (reg&0xffff));
   //printf("adc_spi_read( %x, %x, %x)\n", fmc, cmd, reg);
-  adc_csr_wr(fd, fmc, ADC_CSR_SERIAL, cmd);
-  while( --tmo)
+
+  ret = fmc_csr_write(fd, fmc, ADC_CSR_SERIAL, cmd);
+  if (ret < 0)
+    return(ret);
+
+  while (--to)
   {
-    if( !(adc_csr_rd(fd, fmc, ADC_CSR_SERIAL) & 0x80000000)) break;
+    ret = fmc_csr_read(fd, fmc, ADC_CSR_SERIAL, &tmp);
+    if (ret < 0)
+      return (ret);
+
+    if (!(tmp & (1<<31)))
+      break;
   }
-  if( !tmo)
+
+  if (!to)
   {
-    printf("adc_spi_read() : cmd = %08x -> timeout...\n", cmd);
+    fprintf(stderr, "adc_spi_read() : cmd = %08x -> timeout...\n", cmd);
     return(-1);
   }
-  data = adc_csr_rd(fd, fmc, ADC_CSR_SERIAL+1);
+
+  ret = fmc_csr_read(fd, fmc, ADC_CSR_SERIAL+1, &tmp);
+  if (ret < 0)
+    return (ret);
+
   //printf("cmd = %08x - data = %08x\n", cmd, data);
 
-  return( data);
+  if (data != NULL)
+  {
+    *data = tmp;
+  }
+
+  return(0);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -165,105 +119,42 @@ adc_spi_read(int fd, int fmc, int cmd, int reg)
  * Return        : 0  if SPI command OK
  * 				  -1  in case of timeout
  *----------------------------------------------------------------------------
- * Description   : writes data in the register reg located in the resource 
+ * Description   : writes data in the register reg located in the resource
  * identified by cmd
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int
-adc_spi_write(int fd, int fmc, int cmd, int reg, int data)
+int adc_spi_write(int fd, int fmc, int cmd, int reg, int data)
 {
-  int tmo;
+  int to, tmp, ret;
 
-  cmd |=  0xc0000000 | reg;
-  tmo = 1000;
+  to = 1000;
+  cmd |=  ((1<<31)|(1<<30)|(reg&0xffff));
+
   //printf("adc_spi_read( %x, %x, %x)\n", fmc, cmd, reg);
-  adc_csr_wr(fd, fmc, ADC_CSR_SERIAL+1, data);
-  data = adc_csr_rd(fd, fmc, ADC_CSR_SERIAL+1);
-  adc_csr_wr(fd, fmc, ADC_CSR_SERIAL, cmd);
-  while( --tmo)
+
+  ret = fmc_csr_write(fd, fmc, ADC_CSR_SERIAL+1, data);
+  if (ret<0)
+    return (ret);
+
+  ret = fmc_csr_write(fd, fmc, ADC_CSR_SERIAL, cmd);
+  if (ret<0)
+    return (ret);
+
+  while(--to)
   {
-    if( !(adc_csr_rd(fd, fmc, ADC_CSR_SERIAL) & 0x80000000)) break;
-  }
-  if( !tmo)
-  {
-    printf("adc_spi_read() : cmd = %08x -> timeout...\n", cmd);
-    return(-1);
+    ret = fmc_csr_read(fd, fmc, ADC_CSR_SERIAL, &tmp);
+    if (ret<0)
+      return(ret);
+
+    if (!(tmp & (1<<31)))
+      return(0);
   }
 
-  return( 0);
+  fprintf(stderr, "adc_spi_read() : cmd = %08x -> timeout...\n", cmd);
+  return(-1);
 }
 
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc_i2c_read
- * Prototype     : int
- * Parameters    : fmc  FMC identifier (1 or 2)
- *                 dev  I2C device address
- *                 reg  register index
- * Return        : content of register
- *----------------------------------------------------------------------------
- * Description   : returns the content of register reg located in the resource
- * identified by dev.
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-uint
-adc_i2c_read(int fd, int fmc, uint device, uint reg)
-{
-  int status;
-  uint data;
-
-  if( fmc == ADC_FMC2)
-  {
-    device |= 0xa0000000;
-  }
-  else
-  {
-    device |= 0x80000000;
-  }
-  status = tsc_i2c_read(fd, device, reg, &data);
-  if( status < 0)
-  {
-    return(-1);
-  }
-  return( data);
-}    
-
-/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- * Function name : adc_i2c_write
- * Prototype     : int
- * Parameters    : fmc  fmc number (1 or 2)
- *                 dev  I2C device address
- *                 reg  register index
- *                 data  data to be written in register
- * Return        : 0  if I2C cycle OK
- * 				  -1  if error
- *----------------------------------------------------------------------------
- * Description   : write data in the register reg located in the resource 
- * identified by dev
- *
- *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-
-int
-adc_i2c_write(int fd, int fmc, uint device, uint reg, uint data)
-{
-  int status;
-
-  if( fmc == ADC_FMC2)
-  {
-    device |= 0xa0000000;
-  }
-  else
-  {
-    device |= 0x80000000;
-  }
-  status = tsc_i2c_write(fd, device, reg, data);
-  if( status < 0)
-  {
-    return(-1);
-  }
-  return( 0);
-}    
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc_gpio_trig
@@ -271,18 +162,134 @@ adc_i2c_write(int fd, int fmc, uint device, uint reg, uint data)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-
-int
-adc_gpio_trig(int fd, int fmc)
+int adc_gpio_trig(int fd, int fmc)
 {
-  adc_csr_wr(fd, fmc, ADC_CSR_GPIO, 0x10); /* set output low */
-  adc_csr_wr(fd, fmc, ADC_CSR_GPIO, 0x20); /* set output high */
-  adc_csr_wr(fd, fmc, ADC_CSR_GPIO, 0x10); /* set output low */
+  fmc_csr_write(fd, fmc, ADC_CSR_GPIO, 0x10); /* set output low */
+  fmc_csr_write(fd, fmc, ADC_CSR_GPIO, 0x20); /* set output high */
+  fmc_csr_write(fd, fmc, ADC_CSR_GPIO, 0x10); /* set output low */
   return(0);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc_read_tmp102
+ * Prototype     : int
+ * Parameters    : fmc number (1 or 2)
+ *                 i2c device address
+ * Return        : fail/success
+ *----------------------------------------------------------------------------
+ * Description   : read temperature from TMP102 I2C device
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
+int adc_read_tmp102(int fd, int fmc, uint dev, uint *temp, uint *temp_lo, uint *temp_hi)
+{
+  int ret;
+  uint ctl, loc_temp, loc_temp_lo, loc_temp_hi;
+
+  ret = fmc_i2c_read(fd, fmc, dev, 1, &ctl);
+  if (ret < 0)
+    return(ret);
+
+  ret = fmc_i2c_read(fd, fmc, dev, 0, &loc_temp);
+  if (ret < 0)
+    return(ret);
+
+  ret = fmc_i2c_read(fd, fmc, dev, 2, &loc_temp_lo);
+  if (ret < 0)
+    return(ret);
+
+  ret = fmc_i2c_read(fd, fmc, dev, 3, &loc_temp_hi);
+  if (ret < 0)
+    return(ret);
+
+  if (loc_temp & 0x100)
+  {
+    loc_temp    = (((loc_temp    << 5) & 0x1fe0) | ((loc_temp    >> 11) & 0x1f));
+    loc_temp_lo = (((loc_temp_lo << 5) & 0x1fe0) | ((loc_temp_lo >> 11) & 0x1f));
+    loc_temp_hi = (((loc_temp_hi << 5) & 0x1fe0) | ((loc_temp_hi >> 11) & 0x1f));
+  }
+  else
+  {
+    loc_temp    = (((loc_temp    << 4) & 0xff0) | ((loc_temp    >> 12) & 0xf));
+    loc_temp_lo = (((loc_temp_lo << 4) & 0xff0) | ((loc_temp_lo >> 12) & 0xf));
+    loc_temp_hi = (((loc_temp_hi << 4) & 0xff0) | ((loc_temp_hi >> 12) & 0xf));
+  }
+
+  if (temp != NULL)
+    (*temp) = loc_temp;
+
+  if (temp_lo != NULL)
+    (*temp_lo) = loc_temp_lo;
+
+  if (temp_hi != NULL)
+    (*temp_hi) = loc_temp_hi;
+
+  return(1);
+}
+
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc_set_tmp102
+ * Prototype     : int
+ * Parameters    : fmc number (1 or 2)
+ *                 i2c device address
+ * Return        : fail/success
+ *----------------------------------------------------------------------------
+ * Description   : set temperature limit T_low and T_high from
+ *                 TMP102 I2C device
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int adc_set_tmp102(int fd, int fmc, uint dev, uint *temp_lo, uint *temp_hi)
+{
+  uint temp, lo, hi, t;
+  int ret;
+
+  ret = fmc_i2c_read(fd, fmc, dev, 0, &temp);
+  if (ret < 0)
+    return(ret);
+
+  if (temp_lo != NULL)
+  {
+    lo = (*temp_lo);
+
+    /* Extended Mode */
+    if (temp & 0x100)
+    {
+      t = (((lo>>5) & 0xff) | ((lo<<11) & 0xf800));
+    }
+    /* Normal Mode */
+    else
+    {
+      t = (((lo>>4) & 0xff) | ((lo<<12) & 0xf000));
+    }
+    ret = fmc_i2c_write(fd, fmc, dev, 2, t);
+    if (ret < 0)
+      return(ret);
+  }
+
+  if (temp_hi != NULL)
+  {
+    hi = (*temp_hi);
+
+    /* Extended Mode */
+    if (temp & 0x100)
+    {
+      t = (((hi>>5) & 0xff) | ((hi<<11) & 0xf800));
+    }
+    /* Normal Mode */
+    else
+    {
+      t= (((hi>>4) & 0xff) | ((hi<<12) & 0xf000));
+    }
+    ret = fmc_i2c_write(fd, fmc, dev, 3, t);
+    if (ret < 0)
+      return(ret);
+  }
+
+  return (1);
+}

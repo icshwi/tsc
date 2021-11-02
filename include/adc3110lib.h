@@ -45,6 +45,9 @@
  *
  *=============================< end file header >============================*/
 
+#ifndef _H_ADC3110LIB
+#define _H_ADC3110LIB
+
 #define IFC1211
 
 #define ADC3110_FMC1    1
@@ -88,30 +91,28 @@
 #define ADC3110_I2C_EEPROM    0x01010051
 #define ADC3110_I2C_THERMO    0x01040048
 
-#define ADC3110_SIGN_1 0x1200
-#define ADC3110_SIGN_2 0x1300
 
-#define adc3110_spi_ads01_read(fd, fmc, reg)             adc3110_spi_read(fd, fmc, ADC3110_SPI_ADS01, reg) 
-#define adc3110_spi_ads01_write(fd, fmc, reg, data)      adc3110_spi_write(fd, fmc, ADC3110_SPI_ADS01, reg, data) 
+#define adc3110_spi_ads01_read(fd, fmc, reg, data)        adc_spi_read(fd, fmc, ADC3110_SPI_ADS01, reg, data)
+#define adc3110_spi_ads01_write(fd, fmc, reg, data)       adc_spi_write(fd, fmc, ADC3110_SPI_ADS01, reg, data)
 
-#define adc3110_spi_ads23_read(fd, fmc, reg)             adc3110_spi_read(fd, fmc, ADC3110_SPI_ADS23, reg) 
-#define adc3110_spi_ads23_write(fd, fmc, reg, data)      adc3110_spi_write(fd, fmc, ADC3110_SPI_ADS23, reg, data) 
+#define adc3110_spi_ads23_read(fd, fmc, reg, data)        adc_spi_read(fd, fmc, ADC3110_SPI_ADS23, reg, data)
+#define adc3110_spi_ads23_write(fd, fmc, reg, data)       adc_spi_write(fd, fmc, ADC3110_SPI_ADS23, reg, data)
 
-#define adc3110_spi_ads45_read(fd, fmc, reg)             adc3110_spi_read(fd, fmc, ADC3110_SPI_ADS45, reg) 
-#define adc3110_spi_ads45_write(fd, fmc, reg, data)      adc3110_spi_write(fd, fmc, ADC3110_SPI_ADS45, reg, data) 
+#define adc3110_spi_ads45_read(fd, fmc, reg, data)        adc_spi_read(fd, fmc, ADC3110_SPI_ADS45, reg, data)
+#define adc3110_spi_ads45_write(fd, fmc, reg, data)       adc_spi_write(fd, fmc, ADC3110_SPI_ADS45, reg, data)
 
-#define adc3110_spi_ads67_read(fd, fmc, reg)             adc3110_spi_read(fd, fmc, ADC3110_SPI_ADS67, reg) 
-#define adc3110_spi_ads67_write(fd, fmc, reg, data)      adc3110_spi_write(fd, fmc, ADC3110_SPI_ADS67, reg, data) 
+#define adc3110_spi_ads67_read(fd, fmc, reg, data)        adc_spi_read(fd, fmc, ADC3110_SPI_ADS67, reg, data)
+#define adc3110_spi_ads67_write(fd, fmc, reg, data)       adc_spi_write(fd, fmc, ADC3110_SPI_ADS67, reg, data)
 
-#define adc3110_spi_lmk_read(fd, fmc, reg)               adc3110_spi_read(fd, fmc, ADC3110_SPI_LMK, reg) 
-#define adc3110_spi_lmk_write(fd, fmc, reg, data)        adc3110_spi_write(fd, fmc, ADC3110_SPI_LMK, reg, data) 
+#define adc3110_spi_lmk_read(fd, fmc, reg, data)          adc_spi_read(fd, fmc, ADC3110_SPI_LMK, reg, data)
+#define adc3110_spi_lmk_write(fd, fmc, reg, data)         adc_spi_write(fd, fmc, ADC3110_SPI_LMK, reg, data)
 
-#define adc3110_i2c_eeprom_read(fd, fmc, reg)            adc3110_i2c_read(fd, fmc, ADC3110_I2C_EEPROM, reg) 
-#define adc3110_i2c_eeprom_write(fd, fmc, reg, data)     adc3110_i2c_write(fd, fmc, ADC3110_I2C_EEPROM, reg, data) 
+#define adc3110_i2c_eeprom_read(fd, fmc, reg)            fmc_i2c_rd(fd, fmc, ADC3110_I2C_EEPROM, reg, data)
+#define adc3110_i2c_eeprom_write(fd, fmc, reg, data)     fmc_i2c_wr(fd, fmc, ADC3110_I2C_EEPROM, reg, data)
 
-#define adc3110_i2c_thermo_read(fd, fmc, reg)            adc3110_i2c_read(fd, fmc, ADC3110_I2C_THERMO, reg) 
-#define adc3110_i2c_thermo_write(fd, fmc, reg, data)     adc3110_i2c_write(fd, fmc, ADC3110_I2C_THERMO, reg, data) 
- 
+#define adc3110_i2c_thermo_read(fd, fmc, reg)            adc_i2c_read(fd, fmc, ADC3110_I2C_THERMO, reg)
+#define adc3110_i2c_thermo_write(fd, fmc, reg, data)     adc_i2c_write(fd, fmc, ADC3110_I2C_THERMO, reg, data)
+
 #define ADC3110_ADS_MODE_NORM      0x000
 #define ADC3110_ADS_MODE_ZERO      0x001
 #define ADC3110_ADS_MODE_ONE       0x002
@@ -122,17 +123,16 @@
 #define ADC3110_ADS_MODE_RAND      0x00a
 #define ADC3110_ADS_MODE_SINE      0x00b
 
-#define adc3110_csr_rd(fd, fmc, csr)                 adc_csr_rd(fd, fmc, csr)
-#define adc3110_csr_wr(fd, fmc, csr, data)           adc_csr_wr(fd, fmc, csr, data)
-#define adc3110_identify(fd, fmc)                    adc_identify(fd, fmc)
-#define adc3110_spi_read(fd, fmc, cmd, reg)          adc_spi_read(fd, fmc, cmd, reg)
-#define adc3110_spi_write(fd, fmc, cmd, reg, data)   adc_spi_write(fd, fmc, cmd, reg, data)
-#define adc3110_i2c_read(fd, fmc, dev, reg)          adc_i2c_read(fd, fmc, cmd, reg)
-#define adc3110_i2c_write(fd, fmc, dev, reg, data)   adc_i2c_write(fd, fmc, cmd, reg, data)
+#define adc3110_csr_rd(fd, fmc, csr, data)              fmc_csr_rd(fd, fmc, csr, data)
+#define adc3110_csr_wr(fd, fmc, csr, data)              fmc_csr_rd(fd, fmc, csr, data)
+#define adc3110_identify(fd, fmc)                       fmc_identify(fd, fmc, NULL, NULL, NULL)
+#define adc3110_spi_read(fd, fmc, cmd, reg, data)       fmc_spi_read(fd, fmc, cmd, reg, data)
+#define adc3110_spi_write(fd, fmc, cmd, reg, data)      fmc_spi_write(fd, fmc, cmd, reg, data)
+#define adc3110_i2c_read(fd, fmc, dev, reg, data)       fmc_i2c_read(fd, fmc, cmd, reg, data)
+#define adc3110_i2c_write(fd, fmc, dev, reg, data)      fmc_i2c_write(fd, fmc, cmd, reg, data)
 
 int adc3110_set_verbose(int vf);
-int adc3110_identify(int fd, int fmc);
-void adc3110_reset(int fd, int fmc);
+int adc3110_reset(int fd, int fmc);
 void adc3110_lmk_init(int fd, int fmc, int reg[]);
 void adc3110_lmk_dump(int fd, int fmc);
 void adc3110_ads42lb69_init(int fd, int fmc, int chan_set); 
@@ -142,4 +142,6 @@ int adc3110_ads42lb69_set_pattern(int fd, int fmc, int chan, int pattern);
 int adc3110_calib_set_idelay(int fd, int fmc, int chan, int idelay);
 int adc3110_calib_get_idelay(int fd, int fmc, int chan);
 int adc3110_gpio_trig(int fd, int fmc);
-    
+
+#endif /* _H_ADC3110LIB */
+

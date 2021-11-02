@@ -1,6 +1,6 @@
 #=========================< begin file & file header >=======================
 #  References
-#  
+#
 #    filename : Makefile
 #    author   : JFG, XP
 #    company  : IOxOS
@@ -14,27 +14,28 @@
 #----------------------------------------------------------------------------
 #
 #  Copyright Notice
-#  
-#    Copyright and all other rights in this document are reserved by 
-#    IOxOS Technologies SA. This documents contains proprietary information    
-#    and is supplied on express condition that it may not be disclosed, 
+#
+#    Copyright and all other rights in this document are reserved by
+#    IOxOS Technologies SA. This documents contains proprietary information
+#    and is supplied on express condition that it may not be disclosed,
 #    reproduced in whole or in part, or used for any other purpose other
-#    than that for which it is supplies, without the written consent of  
-#    IOxOS Technologies SA                                                        
+#    than that for which it is supplies, without the written consent of
+#    IOxOS Technologies SA
 #
 #=============================< end file header >============================
 
-INCDIRS = -I ../include 
+INCDIRS = -I ../include
 RANLIB = ranlib
 
-CFLAGS	        := -MP -MMD -Wall $(INCDIRS) $(EXTRAFLAGS)
+CFLAGS          := -MP -MMD -Wall $(INCDIRS) $(EXTRAFLAGS)
 
 SRCS_LIB_TSC	:= tsculib.c clilib.c tscextlib.c tstlib.c ponmboxlib.c \
                    mtca4amclib.c mtca4rtmlib.c pca9539lib.c i2ceepromlib.c \
                    fbi1482lib.c rcf1450lib.c rsp1461lib.c rdt1465lib.c \
-                   rcc1466lib.c
-SRCS_LIB_ADC	:= adclib.c  adc3112lib.c fscope3112lib.c adc3110lib.c \
-                   gscopelib.c gscope3110lib.c adc3117lib.c adc3210lib.c 
+                   rcc1466lib.c fmclib.c ltc2489lib.c
+SRCS_LIB_ADC	:= adclib.c  ads42lb69lib.c dac38j84lib.c adc3112lib.c fscope3112lib.c adc3110lib.c \
+                   gscopelib.c gscope3110lib.c adc3117lib.c adc3210lib.c \
+                   daq1430lib.c lmklib.c xilinxlib.c zdclib.c
 
 OBJS_LIB_TSC	:= $(SRCS_LIB_TSC:.c=.o)
 OBJS_LIB_ADC	:= $(SRCS_LIB_ADC:.c=.o)
@@ -43,11 +44,11 @@ all: libtsc.a libadc.a
 
 libtsc.a: $(OBJS_LIB_TSC)
 	$(AR) r $@ $^
-	$(RANLIB) $@ 
+	$(RANLIB) $@
 
 libadc.a: $(OBJS_LIB_ADC)
-	$(AR) r $@ $^ 
-	$(RANLIB) $@ 
+	$(AR) r $@ $^
+	$(RANLIB) $@
 
 %o: %c
 	$(CC) $(CFLAGS) -o $@ -c $<
