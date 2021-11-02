@@ -1,7 +1,7 @@
 /*=========================< begin file & file header >=======================
  *  References
  *  
- *    filename : adclib.h
+ *    filename : zdclib.h
  *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : october 18,2018
@@ -9,7 +9,7 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *    That library contains a set of function to access the ADC FMC
+ *    That library contains a set of function to access the ZDC FMC
  *
  *----------------------------------------------------------------------------
  *
@@ -44,23 +44,15 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_ADCLIB
-#define _H_ADCLIB
+#define ZDC_SIGN_ID 0x40140101
 
-#define ADC_CSR_SIGN          0x0     /* Signature                        */
-#define ADC_CSR_CTL           0x1     /* Main control & status            */
-#define ADC_CSR_LED           0x2     /* Front-Panel LED management       */
-#define ADC_CSR_SERIAL        0x3     /* Serial Interface                 */
-#define ADC_CSR_GPIO          0x5     /* Front-Panel GPIO management      */
-#define ADC_CSR_DISC          0x6     /* Discriminator Function           */
-#define ADC_CSR_FMC           0x7     /* IFC carrier support              */
+#define ZDC_SRC_ADC0 0
+#define ZDC_SRC_ADC1 1
+#define ZDC_SRC_ADC2 2
+#define ZDC_SRC_ADC3 3
+#define ZDC_SRC_FIFO 4
 
-/* --------------------------------------------------------------------------------------------------- */
-/*  Function Prototypes                                                                                */
-/* --------------------------------------------------------------------------------------------------- */
-extern int adc_spi_read(int fd, int fmc, int cmd, int reg, int *data);
-extern int adc_spi_write(int fd, int fmc, int cmd, int reg, int data);
-extern int adc_read_tmp102(int fd, int fmc, uint dev, uint *temp, uint *temp_lo, uint *temp_hi);
-extern int adc_set_tmp102(int fd, int fmc, uint dev, uint *temp_lo, uint *temp_hi);
+int zdc_identify(void);
+int zdc_smem_load(int fd, int src, char *buf, int size);
+int zdc_smem_init(int fd, int chan, int size);
 
-#endif /* _H_ADCLIB */

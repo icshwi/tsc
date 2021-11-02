@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <tsculib.h>
 #include <tscextlib.h>
+#include <fmclib.h>
 #include <adclib.h>
 #include <adc3110lib.h>
 
@@ -94,30 +95,42 @@ int adc3110_XXX(void)
  * Function name : adc3110_reset
  * Prototype     : void
  * Parameters    : fmc FMC identifier (1 or 2)
- * Return        : void
+ * Return        : int
  *----------------------------------------------------------------------------
- * Description   : perform a reset of the ADC3110 FMC by setting and re-setting
- * bit 8 of the control register (ADC3110_CSR_CTL)
- *
+ * Description   : perform a reset of the ADC3110 FMC by setting and 
+ *                 re-setting bit 8 of the control register (ADC_CSR_CTL)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void adc3110_reset(int fd, int fmc)
+int adc3110_reset(int fd, int fmc)
 {
-  int sign;
-  int pon;
+  int sign, ret;
 
-  pon = 0xc0000000;
-  tsc_pon_write(fd, 0xc, &pon);
-  usleep( 20000);
-  sign = adc3110_csr_rd(fd, fmc, ADC3110_CSR_SIGN);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_SIGN, sign);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_CTL, 0x1c00);
-  usleep( 50000);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_CTL, 0x4000);
-  usleep( 50000);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_CTL, 0x00);
+  ret = fmc_init(fd);
+  if (ret < 0)
+    return(ret);
 
-  return;
+  /* expected signature */
+  sign = ADC3110_SIGN_ID;
+
+  ret = fmc_identify(fd, fmc, &sign, NULL, NULL);
+  if (ret < 0) 
+    return(ret);
+
+  ret = fmc_csr_write(fd, fmc, ADC_CSR_CTL, 0x1C00);
+  if (ret < 0) 
+    return(ret);
+
+  usleep(50000);
+
+  ret = fmc_csr_write(fd, fmc, ADC_CSR_CTL, 0x4000);
+  if (ret < 0)
+    return(ret);
+
+  usleep(50000);
+
+  ret = fmc_csr_write(fd, fmc, ADC_CSR_CTL, 0x0000);
+
+  return(ret);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -165,7 +178,7 @@ void adc3110_lmk_init(int fd, int fmc, int lmk_reg[])
   /* --------------------------------------------*/
   /* Enable On-board 100 MHz clock from +OSC575  */
   /* --------------------------------------------*/
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_LED, 0x80000003);   /* FP Led flashing + CCHD575-100MHz  Power-on */
+  fmc_csr_write(fd, fmc, ADC_CSR_LED, 0x80000003);   /* FP Led flashing + CCHD575-100MHz  Power-on */
   usleep( 20000);
   adc3110_spi_lmk_write(fd, fmc, 0x1e, lmk_reg[ 0x1e]);             /*  LMK04803B_R30 PLL2 P/N Recallibration */
   adc3110_spi_lmk_write(fd, fmc, 0x0c, lmk_reg[ 0x0c] | 0x800000);  /*  LMK04906_R12 LD pin programmable  */
@@ -207,7 +220,7 @@ adc3110_lmk_dump(int fd, int fmc)
     printf("\n%2x : ", reg);
     for( i = 0; i <  4; i++)
     {
-      data = adc3110_spi_lmk_read(fd, fmc, reg+i);
+      adc3110_spi_lmk_read(fd, fmc, reg+i, &data);
       printf("%08x ", data);
     }
   }
@@ -375,7 +388,7 @@ adc3110_ads42lb69_dump(int fd, int fmc)
     printf("\n%2x : ", reg);
     for( i = 0; i <  8; i++)
     {
-      data = adc3110_spi_ads01_read(fd, fmc, reg+i);
+      adc3110_spi_ads01_read(fd, fmc, reg+i, &data);
       printf("%04x ", (unsigned short)data);
     }
   }
@@ -389,7 +402,7 @@ adc3110_ads42lb69_dump(int fd, int fmc)
     printf("\n%2x : ", reg);
     for( i = 0; i <  8; i++)
     {
-      data = adc3110_spi_ads23_read(fd, fmc, reg+i);
+      adc3110_spi_ads23_read(fd, fmc, reg+i, &data);
       printf("%04x ", (unsigned short)data);
     }
   }
@@ -402,7 +415,7 @@ adc3110_ads42lb69_dump(int fd, int fmc)
     printf("\n%2x : ", reg);
     for( i = 0; i <  8; i++)
     {
-      data = adc3110_spi_ads45_read(fd, fmc, reg+i);
+      adc3110_spi_ads45_read(fd, fmc, reg+i, &data);
       printf("%04x ", (unsigned short)data);
     }
   }
@@ -416,7 +429,7 @@ adc3110_ads42lb69_dump(int fd, int fmc)
     printf("\n%2x : ", reg);
     for( i = 0; i <  8; i++)
     {
-      data = adc3110_spi_ads23_read(fd, fmc, reg+i);
+      adc3110_spi_ads23_read(fd, fmc, reg+i, &data);
       printf("%04x ", (unsigned short)data);
     }
   }
@@ -445,10 +458,7 @@ adc3110_ads42lb69_dump(int fd, int fmc)
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-adc3110_ads42lb69_set_mode(int fd, int fmc,
-			    int chan,
-			    int mode)
+int  adc3110_ads42lb69_set_mode(int fd, int fmc, int chan, int mode)
 {
   int csr;
 
@@ -456,7 +466,7 @@ adc3110_ads42lb69_set_mode(int fd, int fmc,
   {
     return( -1);
   }
-  csr =  adc3110_spi_read(fd, fmc, adc3110_spi_ads[chan], 0xf);
+  adc_spi_read(fd, fmc, adc3110_spi_ads[chan], 0xf, &csr);
   if( chan & 1)
   {
     csr = (csr&0xf0) | (mode&0xf);
@@ -465,8 +475,8 @@ adc3110_ads42lb69_set_mode(int fd, int fmc,
   {
     csr = (csr&0xf) | ((mode<<4)&0xf0);
   }
-  adc3110_spi_write(fd, fmc, adc3110_spi_ads[chan], 0xf, csr);
-  csr =  adc3110_spi_read(fd, fmc, adc3110_spi_ads[chan], 0xf);
+  adc_spi_write(fd, fmc, adc3110_spi_ads[chan], 0xf, csr);
+  adc_spi_read(fd, fmc, adc3110_spi_ads[chan], 0xf, &csr);
   return( csr);
 }
 
@@ -482,31 +492,25 @@ adc3110_ads42lb69_set_mode(int fd, int fmc,
  * test mode
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-int 
-adc3110_ads42lb69_set_pattern(int fd, int fmc,
-			       int chan,
-			       int pattern)
+int adc3110_ads42lb69_set_pattern(int fd, int fmc, int chan, int pattern)
 {
-  int csr;
+  int csr, tmp, i;
 
-  if( chan >= ADC3110_CHAN_NUM)
-  {
+  if(chan >= ADC3110_CHAN_NUM)
     return( -1);
+  
+  csr = pattern;
+  for (i=0; i<4; i++)
+  {
+    adc_spi_write(fd, fmc, adc3110_spi_ads[chan], (0x13-i), (csr&0xff));
+    csr >>= 8;
   }
-  csr = (pattern >> 24) & 0xff;
-  adc3110_spi_write(fd, fmc, adc3110_spi_ads[chan], 0x10, csr);
-  csr = (pattern >> 16) & 0xff;
-  adc3110_spi_write(fd, fmc, adc3110_spi_ads[chan], 0x11, csr);
-  csr = (pattern >> 8) & 0xff;
-  adc3110_spi_write(fd, fmc, adc3110_spi_ads[chan], 0x12, csr);
-  csr = pattern & 0xff;
-  adc3110_spi_write(fd, fmc, adc3110_spi_ads[chan], 0x13, csr);
-
-  csr = adc3110_spi_read(fd, fmc, adc3110_spi_ads[chan], 0x10) << 24;
-  csr |= adc3110_spi_read(fd, fmc, adc3110_spi_ads[chan], 0x11) << 16;
-  csr |= adc3110_spi_read(fd, fmc, adc3110_spi_ads[chan], 0x12) << 8;
-  csr |= adc3110_spi_read(fd, fmc, adc3110_spi_ads[chan], 0x13);
-
+  csr = 0;
+  for (i=0; i<4; i++)
+  {
+    adc_spi_read(fd, fmc, adc3110_spi_ads[chan], (0x10+i), &tmp);
+    csr |= ((tmp & 0xff) << 8);
+  }
   return( csr);
 } 
 
@@ -526,22 +530,18 @@ adc3110_ads42lb69_set_pattern(int fd, int fmc,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-adc3110_calib_set_idelay(int fd, int fmc,
-			  int chan,
-			  int idelay)
+int adc3110_calib_set_idelay(int fd, int fmc, int chan, int idelay)
 {
-  int csr;
-  volatile int tmp;
+  int csr, tmp;
 
 
   if( chan >= ADC3110_CHAN_NUM)
   {
     return( -1);
   }
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_IDELAY, 0xc0007fff); /*  RESET IDELAYE3 + ISERDES3 */
-  tmp =  adc3110_csr_rd(fd, fmc, ADC3110_CSR_IDELAY);
-  if( idelay == -1) return( tmp);
+  fmc_csr_write(fd, fmc, ADC3110_CSR_IDELAY, 0xc0007fff); /*  RESET IDELAYE3 + ISERDES3 */
+  fmc_csr_read(fd, fmc, ADC3110_CSR_IDELAY, &tmp);
+  if(idelay == -1) return( tmp);
 
   csr = 0x0;
   if( chan == -1) csr |= 0x7fff;
@@ -551,14 +551,14 @@ adc3110_calib_set_idelay(int fd, int fmc,
   else csr |= 0x3f;
 
   usleep(10000);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_IDELAY, 0x0);
-  tmp =  adc3110_csr_rd(fd, fmc, ADC3110_CSR_IDELAY);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_IDELAY, csr);
-  tmp =  adc3110_csr_rd(fd, fmc, ADC3110_CSR_IDELAY);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_IDELAY, csr|0x10000000);
-  tmp =  adc3110_csr_rd(fd, fmc, ADC3110_CSR_IDELAY);
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_IDELAY, 0x0000000); /* force to use test IOxOS pattern */
-  csr =  adc3110_csr_rd(fd, fmc, ADC3110_CSR_IDELAY);
+  fmc_csr_write (fd, fmc, ADC3110_CSR_IDELAY, 0x0);
+  fmc_csr_read  (fd, fmc, ADC3110_CSR_IDELAY, &tmp);
+  fmc_csr_write (fd, fmc, ADC3110_CSR_IDELAY, csr);
+  fmc_csr_read  (fd, fmc, ADC3110_CSR_IDELAY, &tmp);
+  fmc_csr_write (fd, fmc, ADC3110_CSR_IDELAY, csr|0x10000000);
+  fmc_csr_read  (fd, fmc, ADC3110_CSR_IDELAY, &tmp);
+  fmc_csr_write (fd, fmc, ADC3110_CSR_IDELAY, 0x0000000); /* force to use test IOxOS pattern */
+  fmc_csr_read  (fd, fmc, ADC3110_CSR_IDELAY, &csr);
   return(csr);
 }
 
@@ -574,12 +574,9 @@ adc3110_calib_set_idelay(int fd, int fmc,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-adc3110_calib_get_idelay(int fd, int fmc,
-			  int chan)
+int adc3110_calib_get_idelay(int fd, int fmc, int chan)
 {
   int csr;
-
 
   if( chan >= ADC3110_CHAN_NUM)
   {
@@ -591,8 +588,8 @@ adc3110_calib_get_idelay(int fd, int fmc,
   if( chan & 1) csr|= 0xfc0;
   else csr |= 0x3f;
 
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_IDELAY, csr);
-  csr =  adc3110_csr_rd(fd, fmc, ADC3110_CSR_IDELAY);
+  fmc_csr_write (fd, fmc, ADC3110_CSR_IDELAY, csr);
+  fmc_csr_read  (fd, fmc, ADC3110_CSR_IDELAY, &csr);
   return(csr);
 }
 
@@ -611,9 +608,9 @@ adc3110_calib_get_idelay(int fd, int fmc,
 int
 adc3110_gpio_trig(int fd, int fmc)
 {
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_GPIO, 0x10); /* set output low */
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_GPIO, 0x20); /* set output high */
-  adc3110_csr_wr(fd, fmc, ADC3110_CSR_GPIO, 0x10); /* set output low */
+  fmc_csr_write(fd, fmc, ADC_CSR_GPIO, 0x10); /* set output low */
+  fmc_csr_write(fd, fmc, ADC_CSR_GPIO, 0x20); /* set output high */
+  fmc_csr_write(fd, fmc, ADC_CSR_GPIO, 0x10); /* set output low */
   return(0);
 }
 
