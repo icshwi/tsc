@@ -27,14 +27,15 @@
 INCDIRS = -I ../include
 RANLIB = ranlib
 
-CFLAGS          := -MP -MMD -Wall $(INCDIRS) $(EXTRAFLAGS)
+CFLAGS          := -fPIC -MP -MMD -Wall $(INCDIRS) $(EXTRAFLAGS)
 
 SRCS_LIB_TSC	:= tsculib.c clilib.c tscextlib.c tstlib.c ponmboxlib.c \
                    mtca4amclib.c mtca4rtmlib.c pca9539lib.c i2ceepromlib.c \
                    fbi1482lib.c rcf1450lib.c rsp1461lib.c rdt1465lib.c \
-                   rcc1466lib.c fmclib.c ltc2489lib.c
+                   rcc1466lib.c ltc2489lib.c dacwgenlib.c fmclib.c
+
 SRCS_LIB_ADC	:= adclib.c  ads42lb69lib.c dac38j84lib.c adc3112lib.c fscope3112lib.c adc3110lib.c \
-                   gscopelib.c gscope3110lib.c adc3117lib.c adc3210lib.c \
+                   gscopelib.c gscope3110lib.c adc3117lib.c adc3210lib.c scope1430lib.c \
                    daq1430lib.c lmklib.c xilinxlib.c zdclib.c
 
 OBJS_LIB_TSC	:= $(SRCS_LIB_TSC:.c=.o)

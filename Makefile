@@ -40,17 +40,19 @@ CPPFLAGS += -I $(TSCTST)
 
 TSCLIB_SRCS := tsculib.c clilib.c tscextlib.c tstlib.c ponmboxlib.c \
 	       	mtca4amclib.c mtca4rtmlib.c pca9539lib.c i2ceepromlib.c \
-            fbi1482lib.c rcf1450lib.c rsp1461lib.c rdt1465lib.c rcc1466lib.c
+            fbi1482lib.c rcf1450lib.c rsp1461lib.c rdt1465lib.c rcc1466lib.c \
+            fmclib.c ltc2489lib.c dacwgenlib.c
 
 ADCLIB_SRCS := adclib.c adc3112lib.c fscope3112lib.c adc3110lib.c gscopelib.c \
-               gscope3110lib.c adc3117lib.c adc3210lib.c
+               gscope3110lib.c adc3117lib.c adc3210lib.c daq1430lib.c lmklib.c \
+               xilinxlib.c ads42lb69lib.c dac38j84lib.c scope1430lib.c zdclib.c
 
 TSCMON_SRCS := TscMon.c script.c rdwr.c conf.c map.c mbox.c amc.c rtm.c dma.c 
 TSCMON_SRCS += timer.c sflash.c buf.c tst.c semaphore.c fifo.c lmk.c 
 TSCMON_SRCS += ddr.c i2c.c adc3110.c adc3117.c adc3112.c acq1430.c alias.c 
 TSCMON_SRCS += tdma.c fbi1482.c rcf1450.c rsp1461.c rdt1465.c rcc1466.c gscope.c
 
-SMEMCA_SRCS :=SmemCalibration.c
+SMEMCA_SRCS := SmemCalibration.c
 #TSCTST_SRCS := $(wildcard $(TSCTST)/*.c)
 
 

@@ -193,24 +193,24 @@
 /*  DAQ_1430 Function Prototypes                                                                                      */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-extern int  daq1430_set_verbose           (int mode);
-extern int  daq1430_reset                 (int fd, int fmc);
-extern int  daq1430_lmk_init              (int fd, int fmc, int mode, int ref, int freq);
-extern int  daq1430_lmk_set_adc_divider   (int fd, int fmc, int divider);
-extern int  daq1430_lmk_dump              (int fd, int fmc);
-extern int  daq1430_lmk_get_status        (int fd, int fmc, int *data);
-extern int  daq1430_ads42lb69_init        (int fd, int fmc, int chan_set);
-extern int  daq1430_ads42lb69_dump        (int fd, int fmc, int chan_set);
-extern int  daq1430_ads42lb69_set_mode    (int fd, int fmc, int chan, int mode);
-extern int  daq1430_ads42lb69_set_pattern (int fd, int fmc, int chan, int pattern);
-extern int  daq1430_direct_dump           (int fd, int fmc, int chan);
-extern int  daq1430_calib_set_idelay      (int fd, int fmc, int chan, int idelay);
-extern int  daq1430_calib_get_idelay      (int fd, int fmc, int chan, int *idelay);
-extern int  daq1430_calib_dump_idelay     (int fd, int fmc);
-extern int  daq1430_calibrate             (int fd, int fmc, int chan, int step);
-extern int  daq1430_read_atest            (int fd, int fmc, int atest_sel, int *measured, int *adc_code, const char ** descr);
-extern int  daq1430_gpio_trig             (int fmc);
-extern int  daq1430_dac_init              (int fd, int fmc, double freq_refclk, double freq_dac, double linerate, int interp, int k, int rdb, int scr, int sysref_mode);
+int  daq1430_set_verbose           (int mode);
+int  daq1430_reset                 (int fd, int fmc);
+int  daq1430_lmk_init              (int fd, int fmc, int mode, int ref, int freq);
+int  daq1430_lmk_set_adc_divider   (int fd, int fmc, int divider);
+int  daq1430_lmk_dump              (int fd, int fmc);
+int  daq1430_lmk_get_status        (int fd, int fmc, int *data);
+int  daq1430_ads42lb69_init        (int fd, int fmc, int chan_set);
+int  daq1430_ads42lb69_dump        (int fd, int fmc, int chan_set);
+int  daq1430_ads42lb69_set_mode    (int fd, int fmc, int chan, int mode);
+int  daq1430_ads42lb69_set_pattern (int fd, int fmc, int chan, int pattern);
+int  daq1430_direct_dump           (int fd, int fmc, int chan);
+int  daq1430_calib_set_idelay      (int fd, int fmc, int chan, int idelay);
+int  daq1430_calib_get_idelay      (int fd, int fmc, int chan, int *idelay);
+int  daq1430_calib_dump_idelay     (int fd, int fmc);
+int  daq1430_calibrate             (int fd, int fmc, int chan, int step);
+int  daq1430_read_atest            (int fd, int fmc, int atest_sel, int *measured, int *adc_code, const char ** descr);
+int  daq1430_gpio_trig             (int fmc);
+int  daq1430_dac_init              (int fd, int fmc, double freq_refclk, double freq_dac, double linerate, int interp, int k, int rdb, int scr, int sysref_mode);
 
 #endif /*  _H_DAQ1430LIB */
 
