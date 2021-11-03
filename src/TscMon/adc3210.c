@@ -45,13 +45,17 @@ static char *rcsid = "$Id: adc3210.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #include "../../include/tscextlib.h"
 #include <tscioctl.h>
 #include <tsculib.h>
+#include <fmclib.h>
 #include <adclib.h>
 #include <adc3210lib.h>
 #include <lmk04616.h>
 
-#define BUS_SPI 1
-#define BUS_I2C 2
-#define BUS_TCSR 3
+#define PCI_DEVICE_ID_TSC_CENTRAL_CPU       0x1001  /* CENTRAL_FPGA seen from local CPU */
+
+#define BUS_SPI   1
+#define BUS_I2C   2
+#define BUS_TCSR  3
+#define BUS_JESD  4     /* JESD204 interface */
 
 
 struct tsc_adc3210_devices
@@ -72,19 +76,24 @@ struct tsc_adc3210_devices
 #define ADC3210_DEV_DAC1   (ADC3210_DAC | 0x1)
 #define ADC3210_DEV_DAC2   (ADC3210_DAC | 0x2)
 
-adc3210_devices[] = 
+adc3210_devices[] =
 {
-    { "ads01", ADC3210_SPI_ADS01, 0, BUS_SPI},
-    { "ads23", ADC3210_SPI_ADS23, 1, BUS_SPI},
-    { "ads45", ADC3210_SPI_ADS45, 2, BUS_SPI},
-    { "ads67", ADC3210_SPI_ADS67, 3, BUS_SPI},
-    { "lmk",  ADC3210_SPI_LMK, 0x10, BUS_SPI},
-    { "dac0", ADC3210_SPI_DAC0, 0x80000000, BUS_SPI},
-    { "dac1", ADC3210_SPI_DAC1, 0x80000001, BUS_SPI},
-    { "dac2", ADC3210_SPI_DAC2, 0x80000002, BUS_SPI},
-    { "tadc", ADC3210_I2C_TADC, 0, BUS_I2C},
-    { "vcxo", ADC3210_I2C_VCXO, 0, BUS_I2C},
-    { "tcsr", 0, 0, BUS_TCSR},
+    { "ads01",  ADC3210_SPI_ADS01,  0,          BUS_SPI},
+    { "ads23",  ADC3210_SPI_ADS23,  1,          BUS_SPI},
+    { "ads45",  ADC3210_SPI_ADS45,  2,          BUS_SPI},
+    { "ads67",  ADC3210_SPI_ADS67,  3,          BUS_SPI},
+    { "lmk",    ADC3210_SPI_LMK,    0x10,       BUS_SPI},
+    { "dac0",   ADC3210_SPI_DAC0,   0x80000000, BUS_SPI},
+    { "dac1",   ADC3210_SPI_DAC1,   0x80000001, BUS_SPI},
+    { "dac2",   ADC3210_SPI_DAC2,   0x80000002, BUS_SPI},
+    { "tadc",   ADC3210_I2C_TADC,   0,          BUS_I2C},
+    { "vcxo",   ADC3210_I2C_VCXO,   0,          BUS_I2C},
+    { "tmp102", ADC3210_I2C_TMP102, 0,          BUS_I2C},
+    { "tcsr",   0,                  0,          BUS_TCSR},
+    { "jes01",  0,                  0,          BUS_JESD},
+    { "jes23",  1,                  0,          BUS_JESD},
+    { "jes45",  2,                  0,          BUS_JESD},
+    { "jes67",  3,                  0,          BUS_JESD},
     { NULL, 0}
 };
 
@@ -233,12 +242,17 @@ adc3210_read( struct cli_cmd_para *c,
   }
   if( add->bus == BUS_TCSR)
   {
-    data = adc3210_csr_rd(tsc_fd, fmc, reg);
+    fmc_csr_read(tsc_fd, fmc, reg, &data);
     printf("reg = %08x - data = %08x\n", reg, data);
   }
   if( add->bus == BUS_I2C)
   {
     data = adc3210_i2c_read(tsc_fd, fmc,add->cmd);
+    printf("reg = %08x - data = %08x\n", reg, data);
+  }
+  if (add->bus == BUS_JESD)
+  {
+    data = adc3210_jesd_read(tsc_fd, fmc, add->cmd, reg);
     printf("reg = %08x - data = %08x\n", reg, data);
   }
   return(0);
@@ -298,7 +312,7 @@ adc3210_rcmp( struct cli_cmd_para *c,
   }
   if( add->bus == BUS_TCSR)
   {
-    data = adc3210_csr_rd(tsc_fd, fmc, reg);
+    fmc_csr_read(tsc_fd, fmc, reg, &data);
     printf("reg = %08x - data = %08x\n", reg, data);
   }
   if( add->bus == BUS_I2C)
@@ -359,13 +373,18 @@ adc3210_write( struct cli_cmd_para *c,
   }
   if( add->bus == BUS_TCSR)
   {
-    adc3210_csr_wr(tsc_fd, fmc, reg, data);
+    fmc_csr_write(tsc_fd, fmc, reg, data);
     printf("reg = %08x - data = %08x\n", reg, data);
   }
   if( add->bus == BUS_I2C)
   {
     data = adc3210_i2c_write(tsc_fd, fmc,add->cmd, reg, data);
     printf("reg = %08x - data = %08x\n", reg, data);
+  }
+  if (add->bus == BUS_JESD)
+  {
+    adc3210_jesd_write(tsc_fd, fmc, add->cmd, reg, data);
+    printf("cmd = %08x - data = %08x\n", add->cmd, data);
   }
   return(0);
 
@@ -388,6 +407,37 @@ adc3210_init( struct cli_cmd_para *c,
   if( !adc3210_init_flag)
   {
     adc3210_init_flag = 1;
+  }
+  return(0);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3210_dump
+ * Prototype     : void
+ * Parameters    : void
+ * Return        : void
+ *----------------------------------------------------------------------------
+ * Description   : adc3210 init
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+adc3210_dump(struct cli_cmd_para *c,
+             struct tsc_adc3210_devices *add)
+{
+  int fmc;
+  char *p;
+
+  fmc = strtoul( c->ext, &p, 16);
+
+  if( add->bus == BUS_JESD)
+  {
+    adc3210_jesd_dump(tsc_fd, fmc, add->cmd);
+  }
+  else
+  {
+    printf("unsupported command\n");
+    return(-1);
   }
   return(0);
 }
@@ -537,6 +587,109 @@ int tsc_adc3210_reset(struct cli_cmd_para *c)
   return 0;
 }
 
+/*----------------------------------------------------------------------------------------------------------------------*/
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : i2c_get_device_address
+ * Prototype     : int
+ * Parameters    : fmc, device, ifc_pid
+ * Return        : int
+ * Scope         : local
+ *----------------------------------------------------------------------------
+ * Description   : Calculate I2C device address depending in IFC & FMC
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+static int i2c_get_device_address(int fmc, int device, int ifc_pid)
+{
+  int fmc_ga = -1;
+  int i2c_dev = 0;
+
+  switch(ifc_pid & 0xff00)
+  {
+    /* FMC GA[0:1] on IFC_1410 & IFC_1411 */
+    case 0x1400:
+      fmc_ga = ((fmc == 1) ? 0x0 : 0x2);
+      break;
+
+    /* FMC GA[0:1] on IFC-1211 */
+    case 0x1200:
+      fmc_ga = ((fmc == 1) ? 0x2 : 0x1);
+      break;
+
+    default:
+      return(-1);
+  }
+
+  switch(device & 0xff)
+  {
+    /* TMP102 */
+    case 0x48:
+      i2c_dev = (device | ((fmc_ga>>1)&1));
+      break;
+
+    /* EEPROM */
+    case 0x50:
+      i2c_dev = (device | (fmc_ga&3));
+      break;
+
+    default:
+      return (-1);
+  }
+  //printf("i2c_dev = 0x%02X\n", i2c_dev);
+  return(i2c_dev);
+}
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : adc3210_show
+ * Prototype     : void
+ * Parameters    : cli parameter structure
+ *                 adc3210 device structure
+ * Return        : success/error
+ *----------------------------------------------------------------------------
+ * Description   : adc3210 show temperature
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int adc3210_tmp102_show(int fmc, struct cli_cmd_para * c, struct tsc_adc3210_devices *add)
+{
+  int rc, device, ifc_pid;
+  uint temp, lo, hi;
+  
+  device = add->cmd;
+  
+  if (device  != ADC3210_I2C_TMP102)
+  {
+    printf(" show command not supported for that device\n");
+    return(-1);
+  }
+  /* local or remote device ? */
+  if (tsc_get_device_id() != PCI_DEVICE_ID_TSC_CENTRAL_CPU)
+  {
+    printf(" show command available only on local CPU\n");
+    return(-1);
+  }
+  /* local CPU has access to PON CSR on IFC */
+  tsc_pon_read(tsc_fd, 0x0, &ifc_pid);
+
+  device = i2c_get_device_address(fmc, device, ifc_pid);
+
+  rc = adc_read_tmp102(tsc_fd, fmc, device, &temp, &lo, &hi);
+
+  if (rc < 0) 
+  {
+    printf(" show command error\n");
+    return (rc);
+  }
+
+  printf("current temperature: %.2f [%.2f - %.2f]\n", (float)temp/16, (float)lo/16, (float)hi/16);
+  
+  return(0);
+}
+
+
+
+
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_adc3210
  * Prototype     : int
@@ -553,6 +706,12 @@ tsc_adc3210( struct cli_cmd_para *c)
   struct tsc_adc3210_devices *add;
   uint fmc;
   char *p;
+
+  if (c->cnt < 1)
+  {
+    fprintf(stderr, "adc3210 command needs more arguments\n");
+    return(-1);
+  }
 
   if(!strcmp("reset", c->para[0])){
     return tsc_adc3210_reset(c);
@@ -641,7 +800,15 @@ tsc_adc3210( struct cli_cmd_para *c)
   {
     return( adc3210_temp( c, add));
   }
-  else 
+  else if( !strcmp( "dump", c->para[1]))
+  {
+    return(adc3210_dump(c, add));
+  }
+  else if ( !strcmp( "show", c->para[1]))
+  {
+    return(adc3210_tmp102_show(fmc, c, add));
+  }
+  else
   {
     printf("bad operation : %s\n",  c->para[1]);
     printf("usage: adc3210.<fmc> <dev> read <reg>\n");

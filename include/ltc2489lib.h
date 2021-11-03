@@ -69,6 +69,6 @@
 #define LTC2489_CMD_CH2_SGL     (LTC2489_CMD_MUX(1) | LTC2489_CMD_SGL |                   LTC2489_CMD_EN | LTC2489_CMD)
 #define LTC2489_CMD_CH3_SGL     (LTC2489_CMD_MUX(1) | LTC2489_CMD_SGL | LTC2489_CMD_INV | LTC2489_CMD_EN | LTC2489_CMD)
 
-extern int ltc2489_read(int fd, int i2c_bus, int device_address, int cmd, int *data);
+int ltc2489_read(int fd, int i2c_bus, int device_address, int cmd, int *data);
 
 #endif /*  _H_LTC2489LIB */

@@ -66,6 +66,7 @@
 #include <gscopelib.h>
 #include <gscope3110lib.h>
 #include <adc3110lib.h>
+#include <fmclib.h>
 
 extern int tsc_fd;
 
@@ -902,7 +903,7 @@ int tsc_gscope_fwinfo_xapp(char addr) {
 
 int tsc_gscope_fwinfo_fmc(char *fmc, char addr) {
 
-    const int fmcSign = (int)ADC3110_SIGN_1;
+    const int fmcSign = (int)FMC1_CSR_BASE;
     int hash = 0, id, retval, fmcType = 0;
 
     id = tscext_csr_rd(tsc_fd, fmcSign);

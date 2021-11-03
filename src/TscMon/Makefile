@@ -47,8 +47,8 @@ all : TscMon SmemCalibration
 
 -include $(CFILES:.c=.d)
 
-TscMon: $(OFILES) $(LIBDIR)/libtsc.a 
-	$(CC) $(LIB) -o $@ $(OFILES) -ltsc -lrt -lm -ladc
+TscMon: $(OFILES) $(LIBDIR)/libtsc.a $(LIBDIR)/libadc.a 
+	$(CC) $(LIB) -o $@ $(OFILES) -lrt -lm -ladc -ltsc
 
 SmemCalibration: SmemCalibration.o $(LIBDIR)/libtsc.a 
 	$(CC) $(LIB) -o $@ $< -ltsc -lrt -lm

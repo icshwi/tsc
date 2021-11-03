@@ -56,6 +56,12 @@
 #define	PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_2 0x1002   /* TSC PCI DEVICE ID CENTRAL 2 */
 #define	PCI_DEVICE_ID_IOXOS_TSC_CENTRAL_3 0x1003   /* TSC PCI DEVICE ID CENTRAL 3 */
 
+#define TSC_DEV_CENTRAL_LOC       0   /* PCIe End-Point for local CPU      ID 0x1001 */
+#define TSC_DEV_IO                1   /* PCIe End-Point for I/O Extension  ID 0x1000 */
+#define TSC_DEV_CENTRAL_EXT       2   /* PCIe End-Point for extension      ID 0x1003 */
+#define TSC_DEV_CENTRAL_BKP       3   /* PCIe End-Point for Backplane      ID 0x1002 */
+#define TSC_DEV_NUM_CENTRAL_BKP  20   /* Maximum number of tsc_central on backplane */
+#define TSC_DEV_MAX               (TSC_DEV_CENTRAL_BKP+TSC_DEV_NUM_CENTRAL_BKP)
 /*
  *  Define the number of each that the TSC supports.
  */
@@ -74,6 +80,7 @@
 #define TSC_IRQ_CTL_IDMA               32  /*  IDMA controler IRQ base           */
 #define TSC_IRQ_CTL_MBX                32  /*  FIFO controler IRQ base           */
 #define TSC_IRQ_CTL_USER               48  /*  USER controler IRQ base           */
+#define TSC_IRQ_CTL_USR1               64  /*  USER controler IRQ base           */
 
 #define TSC_IRQ_SRC_I2C_CRIT            9  /*  I2C CRIT                           */
 #define TSC_IRQ_SRC_I2C_OK             10  /*  I2C ended OK                       */
@@ -113,10 +120,15 @@
 #define TSC_IRQ_SRC_MBX_6               14  /*  Mailbox #0 not empty               */
 #define TSC_IRQ_SRC_MBX_7               15  /*  Mailbos #7 not empty               */
 
+#define TSC_IRQ_SRC_USR1_0               0  /*  USR1 IRQ 0                         */
+#define TSC_IRQ_SRC_USR1_1               1  /*  USR1 IRQ 1                         */
+#define TSC_IRQ_SRC_USR1_2               2  /*  USR1 IRQ 2                         */
+#define TSC_IRQ_SRC_USR1_3               3  /*  USR1 IRQ 3                         */
+
 #define TSC_ITC_IM_ALL            (0xffff)  /*  mask for  All interrupts           */
 #define TSC_ITC_VEC( sts)       (sts&0xff)  /*  get irq ector from iack status     */
 #define TSC_ITC_SRC( sts)   ((sts>>8)&0xf) /*  get irq source from iack status    */
-#define TSC_ITC_CTL( ctl)  ((ctl>>12)&0x3)  /*  get irq controller from iack status   */
+#define TSC_ITC_CTL( ctl)  ((ctl>>12)&0x7)  /*  get irq controller from iack status   */
 
 
 /*
@@ -399,9 +411,27 @@ static const int TSC_CSR_IDMA2_DCNT[4] = { TSC_CSR_IDMA2_RD_0_DCNT, TSC_CSR_IDMA
 
 #define TSC_CSR_USER_ROM	            0xf80
 
-#define TSC_CSR_OFFSET_MAX	       0xfff
+#define TSC_CSR_OFFSET_MAX              0x17ff
 
 #define TSC_CSR_ITC_OFFSET         0x0080
+
+#define TSC_CSR_TMEM4_BRG_CSR           0x1120
+#define TSC_CSR_TMEM5_BRG_CSR           0x1130
+
+#define TSC_TMEM_OFFSET(cs, wsiz)       ((((cs>>2)&1)<<(15+(wsiz&15)))|((cs&3)<<(13+(wsiz&15))))
+#define TSC_TMEM_WSIZ(x)                (x<<4)
+#define TSC_TMEM_WSIZ_64K               0x0     /* 2 * 4 *   8K */
+#define TSC_TMEM_WSIZ_128K              0x1     /* 2 * 4 *  16K */
+#define TSC_TMEM_WSIZ_256K              0x2     /* 2 * 4 *  32K */
+#define TSC_TMEM_WSIZ_512K              0x3     /* 2 * 4 *  64K */
+#define TSC_TMEM_WSIZ_1M                0x4     /* 2 * 4 * 128K */
+#define TSC_TMEM_WSIZ_2M                0x5     /* 2 * 4 * 256K */
+#define TSC_TMEM_WSIZ_4M                0x6     /* 2 * 4 * 512K */
+#define TSC_TMEM_WSIZ_8M                0x7     /* 2 * 4 *   1M */
+#define TSC_TMEM_WSIZ_16M               0x8     /* 2 * 4 *   2M */
+#define TSC_TMEM_WSIZ_32M               0x9     /* 2 * 4 *   4M */
+#define TSC_TMEM_WSIZ_64M               0xA     /* 2 * 4 *   8M */
+#define TSC_TMEM_WSIZ_128M              0xB     /* 2 * 4 *  16M */
 
 #define TSC_CSR_ITC_IACK_OFFSET    0x0000
 #define TSC_CSR_ITC_CSR_OFFSET     0x0004
@@ -477,10 +507,10 @@ static const int TSC_CSR_IDMA2_DCNT[4] = { TSC_CSR_IDMA2_RD_0_DCNT, TSC_CSR_IDMA
 #define TSC_PCIE_MMUDAT_AS_MASK             (15<<8)  /* address space mask                */
 #define TSC_PCIE_MMUDAT_DES_                (1<<12)  /* destination bus                   */
 #define TSC_PCIE_MMUDAT_DES_SHM             (2<<12)  /* destination Shared Memory         */
-#define TSC_PCIE_MMUDAT_DES_SHM1            (2<<12)  /* destination Shared Memory 1       */
+#define TSC_PCIE_MMUDAT_DES_SHM1            TSC_PCIE_MMUDAT_DES_SHM  /* destination Shared Memory 1 */  
 #define TSC_PCIE_MMUDAT_DES_SHM2            (3<<12)  /* destination Shared Memory 2       */
-#define TSC_PCIE_MMUDAT_DES_USR             (3<<12)  /* destination User Block            */
-#define TSC_PCIE_MMUDAT_DES_USR1            (4<<12)  /* destination User Block 1          */
+#define TSC_PCIE_MMUDAT_DES_USR             (4<<12)  /* destination User Block            */
+#define TSC_PCIE_MMUDAT_DES_USR1            TSC_PCIE_MMUDAT_DES_USR  /* destination User Block 1          */
 #define TSC_PCIE_MMUDAT_DES_USR2            (5<<12)  /* destination User Block 2          */
 #define TSC_PCIE_MMUDAT_DES_AXI4            (6<<12)  /* destination AXI-4 Bridge          */
 
