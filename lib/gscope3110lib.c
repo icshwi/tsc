@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : gscope3110lib.c
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -54,20 +54,26 @@
 #include <tsculib.h>
 #include <tscioctl.h>
 #include <tscextlib.h>
+#include <gscopelib.h>
 #include <gscope3110lib.h>
+#include <fmclib.h>
+#include <adclib.h>
 #include <adc3110lib.h>
 #include <adc3210lib.h>
 #include <adc3117lib.h>
+#include <daq1430lib.h>
 #include <errno.h>
 #include <time.h>
+
+#include <debug.h>
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : gscope3110_XXX
  * Prototype     : int
  * Parameters    : void
- * Return        : 
+ * Return        :
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -85,7 +91,7 @@ int gscope3110_XXX(void) {
  *                 space
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -105,10 +111,10 @@ gscope3110_map_usr(int fd, int fmc, char **buf, int offset, int size) {
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : gscope3110_unmap_usr
  * Prototype     : int
- * Parameters    : pointer to map 
+ * Parameters    : pointer to map
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -127,12 +133,191 @@ void gscope3110_unmap_usr(int fd, struct tsc_ioctl_map_win *map, char *u_addr) {
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
-gscope3110_mux_init( int *mux_map) 
+int
+gscope3110_mux_init( int *mux_map)
 {
   return(0);
 
 }
+
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : gscope1430_acq_smem_init
+ * Prototype     : int
+ * Parameters    :
+ *                 scope_unit
+ *                 chan_set:    list of the channels you want to init
+ *                 rgbuf_base:  the base adress of the first ring buffer
+ *                 rgbuf_size:  the size of the buffers
+ *                 mode:        single or dual (currently unsupported)
+ * Return        : current value of GSCOPE_CSR_SWRx_ACQ_MGT register
+ *----------------------------------------------------------------------------
+ * Description   : Initialize the acquisition: assign to each selected buffer
+ *                 a base adress and a size
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int gscope1430_acq_smem_init(int fd, int chan_set, int rgbuf_base, int rgbuf_size, int mode)
+{
+  int cnt_1, cnt_2, sel_1, sel_2, final_addr_1, final_addr_2, busy_1, busy_2, sec_off_1, sec_off_2;
+  int i, j, base, size, chan_set_copy, mask, new_base, adc_map, fct;
+  uint32_t tmp;
+
+  gscope_mux_build_map(fd);
+
+  /* set base address for each channel */
+  base = (rgbuf_base & GSCOPE_RGBUF_BASE_MASK);
+  size = (rgbuf_size & GSCOPE_RGBUF_SIZE_MASK);
+
+  cnt_1 = 0;  /* for scope unit #1 */
+  cnt_2 = 0;  /* for scope unit #2 */
+  sel_1 = 0;
+  sel_2 = 0;
+  chan_set_copy = chan_set;
+
+  for (i = 0; i < 10; i++)
+  {
+    adc_map = gscope_mux_get_map(fd, i);
+
+    /* ADC channel active & mapped ? */
+    if ((chan_set_copy & 1) && adc_map != 0)
+    {
+      for (j=0; j<16; j++)
+      {
+        if (adc_map & (1<<j))
+        {
+          if (j<=7)
+          {
+            cnt_1++;
+            sel_1 |= (1<<j);
+          }
+          else
+          {
+            cnt_2++;
+            sel_2 |= (1<<(j-8));
+          }
+        }
+      }
+    }
+    chan_set_copy >>= 1;
+  }
+
+  if (mode == GSCOPE_RGBUF_MODE_DUAL)
+  {
+    sec_off_1 = cnt_1 * size;
+    sec_off_2 = cnt_2 * size;
+    cnt_1 *= 2;
+    cnt_2 *= 2;
+  }
+
+  final_addr_1 = base + cnt_1 * size;
+  final_addr_2 = base + cnt_2 * size;
+
+  if (final_addr_1 > GSCOPE_RGBUF_ADDR_MAX || final_addr_2 > GSCOPE_RGBUF_ADDR_MAX)
+  {
+    return -1;
+  }
+
+  gscope_acq_abort(fd, 1);
+  gscope_acq_abort(fd, 2);
+
+  chan_set_copy = chan_set;
+  new_base = base;
+
+  /* initialize scope unit #1 */
+  for (i = 0; i < 8; i++)
+  {
+    mask = (size | i);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, mask);
+
+    /* scope channel active ? -> allocate */
+    if (sel_1 & (1<<i))
+    {
+      tmp = (new_base & 0xffff0000);
+      if (mode == GSCOPE_RGBUF_MODE_DUAL)
+      {
+        tmp |= (((new_base + sec_off_1)>>16)&0xffff);
+      }
+      gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_BAS, tmp);
+      new_base += size;
+    }
+    else
+    {
+      tmp = ((GSCOPE_RGBUF_ADDR_START & 0xffff0000) | ((GSCOPE_RGBUF_ADDR_START>>16)&0xffff));
+      gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_BAS, tmp);
+    }
+  }
+
+  /* reload initial base address */
+  new_base = base;
+
+  /* initialize scope unit #2 */
+  for (i = 0; i < 8; i++)
+  {
+    mask = (size | i);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, mask);
+
+    /* scope channel active ? -> allocate */
+    if (sel_2 & (1<<i))
+    {
+      tmp = (new_base & 0xffff0000);
+
+      if (mode == GSCOPE_RGBUF_MODE_DUAL)
+      {
+        tmp |= (((new_base + sec_off_2)>>16)&0xffff);
+      }
+
+      gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_BAS, tmp);
+      new_base += size;
+    }
+    else
+    {
+      tmp = ((GSCOPE_RGBUF_ADDR_START & 0xffff0000) | ((GSCOPE_RGBUF_ADDR_START>>16)&0xffff));
+      gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_BAS, tmp);
+    }
+  }
+
+  /* Enable Dual Buffer Mode */
+  if (mode == GSCOPE_RGBUF_MODE_DUAL)
+  {
+    tmp = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+    tmp &= 0x0fffffff;
+    tmp |= GSCOPE_ACQ_DUALBUF_ENA;
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_ACQ_MGT, tmp);
+
+    tmp = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+    tmp &= 0x0fffffff;
+    tmp |= GSCOPE_ACQ_DUALBUF_ENA;
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_ACQ_MGT, tmp);
+  }
+
+  fmc_csr_read(fd, 1, ADC_CSR_CTL, &fct);
+  /* 1x sample or 2x samples mode (16-bit / 32-bit) */
+  fct = ((fct & (1<<24)) ? 0 : 1);
+
+  /* enable FMUX & DPRAM */
+  mask = ((1<<31) | ((fct&7)<<28) | (chan_set & 0x3FF));
+
+  gscope_csr_wr(fd, GSCOPE_CSR_FE1_CSR2, mask);
+
+  /* init buffer with 0,1,2,3,.. */
+  gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, (0xC0000010 | size));
+  gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, (0xC0000010 | size));
+
+  do
+  {
+    usleep(1000);
+
+    busy_1 = (gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG) & GSCOPE_SMEM_INIT_BUSY_MASK);
+    busy_2 = (gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG) & GSCOPE_SMEM_INIT_BUSY_MASK);
+
+  } while (busy_1 == GSCOPE_SMEM_INIT_BUSY_MASK || busy_2 == GSCOPE_SMEM_INIT_BUSY_MASK);
+
+  return gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+}
+
+/*--------------------------------------------------------------------------------------------------------------------*/
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : gscope3110_acq_smem_init
@@ -149,7 +334,7 @@ gscope3110_mux_init( int *mux_map)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int gscope3110_acq_smem_init(int fd, int chan_set, int rgbuf_base,
-		int rgbuf_size, int mode) 
+		int rgbuf_size, int mode)
 {
 
 	int cnt, i, base, size, chan_set_copy, mask, mask2, busy, busy2, final_addr, new_base;
@@ -256,7 +441,7 @@ int gscope3110_acq_smem_init(int fd, int chan_set, int rgbuf_base,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int gscope3210_acq_smem_init(int fd, int chan_set, int rgbuf_base,
-		int rgbuf_size, int mode) 
+		int rgbuf_size, int mode)
 {
 
 	int cnt, i, base, size, chan_set_copy, mask, mask2, busy, busy2, final_addr, new_base;
@@ -363,7 +548,7 @@ int gscope3210_acq_smem_init(int fd, int chan_set, int rgbuf_base,
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 int gscope3117_acq_smem_init(int fd, int fmc, int rgbuf_base,
-			     int rgbuf_size, int mode) 
+			     int rgbuf_size, int mode)
 {
 
 	int cnt, i, base, size, chan_set_copy, mask, busy, final_addr, new_base;
@@ -387,8 +572,7 @@ int gscope3117_acq_smem_init(int fd, int fmc, int rgbuf_base,
 		return -1;
 	}
 
-	gscope3110_acq_abort(fd, 1);
-	gscope3110_acq_abort(fd, 2);
+	gscope3110_acq_abort(fd, fmc);
 
 	chan_set_copy = chan_set;
 	new_base = base;
@@ -414,7 +598,7 @@ int gscope3117_acq_smem_init(int fd, int fmc, int rgbuf_base,
 	  } while(busy == GSCOPE_SMEM_INIT_BUSY_MASK);
  	  return (gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT));
 	}
-	else 
+	else
 	{
           for(i = 0; i < ADC3117_CHAN_NUM/ADC3117_CHAN_GROUP; i++)
 	  {
@@ -441,12 +625,12 @@ int gscope3117_acq_smem_init(int fd, int fmc, int rgbuf_base,
  * Function name : gscope3110_acq_dpram_init
  * Prototype     : int
  * Parameters    : fmc  FMC identifier (1 or 2)
- * 				   chan_set  set of channel to be enabled for acquisition 
+ * 				   chan_set  set of channel to be enabled for acquisition
  * 				   			 (bitfield)
  * 				   size  buffer size
  * Return        : current value of GSCOPE_CSR_SWRx_ACQ_MGT register
  *----------------------------------------------------------------------------
- * Description   : initialize the data acquisition state machine and enable the 
+ * Description   : initialize the data acquisition state machine and enable the
  * channels set in chan_set.The parameter size defines the DPRAM buffer size
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -514,7 +698,7 @@ int gscope3110_acq_status(int fd, int fmc) {
  *                 buf_mode  single or dual (currently unsupported)
  * Return        : current value of GSCOPE_CSR_SWRx_ACQ_MGT register
  *----------------------------------------------------------------------------
- * Description   : arms the data acquisition state machine and returns its 
+ * Description   : arms the data acquisition state machine and returns its
  * current status
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -522,45 +706,52 @@ int gscope3110_acq_status(int fd, int fmc) {
 int gscope3110_acq_arm(int fd, int fmc, int trig_mode, int trig_pos, int buf_mode, int rearm) {
 	int csr, acq_mode, acq_trig, sync, mask;
 
-	if (fmc == GSCOPE_FMC2) 
-	{
-		csr = GSCOPE_CSR_SWR2_ACQ_MGT;
-	} else 
-	{
-		csr = GSCOPE_CSR_SWR1_ACQ_MGT;
-	}
+  if (fmc == GSCOPE_FMC2)
+  {
+    csr = GSCOPE_CSR_SWR2_ACQ_MGT;
+  }
+  else
+  {
+    csr = GSCOPE_CSR_SWR1_ACQ_MGT;
+  }
 
-	mask = rearm ? GSCOPE_REARM_MASK : GSCOPE_ARM_MASK;
+  mask = (rearm ? GSCOPE_REARM_MASK : GSCOPE_ARM_MASK);
 
-	acq_mode = trig_mode & GSCOPE_ARM_CODE_MODE_MASK;
-	acq_trig = trig_mode & GSCOPE_ARM_CODE_TRIG_MASK;
-	sync = trig_mode & GSCOPE_ARM_CODE_SYNC_MASK;
+  acq_mode = (trig_mode & GSCOPE_ARM_CODE_MODE_MASK);
+  acq_trig = (trig_mode & GSCOPE_ARM_CODE_TRIG_MASK);
+  sync     = (trig_mode & GSCOPE_ARM_CODE_SYNC_MASK);
 
-	if(acq_mode == GSCOPE_ARM_CODE_CONT){
-		mask = mask | (GSCOPE_ARM_CONT << GSCOPE_ARM_MODE_START);
-	}
-	else{
-		mask = mask | (GSCOPE_ARM_SINGLE << GSCOPE_ARM_MODE_START);
-	}
-	if(acq_trig == GSCOPE_ARM_CODE_NORMAL){
-		mask = mask | (GSCOPE_ARM_NORMAL << GSCOPE_ARM_TRIG_START);
-	}
-	else{
-		mask = mask | (GSCOPE_ARM_AUTO << GSCOPE_ARM_TRIG_START);
-	}
-	if(sync == GSCOPE_ARM_CODE_MASTER){
-		mask = mask | (GSCOPE_ARM_MASTER << GSCOPE_ARM_SYNC_START);
-	}
-	else{
-		mask = mask | (GSCOPE_ARM_SLAVE << GSCOPE_ARM_SYNC_START);
-	}
+  if(acq_mode == GSCOPE_ARM_CODE_CONT)
+  {
+    mask |= (GSCOPE_ARM_CONT << GSCOPE_ARM_MODE_START);
+  }
+  else
+  {
+    mask |= (GSCOPE_ARM_SINGLE << GSCOPE_ARM_MODE_START);
+  }
+  if(acq_trig == GSCOPE_ARM_CODE_NORMAL)
+  {
+    mask |= (GSCOPE_ARM_NORMAL << GSCOPE_ARM_TRIG_START);
+  }
+  else
+  {
+    mask |= (GSCOPE_ARM_AUTO << GSCOPE_ARM_TRIG_START);
+  }
+  if(sync == GSCOPE_ARM_CODE_MASTER)
+  {
+    mask |= (GSCOPE_ARM_MASTER << GSCOPE_ARM_SYNC_START);
+  }
+  else
+  {
+    mask |= (GSCOPE_ARM_SLAVE << GSCOPE_ARM_SYNC_START);
+  }
 
-	mask = mask | (trig_pos << GSCOPE_ARM_TRIG_POS_START);
+  mask |= (trig_pos << GSCOPE_ARM_TRIG_POS_START);
 
-	gscope_csr_wr(fd, csr, mask);
-	usleep(2000);
+  gscope_csr_wr(fd, csr, mask);
+  usleep(2000);
 
-	return (gscope_csr_rd(fd, csr));
+  return (gscope_csr_rd(fd, csr));
 }
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : gscope3110_acq_abort
@@ -568,27 +759,39 @@ int gscope3110_acq_arm(int fd, int fmc, int trig_mode, int trig_pos, int buf_mod
  * Parameters    : fmc  FMC identifier (1 or 2)
  * Return        : current value of GSCOPE_CSR_SWRx_ACQ_MGT register
  *----------------------------------------------------------------------------
- * Description   : abort the data acquisition, put the state machine in idle 
+ * Description   : abort the data acquisition, put the state machine in idle
  * and returns its current status
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int gscope3110_acq_abort(int fd, int fmc) {
-	if (fmc == GSCOPE_FMC2) {
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR2_ACQ_MGT, 0x20000000);
-		usleep(2000);
-		/* return to idle state */
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR2_ACQ_MGT, 0x40000000);
-		usleep(2000);
-		return (gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT));
-	} else {
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR1_ACQ_MGT, 0x20000000);
-		usleep(2000);
-		/* return to idle state */
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR1_ACQ_MGT, 0x40000000);
-		usleep(2000);
-		return (gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT));
-	}
+int gscope3110_acq_abort(int fd, int fmc)
+{
+  int tmp;
+
+  if (fmc == GSCOPE_FMC2)
+  {
+    tmp = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+    tmp &= ~(0xF0000000);
+
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_ACQ_MGT, (0x20000000 | tmp));
+    usleep(2000);
+    /* return to idle state */
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_ACQ_MGT, (0x40000000 | tmp));
+    usleep(2000);
+    return (gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT));
+  }
+  else
+  {
+    tmp = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+    tmp &= ~(0xF0000000);
+
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_ACQ_MGT, (0x20000000 | tmp));
+    usleep(2000);
+    /* return to idle state */
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_ACQ_MGT, (0x40000000 | tmp));
+    usleep(2000);
+    return (gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT));
+  }
 }
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : gscope3110_trig_set
@@ -710,8 +913,8 @@ void gscope3110_acq_load(int fd, int fmc, char *buf, int size) {
  * Return        : 0   if DMA transfer OK
  * 				   < 0 if error (see TSC API for DMA transfer status)
  *----------------------------------------------------------------------------
- * Description   : start a DMA transfer of size bytes from DPRAM offset 
- * dpram_off associated to ADC channel chan to PCI address pci_addr. 
+ * Description   : start a DMA transfer of size bytes from DPRAM offset
+ * dpram_off associated to ADC channel chan to PCI address pci_addr.
  * The status of the DMA transfer is returned.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -843,27 +1046,43 @@ int gscope3110_acq_smem_move(int fd, int fmc, int chan, uint64_t pci_addr,
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : gscope3110_part_save_file
  * Prototype     : int
- * Parameters    :
+ * Parameters    : start      start in byte
+ *                 end        end   in byte
+ *                 trig       trigger position
+ *                 acq_buf    pointer on acquisition buffer
+ *                 acq_file   pointer to file
+ *                 inc        increment
+ *                 mask       AND-mask sample
+ *                 fmt        sample format representation
+ *                              0 = unsigned 16-bit
+ *                              1 = signed 16-bit
  * Return        :
  *----------------------------------------------------------------------------
  * Description   : save 16 bit adc samples from acq_buf in text file acq_file
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int gscope3110_part_save_file(int start, int end, int pos, char *acq_buf,
-			      FILE *acq_file, int inc, int mask) {
+int gscope3110_part_save_file(int start, int end, int trig, char *acq_buf, FILE *acq_file, int inc, int mask, int fmt)
+{
+  int data, i, pos;
 
-	int data, i;
+  pos = 0;
+  for (i = start; i < end; i += 2*inc)
+  {
+    data = *(unsigned char*) &acq_buf[i] | (*(unsigned char*) &acq_buf[i + 1] << 8);
+    data &= mask;
+    if (fmt == 0)
+    {
+      fprintf(acq_file, ((trig==i) ? "%-6d    # <-- TRIGGER\n" : "%d\n"), (unsigned short)data);
+    }
+    else
+    {
+      fprintf(acq_file, ((trig==i) ? "%-6d    # <-- TRIGGER\n" : "%d\n"), (signed short)data);
+    }
+    pos++;
+  }
 
-	for (i = start; i < end; i += 2*inc) {
-		data = *(unsigned char*) &acq_buf[i] | (*(unsigned char*) &acq_buf[i + 1] << 8);
-		//fprintf(acq_file, "%d %d\n", pos, (short) data);
-		data &= mask;
-		fprintf(acq_file, "%d\n", (unsigned short)data);
-		pos++;
-	}
-
-	return pos;
+  return pos;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -876,17 +1095,27 @@ int gscope3110_part_save_file(int start, int end, int pos, char *acq_buf,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int gscope3110_part_save_buffer(int start, int end, int pos, char *acq_buf,
-				char* output_buffer, int inc, int mask) {
+int gscope3110_part_save_buffer(int start, int end, int pos, char *acq_buf, char* output_buffer, int inc, int mask)
+{
+  int i, cnt;
 
-	int i;
-	for (i = start; i < end; i += 2*inc) {
-	  output_buffer[pos] = *(unsigned char*) &acq_buf[i] & (mask >> 8);
-		output_buffer[pos+1] = *(unsigned char*) &acq_buf[i+1] & mask;
-		pos += 2;
-	}
+  if (inc == 1 && mask == 0xffff)
+  {
+    cnt = (end - start - 1);
+    memcpy((void *)&output_buffer[pos], (void *)&acq_buf[start], cnt);
+    pos += cnt;
+  }
+  else
+  {
+    for (i = start; i < end; i += 2*inc)
+    {
+      output_buffer[pos] = *(unsigned char*) &acq_buf[i] & (mask >> 8);
+      output_buffer[pos+1] = *(unsigned char*) &acq_buf[i+1] & mask;
+      pos += 2;
+    }
+  }
 
-	return pos;
+  return pos;
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -894,8 +1123,11 @@ int gscope3110_part_save_buffer(int start, int end, int pos, char *acq_buf,
  * Prototype     : int
  * Parameters    : chan      the channel from which the datas are saved
  *                 str       the name of the file or the buffer
- * 				   mode      buffer (0) or file (1)
- * 				   new_size  the size of the file
+ *                 mode
+ *                      [0] buffer = 0 or file = 1
+ *                      [1] 0 = auto buffer, 1 = force buffer (only in dual buffer mode)
+ *                      [2] primary = 0 or secondary = 1
+ *                 new_size  the size of the file
  * Return        : fail/success
  *----------------------------------------------------------------------------
  * Description   : Save the datas from a channel in a file or a buffer of a
@@ -903,121 +1135,173 @@ int gscope3110_part_save_buffer(int start, int end, int pos, char *acq_buf,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int gscope3110_smem_save(int fd, int chan, char *str, int mode, int new_size, int mask)
+int gscope3110_smem_save(int fd, int chan, char *str, int mode, int new_size, int mask, int fmt)
 {
+  int base, size, pos, trig, size_mask, pre_trig, start, end, csr, burst_size, extr, gap, prop, ctl;
+  struct tsc_ioctl_map_win shm_mas_map_win;
+  char *acq_buf;
+  FILE* acq_file;
+  int inc;
+  int scope_chan;
 
-	int base, size, pos, trig, size_mask, prop, pre_trig, pre_trig_mask, extr, start, end, gap, csr;
-	struct tsc_ioctl_map_win shm_mas_map_win;
-	char *acq_buf;
-	FILE* acq_file;
-	int inc;
+  inc = 1;
 
-	inc = 1;
-	/* if ADC3117 samples are grouped by 4 */
-	if( (gscope_csr_rd(fd,  GSCOPE_CSR_SIGN1) & 0xffff) == 0x3117) inc = 4;
+  /* if ADC3117 samples are grouped by 4 */
+  /*if ((gscope_csr_rd(GSCOPE_CSR_SIGN1) & 0xffff) == 0x3117)
+  {
+    inc = 4;
+  }*/
 
-	if (chan < ADC3110_CHAN_NUM / 2) 
-	{
+  /*gscope_mux_build_map();*/
 
-		csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG);
-		csr = (csr & GSCOPE_SAVE_CHAN_MASK) | chan;
+  scope_chan = gscope_mux_get_scope_chan(fd, chan);
 
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, csr);
-		base = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_BAS);
-		trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_TRIG_MKT);
-		pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+  if (scope_chan == -1)
+  {
+    fprintf(stderr, "adc channel not mapped to a scope channel !\n");
+    return(-1);
+  }
 
-	}else 
-	{
+  if (scope_chan < 8)
+  {
+    ctl = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+    csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG);
+    csr = (csr & GSCOPE_SAVE_CHAN_MASK) | scope_chan;
 
-		csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG);
-		csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan - (ADC3110_CHAN_NUM / 2));
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, csr);
-		base = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_BAS);
-		trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_TRIG_MKT);
-		pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, csr);
+    base = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_BAS);
 
-	}
+    /* Dual Buffer Mode Enabled ? AND
+     * Secondary Buffer Filled ? OR
+     * User Requested Secondary Buffer ?
+     */
+    if ((ctl & GSCOPE_ACQ_DUALBUF_ENA) &&
+        ((ctl & GSCOPE_ACQ_DUALBUF1_DONE) || ((mode & GSCOPE_SAVE_FORCE_BUF) && (mode & GSCOPE_SAVE_SEC_BUF))))
+    {
+      base = ((base << 16) & 0xffff0000);
+    }
+    else
+    {
+      base = (base  & 0xffff0000);
+    }
 
-	size_mask = GSCOPE_RGBUF_SIZE_MASK;
-	size = csr & size_mask;
-	if( !size) size = 0x10000000;
+    trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_TRIG_MKT);
+    pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+  }
+  else
+  {
+    ctl = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+    csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG);
+    csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (scope_chan - 8);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, csr);
+    base = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_BAS);
 
+    /* Dual Buffer Mode Enabled ? AND
+     * Secondary Buffer Filled ? OR
+     * User Requested Secondary Buffer ?
+     */
+    if ((ctl & GSCOPE_ACQ_DUALBUF_ENA) &&
+        ((ctl & GSCOPE_ACQ_DUALBUF1_DONE) || ((mode & GSCOPE_SAVE_FORCE_BUF) && (mode & GSCOPE_SAVE_SEC_BUF))))
+    {
+      base = ((base << 16) & 0xffff0000);
+    }
+    else
+    {
+      base = (base  & 0xffff0000);
+    }
 
-	pre_trig = pre_trig >> GSCOPE_ARM_TRIG_POS_START;
+    trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_TRIG_MKT);
+    pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+  }
 
-	//111...111
-	pre_trig_mask = (1 << GSCOPE_ARM_TRIG_POS_SIZE) - 1;
-	pre_trig = 	pre_trig & 	pre_trig_mask;
-	prop = pre_trig;
-	pre_trig *= size;
-	pre_trig = pre_trig / GSCOPE_ARM_TRIG_POS_MAX;
+  trig &= 0x1FFFFFF8;
 
+  burst_size = ((csr & (1<<29)) ? 4096 : 2048);
 
+  size_mask = GSCOPE_RGBUF_SIZE_MASK;
+  size = (csr & size_mask);
+  if (!size)
+  {
+    size = 8192*64*1024;
+  }
 
-	bzero(&shm_mas_map_win, sizeof(shm_mas_map_win));
-	shm_mas_map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_PMEM;
-	shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
-	if (chan >= ADC3110_CHAN_NUM / 2)
-	{
-		shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
-	}
-	shm_mas_map_win.req.rem_addr = base;
-	shm_mas_map_win.req.size = size;
-	tsc_map_alloc(fd, &shm_mas_map_win);
-	acq_buf = (char*) tsc_pci_mmap(fd, shm_mas_map_win.sts.loc_base,
-			shm_mas_map_win.sts.size); 
+  prop = ((pre_trig >> GSCOPE_ARM_TRIG_POS_START) & 0x7);
 
-	if(new_size > size || new_size == 0)
-	{
-		new_size = size;
-	}
+  pre_trig  = (   prop  * size / GSCOPE_ARM_TRIG_POS_MAX);
 
-	extr = (trig + size - pre_trig) % size;
-	gap = size - new_size;
+  bzero(&shm_mas_map_win, sizeof(shm_mas_map_win));
+  shm_mas_map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_PMEM;
+  shm_mas_map_win.req.mode.space = ((scope_chan < 8) ? MAP_SPACE_SHM : MAP_SPACE_SHM2);
 
-	start = (extr + ((gap * prop) / GSCOPE_ARM_TRIG_POS_MAX)) % size;
-	end = (extr - ((gap * (GSCOPE_ARM_TRIG_POS_MAX - prop)) / GSCOPE_ARM_TRIG_POS_MAX) + size) % size;
+  shm_mas_map_win.req.rem_addr = base;
+  shm_mas_map_win.req.size = size;
+  tsc_map_alloc(fd, &shm_mas_map_win);
+  acq_buf = (char*) tsc_pci_mmap(fd, shm_mas_map_win.sts.loc_base,
+    shm_mas_map_win.sts.size);
 
+  if (new_size > size || new_size == 0)
+  {
+    new_size = size;
+  }
 
+  gap = (size - new_size);
+  extr = ((trig + size - pre_trig) % size);
 
-	if(mode){
+  if (gap <= (trig % burst_size))
+  {
+    if (pre_trig > 0)
+    {
+      extr = (((extr / burst_size) + 1) * burst_size) % size;
+    }
+    else
+    {
+      extr = ((extr / burst_size) * burst_size) % size;
+    }
+  }
 
-		acq_file = fopen(str, "w");
+  start = (extr + ((gap *   prop)  / 8)        ) % size;
+  end   = (extr - ((gap *(8-prop)) / 8) + size ) % size;
 
-		if(!acq_file)
-		{
-			printf("cannot create acquisition file %s\n", str);
-			return (-1);
-		}
-		if(end < trig || start > trig)
-		{
-		  pos = gscope3110_part_save_file(start, size, 0, acq_buf, acq_file, inc, mask);
-			pos = gscope3110_part_save_file(0, end, pos, acq_buf, acq_file, inc, mask);
-		}
-		else
-		{
-			pos = gscope3110_part_save_file(start, end, 0, acq_buf, acq_file, inc, mask);
-		}
-		fclose(acq_file);
-	}
-	else{
-		if(end < trig || start > trig)
-		{
-			pos = gscope3110_part_save_buffer(start, size, 0, acq_buf, str, inc, mask);
-			pos = gscope3110_part_save_buffer(0, end, pos, acq_buf, str, inc, mask);
-		}
-		else
-		{
-			pos = gscope3110_part_save_buffer(start, end, 0, acq_buf, str, inc, mask);
-		}
-	}
+  debug("trig = 0x%08X, start = 0x%08X, end = 0x%08X, base = 0x%08X", trig, start, end, base);
 
+  if (mode&1)
+  {
 
-	tsc_pci_munmap(acq_buf, shm_mas_map_win.sts.size);
-	tsc_map_free(fd, &shm_mas_map_win);
+    acq_file = fopen(str, "w");
 
-	return 0;
+    if(!acq_file)
+    {
+      fprintf(stderr, "cannot create acquisition file %s\n", str);
+      return (-1);
+    }
+    if(end < trig || start >= trig)
+    {
+      pos = gscope3110_part_save_file(start, size, trig, acq_buf, acq_file, inc, mask, fmt);
+      pos = gscope3110_part_save_file(0,     end,  trig, acq_buf, acq_file, inc, mask, fmt);
+    }
+    else
+    {
+      pos = gscope3110_part_save_file(start, end, trig, acq_buf, acq_file, inc, mask, fmt);
+    }
+    fclose(acq_file);
+  }
+  else
+  {
+    if(end < trig || start >= trig)
+    {
+      pos = gscope3110_part_save_buffer(start, size,   0, acq_buf, str, inc, mask);
+      pos = gscope3110_part_save_buffer(0,      end, pos, acq_buf, str, inc, mask);
+    }
+    else
+    {
+      pos = gscope3110_part_save_buffer(start, end, 0, acq_buf, str, inc, mask);
+    }
+  }
+
+  tsc_pci_munmap(acq_buf, shm_mas_map_win.sts.size);
+  tsc_map_free(fd, &shm_mas_map_win);
+
+  return(new_size);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1034,117 +1318,132 @@ int gscope3110_smem_save(int fd, int chan, char *str, int mode, int new_size, in
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int gscope3210_smem_save(int fd, int chan, char *str, int mode, int new_size, int mask)
+int gscope3210_smem_save(int fd, int chan, char *str, int mode, int new_size, int mask, int fmt)
 {
 
-	int base, size, pos, trig, size_mask, prop, pre_trig, pre_trig_mask, extr, start, end, gap, csr;
-	struct tsc_ioctl_map_win shm_mas_map_win;
-	char *acq_buf;
-	FILE* acq_file;
-	int inc;
+  int base, size, pos, trig, size_mask, prop, pre_trig, extr, start, end, gap, csr, burst_size;
+  struct tsc_ioctl_map_win shm_mas_map_win;
+  char *acq_buf;
+  FILE* acq_file;
+  int inc;
 
-	inc = 1;
-	/* if ADC3117 samples are grouped by 4 */
-	if( (gscope_csr_rd(fd, GSCOPE_CSR_SIGN1) & 0xffff) == 0x3117) inc = 4;
+  inc = 1;
+  /* if ADC3117 samples are grouped by 4 */
+  if( (gscope_csr_rd(fd, GSCOPE_CSR_SIGN1) & 0xffff) == 0x3117) inc = 4;
 
-	if (chan < ADC3210_CHAN_NUM / 2) 
-	{
-		csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG);
-		csr = (csr & GSCOPE_SAVE_CHAN_MASK) | chan;
+  if (chan < ADC3210_CHAN_NUM / 2)
+  {
+    csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG);
+    csr = (csr & GSCOPE_SAVE_CHAN_MASK) | chan;
 
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, csr);
-		base = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_BAS);
-		trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_TRIG_MKT);
-		pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, csr);
+    base = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_BAS);
+    trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_TRIG_MKT);
+    pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+  }
+  else
+  {
+    csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG);
+    csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan - (ADC3210_CHAN_NUM / 2));
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, csr);
+    base = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_BAS);
+    trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_TRIG_MKT);
+    pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+  }
 
-	}else 
-	{
+  trig &= 0x1FFFFFF8;
 
-		csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG);
-		csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan - (ADC3210_CHAN_NUM / 2));
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, csr);
-		base = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_BAS);
-		trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_TRIG_MKT);
-		pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+  burst_size = ((csr & (1<<29)) ? 4096 : 2048);
 
-	}
+  size_mask = GSCOPE_RGBUF_SIZE_MASK;
+  size = csr & size_mask;
+  if (!size)
+  {
+    size = 8192*64*1024;
+  }
 
-	size_mask = GSCOPE_RGBUF_SIZE_MASK;
-	size = csr & size_mask;
-	if( !size) size = 0x10000000;
+  prop = ((pre_trig >> GSCOPE_ARM_TRIG_POS_START) & 0x7);
 
+  pre_trig = ( prop * size / GSCOPE_ARM_TRIG_POS_MAX);
 
-	pre_trig = pre_trig >> GSCOPE_ARM_TRIG_POS_START;
+  bzero(&shm_mas_map_win, sizeof(shm_mas_map_win));
+  shm_mas_map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_PMEM;
+  shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
+  if (chan >= ADC3210_CHAN_NUM / 2)
+  {
+    shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
+  }
+  shm_mas_map_win.req.rem_addr = base;
+  shm_mas_map_win.req.size = size;
+  tsc_map_alloc(fd, &shm_mas_map_win);
+  acq_buf = (char*) tsc_pci_mmap(fd, shm_mas_map_win.sts.loc_base,
+      shm_mas_map_win.sts.size);
 
-	//111...111
-	pre_trig_mask = (1 << GSCOPE_ARM_TRIG_POS_SIZE) - 1;
-	pre_trig = 	pre_trig & 	pre_trig_mask;
-	prop = pre_trig;
-	pre_trig *= size;
-	pre_trig = pre_trig / GSCOPE_ARM_TRIG_POS_MAX;
+  if (new_size > size || new_size == 0)
+  {
+    new_size = size;
+  }
 
+  gap = (size - new_size);
+  extr = ((trig + size - pre_trig) % size);
 
+  if (gap <= (trig % burst_size))
+  {
+    if (pre_trig > 0)
+    {
+      extr = (((extr / burst_size) + 1) * burst_size) % size;
+    }
+    else
+    {
+      extr = ((extr / burst_size) * burst_size) % size;
+    }
+  }
 
-	bzero(&shm_mas_map_win, sizeof(shm_mas_map_win));
-	shm_mas_map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_PMEM;
-	shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
-	if (chan >= ADC3210_CHAN_NUM / 2)
-	{
-		shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
-	}
-	shm_mas_map_win.req.rem_addr = base;
-	shm_mas_map_win.req.size = size;
-	tsc_map_alloc(fd, &shm_mas_map_win);
-	acq_buf = (char*) tsc_pci_mmap(fd, shm_mas_map_win.sts.loc_base,
-			shm_mas_map_win.sts.size); 
+  start = (extr + ((gap *  prop     ) / 8)       ) % size;
+  end   = (extr - ((gap * (8 - prop)) / 8) + size) % size;
 
-	if(new_size > size || new_size == 0)
-	{
-		new_size = size;
-	}
+#ifdef DEBUG
+  printf("trig = 0x%08X, start = 0x%08X, end = 0x%08X\n", trig, start, end);
+#endif /* DEBUG */
 
-	extr = (trig + size - pre_trig) % size;
-	gap = size - new_size;
+  if (mode)
+  {
 
-	start = (extr + ((gap * prop) / GSCOPE_ARM_TRIG_POS_MAX)) % size;
-	end = (extr - ((gap * (GSCOPE_ARM_TRIG_POS_MAX - prop)) / GSCOPE_ARM_TRIG_POS_MAX) + size) % size;
+    acq_file = fopen(str, "w");
 
-	if(mode){
-		acq_file = fopen(str, "w");
+    if(!acq_file)
+    {
+      fprintf(stderr, "cannot create acquisition file %s\n", str);
+      return (-1);
+    }
+    if(end < trig || start >= trig)
+    {
+      pos = gscope3110_part_save_file(start, size, trig, acq_buf, acq_file, inc, mask, fmt);
+      pos = gscope3110_part_save_file(0,     end,  trig, acq_buf, acq_file, inc, mask, fmt);
+    }
+    else
+    {
+      pos = gscope3110_part_save_file(start, end, trig, acq_buf, acq_file, inc, mask, fmt);
+    }
+    fclose(acq_file);
+  }
+  else
+  {
+    if(end < trig || start >= trig)
+    {
+      pos = gscope3110_part_save_buffer(start, size, 0, acq_buf, str, inc, mask);
+      pos = gscope3110_part_save_buffer(0, end, pos, acq_buf, str, inc, mask);
+    }
+    else
+    {
+      pos = gscope3110_part_save_buffer(start, end, 0, acq_buf, str, inc, mask);
+    }
+  }
 
-		if(!acq_file)
-		{
-			printf("cannot create acquisition file %s\n", str);
-			return (-1);
-		}
-		if(end < trig || start > trig)
-		{
-			pos = gscope3110_part_save_file(start, size, 0, acq_buf, acq_file, inc, mask);
-			pos = gscope3110_part_save_file(0, end, pos, acq_buf, acq_file, inc, mask);
-		}
-		else
-		{
-			pos = gscope3110_part_save_file(start, end, 0, acq_buf, acq_file, inc, mask);
-		}
-		fclose(acq_file);
-	}
-	else{
-		if(end < trig || start > trig)
-		{
-			pos = gscope3110_part_save_buffer(start, size, 0, acq_buf, str, inc, mask);
-			pos = gscope3110_part_save_buffer(0, end, pos, acq_buf, str, inc, mask);
-		}
-		else
-		{
-			pos = gscope3110_part_save_buffer(start, end, 0, acq_buf, str, inc, mask);
-		}
-	}
+  tsc_pci_munmap(acq_buf, shm_mas_map_win.sts.size);
+  tsc_map_free(fd, &shm_mas_map_win);
 
-
-	tsc_pci_munmap(acq_buf, shm_mas_map_win.sts.size);
-	tsc_map_free(fd, &shm_mas_map_win);
-
-	return 0;
+  return(new_size);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1161,118 +1460,129 @@ int gscope3210_smem_save(int fd, int chan, char *str, int mode, int new_size, in
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int gscope3117_smem_save(int fd, int fmc, int chan, char *str, int mode, int new_size, int mask)
+int gscope3117_smem_save(int fd, int fmc, int chan, char *str, int mode, int new_size, int mask, int fmt)
 {
 
-	int base, size, pos, trig, size_mask, prop, pre_trig, pre_trig_mask, extr, start, end, gap, csr;
-	struct tsc_ioctl_map_win shm_mas_map_win;
-	char *acq_buf;
-	FILE* acq_file;
-	int inc, off;
+  int base, size, pos, trig, size_mask, prop, pre_trig, extr, start, end, gap, csr, burst_size;
+  struct tsc_ioctl_map_win shm_mas_map_win;
+  char *acq_buf;
+  FILE* acq_file;
+  int inc, off;
 
-	inc = ADC3117_CHAN_GROUP;
-	off = (chan%ADC3117_CHAN_GROUP)*2;
+  inc = ADC3117_CHAN_GROUP;
+  off = (chan%ADC3117_CHAN_GROUP)*2;
 
-	if( fmc == ADC3117_FMC1)
-	{
-		csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG);
-		csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan/ADC3117_CHAN_GROUP);
+  if( fmc == ADC3117_FMC1)
+  {
+    csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_CFG);
+    csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan/ADC3117_CHAN_GROUP);
 
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, csr);
-		base = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_BAS);
-		trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_TRIG_MKT);
-		pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR1_RGB_CFG, csr);
+    base = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_RGB_BAS);
+    trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_TRIG_MKT);
+    pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR1_ACQ_MGT);
+  }
+  else
+  {
+    csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG);
+    csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan/ADC3117_CHAN_GROUP);
+    gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, csr);
+    base = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_BAS);
+    trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_TRIG_MKT);
+    pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+  }
 
-	}else 
-	{
+  trig &= 0x1FFFFFF8;
 
-		csr = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_CFG);
-		csr = (csr & GSCOPE_SAVE_CHAN_MASK) | (chan/ADC3117_CHAN_GROUP);
-		gscope_csr_wr(fd, GSCOPE_CSR_SWR2_RGB_CFG, csr);
-		base = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_RGB_BAS);
-		trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_TRIG_MKT);
-		pre_trig = gscope_csr_rd(fd, GSCOPE_CSR_SWR2_ACQ_MGT);
+  burst_size = ((csr & (1<<29)) ? 4096 : 2048);
 
-	}
+  size_mask = GSCOPE_RGBUF_SIZE_MASK;
+  size = csr & size_mask;
+  if (!size)
+  {
+    size = (8192*64*1024);     /* 64K * 8192 when 0 */
+  }
 
-	size_mask = GSCOPE_RGBUF_SIZE_MASK;
-	size = csr & size_mask;
-	if( !size) size = 0x10000000;
+  prop  = ((pre_trig >> GSCOPE_ARM_TRIG_POS_START) & 0x7);
 
-	pre_trig = pre_trig >> GSCOPE_ARM_TRIG_POS_START;
+  pre_trig = (prop * size / GSCOPE_ARM_TRIG_POS_MAX);
 
-	//111...111
-	pre_trig_mask = (1 << GSCOPE_ARM_TRIG_POS_SIZE) - 1;
-	pre_trig = 	pre_trig & 	pre_trig_mask;
-	prop = pre_trig;
-	pre_trig *= size;
-	pre_trig = pre_trig / GSCOPE_ARM_TRIG_POS_MAX;
+  bzero(&shm_mas_map_win, sizeof(shm_mas_map_win));
+  shm_mas_map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_PMEM;
+  shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
+  if( fmc == ADC3117_FMC2)
+  {
+    shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
+  }
+  shm_mas_map_win.req.rem_addr = base;
+  shm_mas_map_win.req.size = size;
+  tsc_map_alloc(fd, &shm_mas_map_win);
+  acq_buf = (char*) tsc_pci_mmap(fd, shm_mas_map_win.sts.loc_base, shm_mas_map_win.sts.size);
 
+  if (new_size > size || new_size == 0)
+  {
+    new_size = size;
+  }
 
+  gap = (size - new_size);
+  extr = ((trig + size - pre_trig) % size);
 
-	bzero(&shm_mas_map_win, sizeof(shm_mas_map_win));
-	shm_mas_map_win.req.mode.sg_id = MAP_ID_MAS_PCIE_PMEM;
-	shm_mas_map_win.req.mode.space = MAP_SPACE_SHM;
-	if( fmc == ADC3117_FMC2)
-	{
-		shm_mas_map_win.req.mode.space = MAP_SPACE_SHM2;
-	}
-	shm_mas_map_win.req.rem_addr = base;
-	shm_mas_map_win.req.size = size;
-	tsc_map_alloc(fd, &shm_mas_map_win);
-	acq_buf = (char*) tsc_pci_mmap(fd, shm_mas_map_win.sts.loc_base,
-			shm_mas_map_win.sts.size); 
+  if (gap <= (trig % burst_size))
+  {
+    if (pre_trig > 0)
+    {
+      extr = (((extr / burst_size) + 1) * burst_size ) % size;
+    }
+    else
+    {
+      extr = ((extr / burst_size) * burst_size) % size;
+    }
+  }
 
-	if(new_size > size || new_size == 0)
-	{
-		new_size = size;
-	}
+  start = (extr + ((gap *  prop)      / 8)        ) % size;
+  end   = (extr - ((gap * (8 - prop)) / 8) + size ) % size;
 
-	extr = (trig + size - pre_trig) % size;
-	gap = size - new_size;
+#ifdef DEBUG
+  printf("trig = 0x%08X, start = 0x%08X, end = 0x%08X\n", trig, start, end);
+#endif /* DEBUG */
 
-	start = (extr + ((gap * prop) / GSCOPE_ARM_TRIG_POS_MAX)) % size;
-	end = (extr - ((gap * (GSCOPE_ARM_TRIG_POS_MAX - prop)) / GSCOPE_ARM_TRIG_POS_MAX) + size) % size;
+  if(mode)
+  {
 
+    acq_file = fopen(str, "w");
 
+    if(!acq_file)
+    {
+      fprintf(stderr, "cannot create acquisition file %s\n", str);
+      return (-1);
+    }
+    if (end < trig || start >= trig)
+    {
+      pos = gscope3110_part_save_file(start+off, size, trig, acq_buf, acq_file, inc, mask, fmt);
+      pos = gscope3110_part_save_file(off,       end,  trig, acq_buf, acq_file, inc, mask, fmt);
+    }
+    else
+    {
+      pos = gscope3110_part_save_file(start+off, end, trig, acq_buf, acq_file, inc, mask, fmt);
+    }
+    fclose(acq_file);
+  }
+  else
+  {
+    if (end < trig || start >= trig)
+    {
+      pos = gscope3110_part_save_buffer(start+off, size, 0, acq_buf, str, inc, mask);
+      pos = gscope3110_part_save_buffer(off, end, pos, acq_buf, str, inc, mask);
+    }
+    else
+    {
+      pos = gscope3110_part_save_buffer(start+off, end, 0, acq_buf, str, inc, mask);
+    }
+  }
+  tsc_pci_munmap(acq_buf, shm_mas_map_win.sts.size);
+  tsc_map_free(fd, &shm_mas_map_win);
 
-	if(mode){
-
-		acq_file = fopen(str, "w");
-
-		if(!acq_file)
-		{
-			printf("cannot create acquisition file %s\n", str);
-			return (-1);
-		}
-		if(end < trig || start > trig)
-		{
-		  pos = gscope3110_part_save_file(start+off, size, 0, acq_buf, acq_file, inc, mask);
-			pos = gscope3110_part_save_file(off, end, pos, acq_buf, acq_file, inc, mask);
-		}
-		else
-		{
-			pos = gscope3110_part_save_file(start+off, end, 0, acq_buf, acq_file, inc, mask);
-		}
-		fclose(acq_file);
-	}
-	else{
-		if(end < trig || start > trig)
-		{
-			pos = gscope3110_part_save_buffer(start, size, 0, acq_buf, str, inc, mask);
-			pos = gscope3110_part_save_buffer(0, end, pos, acq_buf, str, inc, mask);
-		}
-		else
-		{
-			pos = gscope3110_part_save_buffer(start, end, 0, acq_buf, str, inc, mask);
-		}
-	}
-
-
-	tsc_pci_munmap(acq_buf, shm_mas_map_win.sts.size);
-	tsc_map_free(fd, &shm_mas_map_win);
-
-	return 0;
+  return(new_size);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1319,7 +1629,7 @@ gscope3110_dpram_save(int fd, int fmc, int chan, char *str, int mode, int new_si
     trig = gscope_csr_rd(fd, GSCOPE_CSR_DWR2_TRIG_MKT);
     prop = gscope_csr_rd(fd, GSCOPE_CSR_DWR1_ACQ_MGT);
   }
-  else 
+  else
   {
     csr = gscope_csr_rd(fd, GSCOPE_CSR_DWR2_RGB_CFG);
     trig = gscope_csr_rd(fd, GSCOPE_CSR_DWR1_TRIG_MKT);
@@ -1336,7 +1646,7 @@ gscope3110_dpram_save(int fd, int fmc, int chan, char *str, int mode, int new_si
   {
     printf("cannot move data\n");
     goto gscope3110_dpram_save_exit;
-  } 
+  }
 /*===> JFG check beginning of data buffer<===*/
   //buf = (unsigned short *)adc_kbuf.u_base;
   //printf("%04x %04x %04x %04x \n", tsc_swap_16(buf[0]), tsc_swap_16(buf[1]), tsc_swap_16(buf[2]), tsc_swap_16(buf[3]));
@@ -1371,7 +1681,7 @@ gscope3110_dpram_save(int fd, int fmc, int chan, char *str, int mode, int new_si
 	n++;
       }
     }
-    else 
+    else
     {
       printf("cannot create acquisition file %s\n", str);
       goto gscope3110_dpram_save_exit;
@@ -1452,84 +1762,77 @@ int sort(struct map *mp){
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-char* gscope3110_filename_generator(char* filename, int chan){
+char * gscope3110_filename_generator(char * filename, int chan)
+{
+  char *buf, *p, *q, time_str[7], date_str[7], chan_str[3];
+  int l;
+  time_t t;
+  struct tm tm;
 
+  if (chan < 0 && chan > 99)
+  {
+    return NULL;
+  }
 
+  l = 0;
+  p = filename;
+  while (p[0] != '\0')
+  {
+    if (p[0] == '%')
+    {
+      if (p[1] == 't' || p[1] == 'd' || p[1] == 'c')
+      {
+        l+= ((p[1] == 'c') ? 1 : 5);
+        p++;
+      }
+    }
+    l++;
+    p++;
+  }
 
-	int i, j, length, ch, total_l, l, first;
-	char *new_filename;
-	struct map m;
-	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+  buf = malloc(l+1);
+  if (buf != NULL)
+  {
+    t = time(NULL);
+    tm = *localtime(&t);
+    sprintf(date_str, "%02d%02d%02d", tm.tm_year - 100,tm.tm_mon + 1, tm.tm_mday);
+    sprintf(time_str, "%02d%02d%02d", tm.tm_hour,tm.tm_min, tm.tm_sec);
+    sprintf(chan_str, "%d", chan);
 
+    p = filename;
+    q = buf;
+    while (*p != '\0')
+    {
+      if (p[0] == '%')
+      {
+        switch(p[1])
+        {
+          case 't':
+            strcpy(q, time_str);
+            q+= 6;
+            p+= 2;
+            continue;
 
+          case 'd':
+            strcpy(q, date_str);
+            q+= 6;
+            p+= 2;
+            continue;
 
-	m.idx = (int*) malloc(16);
+          case 'c':
+            strcpy(q, chan_str);
+            while (*q != '\0') q++;
+            p+= 2;
+            continue;
 
-	for(i = 0; i < 16; i++){
-		m.string[i] = (char*) malloc(16);
-	}
-
-	sprintf(m.string[0], "%02d%02d%02d", tm.tm_year - 100,tm.tm_mon + 1, tm.tm_mday);
-	sprintf(m.string[1], "%02d%02d%02d", tm.tm_hour,tm.tm_min, tm.tm_sec);
-	sprintf(m.string[2], "%d", chan);
-	m.chan_idx = 2;
-
-	length = strlen(filename);
-
-	for(i = 0; i < 3; i++){
-		m.idx[i] = -1;
-	}
-
-	for(ch = 0; ch < length; ch++){
-		if(filename[ch] == '%'){
-			if(filename[ch + 1] == 'd'){
-				m.idx[0] = ch;
-			}
-			else if(filename[ch + 1] == 'c'){
-				m.idx[2] = ch;
-			}
-			else{
-				m.idx[1] = ch;
-			}
-		}
-	}
-
-	sort(&m);
-
-	i = 0;
-	first = 3;
-	do{
-		if(m.idx[i] != -1){
-			first = i;
-		}
-		i++;
-	}while(first > 2);
-
-	new_filename = (char*) malloc(length + 20);
-
-
-	total_l = 0;
-	ch = 0;
-	for(i = first; i < 3; i++){
-		for(; ch < m.idx[i]; ch++){
-			new_filename[ch] = filename[ch - total_l];
-		}
-		l = strlen(m.string[i]);
-		for(; ch < m.idx[i] + l; ch++){
-			new_filename[ch] = m.string[i][ch - m.idx[i]];
-		}
-		total_l += l - 2;
-		for(j = i + 1; j < 3; j++){
-			m.idx[j] += l - 2;
-		}
-	}
-
-	for(;ch < length + total_l; ch++){
-		new_filename[ch] = filename[ch - total_l];
-	}
-
-	new_filename[ch] = 0;
-
-	return new_filename;
+          default:
+            *q++ = *p++;
+            break;
+        }
+      }
+      *q++ = *p++;
+    }
+    *q = '\0';
+  }
+  return buf;
 }

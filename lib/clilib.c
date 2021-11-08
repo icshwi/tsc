@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : clilib.c
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -425,14 +425,14 @@ cli_get_cmd( struct cli_cmd_history *h,
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-struct cli_cmd_para    
-*cli_cmd_parse( char *cmdline, 
+struct cli_cmd_para
+*cli_cmd_parse( char *cmdline,
 		struct cli_cmd_para *c)
 {
   char *p;
   long i;
   while( *cmdline == ' ') cmdline++;
-  strcpy( c->cmdline, cmdline); 
+  strcpy( c->cmdline, cmdline);
   c->cmd = c->cmdline;
   p = strpbrk( c->cmd, ". \t");
   if( p)
@@ -460,7 +460,7 @@ struct cli_cmd_para
       p = strpbrk( c->para[i], "\"");
       if( !p)
       {
-	break;
+        break;
       }
       end = p;
       p = strpbrk( p, " \t");
@@ -476,6 +476,10 @@ struct cli_cmd_para
     {
       break;
     }
+  }
+  if (i > 0 && c->para[(i-1)][0] == 0)
+  {
+    i--;
   }
   c->cnt = i;
 
@@ -507,7 +511,7 @@ cli_get_para_str( struct cli_cmd_para *c,
         return( CLI_OK);
       }
     }
-    else 
+    else
     {
       if( !strcmp( str, c->para[idx]))
       {
