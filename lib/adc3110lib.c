@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : adc3110lib.c
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -79,9 +79,9 @@ int adc3110_set_verbose(int vf)
  * Function name : adc3110_XXX
  * Prototype     : int
  * Parameters    : void
- * Return        : 
+ * Return        :
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -97,7 +97,7 @@ int adc3110_XXX(void)
  * Parameters    : fmc FMC identifier (1 or 2)
  * Return        : int
  *----------------------------------------------------------------------------
- * Description   : perform a reset of the ADC3110 FMC by setting and 
+ * Description   : perform a reset of the ADC3110 FMC by setting and
  *                 re-setting bit 8 of the control register (ADC_CSR_CTL)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -113,11 +113,11 @@ int adc3110_reset(int fd, int fmc)
   sign = ADC3110_SIGN_ID;
 
   ret = fmc_identify(fd, fmc, &sign, NULL, NULL);
-  if (ret < 0) 
+  if (ret < 0)
     return(ret);
 
   ret = fmc_csr_write(fd, fmc, ADC_CSR_CTL, 0x1C00);
-  if (ret < 0) 
+  if (ret < 0)
     return(ret);
 
   usleep(50000);
@@ -137,7 +137,7 @@ int adc3110_reset(int fd, int fmc)
  * Function name : adc3110_lmk_init
  * Prototype     : void
  * Parameters    : fmc  FMC identifier (1 or 2)
- * 				   lmk_reg[]  pointer to a table holding the init value of the 
+ * 				   lmk_reg[]  pointer to a table holding the init value of the
  * 				   			  32 registers
  * Return        : void
  *----------------------------------------------------------------------------
@@ -152,9 +152,9 @@ void adc3110_lmk_init(int fd, int fmc, int lmk_reg[])
 
   if(adc3110_verbose_flag) printf("Initialisation LMK04906\n");
   adc3110_spi_lmk_write(fd, fmc, 0x0, 0x00020000); /* LMK04803B_R00 Generate a programmable RESET to the LMK04803B   */
-  usleep( 50000);
+  usleep(50000);
   adc3110_spi_lmk_write(fd, fmc, 0xb, lmk_reg[0xb]);
-  usleep( 50000);
+  usleep(50000);
   for( reg = 0; reg <= 0x10; reg++)
   {
     //printf("lmk reg %02d : %08x..", reg, adc3110_spi_lmk_read( fmc, reg));
@@ -207,8 +207,7 @@ void adc3110_lmk_init(int fd, int fmc, int lmk_reg[])
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void
-adc3110_lmk_dump(int fd, int fmc)
+void adc3110_lmk_dump(int fd, int fmc)
 {
   int reg, data;
 
@@ -235,7 +234,7 @@ adc3110_lmk_dump(int fd, int fmc)
  * Parameters    : fmc  FMC identifier (1 or 2)
  * Return        : void
  *----------------------------------------------------------------------------
- * Description   : initializes the four ads42lb69 dual analog-to-digital 
+ * Description   : initializes the four ads42lb69 dual analog-to-digital
  * converters present on the ADC_3110 FMC
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -247,7 +246,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
   if( chan_set & (ADC3110_CHAN_SET_0|ADC3110_CHAN_SET_1))
   {
     /* *****************************************************************/
-    /* Initialisation ADC_3110 ads42lb69 01                            */      
+    /* Initialisation ADC_3110 ads42lb69 01                            */
     /* *****************************************************************/
     if(adc3110_verbose_flag) printf("Initialisation ADC_3110 ads42lb69 01\n");
     adc3110_spi_ads01_write(fd, fmc, 0x8, 0x19);  /* ADS42LB69_Reg 0x08 RESET device   */
@@ -278,7 +277,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
   {
     if(adc3110_verbose_flag) printf("Initialisation ADC_3110 ads42lb69 23\n");
     /* *****************************************************************/
-    /* Initialisation ADC_3110 ads42lb69 23                            */      
+    /* Initialisation ADC_3110 ads42lb69 23                            */
     /* *****************************************************************/
     adc3110_spi_ads23_write(fd, fmc, 0x8, 0x19);  /* ADS42LB69_Reg 0x08 RESET device   */
     usleep( 10000);
@@ -307,7 +306,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
   if( chan_set & (ADC3110_CHAN_SET_4|ADC3110_CHAN_SET_5))
   {
     /* *****************************************************************/
-    /* Initialisation ADC_3110 ads42lb69 45                            */      
+    /* Initialisation ADC_3110 ads42lb69 45                            */
     /* *****************************************************************/
     if(adc3110_verbose_flag) printf("Initialisation ADC_3110 ads42lb69 45\n");
     adc3110_spi_ads45_write(fd, fmc, 0x8, 0x19);  /* ADS42LB69_Reg 0x08 RESET device   */
@@ -337,7 +336,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
   if( chan_set & (ADC3110_CHAN_SET_6|ADC3110_CHAN_SET_7))
   {
     /* *****************************************************************/
-    /* Initialisation ADC_3110 ads42lb69 67                            */      
+    /* Initialisation ADC_3110 ads42lb69 67                            */
     /* *****************************************************************/
     if(adc3110_verbose_flag) printf("Initialisation ADC_3110 ads42lb69 67\n");
     adc3110_spi_ads67_write(fd, fmc, 0x8, 0x19);  /* ADS42LB69_Reg 0x08 RESET device   */
@@ -375,8 +374,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
  * Description   : display the content of the ads42lb69 registers.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
-void
-adc3110_ads42lb69_dump(int fd, int fmc)
+void adc3110_ads42lb69_dump(int fd, int fmc)
 {
   int reg, data;
 
@@ -445,7 +443,7 @@ adc3110_ads42lb69_dump(int fd, int fmc)
  *                 mode  operation mode
  * Return        : mode  current value of ADC42LB67 register 0xF
  *----------------------------------------------------------------------------
- * Description   : allow to set the operation mode of for ADC channel referred 
+ * Description   : allow to set the operation mode of for ADC channel referred
  * by chan. The mode (loaded in register 0xF) shall be:
  * - ADC3110_ADS_MODE_NORM    → normal operation
  * - ADC3110_ADS_MODE_ZERO    → output all 0s
@@ -488,7 +486,7 @@ int  adc3110_ads42lb69_set_mode(int fd, int fmc, int chan, int mode)
  * 				   pattern	32 bit pattern loaded in registers 0x10 → 0x13
  * Return        : pattern	current value of ADC42LB67 register 0x10 → 0x13
  *----------------------------------------------------------------------------
- * Description   : allow to set for any channel the data pattern to be used in 
+ * Description   : allow to set for any channel the data pattern to be used in
  * test mode
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -498,7 +496,7 @@ int adc3110_ads42lb69_set_pattern(int fd, int fmc, int chan, int pattern)
 
   if(chan >= ADC3110_CHAN_NUM)
     return( -1);
-  
+
   csr = pattern;
   for (i=0; i<4; i++)
   {
@@ -512,20 +510,20 @@ int adc3110_ads42lb69_set_pattern(int fd, int fmc, int chan, int pattern)
     csr |= ((tmp & 0xff) << 8);
   }
   return( csr);
-} 
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3110_calib_set_idelay
  * Prototype     : int
  * Parameters    : fmc  FMC identifier (1 or 2)
- *                 chan  channel number (0 -> ADC3110_CHAN_NUM - 1) 
+ *                 chan  channel number (0 -> ADC3110_CHAN_NUM - 1)
  *                 		 if - 1 adjust for all channels
- *                 idelay  calibration delay ( 0 -> 0x1ff) 
+ *                 idelay  calibration delay ( 0 -> 0x1ff)
  *                 		   if -1 reset IDELAY
  * Return        : current value of IDELAY register
  *----------------------------------------------------------------------------
- * Description   : adjust the data interface calibration delay to delay for 
- * channel chan. If chan equal -1, ajustment is applied to all channels. 
+ * Description   : adjust the data interface calibration delay to delay for
+ * channel chan. If chan equal -1, ajustment is applied to all channels.
  * If delay is set to -1, default delay value ir restored.
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -569,7 +567,7 @@ int adc3110_calib_set_idelay(int fd, int fmc, int chan, int idelay)
  *                 chan  channel number ( 0 -> ADC3110_CHAN_NUM - 1)
  * Return        : current value of IDELAY register
  *----------------------------------------------------------------------------
- * Description   : return the current value of ADC3110_CSR_IDELAY register for 
+ * Description   : return the current value of ADC3110_CSR_IDELAY register for
  * channel chan
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
@@ -600,7 +598,7 @@ int adc3110_calib_get_idelay(int fd, int fmc, int chan)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 

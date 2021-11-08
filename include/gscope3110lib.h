@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : gscope3110lib.h
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -46,6 +46,9 @@
  *
  *=============================< end file header >============================*/
 
+#ifndef _H_GSCOPE3110LIB
+#define _H_GSCOPE3110LIB
+
 #include <gscopelib.h>
 
 #define GSCOPE3110_CSR_BASE   0x00001000
@@ -58,14 +61,14 @@
 #define GSCOPE3110_CSR_RWT2         0x67
 
 #define GSCOPE3110_CSR_FE1_CSR1     0x68
-#define GSCOPE3110_CSR_FE1_CSR2     0x69 
-#define GSCOPE3110_CSR_FE1_CSR3     0x6a 
-#define GSCOPE3110_CSR_FE1_TRIG     0x6b 
+#define GSCOPE3110_CSR_FE1_CSR2     0x69
+#define GSCOPE3110_CSR_FE1_CSR3     0x6a
+#define GSCOPE3110_CSR_FE1_TRIG     0x6b
 #define GSCOPE3110_CSR_FE2_CSR1     0x6c
 #define GSCOPE3110_CSR_FE2_CSR2     0x6d
-#define GSCOPE3110_CSR_FE2_CSR3     0x6e 
+#define GSCOPE3110_CSR_FE2_CSR3     0x6e
 #define GSCOPE3110_CSR_FE2_TRIG     0x6f
- 
+
 #define GSCOPE3110_CSR_SWR1_RGB_CFG       0x70
 #define GSCOPE3110_CSR_DWR1_RGB_CFG       0x70
 #define GSCOPE3110_CSR_SWR1_RGB_BAS       0x71
@@ -207,13 +210,18 @@
 
 #define GSCOPE3110_MIXED_FMC                 3
 
-#define gscope3110_csr_rd(fd, csr)           gscope_csr_rd(fd, csr) 
-#define gscope3110_csr_wr(fd, csr, data)     gscope_csr_wr(fd, csr, data) 
+#define gscope3110_csr_rd(fd, csr)           gscope_csr_rd(fd, csr)
+#define gscope3110_csr_wr(fd, csr, data)     gscope_csr_wr(fd, csr, data)
 #define gscope3110_identify(fd)              gscope_identify(fd)
+#define gscope3110_irq_alloc(fd, irq_set)            gscope_irq_alloc(fd, irq_set)
+#define gscope3110_irq_free(fd, irq)                 gscope_irq_free(fd, irq)
+#define gscope3110_irq_arm(fd, irq)                  gscope_irq_arm(fd, irq)
+#define gscope3110_irq_armwait(fd, irq, tmo, vector) gscope_irq_armwait(fd, irq, tmo, vector)
+#define gscope3110_irq_reset(fd)                    gscope_irq_reset(fd)
 
 struct tsc_ioctl_map_win *gscope3110_map_usr(int fd, int fmc, char **buf, int offset, int size);
 void gscope3110_unmap_usr(int fd, struct tsc_ioctl_map_win *map, char *u_addr);
-int gscope3110_acq_smem_init(int fd, int chan_set, int rgbuf_base, int rgbuf_size, int mode);
+int gscope1430_acq_smem_init(int fd, int chan_set, int rgbuf_base, int rgbuf_size, int mode);
 int gscope3110_acq_smem_init(int fd, int chan_set, int rgbuf_base, int rgbuf_size, int mode);
 int gscope3210_acq_smem_init(int fd, int chan_set, int rgbuf_base, int rgbuf_size, int mode);
 int gscope3117_acq_smem_init(int fd, int fmc, int rgbuf_base, int rgbuf_size, int mode);
@@ -223,17 +231,19 @@ int gscope3110_acq_arm(int fd, int fmc, int trig_mode, int trig_pos, int buf_siz
 int gscope3110_acq_abort(int fd, int fmc);
 int gscope3110_acq_rearm(int fmc);
 int gscope3110_acq_stop(int fmc);
-void gscope3110_acq_clear(int fd, int fmc, int chan); 
+void gscope3110_acq_clear(int fd, int fmc, int chan);
 void gscope3110_acq_load(int fd, int fmc, char *buf, int size);
 int gscope3110_acq_read(int fd, int fmc, int chan, unsigned short *buf, int size);
 void gscope3110_trig_set(int fd, int fmc, int chan, int mode, int offset, int hyst);
 void gscope_trig_dis(int fd, int fmc);
-int gscope3110_smem_save(int fd, int chan,  char* str, int mode, int new_size, int mask);
-int gscope3210_smem_save(int fd, int chan,  char* str, int mode, int new_size, int mask);
-int gscope3117_smem_save(int fd, int fmc, int chan,  char* str, int mode, int new_size, int mask);
+int gscope3110_smem_save(int fd, int chan,  char* str, int mode, int new_size, int mask, int fmt);
+int gscope3210_smem_save(int fd, int chan,  char* str, int mode, int new_size, int mask, int fmt);
+int gscope3117_smem_save(int fd, int fmc, int chan,  char* str, int mode, int new_size, int mask, int fmt);
 int gscope3110_dpram_save(int fd, int fmc, int chan,  char* str, int mode, int new_size);
 char* gscope3110_filename_generator(char* filename, int chan);
 int gscope3110_trig_time(int fd, int fmc, int *msec_p, int *nsec_p);
 int gscope3110_intr_status(void);
 int gscope3110_acq_dpram_move(int fd, int fmc,  int chan,  uint64_t pci_addr,  uint64_t dpram_off, int size);
 int gscope3110_acq_smem_move(int fd,int fmc, int chan, uint64_t pci_addr, uint64_t shm_off, int size);
+
+#endif /* _H_GSCOPE3110LIB */

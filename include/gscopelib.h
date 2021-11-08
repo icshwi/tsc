@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : gscopelib.h
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -15,13 +15,13 @@
  *----------------------------------------------------------------------------
  *
  *  Copyright Notice
- *  
- *    Copyright and all other rights in this document are reserved by 
- *    IOxOS Technologies SA. This documents contains proprietary information    
- *    and is supplied on express condition that it may not be disclosed, 
+ *
+ *    Copyright and all other rights in this document are reserved by
+ *    IOxOS Technologies SA. This documents contains proprietary information
+ *    and is supplied on express condition that it may not be disclosed,
  *    reproduced in whole or in part, or used for any other purpose other
- *    than that for which it is supplies, without the written consent of  
- *    IOxOS Technologies SA                                                        
+ *    than that for which it is supplies, without the written consent of
+ *    IOxOS Technologies SA
  *
  *=============================< end file header >============================*/
 
@@ -40,14 +40,14 @@
 #define GSCOPE_CSR_RWT2         0x67
 
 #define GSCOPE_CSR_FE1_CSR1     0x68   /* 0x11a0 */
-#define GSCOPE_CSR_FE1_CSR2     0x69 
-#define GSCOPE_CSR_FE1_CSR3     0x6a 
-#define GSCOPE_CSR_FE1_TRIG     0x6b 
+#define GSCOPE_CSR_FE1_CSR2     0x69
+#define GSCOPE_CSR_FE1_CSR3     0x6a
+#define GSCOPE_CSR_FE1_TRIG     0x6b
 #define GSCOPE_CSR_FE2_CSR1     0x6c
 #define GSCOPE_CSR_FE2_CSR2     0x6d
-#define GSCOPE_CSR_FE2_CSR3     0x6e 
+#define GSCOPE_CSR_FE2_CSR3     0x6e
 #define GSCOPE_CSR_FE2_TRIG     0x6f
- 
+
 #define GSCOPE_CSR_SWR1_RGB_CFG       0x70   /* 0x11c0 */
 #define GSCOPE_CSR_DWR1_RGB_CFG       0x70
 #define GSCOPE_CSR_SWR1_RGB_BAS       0x71
@@ -207,14 +207,6 @@
 #define GSCOPE_SAVE_PRI_BUF           (0<<2)    /* Primary Buffer             (only in dual buffer mode when FORCED)  */
 #define GSCOPE_SAVE_SEC_BUF           (0<<2)    /* Secondary Buffer           (only in dual buffer mode when FORCED)  */
 
-
-
-void gscope_csr_wr(int fd, int csr, int data);
-int gscope_csr_rd(int fd, int csr);
-int gscope_identify(int fd);
-struct tsc_ioctl_map_win *gscope_map(int fd, int space, char **buf, int offset, int size);
-void gscope_unmap(int fd, struct tsc_ioctl_map_win *map, char *u_addr);
-
 void                         gscope_csr_wr         (int fd, int csr, int data);
 int                          gscope_csr_rd         (int fd, int csr);
 int                          gscope_identify       (int fd);
@@ -225,6 +217,11 @@ int                          gscope_acq_arm        (int fd, int fmc, int trig_mo
 int                          gscope_acq_abort      (int fd, int fmc);
 int                          gscope_acq_rearm      (int fd, int fmc);
 int                          gscope_acq_release_buf(int fd, int fmc, int buf);
+struct tsc_ioctl_usr_irq *   gscope_irq_alloc      (int fd, int irq_set);
+int                          gscope_irq_free       (int fd, struct tsc_ioctl_usr_irq *irq);
+int                          gscope_irq_arm        (int fd, struct tsc_ioctl_usr_irq *irq);
+int                          gscope_irq_armwait    (int fd, struct tsc_ioctl_usr_irq *irq, uint tmo, uint *vector);
+int                          gscope_irq_reset      (void);
 void                         gscope_trig_dis       (int fd, int fmc);
 
 void                         gscope_dump           (int fd, int fmc);

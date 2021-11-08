@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : fscope3112lib.h
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -62,6 +62,7 @@
 #define ADC3112_CSR_LED          0x82
 #define ADC3112_CSR_SERIAL       0x83
 #define ADC3112_CSR_GPIO         0x85
+#define ADC3112_CSR_MARK         0x86
 #define ADC3112_CSR_FMC          0x87
 #define ADC3112_CSR_GAIN         0x88
 #define ADC3112_CSR_TTIM         0x8c
@@ -97,35 +98,35 @@
 #define ADC3112_XRA_FEIR      0x12
 #define ADC3112_XRA_IFR       0x14
 
-#define adc3112_spi_ads01_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_ADS01, reg) 
-#define adc3112_spi_ads01_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_ADS01, reg, data) 
+#define adc3112_spi_ads01_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_ADS01, reg)
+#define adc3112_spi_ads01_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_ADS01, reg, data)
 
-#define adc3112_spi_ads23_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_ADS23, reg) 
-#define adc3112_spi_ads23_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_ADS23, reg, data) 
+#define adc3112_spi_ads23_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_ADS23, reg)
+#define adc3112_spi_ads23_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_ADS23, reg, data)
 
-#define adc3112_spi_xra01_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_XRA01, reg) 
-#define adc3112_spi_xra01_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_XRA01, reg, data) 
+#define adc3112_spi_xra01_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_XRA01, reg)
+#define adc3112_spi_xra01_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_XRA01, reg, data)
 
-#define adc3112_spi_xra23_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_XRA23, reg) 
-#define adc3112_spi_xra23_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_XRA23, reg, data) 
+#define adc3112_spi_xra23_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_XRA23, reg)
+#define adc3112_spi_xra23_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_XRA23, reg, data)
 
-#define adc3112_spi_xratrig_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_XRATRIG, reg) 
-#define adc3112_spi_xratrig_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_XRATRIG, reg, data) 
+#define adc3112_spi_xratrig_read(fd, fmc, reg)             adc3112_spi_read(fd, fmc, ADC3112_SPI_XRATRIG, reg)
+#define adc3112_spi_xratrig_write(fd, fmc, reg, data)      adc3112_spi_write(fd, fmc, ADC3112_SPI_XRATRIG, reg, data)
 
-#define adc3112_spi_lmk_read(fd, fmc, reg)               adc3112_spi_read(fd, fmc, ADC3112_SPI_LMK, reg) 
-#define adc3112_spi_lmk_write(fd, fmc, reg, data)        adc3112_spi_write(fd, fmc, ADC3112_SPI_LMK, reg, data) 
+#define adc3112_spi_lmk_read(fd, fmc, reg)               adc3112_spi_read(fd, fmc, ADC3112_SPI_LMK, reg)
+#define adc3112_spi_lmk_write(fd, fmc, reg, data)        adc3112_spi_write(fd, fmc, ADC3112_SPI_LMK, reg, data)
 
-#define adc3112_spi_sy_read(fd, fmc, reg)               adc3112_spi_read(fd, fmc, ADC3112_SPI_SY, reg) 
-#define adc3112_spi_sy_write(fd, fmc, reg, data)        adc3112_spi_write(fd, fmc, ADC3112_SPI_SY, reg, data) 
+#define adc3112_spi_sy_read(fd, fmc, reg)               adc3112_spi_read(fd, fmc, ADC3112_SPI_SY, reg)
+#define adc3112_spi_sy_write(fd, fmc, reg, data)        adc3112_spi_write(fd, fmc, ADC3112_SPI_SY, reg, data)
 
-#define adc3112_spi_dac_read(fd, fmc, reg)               adc3112_spi_read(fd, fmc, ADC3112_SPI_DAC, reg) 
-#define adc3112_spi_dac_write(fd, fmc, reg, data)        adc3112_spi_write(fd, fmc, ADC3112_SPI_DAC, reg, data) 
+#define adc3112_spi_dac_read(fd, fmc, reg)               adc3112_spi_read(fd, fmc, ADC3112_SPI_DAC, reg)
+#define adc3112_spi_dac_write(fd, fmc, reg, data)        adc3112_spi_write(fd, fmc, ADC3112_SPI_DAC, reg, data)
 
-#define adc3112_i2c_eeprom_read(fd, fmc, reg)            adc3112_i2c_read(fd, fmc, ADC3112_I2C_EEPROM, reg) 
-#define adc3112_i2c_eeprom_write(fd, fmc, reg, data)     adc3112_i2c_write(fd, fmc, ADC3112_I2C_EEPROM, reg, data) 
+#define adc3112_i2c_eeprom_read(fd, fmc, reg)            adc3112_i2c_read(fd, fmc, ADC3112_I2C_EEPROM, reg)
+#define adc3112_i2c_eeprom_write(fd, fmc, reg, data)     adc3112_i2c_write(fd, fmc, ADC3112_I2C_EEPROM, reg, data)
 
-#define adc3112_i2c_thermo_read(fd, fmc, reg)            adc3112_i2c_read(fd, fmc, ADC3112_I2C_THERMO, reg) 
-#define adc3112_i2c_thermo_write(fd, fmc, reg, data)     adc3112_i2c_write(fd, fmc, ADC3112_I2C_THERMO, reg, data) 
+#define adc3112_i2c_thermo_read(fd, fmc, reg)            adc3112_i2c_read(fd, fmc, ADC3112_I2C_THERMO, reg)
+#define adc3112_i2c_thermo_write(fd, fmc, reg, data)     adc3112_i2c_write(fd, fmc, ADC3112_I2C_THERMO, reg, data)
 
 #define ADC3112_XRA_FE_IN_GND   0x55        /* XRA1404 OCR    Grounded ADC inputs  */
 #define ADC3112_XRA_FE_IN_POS   0x22        /* XRA1404 OCR    SE Pos input  */
@@ -141,7 +142,7 @@
 #define ADC3112_XRA_TRIG_GPIO     0x57
 #define ADC3112_XRA_TRIG_ADC      0x47
 #define ADC3112_XRA_TRIG_RISE     0x20
- 
+
 #define ADC3112_TTRIG_ENA       0xc0
 #define ADC3112_TTRIG_ARM       0x01
 #define ADC3112_TTRIG_RESET     0x02
@@ -190,12 +191,12 @@ uint adc3112_i2c_read(int fd, int fmc, uint cmd, uint reg);
 int adc3112_i2c_write(int fd, int fmc, uint cmd, uint reg, uint data);
 void adc3112_xra1404_init(int fd, int fmc);
 void adc3112_xratrig_enable(int fd, int fmc, int src, int level);
-void adc3112_xratrig_disable(int fd, int fmc); 
+void adc3112_xratrig_disable(int fd, int fmc);
 void adc3112_lmk_init(int fd, int fmc, int reg[]);
 void adc3112_lmk_dump(int fd, int fmc);
-void adc3112_ads5409_reset(int fd, int fmc, int filter); 
-void adc3112_ads5409_init(int fd, int fmc, int corr); 
-void adc3112_ads5409_dump(int fd, int fmc); 
+void adc3112_ads5409_reset(int fd, int fmc, int filter);
+void adc3112_ads5409_init(int fd, int fmc, int corr);
+void adc3112_ads5409_dump(int fd, int fmc);
 int  adc3112_ads5409_enable(int fd, int fmc, int m01, int m23);
 int adc3112_gpio_reset(int fd, int fmc);
 int adc3112_gpio_trig(int fd, int fmc);
@@ -213,5 +214,3 @@ int adc3112_calib_show_err_cnt( struct adc3112_calib_ctl *cc, int chan);
 int adc3112_calib_show_min_max( struct adc3112_calib_ctl *cc, int chan);
 void adc3112_calib_get_ttim(int fd, struct adc3112_calib_ctl *cc, int chan);
 void adc3112_calib_restore(int fd, int fmc);
-
-    
