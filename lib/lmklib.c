@@ -84,7 +84,7 @@ int lmk_read(lmk_t *lmk, int fd, int reg, int *data, int priv)
   if (lmk == NULL || lmk->func == NULL)        
     return (-1);
 
-  return lmk->func(LMK_REG_READ, fd, reg, data, priv);
+  return lmk->func(fd, LMK_REG_READ, reg, data, priv);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -105,7 +105,7 @@ int lmk_write(lmk_t *lmk, int fd, int reg, int data, int priv)
   if (lmk == NULL || lmk->func == NULL)
     return (-1);
 
-  return lmk->func(LMK_REG_WRITE, fd, reg, &tmp, priv);
+  return lmk->func(fd, LMK_REG_WRITE, reg, &tmp, priv);
 }
 
 /*--------------------------------------------------------------------------------------------------------------------*/
@@ -125,18 +125,18 @@ int lmk04806_init(lmk_t *lmk, int fd, int lmk_reg[], int priv, int quiet)
 
   if (!quiet)
     printf("LMK04806 initialisation\n");
-    
+
   /* LMK04806_R00 Generate a programmable RESET */
   ret = lmk_write(lmk, fd, 0x0, 0x00020000, priv);
   if (ret < 0) return(ret);
-  
+
   usleep(50000);
 
   ret = lmk_write(lmk, fd, 0xB, lmk_reg[0xB], priv);
   if (ret < 0) return(ret);
-  
+
   usleep(50000);
-  
+
   /* R0 - R16 / R24 - R31 */
   for (r=0x00; r<=0x1F; r++)
   {
