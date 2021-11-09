@@ -89,7 +89,7 @@ void ads42lb69_configure(int ads_num, int *ads_map)
 
 int ads42lb69_init(int fd, int fmc, int chan_set, int regs[], int quiet, int fmt)
 {
-  int adc, ret, count, tmp;
+  int adc, ret, count;
 
   if (fmc < 0 || fmc > 2 || ads42lb69_map == NULL)
     return(-1);
@@ -148,10 +148,6 @@ int ads42lb69_init(int fd, int fmc, int chan_set, int regs[], int quiet, int fmt
          fmt == 0,                                            Data format = Twos complement.
          fmt == ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN (0x10), Data format = Offset binary.
       */
-      tmp = regs[0x08];
-      if (fmt > 0) {
-        tmp = tmp | ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN;
-      }
       /* ADS42LB69_Reg 0x08 Data format = fmt + align test pattern on channel A & B */
       ret = adc_spi_write(fd, fmc, ads42lb69_map[2*adc+0], 0x08, (regs[0x08] | fmt));
       if (ret < 0) 
