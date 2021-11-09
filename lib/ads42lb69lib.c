@@ -87,9 +87,9 @@ void ads42lb69_configure(int ads_num, int *ads_map)
  * \return  >=0 on sucess, <0 on error 
  */
 
-int ads42lb69_init(int fd, int fmc, int chan_set, int regs[], int quiet)
+int ads42lb69_init(int fd, int fmc, int chan_set, int regs[], int quiet, int fmt)
 {
-  int adc, ret, count;
+  int adc, ret, count, tmp;
 
   if (fmc < 0 || fmc > 2 || ads42lb69_map == NULL)
     return(-1);
@@ -143,8 +143,17 @@ int ads42lb69_init(int fd, int fmc, int chan_set, int regs[], int quiet)
         return(ret);
       }
 
-      /* ADS42LB69_Reg 0x08 Data format = 2s complement + align test pattern on channel A & B */
-      ret = adc_spi_write(fd, fmc, ads42lb69_map[2*adc+0], 0x08, regs[0x08]);
+      /*
+         Register 8, Set data format accordingly.
+         fmt == 0,                                            Data format = Twos complement.
+         fmt == ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN (0x10), Data format = Offset binary.
+      */
+      tmp = regs[0x08];
+      if (fmt > 0) {
+        tmp = tmp | ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN;
+      }
+      /* ADS42LB69_Reg 0x08 Data format = fmt + align test pattern on channel A & B */
+      ret = adc_spi_write(fd, fmc, ads42lb69_map[2*adc+0], 0x08, (regs[0x08] | fmt));
       if (ret < 0) 
       {
         return(ret);
@@ -159,7 +168,7 @@ int ads42lb69_init(int fd, int fmc, int chan_set, int regs[], int quiet)
 
       /* ADS42LB69_Reg 0x0C Channel B(Odd) Gain enabled with 0dB - /No OVR  */
       ret = adc_spi_write(fd, fmc, ads42lb69_map[2*adc+0], 0x0C, regs[0x0C]);
-      if (ret < 0) 
+      if (ret < 0)
       {
         return(ret);
       }

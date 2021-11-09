@@ -95,6 +95,8 @@
 #define ADS42LB69_IDLY_ISERDESE3_RST      (1<<30) /* Reset ISERDESE3                */
 #define ADS42LB69_IDLY_IDELAYE3_RST       (1<<31) /* Reset IDELAYE3                 */
 
+#define ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN (1<< 4) /* Register 8, Data Format Field  */
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 #define ADS42LB69_MODE_NORM     0x00              /* Normal Mode                              */
@@ -113,7 +115,7 @@
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 extern void ads42lb69_configure           (int ads_num, int *ads_map);
-extern int  ads42lb69_init                (int fd, int fmc, int chan_set, int regs[], int quiet);
+extern int  ads42lb69_init                (int fd, int fmc, int chan_set, int regs[], int quiet, int fmt);
 extern int  ads42lb69_dump                (int fd, int fmc, int chan_set);
 extern int  ads42lb69_set_mode            (int fd, int fmc, int chan, int mode);
 extern int  ads42lb69_get_mode            (int fd, int fmc, int chan, int *mode);

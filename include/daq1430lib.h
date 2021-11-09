@@ -199,7 +199,7 @@ int  daq1430_lmk_init              (int fd, int fmc, int mode, int ref, int freq
 int  daq1430_lmk_set_adc_divider   (int fd, int fmc, int divider);
 int  daq1430_lmk_dump              (int fd, int fmc);
 int  daq1430_lmk_get_status        (int fd, int fmc, int *data);
-int  daq1430_ads42lb69_init        (int fd, int fmc, int chan_set);
+int  daq1430_ads42lb69_init        (int fd, int fmc, int chan_set, int fmt);
 int  daq1430_ads42lb69_dump        (int fd, int fmc, int chan_set);
 int  daq1430_ads42lb69_set_mode    (int fd, int fmc, int chan, int mode);
 int  daq1430_ads42lb69_set_pattern (int fd, int fmc, int chan, int pattern);

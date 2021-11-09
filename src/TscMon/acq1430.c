@@ -2764,6 +2764,7 @@ int tsc_acq1430(struct cli_cmd_para *c)
   uint cmd, data, fmc;
   char *p;
   int adc_ch_mask, rc;
+  int fmt = 0;
 
   if(!c->ext)
   {
@@ -3257,7 +3258,20 @@ int tsc_acq1430(struct cli_cmd_para *c)
         {
           adc_ch_mask = add->idx;
         }
-        return daq1430_ads42lb69_init(tsc_fd, fmc, adc_ch_mask);
+        /* second param should be data format */
+        if (c->cnt > 2 ) {
+            if (!strcmp("bin", c->para[2])) {
+                fmt = ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN;
+                printf("Setting ADS42LB69 data format to offset binary\n");
+            } else {
+                fmt = 0;
+                printf("Setting ADS42LB69 data format to two's complement\n");
+            }
+        } else {
+            fmt = 0;
+            printf("Setting ADS42LB69 data format to two's complement\n");
+        }
+        return daq1430_ads42lb69_init(tsc_fd, fmc, adc_ch_mask, fmt);
       }
     }
   }
