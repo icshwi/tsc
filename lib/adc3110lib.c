@@ -240,8 +240,7 @@ void adc3110_lmk_dump(int fd, int fmc)
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
-adc3110_ads42lb69_init(int fd, int fmc,
-			int chan_set)
+adc3110_ads42lb69_init(int fd, int fmc, int chan_set, int fmt)
 {
   if( chan_set & (ADC3110_CHAN_SET_0|ADC3110_CHAN_SET_1))
   {
@@ -255,7 +254,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
     adc3110_spi_ads01_write(fd, fmc, 0x5, 0x00);  /* ADS42LB69_Reg 0x08 RESET device   */
     adc3110_spi_ads01_write(fd, fmc, 0x6, 0x00);  /* ADS42LB69_Reg 0x06 LVDS CLKDIV=0 : Bypassed   */
     adc3110_spi_ads01_write(fd, fmc, 0x7, 0x00);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
-    adc3110_spi_ads01_write(fd, fmc, 0x8, 0x0c);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
+    adc3110_spi_ads01_write(fd, fmc, 0x8, (0x0c | fmt));  /* ADS42LB69_Reg 0x08 Test pattern sync, Data format = 2's comp/offset binary */
     adc3110_spi_ads01_write(fd, fmc, 0xb, 0x00);  /* ADS42LB69_Reg 0x0B Channel A(even) Gain disabled 0dB /No FLIP   */
     adc3110_spi_ads01_write(fd, fmc, 0xc, 0x00);  /* ADS42LB69_Reg 0x0C Channel B(Odd) Gain disabled 0dB /No OVR   */
     adc3110_spi_ads01_write(fd, fmc, 0xd, 0x00);  /* ADS42LB69_Reg 0x0D OVR pin normal   */
@@ -285,7 +284,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
     adc3110_spi_ads23_write(fd, fmc, 0x5, 0x00);  /* ADS42LB69_Reg 0x08 RESET device   */
     adc3110_spi_ads23_write(fd, fmc, 0x6, 0x00);  /* ADS42LB69_Reg 0x06 LVDS CLKDIV=0 : Bypassed   */
     adc3110_spi_ads23_write(fd, fmc, 0x7, 0x00);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
-    adc3110_spi_ads23_write(fd, fmc, 0x8, 0x0c);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
+    adc3110_spi_ads23_write(fd, fmc, 0x8, (0x0c | fmt)); /* ADS42LB69_Reg 0x08 Test pattern sync, Data format = 2's comp/offset binary */
     adc3110_spi_ads23_write(fd, fmc, 0xb, 0x00);  /* ADS42LB69_Reg 0x0B Channel A(even) Gain disabled 0dB /No FLIP   */
     adc3110_spi_ads23_write(fd, fmc, 0xc, 0x00);  /* ADS42LB69_Reg 0x0C Channel B(Odd) Gain disabled 0dB /No OVR   */
     adc3110_spi_ads23_write(fd, fmc, 0xd, 0x00);  /* ADS42LB69_Reg 0x0D OVR pin normal   */
@@ -315,7 +314,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
     adc3110_spi_ads45_write(fd, fmc, 0x5, 0x00);  /* ADS42LB69_Reg 0x08 RESET device   */
     adc3110_spi_ads45_write(fd, fmc, 0x6, 0x00);  /* ADS42LB69_Reg 0x06 LVDS CLKDIV=0 : Bypassed   */
     adc3110_spi_ads45_write(fd, fmc, 0x7, 0x00);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
-    adc3110_spi_ads45_write(fd, fmc, 0x8, 0x0c);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
+    adc3110_spi_ads45_write(fd, fmc, 0x8, (0x0c | fmt)); /* ADS42LB69_Reg 0x08 Test pattern sync, Data format = 2's comp/offset binary */
     adc3110_spi_ads45_write(fd, fmc, 0xb, 0x00);  /* ADS42LB69_Reg 0x0B Channel A(even) Gain disabled 0dB /No FLIP   */
     adc3110_spi_ads45_write(fd, fmc, 0xc, 0x00);  /* ADS42LB69_Reg 0x0C Channel B(Odd) Gain disabled 0dB /No OVR   */
     adc3110_spi_ads45_write(fd, fmc, 0xd, 0x00);  /* ADS42LB69_Reg 0x0D OVR pin normal   */
@@ -345,7 +344,7 @@ adc3110_ads42lb69_init(int fd, int fmc,
     adc3110_spi_ads67_write(fd, fmc, 0x5, 0x00);  /* ADS42LB69_Reg 0x08 RESET device   */
     adc3110_spi_ads67_write(fd, fmc, 0x6, 0x00);  /* ADS42LB69_Reg 0x06 LVDS CLKDIV=0 : Bypassed   */
     adc3110_spi_ads67_write(fd, fmc, 0x7, 0x00);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
-    adc3110_spi_ads67_write(fd, fmc, 0x8, 0x0c);  /* ADS42LB69_Reg 0x07 SYNC_IN delay = 0 ps   */
+    adc3110_spi_ads67_write(fd, fmc, 0x8, (0x0c | fmt)); /* ADS42LB69_Reg 0x08 Test pattern sync, Data format = 2's comp/offset binary */
     adc3110_spi_ads67_write(fd, fmc, 0xb, 0x00);  /* ADS42LB69_Reg 0x0B Channel A(even) Gain disabled 0dB /No FLIP   */
     adc3110_spi_ads67_write(fd, fmc, 0xc, 0x00);  /* ADS42LB69_Reg 0x0C Channel B(Odd) Gain disabled 0dB /No OVR   */
     adc3110_spi_ads67_write(fd, fmc, 0xd, 0x00);  /* ADS42LB69_Reg 0x0D OVR pin normal   */

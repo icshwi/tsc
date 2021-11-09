@@ -915,7 +915,7 @@ int daq1430_lmk_get_status(int fd, int fmc, int *data)
  *
  */
 
-int daq1430_ads42lb69_init(int fd, int fmc, int chan_set)
+int daq1430_ads42lb69_init(int fd, int fmc, int chan_set, int fmt)
 {
   int tmp, ret, timeout = 1000;
 
@@ -925,7 +925,7 @@ int daq1430_ads42lb69_init(int fd, int fmc, int chan_set)
   }
 
   /* Configure ADS42LB69 */
-  ret = ads42lb69_init(fd, fmc, chan_set, daq1430_ads42lb69_init_regs, (daq1430_verbose_mode==0));
+  ret = ads42lb69_init(fd, fmc, chan_set, daq1430_ads42lb69_init_regs, (daq1430_verbose_mode==0), fmt);
 
   /* RESET MMCM/PLL */
   tmp = DAQ1430_CTL_MMCM_RESET;
