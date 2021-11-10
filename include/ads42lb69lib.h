@@ -95,8 +95,8 @@
 #define ADS42LB69_IDLY_ISERDESE3_RST      (1<<30) /* Reset ISERDESE3                */
 #define ADS42LB69_IDLY_IDELAYE3_RST       (1<<31) /* Reset IDELAYE3                 */
 
-#define ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN (1<< 4) /* Register 8, Data Format Field  */
-
+#define ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN 0x18 /* Register 8, DATA FORMAT Field
+                                                      Register 8, DIS CTRL PINS Field */
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 #define ADS42LB69_MODE_NORM     0x00              /* Normal Mode                              */
