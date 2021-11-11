@@ -746,7 +746,7 @@ int tsc_gscope_save(struct cli_cmd_para *c)
     fmc = ADC3110_FMC1;
 	if(c->cnt < 4){
       fprintf(stderr, "wrong number of parameter(s)\n");
-      fprintf(stderr, __gscope_save_usage);
+      fprintf(stderr, "%s", __gscope_save_usage);
       return(-1);
 	}
 
@@ -761,7 +761,7 @@ int tsc_gscope_save(struct cli_cmd_para *c)
         if (identify != 0x1430)
         {
             fprintf(stderr, "wrong or missing fmc index\n");
-            fprintf(stderr, __gscope_save_usage);
+            fprintf(stderr, "%s", __gscope_save_usage);
             return(-1);
         }
 	}
@@ -776,12 +776,12 @@ int tsc_gscope_save(struct cli_cmd_para *c)
 	else
 	{
     fprintf(stderr, "wrong <buf> parameter expected 'smem' or 'dpram'\n");
-    fprintf(stderr, __gscope_save_usage);
+    fprintf(stderr, "%s", __gscope_save_usage);
     return(-1);
 	}
 	if(sscanf( c->para[2],"%x", &chanset) < 1){
     fprintf(stderr, "invalid channel set\n");
-    fprintf(stderr, __gscope_save_usage);
+    fprintf(stderr, "%s", __gscope_save_usage);
     return(-1);
 	}
 
@@ -810,7 +810,7 @@ int tsc_gscope_save(struct cli_cmd_para *c)
   if (chanset < 0 || chanset > max_chanset)
   {
     fprintf(stderr, "that chanset does not exist\n");
-    fprintf(stderr, __gscope_save_usage);
+    fprintf(stderr, "%s", __gscope_save_usage);
     return (-1);
   }
 
@@ -820,7 +820,7 @@ int tsc_gscope_save(struct cli_cmd_para *c)
     if (sscanf( c->para[4],"%x", &fmt) != 1)
     {
       fprintf(stderr, "wrong <fmt> parameter expected 0 for unsigned or 1 for signed integer !\n");
-      fprintf(stderr, __gscope_save_usage);
+      fprintf(stderr, "%s", __gscope_save_usage);
       return(-1);
     }
   }
@@ -831,7 +831,7 @@ int tsc_gscope_save(struct cli_cmd_para *c)
     if (sscanf( c->para[5],"%x", &new_size) != 1)
     {
       fprintf(stderr, "wrong <size> parameter expected hexadecimal value !\n");
-      fprintf(stderr, __gscope_save_usage);
+      fprintf(stderr, "%s", __gscope_save_usage);
       return(-1);
     }
   }
@@ -842,7 +842,7 @@ int tsc_gscope_save(struct cli_cmd_para *c)
     if (sscanf( c->para[6],"%x", &mask) != 1)
     {
       fprintf(stderr, "wrong <mask> parameter expected 16-bit hexadecimal value !\n");
-      fprintf(stderr, __gscope_save_usage);
+      fprintf(stderr, "%s", __gscope_save_usage);
       return(-1);
     }
   }

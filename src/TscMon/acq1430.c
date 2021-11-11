@@ -1738,7 +1738,7 @@ static int acq1430_save(struct cli_cmd_para *c)
   if (c->cnt < 1)
   {
     fprintf(stderr, "acq1430 acq command needs more arguments\n");
-    fprintf(stderr, _acq1430_save_usage);
+    fprintf(stderr, "%s", _acq1430_save_usage);
     return(-1);
   }
 
@@ -1747,7 +1747,7 @@ static int acq1430_save(struct cli_cmd_para *c)
     if( sscanf( c->para[2],"%x", &offset) != 1)
     {
       fprintf(stderr, "wrong offset value\n");
-      fprintf(stderr, _acq1430_save_usage);
+      fprintf(stderr, "%s", _acq1430_save_usage);
       return(-1);
     }
   }
@@ -1757,7 +1757,7 @@ static int acq1430_save(struct cli_cmd_para *c)
     if( sscanf( c->para[3],"%x", &size) != 1)
     {
       fprintf(stderr, "wrong size value\n");
-      fprintf(stderr, _acq1430_save_usage);
+      fprintf(stderr, "%s", _acq1430_save_usage);
       return(-1);
     }
   }
@@ -1778,7 +1778,7 @@ static int acq1430_save(struct cli_cmd_para *c)
     if (sram)
     {
       fprintf(stderr, "this mode is no supported for sram scope\n");
-      fprintf(stderr, _acq1430_save_usage);
+      fprintf(stderr, "%s", _acq1430_save_usage);
       return(-1);
     }
 
@@ -2153,19 +2153,19 @@ static int acq1430_dump(struct cli_cmd_para *c, struct tsc_acq1430_devices *add)
     if (c->cnt < 4)
     {
       fprintf(stderr, "acq1430 eeprom dump command needs more arguments\n");
-      fprintf(stderr, __eeprom_usage);
+      fprintf(stderr, "%s", __eeprom_usage);
       return(-1);
     }
     if (sscanf(c->para[2],"%x", &off) != 1)
     {
       fprintf(stderr, "bad offset\n");
-      fprintf(stderr, __eeprom_usage);
+      fprintf(stderr, "%s", __eeprom_usage);
       return(-1);
     }
     if (sscanf(c->para[3],"%x", &size) != 1)
     {
       fprintf(stderr, "bad size\n");
-      fprintf(stderr, __eeprom_usage);
+      fprintf(stderr, "%s", __eeprom_usage);
       return(-1);
     }
 
@@ -2245,7 +2245,7 @@ static int acq1430_lmk_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
       if (tmp == -1)
       {
         fprintf(stderr, "wrong mode '%s' expected 'default', 'clkdist', 'intref' or 'dualpll'\n", c->para[2]);
-        fprintf(stderr, __usage);
+        fprintf(stderr, "%s", __usage);
         return(-1);
       }
       lmk_mode = ((tmp == 0) ? 0 : (tmp-1));
@@ -2266,7 +2266,7 @@ static int acq1430_lmk_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
               if (sscanf(p, "%d", &tmp) != 1)
               {
                 fprintf(stderr, "wrong divider '%s' expected a value in range 1 to 1045\n", p);
-                fprintf(stderr, __usage);
+                fprintf(stderr, "%s", __usage);
                 return(-1);
               }
               lmk_divider = tmp;
@@ -2278,7 +2278,7 @@ static int acq1430_lmk_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
               if (tmp == -1)
               {
                 fprintf(stderr, "wrong ref '%s' expected 'fmc' or 'rtm'\n", p);
-                fprintf(stderr, __usage);
+                fprintf(stderr, "%s", __usage);
                 return(-1);
               }
               lmk_ref = tmp;
@@ -2294,7 +2294,7 @@ static int acq1430_lmk_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
               if (tmp == -1)
               {
                 fprintf(stderr, "wrong freq '%s' expected 'default', '250m', '100m' or '10m'\n", p);
-                fprintf(stderr, __usage);
+                fprintf(stderr, "%s", __usage);
                 return(-1);
               }
               lmk_freq = ((tmp==0) ? 0 : (tmp-1));
@@ -2307,7 +2307,7 @@ static int acq1430_lmk_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
 
             default:
               fprintf(stderr, "unknown argument '%s'\n", p);
-              fprintf(stderr, __usage);
+              fprintf(stderr, "%s", __usage);
               return(-1);
           }
         }
@@ -2363,7 +2363,7 @@ static int acq1430_dac_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
       if (sscanf(c->para[2], "%lf", &dac_freq_out) != 1)
       {
         fprintf(stderr, "output frequency expected in MHz !\n");
-        fprintf(stderr, __usage);
+        fprintf(stderr, "%s", __usage);
         return(-1);
       }
     }
@@ -2373,7 +2373,7 @@ static int acq1430_dac_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
       if (sscanf(c->para[3], "%lf", &dac_freq_in) != 1)
       {
         fprintf(stderr, "input frequency expected in MHz !\n");
-        fprintf(stderr, __usage);
+        fprintf(stderr, "%s", __usage);
         return(-1);
       }
       /* ask to calculate the linerate */
@@ -2385,7 +2385,7 @@ static int acq1430_dac_init(struct cli_cmd_para *c, struct tsc_acq1430_devices *
       if (sscanf(c->para[4], "%lf", &dac_linerate) != 1)
       {
         fprintf(stderr, "input linerate expected in Gbit/S !\n");
-        fprintf(stderr, __usage);
+        fprintf(stderr, "%s", __usage);
         return(-1);
       }
     }
