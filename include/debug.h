@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : debug.h
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -46,7 +46,7 @@
  *=============================< end file header >============================*/
 
 #ifdef DEBUG
-#define debug(x) printf x
+#define debug(fmt, ...)  printf("%s:%d: " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__)
 #else
-#define debug(x)
+#define debug(...)
 #endif

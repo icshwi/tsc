@@ -68,6 +68,7 @@ static char *rcsid = "$Id: adc3110.c,v 1.10 2014/12/19 09:36:19 ioxos Exp $";
 #include <tscioctl.h>
 #include <tsculib.h>
 #include <adc3110lib.h>
+#include <ads42lb69lib.h>
 #include <lmk04906.h>
 
 #define BUS_SPI 1
@@ -975,6 +976,7 @@ tsc_adc3110( struct cli_cmd_para *c)
 
   struct tsc_adc3110_devices *add;
   uint cmd, data, reg, fmc, tmo, id;
+  int fmt;
   char *p;
 
   adc3110_init();
@@ -1367,8 +1369,21 @@ tsc_adc3110( struct cli_cmd_para *c)
 		}
 		if( !strncmp( "ads", c->para[0], 3))
 		{
-			printf("Calling adc3110_ads42lb69_init() for all channels\n");
-			adc3110_ads42lb69_init(tsc_fd, fmc, ADC3110_CHAN_SET_ALL); /* init all channels */
+            printf("Calling adc3110_ads42lb69_init() for all channels\n");
+            /* Third param should be data format */
+            if (c->cnt > 2) {
+                if (!strncmp("bin", c->para[2], 3)) {
+                    fmt = ADS42LB69_REG8_DATA_FORMAT_OFFSET_BIN;
+                    printf("Setting data format to offset binary\n");
+                } else {
+                    fmt = 0;
+                    printf("Setting data format to two's complement\n");
+                }
+            } else {
+                fmt = 0;
+                printf("Setting data format to two's complement\n");
+            }
+			adc3110_ads42lb69_init(tsc_fd, fmc, ADC3110_CHAN_SET_ALL, fmt); /* init all channels */
 			return(0);
 		}
 	}

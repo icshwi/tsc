@@ -1,6 +1,6 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
+ *
  *    filename : adc3112lib.c
  *    author   : JFG, XP
  *    company  : IOxOS
@@ -55,7 +55,7 @@
 
 int adc3112_verbose_flag = 0;
 
-int 
+int
 adc3112_set_verbose(int vf)
 {
   adc3112_verbose_flag = vf;
@@ -66,13 +66,13 @@ adc3112_set_verbose(int vf)
  * Function name : adc3112_XXX
  * Prototype     : int
  * Parameters    : void
- * Return        : 
+ * Return        :
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 adc3112_XXX(void)
 {
 
@@ -85,11 +85,11 @@ adc3112_XXX(void)
  * Parameters    : register index
  * Return        : register content
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 adc3112_csr_rd(int fd, int fmc,
 		int csr)
 {
@@ -108,11 +108,11 @@ adc3112_csr_rd(int fd, int fmc,
  * Parameters    : register index
  * Return        : register content
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-void 
+void
 adc3112_csr_wr(int fd, int fmc,
 		int csr,
 	        int data)
@@ -132,11 +132,11 @@ adc3112_csr_wr(int fd, int fmc,
  * Parameters    : none
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-int 
+int
 adc3112_identify(int fd, int fmc)
 {
   int id;
@@ -154,7 +154,7 @@ adc3112_identify(int fd, int fmc)
  *                 register index
  * Return        : data
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -193,7 +193,7 @@ adc3112_spi_read(int fd, int fmc,
  *                 data
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -232,7 +232,7 @@ adc3112_spi_write(int fd, int fmc,
  *                 register index
  * Return        : data
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -258,7 +258,7 @@ adc3112_i2c_read(int fd, int fmc,
     return(-1);
   }
   return( data);
-}    
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3112_i2c_write
@@ -268,7 +268,7 @@ adc3112_i2c_read(int fd, int fmc,
  *                 register index
  * Return        : data
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -294,7 +294,7 @@ adc3112_i2c_write(int fd, int fmc,
     return(-1);
   }
   return( 0);
-}    
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3112_eeprom_read
@@ -305,7 +305,7 @@ adc3112_i2c_write(int fd, int fmc,
  *                 size
  * Return        : data
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -333,7 +333,7 @@ adc3112_eeprom_read(int fd, int fmc,
  *                 size
  * Return        : data
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -360,14 +360,21 @@ adc3112_eeprom_write(int fd, int fmc,
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 void
 adc3112_reset(int fd, int fmc)
 {
+  int sign;
+  int pon;
 
+  pon = 0xc0000000;
+  tsc_pon_write(fd, 0xc, &pon);
+  usleep( 20000);
+  sign = adc3112_csr_rd(fd, fmc, ADC3112_CSR_SIGN);
+  adc3112_csr_wr(fd, fmc, ADC3112_CSR_SIGN, sign);
   adc3112_csr_wr(fd, fmc, ADC3112_CSR_CTL, 0x100);
   usleep( 20000);
   adc3112_csr_wr(fd, fmc, ADC3112_CSR_CTL, 0x0);
@@ -382,7 +389,7 @@ adc3112_reset(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -416,7 +423,7 @@ adc3112_xra1404_init(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -432,7 +439,7 @@ adc3112_xratrig_enable(int fd, int fmc,
   {
     ocr = ADC3112_XRA_TRIG_RISE;
   }
-  else 
+  else
   {
     ocr = 0;
     src = -src;
@@ -478,8 +485,8 @@ adc3112_xratrig_enable(int fd, int fmc,
   adc3112_spi_xratrig_write(fd, fmc, ADC3112_XRA_OCR, ocr);
   adc3112_spi_xratrig_write(fd, fmc, ADC3112_XRA_GCR, gcr);
   adc3112_spi_dac_write(fd, fmc, 0x18, level);
-  return;                
-}                        
+  return;
+}
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : adc3112_xratrig_disable
@@ -487,7 +494,7 @@ adc3112_xratrig_enable(int fd, int fmc,
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -506,7 +513,7 @@ adc3112_xratrig_disable(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -583,7 +590,7 @@ adc3112_lmk_dump(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -593,7 +600,7 @@ adc3112_ads5409_reset(int fd, int fmc,
 {
 
   /* *****************************************************************/
-  /* ADS5409 Channel 01 U737                                         */      
+  /* ADS5409 Channel 01 U737                                         */
   /* *****************************************************************/
   adc3112_spi_ads01_write(fd, fmc, 0x2c, 0xD2F0); /* ADS5409_R2c 4 SW RESET  !!!NEW JB20140626   */
   usleep( 50000);
@@ -605,12 +612,12 @@ adc3112_ads5409_reset(int fd, int fmc,
   {
     adc3112_spi_ads01_write(fd, fmc, 0x0, 0xd200); /* ADS5409_R00 4 Wire SPI + decimation filter high  */
   }
-  else 
+  else
   {
     adc3112_spi_ads01_write(fd, fmc, 0x0, 0x8000); /* ADS5409_R00 4 Wire SPI + no filter  */
   }
   /* *****************************************************************/
-  /* ADS5409 Channel 23 U747                                         */      
+  /* ADS5409 Channel 23 U747                                         */
   /* *****************************************************************/
   adc3112_spi_ads23_write(fd, fmc, 0x2c, 0xD2F0); /* ADS5409_R2c 4 SW RESET  !!!NEW JB20140626   */
   usleep( 50000);
@@ -622,7 +629,7 @@ adc3112_ads5409_reset(int fd, int fmc,
   {
     adc3112_spi_ads23_write(fd, fmc, 0x0, 0xd200); /* ADS5409_R00 4 Wire SPI + decimation filter high  */
   }
-  else 
+  else
   {
     adc3112_spi_ads23_write(fd, fmc, 0x0, 0x8000); /* ADS5409_R00 4 Wire SPI + no filter  */
   }
@@ -636,7 +643,7 @@ adc3112_ads5409_reset(int fd, int fmc,
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -645,7 +652,7 @@ adc3112_ads5409_init(int fd, int fmc,
 		      int corr)
 {
   /* *****************************************************************/
-  /* ADS5409 Channel 01 U737                                         */      
+  /* ADS5409 Channel 01 U737                                         */
   /* *****************************************************************/
 
   /* Initialization sequence according to data-sheet */
@@ -654,7 +661,7 @@ adc3112_ads5409_init(int fd, int fmc,
     //adc3112_spi_ads01_write( fmc, 0x1, 0x8202);  /* ADS5409_R01 CHA&B Corr EN + Two's complement + HP Mode 1     */
     adc3112_spi_ads01_write(fd, fmc, 0x1, 0x820a);  /* ADS5409_R01 CHA&B Corr EN + Offset Binary + HP Mode 1     */
   }
-  else 
+  else
   {
     //adc3112_spi_ads01_write( fmc, 0x1, 0x0002);  /* ADS5409_R01 CHA&B Corr DIS + Two's complement + HP Mode 1     */
     adc3112_spi_ads01_write(fd, fmc, 0x1, 0x000a);  /* ADS5409_R01 CHA&B Corr DIS + Offset Binary + HP Mode 1     */
@@ -680,7 +687,7 @@ adc3112_ads5409_init(int fd, int fmc,
   //adc3112_spi_ads01_write( fmc, 0x67, 0x2FFF); /* ADS5409_R67 LDVS OUTB bus EN                                  */
 
   /* *****************************************************************/
-  /* ADS5409 Channel 23 U747                                         */      
+  /* ADS5409 Channel 23 U747                                         */
   /* *****************************************************************/
 
   /* Initialization sequence according to data-sheet */
@@ -689,7 +696,7 @@ adc3112_ads5409_init(int fd, int fmc,
     //adc3112_spi_ads23_write( fmc, 0x1, 0x8202);  /* ADS5409_R01 CHA&B Corr EN + Two's complement + HP Mode 1     */
     adc3112_spi_ads23_write(fd, fmc, 0x1, 0x820a);  /* ADS5409_R01 CHA&B Corr EN + Offset Binary + HP Mode 1     */
   }
-  else 
+  else
   {
     //adc3112_spi_ads23_write( fmc, 0x1, 0x0002);  /* ADS5409_R01 CHA&B Corr DIS + Two's complement + HP Mode 1     */
     adc3112_spi_ads23_write(fd, fmc, 0x1, 0x000a);  /* ADS5409_R01 CHA&B Corr DIS + Offset Binary + HP Mode 1     */
@@ -758,7 +765,7 @@ adc3112_ads5409_dump(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -770,7 +777,7 @@ adc3112_ads5409_enable(int fd, int fmc,
   int data;
 
    /* *****************************************************************/
-  /* ISERDES ADS5409 Initialisation                                  */      
+  /* ISERDES ADS5409 Initialisation                                  */
   /* *****************************************************************/
 
   adc3112_spi_xratrig_write(fd, fmc, 0x2, 0x60); /* XRA1404 OCR    ADC_ENABLE = 1  -> ADS5409 ENABLE = '1'   */
@@ -805,7 +812,7 @@ adc3112_ads5409_enable(int fd, int fmc,
   {
     adc3112_spi_ads01_write(fd, fmc, 0x0, 0xd200); /* ADS5409_R00 4 Wire SPI + decimation filter high  */
   }
-  else 
+  else
   {
     adc3112_spi_ads01_write(fd, fmc, 0x0, 0x8000); /* ADS5409_R00 4 Wire SPI + no filter  */
   }
@@ -818,14 +825,14 @@ adc3112_ads5409_enable(int fd, int fmc,
   {
     adc3112_spi_ads23_write(fd, fmc, 0x0, 0xd200); /* ADS5409_R00 4 Wire SPI + decimation filter high  */
   }
-  else 
+  else
   {
     adc3112_spi_ads23_write(fd, fmc, 0x0, 0x8000); /* ADS5409_R00 4 Wire SPI + no filter  */
   }
   usleep( 20000);
 
   /* *****************************************************************/
-  /* Initialize Front-end INPUT                                      */      
+  /* Initialize Front-end INPUT                                      */
   /* *****************************************************************/
   adc3112_spi_xra01_write(fd, fmc, 0x02, m01 & ADC3112_XRA_FE_MASK);   /* XRA1404 OCR    Grounded ADC inputs */
   adc3112_spi_xra23_write(fd, fmc, 0x02, m23 & ADC3112_XRA_FE_MASK);   /* XRA1404 OCR    Grounded ADC inputs */
@@ -839,7 +846,7 @@ adc3112_ads5409_enable(int fd, int fmc,
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -856,7 +863,7 @@ adc3112_gpio_reset(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -875,7 +882,7 @@ adc3112_gpio_trig(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -897,7 +904,7 @@ adc3112_ttrig_arm(int fd, int fmc)
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -933,7 +940,7 @@ adc3112_dac_set_level(int fd, int fmc,
  * Parameters    : fmc number (1 or 2)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -979,7 +986,7 @@ adc3112_ttim_init(int fd, int fmc)
  *                 channe number (0 to 3)
  * Return        : fail/success
  *----------------------------------------------------------------------------
- * Description   : 
+ * Description   :
  *
  *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
@@ -1072,7 +1079,7 @@ adc3112_calib_set_default(int fd, struct adc3112_calib_ctl *cc,
 
   /* load default delay */
   data = 0x40000000 | (chan << 26);
-  adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+  adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
   adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
   cc->chan[chan].delay = 0;
   /* update ttim array */
@@ -1154,7 +1161,7 @@ adc3112_calib_inc_delay(int fd, struct adc3112_calib_ctl *cc,
     for( bit = 0; bit < 12; bit++)
     {
       data = 0xa0000000 | (bit<<20) | (chan << 26);
-      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
       cc->chan[chan].ttim[bit+4] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
     }
     data = 0xa0c00000 | (chan << 26);
@@ -1170,7 +1177,7 @@ adc3112_calib_inc_delay(int fd, struct adc3112_calib_ctl *cc,
       {
 	//printf("increment bit %d\n", bit);
 	data = 0xa0000000 | (bit<<20) | (chan << 26);
-        adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+        adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
 	cc->chan[chan].ttim[bit+4] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
       }
     }
@@ -1178,7 +1185,7 @@ adc3112_calib_inc_delay(int fd, struct adc3112_calib_ctl *cc,
     {
       //printf("decrement bit 12\n");
       data = 0xa0c00000 | (chan << 26);
-      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
       cc->chan[chan].ttim[0] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
     }
   }
@@ -1202,11 +1209,11 @@ adc3112_calib_dec_delay(int fd, struct adc3112_calib_ctl *cc,
     for( bit = 0; bit < 12; bit++)
     {
       data = 0x80000000 | (bit<<20) | (chan << 26);
-      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
       cc->chan[chan].ttim[bit+4] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
     }
     data = 0x80c00000 | (chan << 26);
-    adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+    adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
     cc->chan[chan].ttim[0] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
   }
   else
@@ -1218,7 +1225,7 @@ adc3112_calib_dec_delay(int fd, struct adc3112_calib_ctl *cc,
       {
 	//printf("decrement bit %d\n", bit);
 	data = 0x80000000 | (bit<<20) | (chan << 26);
-        adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+        adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
 	cc->chan[chan].ttim[bit+4] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
       }
     }
@@ -1226,7 +1233,7 @@ adc3112_calib_dec_delay(int fd, struct adc3112_calib_ctl *cc,
     {
       //printf("decrement bit 12\n");
       data = 0x80c00000 | (chan << 26);
-      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data); 
+      adc3112_csr_wr(fd, cc->fmc, ADC3112_CSR_TTIM, data);
       cc->chan[chan].ttim[0] =  adc3112_csr_rd(fd, cc->fmc, ADC3112_CSR_TTIM);
     }
   }
@@ -1349,7 +1356,7 @@ adc3112_calib_show_res(struct adc3112_calib_ctl *cc)
   if( adc3112_verbose_flag) printf("delay   CH0  CH1  CH2  CH3\n");
   for( step = 0; step < (CAL_STEP_NUM+1); step++)
   {
-    if( adc3112_verbose_flag) printf("%5d : %04x %04x %04x %04x\n", step - (CAL_STEP_NUM/2), 
+    if( adc3112_verbose_flag) printf("%5d : %04x %04x %04x %04x\n", step - (CAL_STEP_NUM/2),
 	   cc->chan[0].cal_res[step], cc->chan[1].cal_res[step], cc->chan[2].cal_res[step], cc->chan[3].cal_res[step]);
   }
   return(0);
@@ -1371,7 +1378,7 @@ adc3112_calib_show_err_cnt(struct adc3112_calib_ctl *cc,
   if( adc3112_verbose_flag) printf("\n Delay   D11  D10  D9   D8   D7   D6   D5   D4   D3   D2   D1   D0  SYNC\n");
   for( step = 0; step < (CAL_STEP_NUM+1); step++)
   {
-   if( adc3112_verbose_flag)  printf("%5d :", step - (CAL_STEP_NUM/2)); 
+   if( adc3112_verbose_flag)  printf("%5d :", step - (CAL_STEP_NUM/2));
     for( bit = 0; bit < 12; bit++)
     {
       if( (cc->chan[chan].err_cnt[15-bit][step] == 0) && (min[15-bit] == -1))
@@ -1385,7 +1392,7 @@ adc3112_calib_show_err_cnt(struct adc3112_calib_ctl *cc,
       if( cc->chan[chan].err_cnt[15-bit][step] == ADC_NUM_SAMPLES)
       {
         if( adc3112_verbose_flag) printf(" XXXX");
-      } 
+      }
       else
       {
         if( adc3112_verbose_flag) printf(" %04x", cc->chan[chan].err_cnt[15-bit][step]);
@@ -1395,8 +1402,8 @@ adc3112_calib_show_err_cnt(struct adc3112_calib_ctl *cc,
     {
       if( adc3112_verbose_flag) printf(" XXXX\n");
     }
-    else 
-    { 
+    else
+    {
       if( adc3112_verbose_flag) printf(" %04x\n", cc->chan[chan].err_cnt[0][step]);
     }
   }
@@ -1486,11 +1493,11 @@ adc3112_calib_show_min_max(struct adc3112_calib_ctl *cc,
   cc->chan[chan].hold_time =  max[15];
   for( bit = 0; bit < 12; bit++)
   {
-    if( max[15-bit] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[15-bit]; 
+    if( max[15-bit] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[15-bit];
     if( adc3112_verbose_flag) printf(" %3d ", max[15-bit]);
   }
   if( adc3112_verbose_flag) printf(" %3d\n", max[0]);
-  //if( max[0] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[0]; 
+  //if( max[0] < cc->chan[chan].hold_time) cc->chan[chan].hold_time = max[0];
   cc->chan[chan].hold_time =   (cc->chan[chan].hold_time - 1)*CAL_STEP_WIDTH;
 
   if( adc3112_verbose_flag) printf(" MEAN :");
@@ -1499,14 +1506,14 @@ adc3112_calib_show_min_max(struct adc3112_calib_ctl *cc,
     cc->chan[chan].delta[15-bit] =  (max[15-bit] + min[15-bit])/2;
     if( adc3112_verbose_flag) printf(" %3d ", cc->chan[chan].delta[15-bit]);
   }
-  cc->chan[chan].delta[0] = (max[0] + min[0])/2; 
+  cc->chan[chan].delta[0] = (max[0] + min[0])/2;
   if( adc3112_verbose_flag) printf(" %3d\n", cc->chan[chan].delta[0]);
 
   if( adc3112_verbose_flag) printf(" MIN  :");
   cc->chan[chan].set_time =  min[15];
   for( bit = 0; bit < 12; bit++)
   {
-    if( min[15-bit] > cc->chan[chan].set_time) cc->chan[chan].set_time = min[15-bit]; 
+    if( min[15-bit] > cc->chan[chan].set_time) cc->chan[chan].set_time = min[15-bit];
     if( adc3112_verbose_flag) printf(" %3d ", min[15-bit]);
   }
   if( adc3112_verbose_flag) printf(" %3d\n", min[0]);

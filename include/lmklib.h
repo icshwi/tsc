@@ -1,7 +1,7 @@
 /*=========================< begin file & file header >=======================
  *  References
- *  
- *    filename : adclib.h
+ *
+ *    filename : lmklib.h
  *    author   : JFG, XP
  *    company  : IOxOS
  *    creation : october 18,2018
@@ -9,7 +9,7 @@
  *----------------------------------------------------------------------------
  *  Description
  *
- *    That library contains a set of function to access the ADC FMC
+ *
  *
  *----------------------------------------------------------------------------
  *
@@ -44,23 +44,33 @@
  *
  *=============================< end file header >============================*/
 
-#ifndef _H_ADCLIB
-#define _H_ADCLIB
+#ifndef _H_LMKLIB
+#define _H_LMKLIB
 
-#define ADC_CSR_SIGN          0x0     /* Signature                        */
-#define ADC_CSR_CTL           0x1     /* Main control & status            */
-#define ADC_CSR_LED           0x2     /* Front-Panel LED management       */
-#define ADC_CSR_SERIAL        0x3     /* Serial Interface                 */
-#define ADC_CSR_GPIO          0x5     /* Front-Panel GPIO management      */
-#define ADC_CSR_DISC          0x6     /* Discriminator Function           */
-#define ADC_CSR_FMC           0x7     /* IFC carrier support              */
+/* ------------------------------------------------------------------------------------------------------------------ */
+/*  Definition                                                                                                        */
+/* ------------------------------------------------------------------------------------------------------------------ */
 
-/* --------------------------------------------------------------------------------------------------- */
-/*  Function Prototypes                                                                                */
-/* --------------------------------------------------------------------------------------------------- */
-extern int adc_spi_read(int fd, int fmc, int cmd, int reg, int *data);
-extern int adc_spi_write(int fd, int fmc, int cmd, int reg, int data);
-extern int adc_read_tmp102(int fd, int fmc, uint dev, uint *temp, uint *temp_lo, uint *temp_hi);
-extern int adc_set_tmp102(int fd, int fmc, uint dev, uint *temp_lo, uint *temp_hi);
+#define LMK_REG_READ     0
+#define LMK_REG_WRITE    1
 
-#endif /* _H_ADCLIB */
+/* arguments: read/write, register, data, priv */
+typedef int (*lmk_func_t)(int, int, int, int*, int);
+
+typedef struct
+{
+  lmk_func_t   func;
+}
+lmk_t;
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+/*  Function Prototypes                                                                                               */
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+extern void lmk_configure       (lmk_t *lmk, lmk_func_t func);
+extern int  lmk_read            (lmk_t *lmk, int fd, int reg, int *data, int priv);
+extern int  lmk_write           (lmk_t *lmk, int fd, int reg, int data,  int priv);
+extern int  lmk04806_init       (lmk_t *lmk, int fd, int lmk_reg[], int priv, int quiet);
+extern int  lmk04806_dump       (lmk_t *lmk, int fd, int priv);
+
+#endif /* _H_LMKLIB */
