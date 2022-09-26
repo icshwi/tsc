@@ -370,7 +370,33 @@ tsc_csr_write(int fd, int idx,
   csr_op.offset = idx;
   csr_op.data = *data_p;
   return(ioctl(fd, TSC_IOCTL_CSR_WR, &csr_op));
-}
+  }
+  
+  
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_csr_write_dbg
+ * Prototype     : int
+ * Parameters    : register index
+ *                 data pointer
+ * Return        : status of write operation
+ *----------------------------------------------------------------------------
+ * Description   : write the tsc csr pointed by idx with the content of
+ *                 data_p. The status of the write operation is returned.
+ *                 Print debug information. 
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+tsc_csr_write_dbg(int fd, int idx,
+	       int *data_p)
+{
+  struct tsc_ioctl_csr_op csr_op;
+
+  if(fd < 0) return(-EBADF);
+  csr_op.offset = idx;
+  csr_op.data = *data_p;
+  printf("Write @ 0x%08x: 0x%08x \n",  idx, *data_p);
+  return(ioctl(fd, TSC_IOCTL_CSR_WR, &csr_op));
+  }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_csr_read
@@ -397,10 +423,37 @@ tsc_csr_read(int fd, int idx,
   csr_op.data = -1;
   retval = ioctl(fd, TSC_IOCTL_CSR_RD, &csr_op);
   *data_p = csr_op.data;
-
   return(retval);
 }
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ * Function name : tsc_csr_read_dbg
+ * Prototype     : int
+ * Parameters    : register index
+ *                 data pointer
+ * Return        : status of read operation
+ *----------------------------------------------------------------------------
+ * Description   : read the content of the tsc csr pointed by idx and return
+ *                 its current value in data_p. The status of the read is
+ *                 returned. Print debug information of idx and data_p.
+ *
+ *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+int
+tsc_csr_read_dbg(int fd, int idx,
+	      int *data_p)
+{
+  struct tsc_ioctl_csr_op csr_op;
+  int retval;
+
+  if(fd < 0) return(-EBADF);
+  csr_op.offset = idx;
+  csr_op.data = -1;
+  retval = ioctl(fd, TSC_IOCTL_CSR_RD, &csr_op);
+  *data_p = csr_op.data;
+  printf(" Readout @ 0x%08x: 0x%08x \n",  idx, *data_p);
+  return(retval);
+}
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  * Function name : tsc_csr_set
  * Prototype     : int
